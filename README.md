@@ -36,6 +36,6 @@ npm run e2e
 npm run build
 ```
 
-Tests use saved court excerpts and avoid live dependencies. The current benchmark uses fictional fixtures and a degraded-text proxy; it is not a measurement on genuine summons photos. Live checks can fail or change; when they fail, results abstain. CourtListener is an index, so no result never means contradiction. Riverside official pages currently disagree about the Desert Region jury number, and SEAL shows both rather than choosing one. The 2026 payment warning expressly addresses calls and texts; paper payment demands without matching direct evidence remain unverified.
+Tests use saved court excerpts and avoid live dependencies. The current benchmark uses fictional fixtures and one generated degraded-photo OCR case; it is not a measurement on genuine summons photos. Live checks can fail or change; when they fail, results abstain. CourtListener is an index, so no result never means contradiction. Riverside official pages currently disagree about the Desert Region jury number, and SEAL shows both rather than choosing one. The 2026 payment warning expressly addresses calls and texts; paper payment demands without matching direct evidence remain unverified.
 
 Architecture and verdict rules are in `docs/`. Further court coverage requires reviewed resolvers and source-specific contradiction rules. Related prior art includes court scam alerts and legal citation checking tools; SEAL’s distinctive workflow connects claims printed in a notice to independently sourced, conservative verdicts.
