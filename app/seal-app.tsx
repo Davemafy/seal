@@ -268,13 +268,11 @@ async function upload(uploaded:File){
   {!text?
    <section className="entry-shell">
    <div className="entry-copy">
-     <p className="entry-kicker">COURT MESSAGE REVIEW</p>
      <h1>Check a court message</h1>
      <p>Received a notice, email, or text? Add it here to see what it asks you to do, what court sources say, and where to confirm the rest.</p>
     </div>
 
     <div className="intake">
-     <div className="intake-heading"><strong>What did you receive?</strong></div>
      <button className={`upload-row ${dragging?'is-dragging':''} ${busy?'is-busy':''}`} type="button" disabled={busy||!hydrated} onPointerDown={()=>{void warmOcr()}} onClick={()=>input.current?.click()}
       onDragOver={event=>{if(event.dataTransfer.types.includes('Files')){event.preventDefault();setDragging(true)}}}
       onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
