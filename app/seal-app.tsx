@@ -5,7 +5,7 @@ import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import PDFPreview from './pdf-preview';
 import {fixtures,type FixtureKey} from '@/lib/fixtures';
 import {fallbackExtract,claimsFromExtraction,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '@/lib/extract';
-import {readInBrowser,type BrowserDocument} from '@/lib/browser-file';
+import {readInBrowser,warmOcr,type BrowserDocument} from '@/lib/browser-file';
 import type {Claim,Extraction,Result,Verification} from '@/lib/types';
 import './workspace.css';
 
@@ -272,7 +272,7 @@ async function upload(uploaded:File){
 
     <div className="intake">
      <div className="intake-heading"><strong>What did you receive?</strong></div>
-     <button className={`upload-row ${dragging?'is-dragging':''}`} type="button" disabled={busy||!hydrated} onClick={()=>input.current?.click()}
+     <button className={`upload-row ${dragging?'is-dragging':''}`} type="button" disabled={busy||!hydrated} onPointerDown={()=>{void warmOcr()}} onClick={()=>input.current?.click()}
       onDragOver={event=>{if(event.dataTransfer.types.includes('Files')){event.preventDefault();setDragging(true)}}}
       onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
       onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
