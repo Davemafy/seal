@@ -70,3 +70,24 @@ GitHub Actions run [#73](https://github.com/Davemafy/seal/actions/runs/361375330
 The deployed production browser then tested a clearly labeled synthetic image containing the official Connecticut jury status number `1-866-388-2430`: **2 MATCH, 0 MISMATCH, 0 COULD_NOT_VERIFY**. The identical synthetic image with only that callback changed to `1-203-555-0199` returned **1 MATCH, 1 MISMATCH, 0 COULD_NOT_VERIFY**. The mismatch retained both official status-number sources through primary evidence plus progressive disclosure and kept the independent 800-827-8224 court contact. CI now waits until `seal-verify.vercel.app` reports the exact Git SHA under test before running this deployed gate, preventing alias-lag false failures.
 
 These are controlled engineering examples. They do not establish accuracy on genuine personal summonses, camera photos, or real scam-message screenshots, and they do not establish user demand or uptake.
+
+
+### Input-agnostic extraction correction — 25 Sep 2026
+
+A low-resolution, readable court-looking image exposed that the extraction layer had become too coupled to the jurisdictions and scam examples used during development. The correction is architectural rather than jurisdiction-specific.
+
+SEAL now follows: **message/image → generic action graph → field confidence → supported-source verification → abstention when unsupported**.
+
+- Browser OCR preserves every recognized token and its confidence instead of deleting all words below a page-independent threshold. Small images are normalized/upscaled from their dimensions alone before OCR; no court or document identity affects that preprocessing.
+- Extraction builds generic action nodes as `verb → object → target → qualifiers`, with action classes for payment, contact, navigation, information disclosure, and appearance/reporting. It does not require a dollar amount to preserve a payment action.
+- Court identity extraction is generic and independent of resolver coverage. An unsupported fictional court can be extracted cleanly while verification still returns only `COULD_NOT_VERIFY`.
+- Confidence belongs to the extracted value. Exact identifiers such as phones, URLs, juror IDs, and dockets use strict token confidence. Multi-word phrases use a robust field score so one noisy OCR word does not discard an otherwise readable phrase.
+- Claims below the confidence threshold are withheld from the resolver and become `COULD_NOT_VERIFY — We couldn’t read this field confidently.` A low-confidence court identity is also prohibited from silently selecting a resolver for other claims.
+- Spatial context for a target is reconstructed generically from nearby tokens, preserving label/value relationships without state- or court-specific layout rules.
+- A `scan` verb does not imply a QR code. The scan action survives, but its target stays unknown unless QR is explicitly present in the recovered text or a future visual-code detector establishes it.
+
+A new browser kill test creates a **526×791 synthetic notice from a fictional unsupported jurisdiction** and requires the real image path to recover separate requested payment, scan, and appearance actions before source verification. The test also requires zero MATCH and zero MISMATCH because there is no resolver for the fictional court.
+
+GitHub Actions run [#89](https://github.com/Davemafy/seal/actions/runs/36141561316) passed 29 unit tests, the 15-case benchmark, 9 normal browser tests (plus the production-only test skipped locally), build, exact-production-SHA synchronization, and the deployed production image pair. Benchmark after correcting the ground truth for generic court extraction: court-name extraction 0.9333, MISMATCH precision 1.00, false-MISMATCH count 0, COULD_NOT_VERIFY rate 0.5376, and full-flow success 0.9333. The higher abstention rate is expected because the action graph now preserves additional requested actions that do not have a supported official-source rule instead of silently dropping them.
+
+No Virginia resolver or Virginia-specific extraction rule was added.
