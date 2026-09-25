@@ -37,3 +37,26 @@
 .action-callout{width:100%;border:0;border-left:3px solid #9a4c43;background:#f8f1ef;color:#26332b;text-align:left;padding:16px 17px 17px;margin:17px 0 3px;display:grid;grid-template-columns:1fr auto;gap:7px 18px}.action-callout>span{grid-column:1/-1;font-size:8px;letter-spacing:.14em;font-weight:800;color:#8c5c54}.action-callout strong{font:500 15px/1.45 Arial,Helvetica,sans-serif;max-width:510px}.action-callout em{font-style:normal;font-size:10px;color:#7b4d46;align-self:end;white-space:nowrap}.action-callout:hover{background:#f5ebe8}
 .seal-has-document .inspection-stage{grid-template-columns:minmax(0,1.02fr) minmax(380px,.82fr)}.seal-has-document .document-zone{background:#eef0ec}.focused-evidence{scroll-margin-top:20px}.claim-value{max-width:680px}.source-quote{background:#f7faf7;padding:12px 14px 12px 18px;border-left:2px solid #73937e}.court-contact{background:#eef4ef;margin-left:-15px;margin-right:-15px;padding:16px 15px 18px;border-top:0}.court-contact h2{margin-top:8px}.verification-caveat{font-size:11px}
 @media(max-width:760px){.message-card-head{display:block;line-height:1.7}.message-sender{padding:18px 19px}.message-lines{padding:8px 19px 13px}.message-line{font-size:12px;padding:9px 0}.message-card .notice-end{margin:0 19px 18px}.action-callout{margin-top:10px;padding:11px 12px}.action-callout strong{font-size:12px}.action-callout em{display:none}.court-contact{margin-left:-8px;margin-right:-8px}}
+
+
+/* Mobile visual QA: stack the original message and evidence instead of covering the source. */
+@media(max-width:760px){
+ .inspection-top{display:grid;grid-template-columns:1fr;gap:14px;align-items:start}
+ .inspection-actions{width:100%;justify-content:space-between}
+ .inspection-actions select{max-width:min(230px,68vw)}
+ .inspection-stage{display:block}
+ .document-zone{height:auto;min-height:0;max-height:none;overflow:visible;padding:12px 12px 18px}
+ .document-paper{min-height:0;padding:22px 18px}
+ .evidence-rail{position:static;height:auto;overflow:visible;box-shadow:none;border-top:1px solid #b8c5ba;padding:16px 0 28px;margin-top:18px;background:transparent}
+ .evidence-rail>.zone-caption{padding:0 4px 12px}
+ .evidence-content{padding:0 4px}
+ .inspection-error{position:static;margin:12px 0}
+ .message-card{box-shadow:none}
+ .action-callout{margin-top:4px}
+ .focused-evidence{padding-top:18px}
+}
+@media(max-width:390px){
+ .document-zone{height:auto}
+ .evidence-rail{height:auto}
+ .inspection-actions select{max-width:215px}
+}
