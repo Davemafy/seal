@@ -32,6 +32,21 @@ jobs:
           path: test-results/*.png
           if-no-files-found: ignore
       - run: npm run build
+      - name: Wait for production alias
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          for attempt in $(seq 1 36); do
+            LIVE_SHA=$(curl -fsS https://seal-verify.vercel.app/api/version 2>/dev/null | node -pe "try{JSON.parse(require('fs').readFileSync(0,'utf8')).sha}catch(e){''}" || true)
+            echo "production sha: ${LIVE_SHA:-unavailable} / expected: $EXPECTED_SHA"
+            if [ "$LIVE_SHA" = "$EXPECTED_SHA" ]; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Production alias did not reach the commit under test within 3 minutes."
+          exit 1
       - name: Production image gate
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
