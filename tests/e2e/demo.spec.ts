@@ -18,3 +18,17 @@ test('demo connects each claim to an independent source and safe contact',async(
  await page.getByRole('button',{name:/New notice/}).click();
  await expect(page.getByRole('button',{name:/Try the demo notice/})).toBeVisible();
 });
+
+test('mobile review keeps the chosen claim and its evidence together',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/demo');
+ await page.getByRole('button',{name:'Check this notice'}).click();
+ await expect(page.getByText('9 claims checked')).toBeVisible({timeout:20000});
+ await page.getByRole('button',{name:/Show list/}).click();
+ await page.getByRole('button',{name:/05 Jury contact number/}).click();
+ await expect(page.locator('.claim-value')).toHaveText('(866) 555-0199');
+ await expect(page.locator('.focused-evidence .state-text')).toHaveText('MISMATCH');
+ await expect(page.locator('.focused-evidence .official-link')).toHaveAttribute('href',/riverside.courts.ca.gov/);
+ await page.getByRole('button',{name:/Show list/}).click();
+ await expect(page.locator('.claim-index-list')).toHaveClass(/mobile-open/);
+});
