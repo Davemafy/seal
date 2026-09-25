@@ -36,16 +36,16 @@ function expectedVerdict(name:string,c:Claim):Verdict{
 const fieldStats:Record<string,{correct:number,total:number}>={};
 const expected=(name:string)=>({
  court_name:name==='action-first jury message'?'Claimed sender: UNITED STATES DISTRICT COURT — DISTRICT OF CONNECTICUT':name==='degraded OCR text proxy'?'':name.includes('Connecticut sample')?'UNITED STATES DISTRICT COURT':'SUPERIOR COURT OF CALIFORNIA, COUNTY OF RIVERSIDE',
- juror_or_reference_number:name.includes('Connecticut sample')?'02-0140':name==='nonexistent private identifier'?'99999999':name==='degraded OCR text proxy'?'':'10472893',
+ juror_or_reference_number:name==='action-first jury message'?'':name.includes('Connecticut sample')?'02-0140':name==='nonexistent private identifier'?'99999999':name==='degraded OCR text proxy'?'':'10472893',
  phone_numbers:name==='action-first jury message'?'2035550199':name==='genuine Connecticut sample PDF'?'18663882430':name==='altered Connecticut sample status phone'?'12035550199':name==='degraded OCR text proxy'||name==='single field altered phone'?'8665550199':name==='unsupported jurisdiction'?'8665550199':name==='official-source conflict'?'7603426264':'9512755076',
  case_or_docket_number:'',
  delivery_method:name==='action-first jury message'?'text message':'',
- court_location:name.includes('Connecticut sample')?'450 Main Street':name==='degraded OCR text proxy'?'':name==='unsupported jurisdiction'?'12 Cedar Street, Northbridge':'Riverside Historic Courthouse, 4050 Main Street, Riverside, CA 92501',
- urls:name.includes('Connecticut sample')?'':name==='single field altered portal'?'rcvduty.com':name==='unsupported jurisdiction'||name==='degraded OCR text proxy'?'':'jurywest.riverside.courts.ca.gov',
+ court_location:name==='action-first jury message'?'':name.includes('Connecticut sample')?'450 Main Street':name==='degraded OCR text proxy'?'':name==='unsupported jurisdiction'?'12 Cedar Street, Northbridge':'Riverside Historic Courthouse, 4050 Main Street, Riverside, CA 92501',
+ urls:name==='action-first jury message'||name.includes('Connecticut sample')?'':name==='single field altered portal'?'rcvduty.com':name==='unsupported jurisdiction'||name==='degraded OCR text proxy'?'':'jurywest.riverside.courts.ca.gov',
  emails:'',
  payment_amount:name==='action-first jury message'?'$750':name==='generic paper fee'?'$50':'',
  information_requests:name==='action-first jury message'?'TEXT MESSAGE: Reply with your Social Security number and date of birth to clear the warrant.':'',
- reporting_date:name.includes('Connecticut sample')?'March 28(Tue.), May 3(Wed.) & May 4(Thu.), 2017':name==='genuine court public notice excerpt'||name==='degraded OCR text proxy'||name==='degraded photo OCR'?'':'April 22, 2027'
+ reporting_date:name==='action-first jury message'?'':name.includes('Connecticut sample')?'March 28(Tue.), May 3(Wed.) & May 4(Thu.), 2017':name==='genuine court public notice excerpt'||name==='degraded OCR text proxy'||name==='degraded photo OCR'?'':'April 22, 2027'
 });
 for(const item of cases){const e=fallbackExtract(item.text);const tokens='tokens' in item?item.tokens||[]:[];if(tokens.length){e.juror_or_reference_number=recoverLabeledJurorNumber(tokens);e.reporting_date=recoverLabeledReportingDate(tokens)}const c=claimsFromExtraction(e,item.text,tokens),v=await verifyClaims(c,e.court_name,'SNAPSHOT',item.text.match(/\bdistrict of connecticut\b/i)?.[0]||'');const reds=v.results.filter(r=>r.verdict==='MISMATCH').length;const exact=v.results.every(r=>r.verdict===expectedVerdict(item.name,c.find(x=>x.id===r.claim_id)!));total+=v.results.length;unknown+=v.results.filter(r=>r.verdict==='COULD_NOT_VERIFY').length;mismatch+=reds;trueMismatch+=Math.min(reds,item.expectedMismatch);falseMismatch+=Math.max(0,reds-item.expectedMismatch);const ground=expected(item.name);
  if(item.name==='flagship mixed notice'){ground.phone_numbers='8665550199';ground.urls='rcvduty.com';ground.emails='jurysupport@riverside-court.org';ground.payment_amount='$50'}
