@@ -43,7 +43,7 @@ export function extractActionGraph(text:string):ActionNode[]{
   if(phone){target_type='phone';target_value=phone}
   else if(url){target_type='url';target_value=url}
   else if(money){target_type='money';target_value=money}
-  else if(verb==='scan'){target_type='qr'}
+  else if(verb==='scan'&&/\bqr\b/i.test(source)){target_type='qr'}
   else if(kind==='disclose'){target_type='information';target_value=source.slice((match.index||0)+match[0].length).replace(/^[\s:,-]+/,'').trim()}
   else if(kind==='appear'){
    const date=source.match(/\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2}(?:,\s*\d{4})?/i)?.[0]||'';
@@ -135,7 +135,7 @@ function claimTypeForAction(action:ActionNode):ClaimType{
 function labelForAction(action:ActionNode){
  if(action.kind==='pay')return 'Requested payment';
  if(action.kind==='contact')return action.target_type==='phone'?'Requested callback':'Requested contact';
- if(action.kind==='navigate')return action.target_type==='url'?'Requested link':action.target_type==='qr'?'Requested scan':'Requested navigation';
+ if(action.kind==='navigate')return action.target_type==='url'?'Requested link':action.verb==='scan'?'Requested scan':'Requested navigation';
  if(action.kind==='disclose')return 'Requested information';
  if(action.kind==='appear')return 'Requested appearance';
  return 'Requested action';
