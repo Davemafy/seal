@@ -8,7 +8,7 @@ export function fallbackExtract(text:string):Extraction {
  e.case_or_docket_number=lines.find(s=>/\b(?:case|docket)\s*(?:number|no\.?|#)\s*[:#]?\s*[\w-]{4,}/i.test(s))?.match(/(?:number|no\.?|#)\s*[:#]?\s*([\w-]{4,})/i)?.[1]||'';
  e.phone_numbers=[...new Set(text.match(/(?:\+1[\s.-]?)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}/g)||[])];
  e.emails=[...new Set(text.match(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi)||[])];
- e.urls=[...new Set(text.match(/(?:https?:\/\/)?(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/[\w./?=&%-]*)?/gi)||[])].filter(s=>!e.emails.some(email=>email.includes(s))&&!/riverside\.courts\.ca\.gov/i.test(s) || /(?:https?:\/\/)?jurywest\.riverside\.courts\.ca\.gov/i.test(s));
+ e.urls=[...new Set(text.match(/(?:https?:\/\/)?(?:[a-z0-9-]+\.)+(?:gov|com|org|edu|net|mil|us|ca|io|uk|co|info|int)\b(?:\/[\w./?=&%-]*)?/gi)||[])].filter(s=>!e.emails.some(email=>email.includes(s))&&!/riverside\.courts\.ca\.gov/i.test(s) || /(?:https?:\/\/)?jurywest\.riverside\.courts\.ca\.gov/i.test(s));
  e.reporting_date=lines.find(s=>/report(?:ing)?\s+date\s*:/i.test(s))?.replace(/^.*?report(?:ing)?\s+date\s*:\s*/i,'')||'';
  const pay=lines.find(s=>/\$\s*\d+.*(?:pay|payment|confirm|attendance)|(?:pay|payment).*\$\s*\d+/i.test(s));
  if(pay){e.payment_demand.amount=pay.match(/\$\s*\d+(?:\.\d{2})?/)?.[0]||'';e.payment_demand.method=/payment app/i.test(pay)?'payment app':/gift card/i.test(pay)?'gift card':/cryptocurrency/i.test(pay)?'cryptocurrency':/wire transfer/i.test(pay)?'wire transfer':''; e.payment_demand.url=e.urls.find(u=>pay.includes(u))||'';}
