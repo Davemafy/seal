@@ -31,16 +31,16 @@ function decisionCopy(verification:Verification|null){
  const mismatches=verification.results.filter(result=>result.verdict==='MISMATCH').length;
  const matches=verification.results.filter(result=>result.verdict==='MATCH').length;
  if(mismatches)return {
-  title:'Some details conflict with official sources.',
-  summary:'Review the highlighted details and use the official route below for your next step.'
+  title:'Some details do not match court sources.',
+  summary:'See which parts conflict, then use the court contact shown below to check what to do next.'
  };
  if(matches)return {
   title:'Some details match official sources.',
-  summary:'You can review each match below. Use an independently found official channel for any next step.'
+  summary:'See what matched below. A matching detail alone does not confirm who sent the message.'
  };
  return {
-  title:'These details need a closer check.',
-  summary:'SEAL could not confirm them from the sources available. The record below shows what was checked.'
+  title:'We could not confirm these details.',
+  summary:'See what was checked below, then contact the court through its own website if you need to act.'
  };
 }
 
@@ -251,44 +251,43 @@ async function upload(uploaded:File){
   <aside className="workspace-rail" aria-label="Workspace">
    <Link href="/" className="rail-brand">SEAL<span>®</span></Link>
    <div className="rail-group-label">WORKSPACE</div>
-   <button className={`rail-item ${!text?'is-current':''}`} type="button" onClick={clear}><span className="rail-item-mark" aria-hidden="true">+</span> New check</button>
-   <button className="rail-item" type="button" disabled={!hydrated} onClick={()=>chooseFixture('action-message-demo')}><span className="rail-item-mark" aria-hidden="true">↗</span> Explore example</button>
+   <button className={`rail-item ${!text?'is-current':''}`} type="button" onClick={clear}>Check a message</button>
+   <button className="rail-item" type="button" disabled={!hydrated} onClick={()=>chooseFixture('action-message-demo')}>See an example</button>
    <div className="rail-spacer"/>
-   <div className="rail-foot"><strong>Source-led review</strong><span>Each finding links back to what SEAL checked.</span></div>
+   <div className="rail-foot"><strong>Check the source</strong><span>Open the court pages behind each finding.</span></div>
   </aside>
   <header className="seal-nav">
    <Link href="/" className="mobile-brand">SEAL</Link>
-   <div className="seal-nav-note">Workspace <span aria-hidden="true">/</span> {text?'Message review':'New check'}</div>
-   {text?<button className="nav-action" type="button" onClick={clear}>Start another check</button>:<div className="nav-trust">Court message review</div>}
+   <div className="seal-nav-note">SEAL <span aria-hidden="true">/</span> {text?'Your review':'Check a message'}</div>
+   {text?<button className="nav-action" type="button" onClick={clear}>Check another message</button>:<div className="nav-trust">Court message review</div>}
   </header>
 
   {!text?
    <section className="entry-shell">
    <div className="entry-copy">
-     <p className="entry-kicker">NEW CHECK</p>
-     <h1>Check a court message.</h1>
-     <p>Add a notice, screenshot, or message. SEAL shows the actions it asks for, checks details against available official sources, and helps you find a clearer next step.</p>
+     <p className="entry-kicker">COURT MESSAGE REVIEW</p>
+     <h1>Check a court message</h1>
+     <p>Received a notice, email, or text? Add it here to see what it asks you to do, what court sources say, and where to confirm the rest.</p>
     </div>
 
     <div className="intake">
-     <div className="intake-heading"><strong>Add your message</strong><span>Choose a file or paste its text</span></div>
+     <div className="intake-heading"><strong>What did you receive?</strong></div>
      <button className={`upload-row ${dragging?'is-dragging':''}`} type="button" disabled={busy||!hydrated} onClick={()=>input.current?.click()}
       onDragOver={event=>{if(event.dataTransfer.types.includes('Files')){event.preventDefault();setDragging(true)}}}
       onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
       onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
-      <span className="upload-plus" aria-hidden="true">+</span>
-      <span><strong>{busy?status:'Drop a file here or browse'}</strong><small>PNG, JPG, or PDF · The file stays in your browser</small></span>
-      <span className="upload-browse">Choose file</span>
+      <span><strong>{busy?status:'Upload a notice or screenshot'}</strong><small>PDF, PNG, or JPG · Your file stays in this browser</small></span>
+      <span className="upload-browse">Browse files</span>
      </button>
 
-     <div className="paste-divider"><span>Or paste text</span></div>
+     <div className="paste-divider"><span>Have an email or text instead?</span></div>
      <label className="paste-field">
-      <span className="field-label">Message text</span>
-      <textarea aria-label="Paste the court message" value={draft} onChange={event=>setDraft(event.target.value)} placeholder="Paste the email, text message, or notice here..."/>
+      <span className="field-label">Paste the message</span>
+      <textarea aria-label="Paste the court message" value={draft} onChange={event=>setDraft(event.target.value)} placeholder="Paste the message exactly as you received it"/>
      </label>
 
      <div className="intake-actions">
-      <button className="check-message" type="button" disabled={!draft.trim()||!hydrated} onClick={submitPaste}>Check pasted text <span aria-hidden="true">→</span></button>
+      <button className="check-message" type="button" disabled={!draft.trim()||!hydrated} onClick={submitPaste}>Check this message</button>
      </div>
 
      {error&&<div role="alert" className="inspection-error">{error}</div>}
@@ -298,12 +297,12 @@ async function upload(uploaded:File){
       <p>Your uploaded file does not leave the browser. Extracted text can be sent to the SEAL server and, when configured, to Groq for claim structuring. SEAL does not store the uploaded file or extracted claims.</p>
      </details>
     </div>
-    <aside className="entry-guide" aria-label="What you will get">
-     <p className="guide-heading">What you’ll get</p>
-     <div><span>01</span><p><strong>Requested actions</strong><small>See what the message is asking you to do.</small></p></div>
-     <div><span>02</span><p><strong>Source checks</strong><small>Compare details with the official sources available to SEAL.</small></p></div>
-     <div><span>03</span><p><strong>A way forward</strong><small>Find an independent route to check the next step.</small></p></div>
-     <p className="guide-limit">SEAL checks claims. It cannot authenticate a document or a sender.</p>
+    <aside className="entry-guide" aria-label="Questions SEAL can help answer">
+     <p className="guide-heading">Questions this can help answer</p>
+     <div><p><strong>What am I being asked to do?</strong><small>See the requests in the message together.</small></p></div>
+     <div><p><strong>What can the court confirm?</strong><small>Check supported details against court sources.</small></p></div>
+     <div><p><strong>How do I check the next step?</strong><small>When available, find court contact outside the message.</small></p></div>
+     <p className="guide-limit">A source match cannot prove who sent a message.</p>
     </aside>
    </section>
    :
@@ -311,7 +310,7 @@ async function upload(uploaded:File){
     <div className="review-head">
      <div>
       <p className="review-context">{isDemo?'EXAMPLE CHECK':file?.kind==='pdf'?'PDF DOCUMENT':file?'IMAGE OR SCREENSHOT':'PASTED MESSAGE'}</p>
-      <h1>{isActionDemo?'Jury-duty message example':isDemo?'Court notice example':'Message review'}</h1>
+      <h1>{isActionDemo?'Jury-duty message example':isDemo?'Court notice example':'Your message'}</h1>
      </div>
      <div className="review-head-actions">
       {isDemo&&<select aria-label="Choose demo fixture" value={fixture} onChange={event=>chooseFixture(event.target.value as FixtureKey)}>
@@ -349,7 +348,7 @@ async function upload(uploaded:File){
        </div>
        :
        <div className="decision">
-        <p className="decision-label">What to do now</p>
+        <p className="decision-label">What we found</p>
         <h2>{decision.title}</h2>
         <p className="decision-summary">{decision.summary}</p>
         {verification.safe_action&&<a className="safe-primary" href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>}
@@ -358,7 +357,7 @@ async function upload(uploaded:File){
          <span>What the message asks</span>
          <strong>{actionSummary}</strong>
         </button>}
-        <div className="review-progress"><span>{claims.length} claims checked</span><span>{count('MISMATCH')} contradict · {count('MATCH')} match · {count('COULD_NOT_VERIFY')} unverified</span></div>
+        <div className="review-progress"><span>{claims.length} details checked</span><span>{count('MISMATCH')} conflict · {count('MATCH')} match · {count('COULD_NOT_VERIFY')} could not verify</span></div>
        </div>}
      </div>
 
@@ -423,7 +422,7 @@ async function upload(uploaded:File){
 
     {ready&&verification?.safe_action&&<section className="source-resolution" id="source-checks" aria-label="Safe next step">
      <div className="section-heading evidence-heading">
-      <h2>What the independent sources change</h2>
+      <h2>What the court sources say</h2>
       <p>{verification.safe_action.title}</p>
      </div>
 
@@ -451,7 +450,7 @@ async function upload(uploaded:File){
       </div>
      </div>
 
-     <p className="resolution-disclaimer">This is not an authenticity ruling. It is a safer route based on independent official sources.</p>
+     <p className="resolution-disclaimer">These sources cannot confirm who sent the message.</p>
     </section>}
 
     {ready&&verification?.contact&&<section className="contact-section" aria-label="Independent court contact">
@@ -473,8 +472,8 @@ async function upload(uploaded:File){
 
     {ready&&<section className="record-section" id="checked-details">
      <div className="section-heading record-heading">
-      <h2>Full verification record</h2>
-      <p>Select a row to inspect the exact source text, result, and supporting evidence.</p>
+      <h2>What was checked</h2>
+      <p>Choose a detail to see the message text alongside the court source.</p>
      </div>
 
      <div className="record-layout">
@@ -544,7 +543,6 @@ async function upload(uploaded:File){
 
   <footer className="seal-footer">
    <span>SEAL is not affiliated with any court.</span>
-   <span>Review the message, the sources, and your next step.</span>
   </footer>
  </main>;
 }
