@@ -38,7 +38,7 @@ jobs:
           EXPECTED_SHA: ${{ github.sha }}
         run: |
           for attempt in $(seq 1 36); do
-            LIVE_SHA=$(curl -fsS https://seal-verify.vercel.app/api/version 2>/dev/null | node -pe "try{JSON.parse(require('fs').readFileSync(0,'utf8')).sha}catch(e){''}" || true)
+            LIVE_SHA=$(curl -fsS https://seal-verify.vercel.app/api/version 2>/dev/null | node -pe "JSON.parse(require('fs').readFileSync(0,'utf8')).sha" 2>/dev/null || true)
             echo "production sha: ${LIVE_SHA:-unavailable} / expected: $EXPECTED_SHA"
             if [ "$LIVE_SHA" = "$EXPECTED_SHA" ]; then
               exit 0
