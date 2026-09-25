@@ -64,7 +64,9 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
    if(!found.length)throw new Error('We couldn’t read enough of this message to check it reliably. Try a clearer screenshot or paste the message text.');
    setClaims(found);setStatus('Checking court sources');
    const verifiable=found.filter(claim=>claim.verification_eligible!==false);
-   const response=await fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({claims:verifiable,court_name:extraction.court_name,jurisdiction_hint:'',mode:sourceMode})});
+   const courtClaim=found.find(claim=>claim.type==='court');
+   const routingCourt=courtClaim?.verification_eligible===false?'':extraction.court_name;
+   const response=await fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({claims:verifiable,court_name:routingCourt,jurisdiction_hint:'',mode:sourceMode})});
    if(!response.ok)throw new Error('The source check could not finish. Try again.');
    const checkedServer=await response.json() as Verification;
    const checkedById=new Map(checkedServer.results.map(result=>[result.claim_id,result]));
