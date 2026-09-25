@@ -135,19 +135,21 @@
 .action-callout span{color:var(--muted);font-size:14px}
 .action-callout strong{font-size:18px;font-weight:500}
 .review-progress{display:flex;justify-content:space-between;gap:12px;margin-top:16px;color:var(--muted);font-size:12px}
-.requested-actions,.source-resolution,.contact-section,.record-section{padding:64px 0;border-top:1px solid var(--line)}
+.requested-actions,.source-resolution,.contact-section,.record-section{padding:64px 0 0;border-top:0}
 .section-heading{display:grid;grid-template-columns:minmax(220px,.46fr) minmax(0,1fr);gap:64px;margin-bottom:32px}
 .section-heading h2{margin:0;font-size:36px;line-height:44px;font-weight:700}
 .section-heading>p{max-width:600px;margin:8px 0 0;color:var(--muted);font-size:16px;line-height:24px}
-.action-list,.source-signals{margin-left:calc(32% + 16px)}
+.action-list,.source-signals{margin-left:calc(32% + 16px);border-radius:8px;overflow:hidden;background:var(--secondary)}
 .action-row{width:100%;display:grid;grid-template-columns:minmax(110px,.3fr) minmax(0,1fr) auto;gap:16px;align-items:start;padding:18px 16px;border:0;border-bottom:1px solid var(--line);background:#fff;color:#000;text-align:left}
+.action-row:last-child{border-bottom:0}
 .action-row:hover,.index-item:hover{background:var(--secondary)}
 .action-verb{font-size:20px;line-height:28px;font-weight:500}
 .action-source{font-size:14px;line-height:20px;color:#4b4b4b}
 .action-state,.index-state,.state-text{font-size:14px;font-weight:500;white-space:nowrap}
 .mismatch{color:var(--conflict)}.match{color:var(--safe)}.could_not_verify{color:var(--unknown)}
-.source-signals{border-top:1px solid var(--line)}
-.source-signal{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.4fr);gap:32px;padding:24px 0;border-bottom:1px solid var(--line)}
+.source-signals{border-top:0}
+.source-signal{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.4fr);gap:32px;padding:24px 16px;border-bottom:1px solid var(--line);background:#fff}
+.source-signal:last-child{border-bottom:0}
 .signal-kind{margin:0 0 8px;color:var(--muted);font-size:14px}
 .source-signal h3{margin:0;font-size:24px;line-height:32px;font-weight:700}
 .source-signal p{margin:12px 0 0;color:#4b4b4b;font-size:16px;line-height:24px}
@@ -168,26 +170,29 @@
 .contact-phone{display:inline-block;color:#000;font-size:36px;line-height:44px;font-weight:700;text-decoration:none}
 .contact-actions{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:16px}
 .contact-actions button{min-height:44px;padding:8px 16px;border:0;border-radius:8px;background:var(--secondary);font-size:14px}
-.record-layout{display:grid;grid-template-columns:minmax(300px,.55fr) minmax(0,1fr);gap:64px}
-.index-title,.focus-number{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px;border-bottom:1px solid var(--line);font-size:14px;font-weight:500}
+.record-layout{display:grid;grid-template-columns:minmax(300px,.55fr) minmax(0,1fr);gap:36px;align-items:start}
+.claim-index,.focused-evidence{border-radius:8px;overflow:hidden;background:var(--secondary)}
+.index-title,.focus-number{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px;border-bottom:1px solid var(--line);font-size:14px;font-weight:500;background:#fff}
 .mobile-index-toggle{display:none;padding:8px 12px;border:0;border-radius:8px;background:var(--secondary);font-size:14px}
 .index-item{width:100%;min-height:64px;display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px;border:0;border-bottom:1px solid var(--line);background:#fff;text-align:left;font-size:14px}
+.index-item:last-child{border-bottom:0}
 .index-item.selected{background:var(--secondary);box-shadow:inset 4px 0 #000}
 .index-ordinal,.from-label,.source-label,.source-timestamp{color:var(--muted);font-size:14px}
 .index-claim{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.focused-evidence{min-width:0}
+.focused-evidence{min-width:0;padding:0 16px 20px}
 .from-label,.source-label{margin-top:24px}
 .claim-value{margin-top:8px;font-size:28px;line-height:36px;font-weight:700;overflow-wrap:anywhere}
 .exact-source{margin:16px 0 24px;padding:16px;border-radius:8px;background:var(--secondary);font-size:16px;line-height:24px}
-.focus-rule{height:1px;background:var(--line)}
+.focus-rule{display:none}
 .source-name{margin-top:8px;font-size:16px;font-weight:500}
 .source-quote{margin:12px 0;font-size:16px;line-height:24px;max-height:144px;overflow:auto}
-.why-line{margin-top:20px;padding-top:16px;border-top:1px solid var(--line);font-size:14px;line-height:20px}
+.why-line{margin-top:20px;padding:16px;border-radius:8px;background:#fff;font-size:14px;line-height:20px}
 .no-source{padding:16px 0;font-size:16px;line-height:24px}
 .additional-sources{margin-top:16px;font-size:14px}
-.additional-sources>div{padding:16px 0;border-bottom:1px solid var(--line)}
+.additional-sources>div{padding:16px;background:#fff;border-bottom:1px solid var(--line)}
+.additional-sources>div:last-child{border-bottom:0}
 .verification-caveat{margin-top:32px}
-.technical-record{margin-top:24px;padding:16px 0;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+.technical-record{margin-top:24px;padding:16px;border-radius:8px;background:var(--secondary);color:var(--muted);font-size:14px}
 .technical-record summary{display:flex;justify-content:space-between}
 .technical-record p{overflow-wrap:anywhere}
 .replay-button{margin-top:16px}
@@ -235,8 +240,8 @@
  .message-card-head{flex-direction:column;gap:2px}
  .precheck h2,.decision h2{font-size:28px;line-height:36px}
  .review-progress{flex-direction:column;gap:4px}
- .requested-actions,.source-resolution,.contact-section,.record-section{padding:48px 0}
- .section-heading{display:block}
+ .requested-actions,.source-resolution,.contact-section,.record-section{padding:40px 0 0}
+ .section-heading{display:block;margin-bottom:24px}
  .section-heading h2{font-size:28px;line-height:36px}
  .section-heading>p{margin-top:12px;font-size:14px;line-height:20px}
  .action-row{grid-template-columns:1fr auto;gap:8px}
@@ -244,6 +249,9 @@
  .safe-route{grid-template-columns:1fr;gap:24px;padding:24px 16px}
  .safe-route h2{font-size:28px;line-height:36px}
  .court-contact,.record-layout{grid-template-columns:1fr;gap:24px}
+ .action-list,.source-signals{border-radius:8px}
+ .record-layout{gap:16px}
+ .focused-evidence{padding:0 16px 20px}
  .contact-phone{font-size:28px;line-height:36px}
  .mobile-index-toggle{display:block}
  .claim-index-list{display:none}
