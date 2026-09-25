@@ -160,7 +160,10 @@ async function upload(uploaded:File){
    setExtractionMode(extractor);
 
    const found=claimsFromExtraction(extraction,sourceText,sourceFile?.tokens||[]);
-   if(!found.length)throw new Error('We couldn’t read enough of this message to check it reliably. Try a clearer screenshot or paste the message text.');
+   if(!found.length){
+    if(sourceFile&&sourceText.trim().length>=40)throw new Error('We could read text in this image, but SEAL couldn’t find a court message or notice to check. Try another image or paste the message text.');
+    throw new Error('We couldn’t read enough of this message to check it reliably. Try a clearer screenshot or paste the message text.');
+   }
 
    setClaims(found);
    setStatus('Checking independent sources');
