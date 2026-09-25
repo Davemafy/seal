@@ -26,11 +26,16 @@ async function ocr(image:HTMLImageElement|HTMLCanvasElement):Promise<Omit<Browse
   const r=await worker.recognize(image,{}, {text:true,blocks:true});const width=('naturalWidth' in image?image.naturalWidth:image.width)||1,height=('naturalHeight' in image?image.naturalHeight:image.height)||1;
   const tokens:Token[]=[];const safeLines:string[]=[];const unreadableFields:UnreadableField[]=[];
   for(const block of r.data.blocks||[])for(const paragraph of block.paragraphs||[])for(const line of paragraph.lines||[]){
+   const words=line.words||[],rawLine=words.map(word=>word.text).join(' ');
+   const phonePattern=/(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}/;
+   const digitWords=words.filter(word=>/\d/.test(word.text));
+   const lowPhone=phonePattern.test(rawLine)&&digitWords.some(word=>Number(word.confidence||0)<FIELD_CONFIDENCE);
+   if(lowPhone&&digitWords.length){const x0=Math.min(...digitWords.map(word=>word.bbox.x0)),y0=Math.min(...digitWords.map(word=>word.bbox.y0)),x1=Math.max(...digitWords.map(word=>word.bbox.x1)),y1=Math.max(...digitWords.map(word=>word.bbox.y1));unreadableFields.push({type:'phone',label:'Unreadable phone number',page:1,source_bbox:{x:x0/width,y:y0/height,width:(x1-x0)/width,height:(y1-y0)/height}});}
    const kept:string[]=[];
-   for(const word of line.words||[]){
-    const b=word.bbox,confidence=Number(word.confidence||0),digits=word.text.replace(/\D/g,'');
-    if(confidence>=FIELD_CONFIDENCE){kept.push(word.text);tokens.push({page:1,text:word.text,x:b.x0/width,y:b.y0/height,width:(b.x1-b.x0)/width,height:(b.y1-b.y0)/height,start:0,end:0,confidence});}
-    else if(digits.length>=10&&digits.length<=11){unreadableFields.push({type:'phone',label:'Unreadable phone number',page:1,source_bbox:{x:b.x0/width,y:b.y0/height,width:(b.x1-b.x0)/width,height:(b.y1-b.y0)/height}});}
+   for(const word of words){
+    const box=word.bbox,confidence=Number(word.confidence||0);
+    if(lowPhone&&/\d/.test(word.text))continue;
+    if(confidence>=FIELD_CONFIDENCE){kept.push(word.text);tokens.push({page:1,text:word.text,x:box.x0/width,y:box.y0/height,width:(box.x1-box.x0)/width,height:(box.y1-box.y0)/height,start:0,end:0,confidence});}
    }
    if(kept.length)safeLines.push(kept.join(' '));
   }
