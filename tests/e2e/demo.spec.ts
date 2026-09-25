@@ -66,7 +66,7 @@ test('public Connecticut sample corroborates public details and abstains on priv
  await expect(page.locator('.index-state.mismatch')).toHaveCount(0);
  await expect(page.locator('.index-state.match')).toHaveCount(3);
  await expect(page.locator('.index-state.could_not_verify').first()).toBeVisible();
- await page.locator('.index-item').filter({hasText:'Juror reference'}).click();
+ await page.locator('.index-item').filter({hasText:/Juror reference|Reference number/}).first().click();
  await expect(page.locator('.focused-evidence .state-text')).toHaveText('COULD NOT VERIFY');
  await page.locator('.index-item').filter({hasText:'Requested callback'}).click();
  await expect(page.locator('.claim-value')).toHaveText('1-866-388-2430');
