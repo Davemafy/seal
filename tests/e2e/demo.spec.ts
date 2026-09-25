@@ -32,3 +32,16 @@ test('mobile review keeps the chosen claim and its evidence together',async({pag
  await page.getByRole('button',{name:/Show list/}).click();
  await expect(page.locator('.claim-index-list')).toHaveClass(/mobile-open/);
 });
+
+test('public sample summons uploads without a fabricated mismatch or URL',async({page})=>{
+ await page.goto('/');
+ await page.locator('input[type="file"]').setInputFiles('tests/fixtures/connecticut-sample-jury-summons.pdf');
+ await expect(page.getByRole('heading',{name:'Uploaded notice'})).toBeVisible({timeout:20000});
+ await expect(page.getByText('Page 1 of 1')).toBeVisible();
+ await page.getByRole('button',{name:'Check this notice'}).click();
+ await expect(page.getByText('3 claims checked')).toBeVisible({timeout:30000});
+ await expect(page.getByText('NO JURY-SOURCE COVERAGE')).toBeVisible();
+ await expect(page.locator('.index-state.mismatch')).toHaveCount(0);
+ await expect(page.locator('.index-item')).toHaveCount(3);
+ await expect(page.getByText('g.AREyOUASALARIEDEMPLoYEE')).toHaveCount(0);
+});
