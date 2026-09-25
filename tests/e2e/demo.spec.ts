@@ -12,7 +12,7 @@ test('action-first demo connects requested actions to official guidance and a sa
  await expect(page.locator('.focused-evidence .state-text')).toHaveText('MISMATCH');
  await expect(page.locator('.focused-evidence .official-link')).toHaveAttribute('href',/consumer\.ftc\.gov/);
  await expect(page.locator('.contact-phone')).toHaveAttribute('href','tel:800-827-8224');
- await expect(page.getByText(/not authenticate this message/i)).toBeVisible();
+ await expect(page.getByText(/not authenticate this message/i).first()).toBeVisible();
  await page.screenshot({path:'test-results/desktop-action.png',fullPage:true});
 });
 
