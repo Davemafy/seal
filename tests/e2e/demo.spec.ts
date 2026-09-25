@@ -19,6 +19,7 @@ test('action-first demo connects requested actions to official guidance and a sa
 test('landing supports paste as a first-class input',async({page})=>{
  await page.goto('/');
  await expect(page.getByRole('heading',{name:/Before you call/i})).toBeVisible();
+ await page.screenshot({path:'test-results/landing-desktop.png',fullPage:true});
  await page.getByLabel('Paste the court message').fill(`UNITED STATES DISTRICT COURT — DISTRICT OF CONNECTICUT
 TEXT MESSAGE: You missed jury duty. To avoid arrest, pay $400 using a gift card.
 Call 203-555-0188 for payment instructions.`);
@@ -32,6 +33,9 @@ Call 203-555-0188 for payment instructions.`);
 
 test('mobile review keeps action, verdict, evidence, and contact legible',async({page})=>{
  await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await expect(page.getByRole('heading',{name:/Before you call/i})).toBeVisible();
+ await page.screenshot({path:'test-results/landing-mobile.png',fullPage:true});
  await page.goto('/demo');
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByText(/claims checked/)).toBeVisible({timeout:20000});
