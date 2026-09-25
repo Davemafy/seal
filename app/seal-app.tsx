@@ -373,7 +373,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
      </div>
     </div>
 
-    {ready&&requestedActions.length>0&&<section className="requested-actions" aria-labelledby="requested-actions-title">
+    {ready&&requestedActions.length>0&&<section className={`requested-actions ${requestedActions.length===1?'single-action':''}`} aria-labelledby="requested-actions-title">
      <div className="section-heading">
       <h2 id="requested-actions-title">What the message asks you to do</h2>
       <p>These are extracted requests, not instructions from SEAL.</p>
