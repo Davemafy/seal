@@ -1,4 +1,11 @@
 export const fixtures={
+ 'action-message-demo':{title:'Connecticut / suspicious message',text:`DEMO / SYNTHETIC MESSAGE
+Claimed sender: UNITED STATES DISTRICT COURT — DISTRICT OF CONNECTICUT
+You failed to appear for federal jury duty.
+TEXT MESSAGE: To avoid arrest, pay $750 today using Cash App.
+Call 203-555-0199 immediately for payment instructions.
+Reply with your Social Security number and date of birth to clear the warrant.
+This synthetic example is based on published jury-scam patterns. It is not a real person's message.`},
  'riverside-mismatch-demo':{title:'Riverside / mixed evidence',text:`DEMO / FICTIONAL NOTICE
 SUPERIOR COURT OF CALIFORNIA, COUNTY OF RIVERSIDE
 Riverside Historic Courthouse, 4050 Main Street, Riverside, CA 92501
