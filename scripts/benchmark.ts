@@ -8,7 +8,9 @@ const cases=[
  {name:'unmodified consistent fictional fixture',text:fixtures['riverside-consistent-demo'].text,expectedMismatch:0},
  {name:'genuine court public notice excerpt',text:'The Superior Court of California, County of Riverside is warning residents about a reported jury duty scam involving a caller falsely claiming that an individual missed jury service and has an outstanding warrant.',expectedMismatch:0},
  {name:'genuine Connecticut sample PDF',text:sampleText,expectedMismatch:0,tokens:sampleTokens},
- {name:'altered Connecticut sample status phone',text:sampleText.replace('1-866-388-2430','1-203-555-0199'),expectedMismatch:1,tokens:sampleTokens.map(token=>({...token,text:token.text.replace('1-866-388-2430','1-203-555-0199')}))},
+ // PDF editors often append replacement text at the end of a content stream;
+ // geometry, rather than stream order, must connect it to the printed label.
+ {name:'altered Connecticut sample status phone',text:sampleText.replace('1-866-388-2430','')+'\n1-203-555-0199',expectedMismatch:1,tokens:[...sampleTokens.filter(token=>token.text!=='1-866-388-2430'),...sampleTokens.filter(token=>token.text==='1-866-388-2430').map(token=>({...token,text:'1-203-555-0199'}))]},
  {name:'single field altered phone',text:fixtures['riverside-consistent-demo'].text.replace('951-275-5076','(866) 555-0199'),expectedMismatch:1},
  {name:'single field altered portal',text:fixtures['riverside-consistent-demo'].text.replace('jurywest.riverside.courts.ca.gov','rcvduty.com'),expectedMismatch:1},
  {name:'nonexistent private identifier',text:fixtures['riverside-consistent-demo'].text.replace('10472893','99999999'),expectedMismatch:0},
