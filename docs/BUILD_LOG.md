@@ -132,3 +132,14 @@ New behavior:
 The decisive-verdict law is unchanged: every MISMATCH still requires direct official evidence. Known-pattern signals are separate from claim verdicts and never authenticate or de-authenticate the notice by themselves.
 
 Automatic Git deployments remain disabled. This batch is validated in GitHub CI before any production action.
+
+
+### Final presentation freeze
+
+No architecture or evidence-model changes. This pass only removes presentation defects exposed by the real Facebook notice:
+- Virginia authority claims display as canonical `Va. Code § …` values while preserving the raw OCR source line as provenance.
+- The collapsed technical record deduplicates evidence by source URL instead of repeating the same official source through claim, signal, and safe-action lanes.
+- Technical status now distinguishes the court resolver from the cross-source layer: `Court resolver: unavailable · Source intelligence: active` rather than the misleading `Resolver: unsupported`.
+- The number of authority conflicts remains evidence-driven; SEAL reports only the citations OCR recovered confidently enough to check.
+
+This is the presentation freeze. CI/browser regression is the final release gate; no further product expansion is planned in this batch.

@@ -237,8 +237,14 @@ export function claimsFromExtraction(e:Extraction,text:string,tokens:Token[]=[])
  add('reporting_date','Reporting date',e.reporting_date);
  add('docket','Case docket',e.case_or_docket_number);
  for(const citation of extractAuthorityCitations(text)){
-  add('authority','Cited authority',citation.raw,citation.context,undefined,citation.raw);
-  const created=result[result.length-1];if(created)created.normalization={section:citation.section,jurisdiction:citation.jurisdiction};
+  const display=citation.jurisdiction==='Virginia'?`Va. Code § ${citation.section}`:citation.raw;
+  add('authority','Cited authority',display,citation.context,undefined,citation.raw);
+  const created=result[result.length-1];
+  if(created){
+   created.normalization={section:citation.section,jurisdiction:citation.jurisdiction};
+   created.exact_source_text=text.split(/\n/).find(line=>line.includes(citation.raw))?.trim()||citation.raw;
+   created.context=citation.context;
+  }
  }
 
  const actions=extractActionGraph(text,tokens),consumedPhones=new Set<string>(),consumedUrls=new Set<string>();

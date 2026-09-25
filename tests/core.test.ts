@@ -235,11 +235,20 @@ describe('public-source intelligence layer',()=>{
   '2. Appear before the Court at the scheduled hearing date.',
   'SCAN TO PAY'
  ].join('\n');
- it('extracts explicit legal authorities as first-class claims',()=>{
+ it('extracts explicit legal authorities as first-class claims with clean display values',()=>{
   const citations=extractAuthorityCitations(notice);
   expect(citations.map(c=>c.section)).toEqual(['46.2-1229','46.2-862','46.2-882']);
   const claims=claimsFromExtraction(fallbackExtract(notice),notice);
-  expect(claims.filter(c=>c.type==='authority')).toHaveLength(3);
+  const authority=claims.filter(c=>c.type==='authority');
+  expect(authority).toHaveLength(3);
+  expect(authority.map(c=>c.value)).toEqual(['Va. Code § 46.2-1229','Va. Code § 46.2-862','Va. Code § 46.2-882']);
+  expect(authority[1].exact_source_text).toContain('Va. Code, Transportation § 46.2-862');
+ });
+ it('keeps malformed OCR authority text as provenance while showing a canonical authority value',()=>{
+  const text='COMMONWEALTH OF VIRGINIA\nVIOLATION: Failure to Pay Electronic Toll\nAUTHORITY: Va. Code, * Va. Code, Transportation § 46.2-862';
+  const authority=claimsFromExtraction(fallbackExtract(text),text).find(c=>c.type==='authority');
+  expect(authority?.value).toBe('Va. Code § 46.2-862');
+  expect(authority?.exact_source_text).toContain('Va. Code, * Va. Code, Transportation § 46.2-862');
  });
  it('finds source-backed authority conflicts, official scam patterns, and a safe independent path',async()=>{
   const e=fallbackExtract(notice),claims=claimsFromExtraction(e,notice);
