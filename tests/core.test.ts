@@ -119,6 +119,35 @@ describe('image jurisdiction routing',()=>{
 });
 
 
+describe('directive action boundary',()=>{
+ it('does not turn descriptive or consequence phrases into requested actions',()=>{
+  const graph=extractActionGraph('VIOLATION: Failure to Pay Electronic Toll\nAUTHORITY: Power to collect unpaid fees\nNOTICE: Prior opportunities to resolve this matter have expired.');
+  expect(graph).toEqual([]);
+ });
+ it('accepts imperative and deontic requests independent of subject matter',()=>{
+  const graph=extractActionGraph('Remit the outstanding balance through the payment system.\nYou are required to appear at the scheduled hearing.\nTo continue, scan the code below.');
+  expect(graph.map(a=>a.kind)).toEqual(['pay','appear','navigate']);
+ });
+ it('splits visually separate columns before action parsing',()=>{
+  const tokens:Token[]=[
+   {page:1,text:'Time:',x:.08,y:.2,width:.05,height:.025,start:0,end:5,confidence:96},
+   {page:1,text:'9:00',x:.14,y:.2,width:.05,height:.025,start:6,end:10,confidence:97},
+   {page:1,text:'AM',x:.20,y:.2,width:.03,height:.025,start:11,end:13,confidence:97},
+   {page:1,text:'Submit',x:.62,y:.2,width:.07,height:.025,start:14,end:20,confidence:96},
+   {page:1,text:'payment',x:.70,y:.2,width:.08,height:.025,start:21,end:28,confidence:96},
+   {page:1,text:'through',x:.79,y:.2,width:.07,height:.025,start:29,end:36,confidence:95},
+   {page:1,text:'portal',x:.87,y:.2,width:.06,height:.025,start:37,end:43,confidence:95}
+  ];
+  const graph=extractActionGraph('Time: 9:00 AM Submit payment through portal',tokens);
+  expect(graph).toHaveLength(1);
+  expect(graph[0]).toMatchObject({verb:'submit',kind:'pay',source_text:'Submit payment through portal'});
+ });
+ it('deduplicates paraphrased instances of the same requested action',()=>{
+  const graph=extractActionGraph('Remit the outstanding balance through the court payment system.\nSubmit payment through the official court payment system.');
+  expect(graph.filter(a=>a.kind==='pay')).toHaveLength(1);
+ });
+});
+
 describe('input-agnostic extraction architecture',()=>{
  it('extracts a court identity without a jurisdiction allowlist',()=>{
   const e=fallbackExtract('COMMONWEALTH OF ALDER\nIN THE MUNICIPAL COURT OF NORTHBRIDGE\nCIVIL DIVISION');
