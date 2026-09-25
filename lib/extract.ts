@@ -3,10 +3,10 @@ export function fallbackExtract(text:string):Extraction {
  const e=emptyExtraction();
  const lines=text.split(/\n/).map(s=>s.trim()).filter(Boolean);
  e.court_name=lines.find(s=>/superior court of california|united states district court/i.test(s))||'';
- e.court_location=lines.find(s=>/\d{2,5}\s+[^\n]{3,80}\b(?:street|st\.?|avenue|ave\.?|road|rd\.?)\b/i.test(s))||'';
+ e.court_location=(lines.find(s=>/\d{2,5}\s+[^\n]{3,80}\b(?:street|st\.?|avenue|ave\.?|road|rd\.?)\b/i.test(s))||'').replace(/\s+/g,' ');
  e.juror_or_reference_number=lines.find(s=>/\b(?:juror|badge|reference)\s*(?:number|no\.?|#|id)\s*[:#]?\s*[A-Z0-9-]{4,}/i.test(s))?.match(/(?:number|no\.?|#|id)\s*[:#]?\s*([A-Z0-9-]{4,})/i)?.[1]||'';
  e.case_or_docket_number=lines.find(s=>/\b(?:case|docket)\s*(?:number|no\.?|#)\s*[:#]?\s*[\w-]{4,}/i.test(s))?.match(/(?:number|no\.?|#)\s*[:#]?\s*([\w-]{4,})/i)?.[1]||'';
- e.phone_numbers=[...new Set(text.match(/(?:\+1[\s.-]?)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}/g)||[])];
+ e.phone_numbers=[...new Set(text.match(/(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}/g)||[])];
  e.emails=[...new Set(text.match(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi)||[])];
  e.urls=[...new Set(text.match(/(?:https?:\/\/)?(?:[a-z0-9-]+\.)+(?:gov|com|org|edu|net|mil|us|ca|io|uk|co|info|int)\b(?:\/[\w./?=&%-]*)?/gi)||[])].filter(s=>!e.emails.some(email=>email.includes(s))&&!/riverside\.courts\.ca\.gov/i.test(s) || /(?:https?:\/\/)?jurywest\.riverside\.courts\.ca\.gov/i.test(s));
  e.reporting_date=lines.find(s=>/report(?:ing)?\s+date\s*:/i.test(s))?.replace(/^.*?report(?:ing)?\s+date\s*:\s*/i,'')||'';
@@ -16,6 +16,29 @@ export function fallbackExtract(text:string):Extraction {
  return e;
 }
 const clean=(s:string)=>s.toLowerCase().replace(/[^a-z0-9]/g,'');
+// PDF text streams can put a form label and its printed value many items apart.
+// Only recover a juror number when its geometry ties it to the printed label.
+export function recoverLabeledJurorNumber(tokens:Token[]):string {
+ for(let i=0;i<tokens.length;i++){
+  if(!/^juror$/i.test(tokens[i].text.trim()))continue;
+  const label=tokens.slice(i+1,i+5).find(t=>t.page===tokens[i].page&&/^number:?$/i.test(t.text.trim())&&Math.abs(t.y-tokens[i].y)<0.015&&t.x>tokens[i].x);
+  if(!label)continue;
+  const nearby=tokens.filter(t=>t.page===label.page&&t.x>label.x+label.width+0.005&&t.x<label.x+0.35&&Math.abs(t.y-label.y)<0.018&&/^\d{2,}-\d{3,}$/.test(t.text.trim()));
+  if(nearby.length===1)return nearby[0].text.trim();
+ }
+ return '';
+}
+export function recoverLabeledReportingDate(tokens:Token[]):string {
+ for(const label of tokens){
+  if(!/^date:$/i.test(label.text.trim()))continue;
+  const value=tokens.filter(t=>t.page===label.page&&t.x>label.x+0.11&&t.y>=label.y-0.017&&t.y<=label.y+0.013&&t.text.trim());
+  const rows=new Map<number,Token[]>();
+  for(const token of value){const row=Math.round(token.y*100);rows.set(row,[...(rows.get(row)||[]),token])}
+  const printed=[...rows].sort((a,b)=>a[0]-b[0]).map(([,row])=>row.sort((a,b)=>a.x-b.x).map(t=>t.text).join(' ').replace(/\s+/g,' ').trim()).join(' ').replace(/\s+/g,' ').trim();
+  if(/\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2}/i.test(printed)&&/\b(?:19|20)\d{2}\b/.test(printed))return printed;
+ }
+ return '';
+}
 export function locatePhrase(phrase:string,tokens:Token[]):{page:number;source_bbox:{x:number;y:number;width:number;height:number};source_token_range:[number,number]}|undefined{
  const target=clean(phrase); if(!target)return;
  for(let a=0;a<tokens.length;a++){let acc='';for(let b=a;b<Math.min(tokens.length,a+35)&&tokens[b].page===tokens[a].page;b++) {acc+=clean(tokens[b].text);if(acc===target){const slice=tokens.slice(a,b+1);const x=Math.min(...slice.map(t=>t.x)),y=Math.min(...slice.map(t=>t.y));return {page:tokens[a].page,source_bbox:{x,y,width:Math.max(...slice.map(t=>t.x+t.width))-x,height:Math.max(...slice.map(t=>t.y+t.height))-y},source_token_range:[a,b]};}if(acc.length>target.length+8)break;}}

@@ -38,10 +38,23 @@ test('public sample summons uploads without a fabricated mismatch or URL',async(
  await page.locator('input[type="file"]').setInputFiles('tests/fixtures/connecticut-sample-jury-summons.pdf');
  await expect(page.getByRole('heading',{name:'Uploaded notice'})).toBeVisible({timeout:20000});
  await expect(page.getByText('Page 1 of 1')).toBeVisible();
+ await expect(page.getByText(/This document is marked SAMPLE/)).toBeVisible();
+ // The printed court heading must render in the canvas; PDF text extraction alone
+ // did not catch a previous deployment where unembedded fonts appeared blank.
+ await expect.poll(async()=>page.locator('canvas').evaluate(canvas=>{
+  const context=(canvas as HTMLCanvasElement).getContext('2d');if(!context)return 0;
+  const pixels=context.getImageData(45,55,380,45).data;let ink=0;
+  for(let i=0;i<pixels.length;i+=4)if(pixels[i]<110&&pixels[i+1]<110&&pixels[i+2]<110&&pixels[i+3]>200)ink++;
+  return ink;
+ }),{timeout:20000}).toBeGreaterThan(120);
  await page.getByRole('button',{name:'Check this notice'}).click();
- await expect(page.getByText('3 claims checked')).toBeVisible({timeout:30000});
+ await expect(page.getByText('5 claims checked')).toBeVisible({timeout:30000});
  await expect(page.getByText('NO JURY-SOURCE COVERAGE')).toBeVisible();
  await expect(page.locator('.index-state.mismatch')).toHaveCount(0);
- await expect(page.locator('.index-item')).toHaveCount(3);
+ await expect(page.locator('.index-item')).toHaveCount(5);
+ await page.getByRole('button',{name:/Juror reference/}).click();
+ await expect(page.locator('.claim-value')).toHaveText('02-0140');
+ await page.getByRole('button',{name:/Reporting date/}).click();
+ await expect(page.locator('.claim-value')).toContainText('March 28(Tue.), May 3(Wed.)');
  await expect(page.getByText('g.AREyOUASALARIEDEMPLoYEE')).toHaveCount(0);
 });

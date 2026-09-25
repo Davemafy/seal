@@ -3,7 +3,7 @@ import Link from 'next/link';
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import PDFPreview from './pdf-preview';
 import {fixtures,type FixtureKey} from '@/lib/fixtures';
-import {fallbackExtract,claimsFromExtraction} from '@/lib/extract';
+import {fallbackExtract,claimsFromExtraction,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '@/lib/extract';
 import {readInBrowser,type BrowserDocument} from '@/lib/browser-file';
 import type {Claim,Extraction,Result,Verification} from '@/lib/types';
 import './workspace.css';
@@ -53,6 +53,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
    if(file?.uncertain){const unclear:Claim={id:'c1',type:'official',label:'Unreadable field',value:'Could not read confidently',exact_source_text:'Unreadable field',page:1};setClaims([unclear]);setExtractionMode('OCR / LOW CONFIDENCE');setVerification({results:[{claim_id:'c1',verdict:'COULD_NOT_VERIFY',explanation:'We couldn’t read this field confidently.',evidence:[],resolver_id:'ocr'}],resolver_id:'ocr'});setRevealed(1);setSelected('c1');return}
    let extraction:Extraction=fallbackExtract(text);let extractor='DETERMINISTIC';
    if(file){try{const response=await fetch('/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});if(response.ok){const data=await response.json();extraction=data.extraction;extractor=data.mode}}catch{}}
+   if(file?.kind==='pdf'){const juror=recoverLabeledJurorNumber(file.tokens),date=recoverLabeledReportingDate(file.tokens);extraction={...extraction,juror_or_reference_number:juror||extraction.juror_or_reference_number,reporting_date:date||extraction.reporting_date}}
    if(runId.current!==id)return;
    setExtractionMode(extractor);
    const found=claimsFromExtraction(extraction,text,file?.tokens||[]);
@@ -82,6 +83,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
   <section className="inspection" onDragOver={e=>{if(e.dataTransfer.types.includes('Files'))e.preventDefault()}} onDrop={e=>{if(e.dataTransfer.files.length){e.preventDefault();upload(e.dataTransfer.files[0])}}}>
    <div className="inspection-top"><div className="case-identity"><span className="case-kicker">SEAL / NOTICE REVIEW</span><h1>{isDemo?'Riverside notice':file?'Uploaded notice':'Notice'}</h1></div><div className="inspection-actions">{isDemo&&<select aria-label="Choose demo fixture" value={fixture} onChange={e=>chooseFixture(e.target.value as FixtureKey)}>{Object.entries(fixtures).map(([key,value])=><option value={key} key={key}>{value.title}</option>)}</select>}<button type="button" onClick={clear}>New notice <span>↗</span></button></div></div>
    <div className="inspection-meta"><span>{isDemo?'DEMO / FICTIONAL NOTICE':file?.kind==='pdf'?'PDF DOCUMENT':'IMAGE DOCUMENT'}</span><span>{sourceLabel}</span><span>{ready?`${claims.length} CLAIMS REVIEWED`:busy?status:'NOT YET CHECKED'}</span></div>
+   {file?.sample&&<div className="source-failure" role="status">This document is marked SAMPLE. It is an example form, not a summons to act on. Claim checks below do not authenticate an individual notice.</div>}
    {liveFailed&&<div className="source-failure" role="status"><span>Riverside’s live pages didn’t respond. These claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Try again ↗</button></div>}
    <div className="inspection-stage" ref={stage}>
     <div className="document-zone"><div className="zone-caption"><span>01 / NOTICE</span><span>{isDemo?'FICTIONAL EXAMPLE':file?.kind==='pdf'?'ORIGINAL PDF':'ORIGINAL IMAGE'}</span></div><div className="document-paper">
