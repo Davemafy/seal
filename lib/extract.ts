@@ -119,11 +119,12 @@ export function locatePhrase(phrase:string,tokens:Token[]):{page:number;source_b
   }
  }
 }
-function confidenceFor(value:string,tokens:Token[]){
+function confidenceFor(value:string,tokens:Token[],strict=false){
  const anchor=locatePhrase(value,tokens);if(!anchor)return undefined;
- const values=tokens.slice(anchor.source_token_range[0],anchor.source_token_range[1]+1).filter(t=>/[a-z0-9]/i.test(t.text)).map(t=>t.confidence).filter((v):v is number=>typeof v==='number');
+ const values=tokens.slice(anchor.source_token_range[0],anchor.source_token_range[1]+1).filter(t=>/[a-z0-9]/i.test(t.text)).map(t=>t.confidence).filter((v):v is number=>typeof v==='number').sort((a,b)=>a-b);
  if(!values.length)return undefined;
- return Math.min(...values);
+ if(strict)return values[0];
+ return values[Math.floor((values.length-1)*0.25)];
 }
 function claimTypeForAction(action:ActionNode):ClaimType{
  if(action.kind==='pay')return 'payment';
@@ -155,7 +156,8 @@ export function claimsFromExtraction(e:Extraction,text:string,tokens:Token[]=[])
   if(!value.trim())return;
   const line=text.split(/\n/).find(s=>s.includes(value))||context||value,exact=line.trim();
   const anchor=locatePhrase(confidenceBasis||value,tokens)||locatePhrase(value,tokens);
-  const fieldConfidence=tokens.length?confidenceFor(confidenceBasis||value,tokens):undefined;
+  const strictConfidence=['phone','url','docket','juror'].includes(type);
+  const fieldConfidence=tokens.length?confidenceFor(confidenceBasis||value,tokens,strictConfidence):undefined;
   result.push({id:`c${result.length+1}`,type,label,value,exact_source_text:exact,page:anchor?.page||1,source_bbox:anchor?.source_bbox,source_token_range:anchor?.source_token_range,context:context||exact,field_confidence:fieldConfidence,verification_eligible:fieldConfidence===undefined||fieldConfidence>=FIELD_CONFIDENCE,action});
  };
  add('court','Court identity',e.court_name);
