@@ -128,7 +128,8 @@ describe('input-agnostic extraction architecture',()=>{
   const graph=extractActionGraph('Remit the outstanding balance through the court payment system.\nScan the code below to continue.\nAppear at the courthouse on May 4, 2027.');
   expect(graph.map(a=>a.kind)).toEqual(['pay','navigate','appear']);
   expect(graph[0]).toMatchObject({verb:'remit',kind:'pay',target_type:'unknown'});
-  expect(graph[1]).toMatchObject({verb:'scan',kind:'navigate',target_type:'qr'});
+  expect(graph[1]).toMatchObject({verb:'scan',kind:'navigate',target_type:'unknown'});
+  expect(extractActionGraph('Scan the QR code to continue.')[0]).toMatchObject({verb:'scan',kind:'navigate',target_type:'qr'});
   expect(graph[2]).toMatchObject({verb:'appear',kind:'appear',target_type:'date',target_value:'May 4, 2027'});
  });
  it('preserves a generic action even when its target is unknown',()=>{
