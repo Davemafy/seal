@@ -56,7 +56,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
   try{
    if(file?.uncertain){const unclear:Claim={id:'c1',type:'official',label:'Unreadable field',value:'Could not read confidently',exact_source_text:'Unreadable field',page:1};setClaims([unclear]);setExtractionMode('OCR / LOW CONFIDENCE');setVerification({results:[{claim_id:'c1',verdict:'COULD_NOT_VERIFY',explanation:'We couldn’t read this field confidently.',evidence:[],resolver_id:'ocr'}],resolver_id:'ocr'});setRevealed(1);setSelected('c1');return}
    let extraction:Extraction=fallbackExtract(text);let extractor='DETERMINISTIC';
-   if(file){try{const response=await fetch('/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});if(response.ok){const data=await response.json();extraction=data.extraction;extractor=data.mode}}catch{}}
+   if(!isDemo){try{const response=await fetch('/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});if(response.ok){const data=await response.json();extraction=data.extraction;extractor=data.mode}}catch{}}
    if(file?.kind==='pdf'){const juror=recoverLabeledJurorNumber(file.tokens),date=recoverLabeledReportingDate(file.tokens);extraction={...extraction,juror_or_reference_number:juror||extraction.juror_or_reference_number,reporting_date:date||extraction.reporting_date}}
    if(runId.current!==id)return;
    setExtractionMode(extractor);
