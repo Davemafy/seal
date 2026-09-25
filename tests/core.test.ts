@@ -180,9 +180,10 @@ describe('input-agnostic extraction architecture',()=>{
   expect(call?.field_confidence).toBe(74);
   expect(call?.verification_eligible).toBe(false);
  });
- it('upscales small screenshots generically and leaves already-large images alone',()=>{
+ it('upscales small screenshots but caps OCR work for large mobile images',()=>{
   expect(ocrScaleForSize(526,791)).toBeGreaterThan(2);
-  expect(ocrScaleForSize(3200,4100)).toBe(1);
+  expect(ocrScaleForSize(1080,2400)).toBeLessThan(1.5);
+  expect(ocrScaleForSize(3200,4100)).toBeLessThan(1);
  });
 });
 
