@@ -17,6 +17,9 @@ test('deployed browser checks a synthetic image and a single-field altered image
  await expect(page.getByRole('heading',{name:'Uploaded notice'})).toBeVisible({timeout:60000});
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByText(/claims checked/)).toBeVisible({timeout:60000});
+ console.log('PRODUCTION_GOOD_INDEX',JSON.stringify(await page.locator('.index-item').allTextContents()));
+ console.log('PRODUCTION_GOOD_TECHNICAL',await page.locator('.technical-record').textContent());
+ await page.screenshot({path:'test-results/production-good-result.png',fullPage:true});
  await expect(page.locator('.index-state.mismatch')).toHaveCount(0);
  await expect(page.locator('.index-state.match')).toHaveCount(2);
  await page.locator('.index-item').filter({hasText:'Requested callback'}).click();
@@ -29,6 +32,9 @@ test('deployed browser checks a synthetic image and a single-field altered image
  await expect(page.getByRole('heading',{name:'Uploaded notice'})).toBeVisible({timeout:60000});
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByText(/claims checked/)).toBeVisible({timeout:60000});
+ console.log('PRODUCTION_ALTERED_INDEX',JSON.stringify(await page.locator('.index-item').allTextContents()));
+ console.log('PRODUCTION_ALTERED_TECHNICAL',await page.locator('.technical-record').textContent());
+ await page.screenshot({path:'test-results/production-altered-result.png',fullPage:true});
  await expect(page.locator('.index-state.mismatch')).toHaveCount(1);
  await page.locator('.index-item').filter({hasText:'Requested callback'}).click();
  await expect(page.locator('.claim-value')).toHaveText('1-203-555-0199');
