@@ -5,8 +5,21 @@ export type BrowserDocument={text:string;tokens:Token[];preview:string;kind:'ima
 
 export function ocrScaleForSize(width:number,height:number){
  if(!width||!height)return 1;
- const desired=Math.max(1600/width,2000/height,1);
- return Math.min(3.5,desired);
+ const desired=Math.max(1600/width,2000/height);
+ const maxPixels=4_000_000;
+ const pixelCap=Math.sqrt(maxPixels/(width*height));
+ return Math.min(3.5,desired,pixelCap);
+}
+
+let ocrWorkerPromise:Promise<Awaited<ReturnType<typeof import('tesseract.js')['createWorker']>>>|null=null;
+
+export function warmOcr(){
+ if(!ocrWorkerPromise){
+  ocrWorkerPromise=import('tesseract.js')
+   .then(({createWorker})=>createWorker('eng'))
+   .catch(error=>{ocrWorkerPromise=null;throw error});
+ }
+ return ocrWorkerPromise;
 }
 
 export async function readInBrowser(file:File):Promise<BrowserDocument>{
@@ -45,7 +58,7 @@ function normalizeForOcr(image:HTMLImageElement){
 }
 
 async function ocr(image:HTMLImageElement|HTMLCanvasElement):Promise<Omit<BrowserDocument,'preview'|'kind'|'sample'>>{
- const {createWorker}=await import('tesseract.js');const worker=await createWorker('eng');
+ const worker=await warmOcr();
  try{
   const r=await worker.recognize(image,{}, {text:true,blocks:true});
   const width=('naturalWidth' in image?image.naturalWidth:image.width)||1,height=('naturalHeight' in image?image.naturalHeight:image.height)||1;
@@ -63,5 +76,9 @@ async function ocr(image:HTMLImageElement|HTMLCanvasElement):Promise<Omit<Browse
   }
   const text=lines.join('\n').trim();
   return {text,tokens,uncertain:text.length<20,ocrConfidence:r.data.confidence,unreadableFields:[]};
- }finally{await worker.terminate();}
+ }catch(error){
+  ocrWorkerPromise=null;
+  try{await worker.terminate()}catch{}
+  throw error;
+ }
 }
