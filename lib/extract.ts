@@ -26,41 +26,96 @@ function extractCourtName(lines:string[]){
  return value;
 }
 
-export function extractActionGraph(text:string):ActionNode[]{
- const lines=text.split(/\n/).map(s=>s.trim()).filter(Boolean);
+function tokenActionSegments(tokens:Token[]):string[]{
+ if(!tokens.length)return [];
+ const byPage=new Map<number,Token[]>();
+ for(const token of tokens)byPage.set(token.page,[...(byPage.get(token.page)||[]),token]);
+ const segments:string[]=[];
+ for(const pageTokens of byPage.values()){
+  const sorted=[...pageTokens].filter(t=>t.text.trim()).sort((a,b)=>a.y-b.y||a.x-b.x);
+  const rows:Token[][]=[];
+  for(const token of sorted){
+   const row=rows.find(r=>Math.abs((r.reduce((sum,t)=>sum+t.y,0)/r.length)-token.y)<Math.max(.012,token.height*.7));
+   if(row)row.push(token);else rows.push([token]);
+  }
+  for(const row of rows){
+   const ordered=row.sort((a,b)=>a.x-b.x);let current:Token[]=[];
+   for(const token of ordered){
+    const prev=current[current.length-1];
+    const gap=prev?token.x-(prev.x+prev.width):0;
+    if(prev&&gap>Math.max(.055,Math.min(.14,(prev.height+token.height)*1.8))){
+     const text=current.map(t=>t.text).join(' ').replace(/\s+/g,' ').trim();if(text)segments.push(text);current=[];
+    }
+    current.push(token);
+   }
+   const text=current.map(t=>t.text).join(' ').replace(/\s+/g,' ').trim();if(text)segments.push(text);
+  }
+ }
+ return segments;
+}
+
+function directiveVerb(source:string){
+ const semantic=source.replace(/^[^:]{1,50}:\s*(?=\S)/,'').replace(/^[\s•*\-–—\d.)]+/,'').trim();
+ const verbs=[...semantic.matchAll(new RegExp(ACTION_VERBS.source,'ig'))];
+ for(const match of verbs){
+  const verb=match[1].toLowerCase(),at=match.index||0,before=semantic.slice(0,at);
+  const clauseStart=before.match(/(?:^|[.;!?]\s+|,\s+)(?:please\s+)?$/i);
+  const purposeThenDirective=/^to\b[^,.;]{0,100},\s*$/i.test(before);
+  const addressedDirective=/\b(?:you|recipient|defendant|juror|driver|respondent|party)\s+(?:must|shall|should|need(?:s)?\s+to|are\s+required\s+to|is\s+required\s+to|are\s+ordered\s+to|is\s+ordered\s+to|are\s+directed\s+to|is\s+directed\s+to)\s*$/i.test(before);
+  const bareDeontic=/\b(?:must|shall|should|required\s+to|ordered\s+to|directed\s+to|need\s+to)\s*$/i.test(before);
+  const imperative=at===0||Boolean(clauseStart)||purposeThenDirective;
+  if(imperative||addressedDirective||bareDeontic)return {semantic,verb,match};
+ }
+ return null;
+}
+
+function actionWords(value:string){
+ return new Set(value.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(word=>word.length>2&&!/^(?:the|and|for|with|through|this|that|your|you|are|from|into|full|total|official|court|payment|system|immediately)$/.test(word)));
+}
+function similarActions(a:ActionNode,b:ActionNode){
+ if(a.kind!==b.kind)return false;
+ if(a.target_type!==b.target_type&&a.target_type!=='unknown'&&b.target_type!=='unknown')return false;
+ if(a.target_value&&b.target_value&&clean(a.target_value)!==clean(b.target_value))return false;
+ const A=actionWords(a.object),B=actionWords(b.object);
+ if(!A.size||!B.size)return a.kind===b.kind&&(!a.target_value||!b.target_value||clean(a.target_value)===clean(b.target_value));
+ let overlap=0;for(const word of A)if(B.has(word))overlap++;
+ return overlap/Math.min(A.size,B.size)>=.5;
+}
+
+export function extractActionGraph(text:string,tokens:Token[]=[]):ActionNode[]{
+ const textLines=text.split(/\n/).map(s=>s.trim()).filter(Boolean);
+ const visual=tokenActionSegments(tokens);
+ const sources=[...new Set((visual.length?visual:textLines).map(s=>s.trim()).filter(Boolean))];
  const actions:ActionNode[]=[];
- for(const source of lines){
-  const semanticSource=source.replace(/^[^:]{1,50}:\s*(?=\S)/,'');
-  const match=semanticSource.match(ACTION_VERBS);if(!match)continue;
-  const verb=match[1].toLowerCase();
-  const before=semanticSource.slice(0,match.index||0).replace(/^[\s•*\-–—\d.)]+/,'').trim();
-  const directive=before.split(/\s+/).filter(Boolean).length<=5||/\b(?:must|shall|required|please|hereby|need to|to avoid|immediately)\b/i.test(semanticSource);
-  if(!directive)continue;
-  const moneyObject=/\b(?:payment|balance|fine|fee|amount|money|costs?)\b/i.test(semanticSource);
+ for(const source of sources){
+  const directive=directiveVerb(source);if(!directive)continue;
+  const {semantic,verb,match}=directive;
+  const moneyObject=/\b(?:payment|balance|fine|fee|amount|money|costs?)\b/i.test(semantic);
   const kind=(moneyObject&&/(?:pay|remit|submit|send|transfer)/.test(verb))||/(?:pay|remit|transfer)/.test(verb)?'pay':/(?:call|contact|phone|text)/.test(verb)?'contact':/(?:open|visit|click|scan)/.test(verb)?'navigate':/(?:reply|provide|share|enter|send|disclose|submit)/.test(verb)?'disclose':/(?:appear|report|attend)/.test(verb)?'appear':'other';
-  const phone=source.match(PHONE)?.[0]||'',url=source.match(URL)?.[0]||'',money=source.match(MONEY)?.[0]||'';
+  const phone=semantic.match(PHONE)?.[0]||'',url=semantic.match(URL)?.[0]||'',money=semantic.match(MONEY)?.[0]||'';
   let target_type:ActionNode['target_type']='unknown',target_value='';
   if(phone){target_type='phone';target_value=phone}
   else if(url){target_type='url';target_value=url}
   else if(money){target_type='money';target_value=money}
-  else if(verb==='scan'&&/\bqr\b/i.test(source)){target_type='qr'}
-  else if(kind==='disclose'){target_type='information';target_value=source.slice((match.index||0)+match[0].length).replace(/^[\s:,-]+/,'').trim()}
+  else if(verb==='scan'&&/\bqr\b/i.test(semantic)){target_type='qr'}
+  else if(kind==='disclose'){target_type='information';target_value=semantic.slice((match.index||0)+match[0].length).replace(/^[\s:,-]+/,'').trim()}
   else if(kind==='appear'){
-   const date=source.match(/\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2}(?:,\s*\d{4})?/i)?.[0]||'';
+   const date=semantic.match(/\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2}(?:,\s*\d{4})?/i)?.[0]||'';
    if(date){target_type='date';target_value=date}
-   else if(/\b(?:court|courthouse|hearing|room|street|st\.?|avenue|ave\.?|road|rd\.?)\b/i.test(source)){target_type='place';target_value=source.slice((match.index||0)+match[0].length).trim()}
+   else if(/\b(?:court|courthouse|hearing|room|street|st\.?|avenue|ave\.?|road|rd\.?)\b/i.test(semantic)){target_type='place';target_value=semantic.slice((match.index||0)+match[0].length).trim()}
   }
-  const object=source.slice((match.index||0)+match[0].length).replace(/^[\s:,-]+/,'').trim();
+  const object=semantic.slice((match.index||0)+match[0].length).replace(/^[\s:,-]+/,'').trim();
   const qualifiers=[...new Set([
-   ...(source.match(/\b(?:must|shall|required|immediately|today|now|before|after|within)\b/gi)||[]),
-   ...(source.match(/\b(?:by|before|after)\s+[^,.;]{1,50}/gi)||[])
+   ...(semantic.match(/\b(?:must|shall|required|immediately|today|now|before|after|within)\b/gi)||[]),
+   ...(semantic.match(/\b(?:by|before|after)\s+[^,.;]{1,50}/gi)||[])
   ])].slice(0,6);
   const node:ActionNode={verb,kind,object,target_type,target_value,qualifiers,source_text:source};
-  if(!actions.some(a=>a.source_text===node.source_text&&a.kind===node.kind))actions.push(node);
+  const duplicate=actions.find(existing=>similarActions(existing,node));
+  if(!duplicate)actions.push(node);
+  else if(node.source_text.length>duplicate.source_text.length&&node.source_text.length<220)Object.assign(duplicate,node);
  }
  return actions;
 }
-
 export function fallbackExtract(text:string):Extraction {
  const e=emptyExtraction();
  const lines=text.split(/\n/).map(s=>s.trim()).filter(Boolean);
@@ -166,7 +221,7 @@ export function claimsFromExtraction(e:Extraction,text:string,tokens:Token[]=[])
  add('reporting_date','Reporting date',e.reporting_date);
  add('docket','Case docket',e.case_or_docket_number);
 
- const actions=extractActionGraph(text),consumedPhones=new Set<string>(),consumedUrls=new Set<string>();
+ const actions=extractActionGraph(text,tokens),consumedPhones=new Set<string>(),consumedUrls=new Set<string>();
  for(const action of actions){
   const type=claimTypeForAction(action),label=labelForAction(action);
   if(action.target_type==='phone'&&action.target_value)consumedPhones.add(clean(action.target_value));
