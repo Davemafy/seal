@@ -60,3 +60,9 @@
  .evidence-rail{height:auto}
  .inspection-actions select{max-width:215px}
 }
+
+
+@media(max-width:760px){
+ .message-card-head span{display:block}
+ .message-card-head span+span{margin-top:2px}
+}
