@@ -45,7 +45,7 @@ function resolveConnecticut(c:Claim,s:CtSources,scams:ScamSources):Result{
   return scams.ftcWebsite?unverified('The official guidance does not establish whether this specific domain belongs to the court.'):noSource();
  }
  if(c.type==='payment'){
-  const method=/payment app|gift card|cryptocurrency|wire transfer/i.test(c.value);const juryContext=/jury|arrest|warrant|failure to appear|fine/i.test(c.context||'');
+  const method=/payment app|cash app|zelle|venmo|gift card|cryptocurrency|crypto|bitcoin|wire transfer/i.test(`${c.value} ${c.context||''}`);const juryContext=/jury|arrest|warrant|failure to appear|fine/i.test(c.context||'');
   const methodProof=scamProof(scams,'ftcJury','Only scammers say you can only pay');const messageProof=scamProof(scams,'ftcGovernment','ask for money or personal information');
   if(method&&juryContext&&methodProof)return verdict(c,'MISMATCH','The requested jury-duty payment method is directly identified in FTC guidance as a scam payment pattern.',[methodProof],'connecticut');
   if(/text|email|message/i.test(c.context||'')&&messageProof)return verdict(c,'MISMATCH','The payment request conflicts with FTC guidance that government agencies do not message people to ask for money.',[messageProof],'connecticut');
