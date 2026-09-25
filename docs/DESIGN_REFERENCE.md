@@ -1,6 +1,10 @@
-# SEAL design reference study
+# SEAL reference index
 
-This pass treats the Figma Community set as a research corpus, not a visual kit to copy. The goal is to stop the interface from defaulting to cards, badges, dashboard metrics, and decorative "AI product" patterns.
+The 50 links in this index were supplied as references. The notes below are **design hypotheses from their titles and the SEAL brief**, not findings from inspecting the Figma canvases. The Community listing URLs were not accessible through the available page reader, and their numeric listing IDs are not Figma design file keys. Do not cite these notes as evidence that the files were opened or studied.
+
+Prioritize visual inspection of the sources most relevant to the current problems: [Article App](https://www.figma.com/community/file/1174812137272978612), [Case Study Presentation Template](https://www.figma.com/community/file/892528949344124083), [Case Study Elements](https://www.figma.com/community/file/1182331333206978506), [Bulletproof Forms](https://www.figma.com/community/file/1209089636584712632), [Responsive Design for Development](https://www.figma.com/community/file/1230850200547605128), and [Contra Wireframe Kit](https://www.figma.com/community/file/833515051385038928). Record specific screenshots, frames, and observed patterns before attributing a design decision to one of them.
+
+The implementation direction came from the task itself: show the document, decision, independent evidence, and safe route in that order. The reference names below are prompts for comparison, not a visual audit.
 
 ## Foundation
 
@@ -67,7 +71,7 @@ This pass treats the Figma Community set as a research corpus, not a visual kit 
 49. **UpTicker Lite Wireframes** — Useful for alternative structure. Learn: layout should follow task sequence. Avoid: app-shell defaults.
 50. **Vercel AI Elements** — Useful as a negative reference for category conventions. Learn: contemporary AI products foreground model interaction. SEAL should instead foreground the uploaded document and independent sources. Avoid: chat chrome, streaming AI theater, tool-call styling.
 
-## Synthesis
+## Provisional synthesis
 
 ### SEAL / upload
 Chosen references: Bulletproof Forms, Simple Design System, Lo-fi Wireframe Kit, Contra Wireframe Kit.
