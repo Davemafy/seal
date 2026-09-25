@@ -420,7 +420,11 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
       </div>
      </div>
 
-     {verification.contact&&<div className="court-contact">
+     <p className="resolution-disclaimer">This is not an authenticity ruling. It is a safer route based on independent official sources.</p>
+    </section>}
+
+    {ready&&verification?.contact&&<section className="contact-section" aria-label="Independent court contact">
+     <div className="court-contact">
       <div>
        <h3>Independent court contact</h3>
        <p>{verification.contact.name||(verification.resolver_id==='connecticut'?'District of Connecticut Jury Office':'Court contact')}</p>
@@ -433,8 +437,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
        </div>
        <p className="contact-source">These details come from the court source, not the uploaded message. {verification.contact.source.source_mode==='SNAPSHOT'?'Source snapshot checked '+new Date(verification.contact.source.checked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.':'Live source checked '+new Date(verification.contact.source.checked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.'}</p>
       </div>
-     </div>}
-     <p className="resolution-disclaimer">This is not an authenticity ruling. It is a safer route based on independent official sources.</p>
+     </div>
     </section>}
 
     {ready&&<section className="record-section">
