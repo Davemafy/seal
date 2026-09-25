@@ -108,9 +108,9 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
  function submitPaste(){const value=draft.trim();if(!value)return;clear();setText(value);void run('SNAPSHOT',{text:value,file:null})}
 
 async function upload(uploaded:File){
-  clear();const uploadId=runId.current;setBusy(true);setStatus('Reading the document');
+  clear();const uploadId=runId.current;setBusy(true);setStatus('Preparing your file');
   try{
-   const doc=await readInBrowser(uploaded);
+   const doc=await readInBrowser(uploaded,next=>{if(runId.current===uploadId)setStatus(next)});
    if(runId.current!==uploadId){URL.revokeObjectURL(doc.preview);return}
    setFile(doc);setText(doc.text);
    if(!doc.text.trim()&&!doc.uncertain)setError('We couldn’t read enough from this file. Try a clearer image or paste the message.');
@@ -275,12 +275,13 @@ async function upload(uploaded:File){
 
     <div className="intake">
      <div className="intake-heading"><strong>What did you receive?</strong></div>
-     <button className={`upload-row ${dragging?'is-dragging':''}`} type="button" disabled={busy||!hydrated} onPointerDown={()=>{void warmOcr()}} onClick={()=>input.current?.click()}
+     <button className={`upload-row ${dragging?'is-dragging':''} ${busy?'is-busy':''}`} type="button" disabled={busy||!hydrated} onPointerDown={()=>{void warmOcr()}} onClick={()=>input.current?.click()}
       onDragOver={event=>{if(event.dataTransfer.types.includes('Files')){event.preventDefault();setDragging(true)}}}
       onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
       onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
-      <span><strong>{busy?status:'Upload a notice or screenshot'}</strong><small>PDF, PNG, or JPG · Your file stays in this browser</small></span>
-      <span className="upload-browse">Browse files</span>
+      <span><strong>{busy?status:'Upload a notice or screenshot'}</strong><small>{busy?'This can take longer the first time on a phone.':'PDF, PNG, or JPG · Your file stays in this browser'}</small></span>
+      {!busy&&<span className="upload-browse">Browse files</span>}
+      {busy&&<span className="upload-progress" aria-hidden="true"><span/></span>}
      </button>
 
      <div className="paste-divider"><span>Have an email or text instead?</span></div>
