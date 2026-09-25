@@ -124,7 +124,7 @@ export function sanitizeStructuredExtraction(extraction:Extraction,text:string):
   let at=lower.indexOf(needle),grounded=false;
   while(at>=0&&!grounded){
    const nearby=lower.slice(Math.max(0,at-120),Math.min(lower.length,at+needle.length+120));
-   grounded=/\b(?:juror|badge|participant)\b[\s\S]{0,80}\b(?:number|no\.?|id)\b/.test(nearby)||/\b(?:juror|badge|participant)\s*(?:number|no\.?|#|id)?\s*[:#-]?\s*$/.test(nearby.slice(0,Math.max(0,nearby.indexOf(needle))));
+   grounded=/\b(?:juror|badge|participant|reference)\b[\s\S]{0,80}\b(?:number|no\.?|id)\b/.test(nearby)||/\b(?:juror|badge|participant|reference)\s*(?:number|no\.?|#|id)?\s*[:#-]?\s*$/.test(nearby.slice(0,Math.max(0,nearby.indexOf(needle))));
    at=lower.indexOf(needle,at+needle.length);
   }
   if(!grounded)next.juror_or_reference_number='';
@@ -250,7 +250,10 @@ export function claimsFromExtraction(e:Extraction,text:string,tokens:Token[]=[])
  };
  add('court','Court identity',e.court_name);
  add('location','Courthouse address',e.court_location);
- add('juror','Juror reference',e.juror_or_reference_number);
+ if(e.juror_or_reference_number){
+  const referenceLine=text.split(/\n/).find(line=>line.includes(e.juror_or_reference_number))||'';
+  add('juror',/\b(?:juror|badge|participant)\b/i.test(referenceLine)?'Juror reference':'Reference number',e.juror_or_reference_number,referenceLine);
+ }
  add('reporting_date','Reporting date',e.reporting_date);
  add('docket','Case docket',e.case_or_docket_number);
  for(const citation of extractAuthorityCitations(text)){
