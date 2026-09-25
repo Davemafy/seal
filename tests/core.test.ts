@@ -100,6 +100,10 @@ describe('Action-first jury scam flow',()=>{
 
 
 describe('image jurisdiction routing',()=>{
+ it('joins a visibly wrapped Connecticut court heading before verification',()=>{
+  const e=fallbackExtract('UNITED STATES DISTRICT COURT — DISTRICT OF\nCONNECTICUT\nJury Status Check Only: Call 1-866-388-2430 after 5:30 PM.');
+  expect(e.court_name).toBe('UNITED STATES DISTRICT COURT — DISTRICT OF CONNECTICUT');
+ });
  it('matches the Connecticut court identity when OCR leaves terminal heading punctuation',async()=>{
   const claim={id:'c0',type:'court' as const,label:'Court identity',value:'UNITED STATES DISTRICT COURT —',exact_source_text:'UNITED STATES DISTRICT COURT —',page:1,context:'UNITED STATES DISTRICT COURT —'};
   const v=await verifyClaims([claim],'UNITED STATES DISTRICT COURT —','SNAPSHOT','DISTRICT OF CONNECTICUT');
