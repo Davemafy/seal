@@ -35,10 +35,10 @@
 .nav-action:hover,.demo-link:hover,.replay-button:hover{background:var(--tertiary)}
 .entry-shell{width:100%;max-width:1240px;min-height:calc(100svh - 148px);margin:0 auto;padding:42px 64px 72px;display:grid;grid-template-columns:minmax(0,1fr) 280px;grid-template-areas:"intro intro" "form guide";column-gap:36px;row-gap:30px;align-content:start;align-items:start}
 .entry-copy{grid-area:intro}
-.entry-kicker{margin:0 0 12px!important;color:var(--muted);font-size:12px!important;font-weight:500;letter-spacing:.06em}
-.entry-copy h1{margin:0;max-width:800px;font-size:clamp(40px,4vw,52px);font-weight:700;line-height:1.15;letter-spacing:0}
+.entry-kicker{margin:0 0 12px!important;color:var(--muted);font-size:14px!important;font-weight:500;line-height:16px;letter-spacing:0}
+.entry-copy h1{margin:0;max-width:800px;font-size:40px;font-weight:700;line-height:52px;letter-spacing:0}
 .entry-copy>p{max-width:750px;margin:12px 0 0;color:#4b4b4b;font-size:16px;line-height:24px}
-.intake{grid-area:form;display:flex;flex-direction:column;gap:12px;padding:24px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.intake{grid-area:form;display:flex;flex-direction:column;gap:12px;padding:24px;border:1px solid var(--line);border-radius:8px;background:#fff}
 .intake-heading{display:flex;justify-content:space-between;gap:16px;align-items:baseline}
 .intake-heading strong{font-size:20px;line-height:28px}
 .intake-heading span{color:var(--muted);font-size:13px}
@@ -49,12 +49,14 @@
 .entry-guide>div strong{font-size:14px;font-weight:500}
 .entry-guide>div small{color:var(--muted);font-size:13px;line-height:19px}
 .guide-limit{margin:18px 0 0;color:var(--muted);font-size:12px;line-height:19px}
-.upload-row{width:100%;min-height:112px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px;text-align:left;border:1px dashed #d3d3d3;border-radius:8px;background:var(--secondary);color:var(--ink)}
-.upload-row:hover,.upload-row.is-dragging{border:2px dashed var(--blue);background:#eff4fe}
-.upload-row strong{display:block;font-size:16px;font-weight:500;line-height:20px}
-.upload-row small{display:block;margin-top:4px;font-size:14px;line-height:20px;color:var(--muted)}
+.upload-row{width:100%;min-height:136px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px;text-align:center;border:1px dashed var(--line-strong);border-radius:8px;background:var(--secondary);color:var(--ink)}
+.upload-row:hover,.upload-row.is-dragging{border-color:var(--blue);background:#eff4fe}
+.upload-row strong{display:block;color:var(--muted);font-size:14px;font-weight:500;line-height:16px}
+.upload-row small{display:block;margin-top:6px;font-size:12px;line-height:20px;color:var(--muted)}
+.upload-row.is-dragging strong{color:var(--blue)}
+.upload-row.is-dragging .upload-browse{visibility:hidden}
 .upload-plus{display:none}
-.upload-browse{flex:none;padding:8px 16px;background:var(--tertiary);border-radius:8px;font-size:14px;font-weight:500;line-height:20px}
+.upload-browse{flex:none;min-width:103px;margin-top:2px;padding:10px 12px;background:var(--tertiary);border-radius:9999px;font-size:14px;font-weight:500;line-height:16px}
 .paste-divider{color:var(--muted);font-size:14px}
 .paste-field{display:block}
 .field-label{display:block;margin-bottom:8px;font-size:14px;font-weight:500;line-height:16px}
@@ -207,10 +209,10 @@
  .nav-trust{font-size:12px}
  .entry-shell,.review-shell{padding:40px 16px 64px}
  .entry-shell{row-gap:32px}
- .entry-copy h1{font-size:40px;line-height:48px}
+ .entry-copy h1{font-size:36px;line-height:44px}
  .entry-copy>p{font-size:16px;line-height:24px}
  .intake{margin-top:0;padding:20px 16px}
- .upload-row{align-items:flex-start;flex-direction:column;min-height:132px}
+ .upload-row{min-height:136px}
  .intake-heading{display:block}
  .intake-heading span{display:block;margin-top:4px}
  .entry-guide{padding:0 4px}
