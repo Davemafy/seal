@@ -237,6 +237,15 @@ describe('structured extraction grounding',()=>{
   expect(clean.delivery_method).toBe('text message');
   expect(claimsFromExtraction(clean,text).some(c=>c.type==='delivery')).toBe(false);
  });
+ it('keeps an explicitly labeled generic reference number without calling it a juror number',()=>{
+  const text='Reference number: ABC98233\nReport as directed.';
+  const model={...fallbackExtract(text),juror_or_reference_number:'ABC98233'};
+  const clean=sanitizeStructuredExtraction(model,text);
+  expect(clean.juror_or_reference_number).toBe('ABC98233');
+  const claim=claimsFromExtraction(clean,text).find(c=>c.type==='juror');
+  expect(claim?.label).toBe('Reference number');
+  expect(claim?.exact_source_text).toContain('Reference number: ABC98233');
+ });
 });
 
 describe('public-source intelligence layer',()=>{
