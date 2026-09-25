@@ -2,7 +2,7 @@ import {describe,it,expect,vi} from 'vitest';import {fallbackExtract,claimsFromE
 import {readFileSync} from 'node:fs';
 const claims=(key:keyof typeof fixtures)=>{const t=fixtures[key].text,e=fallbackExtract(t);return {t,e,c:claimsFromExtraction(e,t)}};
 describe('extraction and source links',()=>{
- it('validates schema and does not convert juror IDs to dockets',()=>{const {e}=claims('riverside-mismatch-demo');expect(extractionSchema.parse(e)).toEqual(e);expect(e.juror_or_reference_number).toBe('10472893');expect(e.case_or_docket_number).toBe('');expect(e.delivery_method).toBe('')});
+ it('validates schema and does not convert juror IDs to dockets',()=>{const {e}=claims('riverside-mismatch-demo');expect(extractionSchema.parse(e)).toEqual(e);expect(e.juror_or_reference_number).toBe('10472893');expect(e.case_or_docket_number).toBe('');expect(e.delivery_method).toBe('text message')});
  it('normalizes only comparable values',()=>{expect(phoneDigits('(951) 275-5076')).toBe('9512755076');expect(domain('https://www.riverside.courts.ca.gov/path')).toBe('riverside.courts.ca.gov');expect(address('4050 Main Street, Riverside, CA 92501')).toBe(address('4050 Main St Riverside CA 92501'))});
  it('anchors exact token phrases',()=>{expect(locatePhrase('Jury Services',[{page:1,text:'Jury',x:.1,y:.2,width:.1,height:.04,start:0,end:4},{page:1,text:'Services',x:.21,y:.2,width:.1,height:.04,start:5,end:13}])?.source_token_range).toEqual([0,1])});
  it('ignores OCR-like dotted words while keeping court portal addresses',()=>{const e=fallbackExtract('g.AREyOUASALARIEDEMPLoYEE\nOfficial jury portal: jurywest.riverside.courts.ca.gov');expect(e.urls).toEqual(['jurywest.riverside.courts.ca.gov'])});
