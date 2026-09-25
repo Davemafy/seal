@@ -251,8 +251,8 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
   {!text?
    <section className="entry-shell">
     <div className="entry-copy">
-     <h1>Check the message before you follow it.</h1>
-     <p>Before you call, click, pay, scan, or reply, SEAL separates what the message asks you to do from what independent official sources can actually establish.</p>
+     <h1>Before you call, click, pay, scan, or reply.</h1>
+     <p>SEAL separates what the message asks you to do from what independent official sources can actually establish before you follow it.</p>
      <p className="entry-principle">A court name, seal, or threatening tone is not proof. The requested action is checked separately.</p>
     </div>
 
