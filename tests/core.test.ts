@@ -1,4 +1,4 @@
-import {describe,it,expect,vi} from 'vitest';import {fallbackExtract,claimsFromExtraction,locatePhrase,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '../lib/extract';import {extractionSchema,type Token} from '../lib/types';import {verdict,verifyClaims,phoneDigits,domain,address,FederalCourtListenerResolver} from '../lib/resolver';import {fixtures} from '../lib/fixtures';
+import {describe,it,expect,vi} from 'vitest';import {fallbackExtract,claimsFromExtraction,extractActionGraph,locatePhrase,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '../lib/extract';import {ocrScaleForSize} from '../lib/browser-file';import {extractionSchema,type Token} from '../lib/types';import {verdict,verifyClaims,phoneDigits,domain,address,FederalCourtListenerResolver} from '../lib/resolver';import {fixtures} from '../lib/fixtures';
 import {readFileSync} from 'node:fs';
 const claims=(key:keyof typeof fixtures)=>{const t=fixtures[key].text,e=fallbackExtract(t);return {t,e,c:claimsFromExtraction(e,t)}};
 describe('extraction and source links',()=>{
@@ -115,5 +115,43 @@ describe('image jurisdiction routing',()=>{
   const v=await verifyClaims([claim],'UNITED STATES DISTRICT COURT','SNAPSHOT','District of Connecticut');
   expect(v.resolver_id).toBe('connecticut');
   expect(v.results[0].verdict).toBe('MATCH');
+ });
+});
+
+
+describe('input-agnostic extraction architecture',()=>{
+ it('extracts a court identity without a jurisdiction allowlist',()=>{
+  const e=fallbackExtract('COMMONWEALTH OF ALDER\nIN THE MUNICIPAL COURT OF NORTHBRIDGE\nCIVIL DIVISION');
+  expect(e.court_name).toBe('IN THE MUNICIPAL COURT OF NORTHBRIDGE');
+ });
+ it('builds verb-object-target action nodes without requiring an amount or known court',()=>{
+  const graph=extractActionGraph('Remit the outstanding balance through the court payment system.\nScan the code below to continue.\nAppear at the courthouse on May 4, 2027.');
+  expect(graph.map(a=>a.kind)).toEqual(['pay','navigate','appear']);
+  expect(graph[0]).toMatchObject({verb:'remit',kind:'pay',target_type:'unknown'});
+  expect(graph[1]).toMatchObject({verb:'scan',kind:'navigate',target_type:'qr'});
+  expect(graph[2]).toMatchObject({verb:'appear',kind:'appear',target_type:'date',target_value:'May 4, 2027'});
+ });
+ it('preserves a generic action even when its target is unknown',()=>{
+  const text='You are required to submit payment through the payment system.';
+  const e=fallbackExtract(text),claims=claimsFromExtraction(e,text);
+  const action=claims.find(c=>c.action?.kind==='other'||c.action?.kind==='pay');
+  expect(action?.label).toMatch(/^Requested/);
+  expect(action?.exact_source_text).toBe(text);
+ });
+ it('attaches confidence to the exact target and withholds a weak value from verification',()=>{
+  const text='Call 203-555-0199 immediately.';
+  const tokens:Token[]=[
+   {page:1,text:'Call',x:.1,y:.1,width:.05,height:.03,start:0,end:4,confidence:96},
+   {page:1,text:'203-555-0199',x:.16,y:.1,width:.16,height:.03,start:5,end:17,confidence:74},
+   {page:1,text:'immediately.',x:.33,y:.1,width:.12,height:.03,start:18,end:30,confidence:95}
+  ];
+  const claims=claimsFromExtraction(fallbackExtract(text),text,tokens);
+  const call=claims.find(c=>c.action?.kind==='contact');
+  expect(call?.field_confidence).toBe(74);
+  expect(call?.verification_eligible).toBe(false);
+ });
+ it('upscales small screenshots generically and leaves already-large images alone',()=>{
+  expect(ocrScaleForSize(526,791)).toBeGreaterThan(2);
+  expect(ocrScaleForSize(3200,4100)).toBe(1);
  });
 });
