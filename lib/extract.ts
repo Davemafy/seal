@@ -30,12 +30,14 @@ export function extractActionGraph(text:string):ActionNode[]{
  const lines=text.split(/\n/).map(s=>s.trim()).filter(Boolean);
  const actions:ActionNode[]=[];
  for(const source of lines){
-  const match=source.match(ACTION_VERBS);if(!match)continue;
+  const semanticSource=source.replace(/^[^:]{1,50}:\s*(?=\S)/,'');
+  const match=semanticSource.match(ACTION_VERBS);if(!match)continue;
   const verb=match[1].toLowerCase();
-  const before=source.slice(0,match.index||0).replace(/^[\s•*\-–—\d.)]+/,'').trim();
-  const directive=before.split(/\s+/).filter(Boolean).length<=5||/\b(?:must|shall|required|please|hereby|need to|to avoid|immediately)\b/i.test(source);
+  const before=semanticSource.slice(0,match.index||0).replace(/^[\s•*\-–—\d.)]+/,'').trim();
+  const directive=before.split(/\s+/).filter(Boolean).length<=5||/\b(?:must|shall|required|please|hereby|need to|to avoid|immediately)\b/i.test(semanticSource);
   if(!directive)continue;
-  const kind=/(?:pay|remit|transfer)/.test(verb)?'pay':/(?:call|contact|phone|text)/.test(verb)?'contact':/(?:open|visit|click|scan)/.test(verb)?'navigate':/(?:reply|provide|share|enter|send|disclose)/.test(verb)?'disclose':/(?:appear|report|attend)/.test(verb)?'appear':'other';
+  const moneyObject=/\b(?:payment|balance|fine|fee|amount|money|costs?)\b/i.test(semanticSource);
+  const kind=(moneyObject&&/(?:pay|remit|submit|send|transfer)/.test(verb))||/(?:pay|remit|transfer)/.test(verb)?'pay':/(?:call|contact|phone|text)/.test(verb)?'contact':/(?:open|visit|click|scan)/.test(verb)?'navigate':/(?:reply|provide|share|enter|send|disclose|submit)/.test(verb)?'disclose':/(?:appear|report|attend)/.test(verb)?'appear':'other';
   const phone=source.match(PHONE)?.[0]||'',url=source.match(URL)?.[0]||'',money=source.match(MONEY)?.[0]||'';
   let target_type:ActionNode['target_type']='unknown',target_value='';
   if(phone){target_type='phone';target_value=phone}
@@ -139,6 +141,14 @@ function labelForAction(action:ActionNode){
  return 'Requested action';
 }
 
+function spatialContext(value:string,tokens:Token[],fallback:string){
+ const anchor=locatePhrase(value,tokens);if(!anchor)return fallback;
+ const target=tokens[anchor.source_token_range[0]],page=target.page;
+ const sameLine=tokens.filter(t=>t.page===page&&Math.abs(t.y-target.y)<Math.max(.018,target.height*.8)&&t.x<target.x+.55&&t.x+t.width>target.x-.35).sort((a,b)=>a.x-b.x);
+ const line=sameLine.map(t=>t.text).join(' ').replace(/\s+/g,' ').trim();
+ return line||fallback;
+}
+
 export function claimsFromExtraction(e:Extraction,text:string,tokens:Token[]=[]):Claim[]{
  const result:Claim[]=[];
  const add=(type:ClaimType,label:string,value:string,context='',action?:ActionNode,confidenceBasis?:string)=>{
@@ -161,10 +171,11 @@ export function claimsFromExtraction(e:Extraction,text:string,tokens:Token[]=[])
   if(action.target_type==='url'&&action.target_value)consumedUrls.add(clean(action.target_value));
   const value=(type==='phone'||type==='url')&&action.target_value?action.target_value:action.source_text;
   const confidenceBasis=(type==='phone'||type==='url')&&action.target_value?action.target_value:action.source_text;
-  add(type,label,value,action.source_text,action,confidenceBasis);
+  const context=(type==='phone'||type==='url')&&action.target_value?spatialContext(action.target_value,tokens,action.source_text):action.source_text;
+  add(type,label,value,context,action,confidenceBasis);
  }
- for(const p of e.phone_numbers)if(!consumedPhones.has(clean(p)))add('phone','Phone number',p,text.split(/\n/).find(s=>s.includes(p))||'',undefined,p);
- for(const u of e.urls)if(!consumedUrls.has(clean(u)))add('url','Website',u,text.split(/\n/).find(s=>s.includes(u))||'',undefined,u);
+ for(const p of e.phone_numbers)if(!consumedPhones.has(clean(p))){const fallback=text.split(/\n/).find(s=>s.includes(p))||'';const context=spatialContext(p,tokens,fallback);add('phone',/\b(?:call|contact|phone)\b/i.test(context)?'Requested callback':'Phone number',p,context,undefined,p)}
+ for(const u of e.urls)if(!consumedUrls.has(clean(u))){const fallback=text.split(/\n/).find(s=>s.includes(u))||'';const context=spatialContext(u,tokens,fallback);add('url',/\b(?:visit|open|click|go|pay)\b/i.test(context)?'Requested link':'Website',u,context,undefined,u)}
  for(const mail of e.emails)add('email','Email address',mail);
  for(const t of e.threats)add('threat','Threat or consequence',t,t);
  if(e.delivery_method)add('delivery','Delivery method',e.delivery_method);
