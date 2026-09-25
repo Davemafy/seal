@@ -52,9 +52,11 @@ test('public sample summons uploads without a fabricated mismatch or URL',async(
  await expect(page.getByText('NO JURY-SOURCE COVERAGE')).toBeVisible();
  await expect(page.locator('.index-state.mismatch')).toHaveCount(0);
  await expect(page.locator('.index-item')).toHaveCount(5);
- await page.getByRole('button',{name:/Juror reference/}).click();
+ await page.locator('.index-item').filter({hasText:'Juror reference'}).click();
  await expect(page.locator('.claim-value')).toHaveText('02-0140');
- await page.getByRole('button',{name:/Reporting date/}).click();
+ await page.locator('.index-item').filter({hasText:'Reporting date'}).click();
  await expect(page.locator('.claim-value')).toContainText('March 28(Tue.), May 3(Wed.)');
+ await page.locator('.index-item').filter({hasText:'Jury contact number'}).click();
+ await expect(page.locator('.claim-value')).toHaveText('1-866-388-2430');
  await expect(page.getByText('g.AREyOUASALARIEDEMPLoYEE')).toHaveCount(0);
 });
