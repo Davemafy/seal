@@ -39,7 +39,7 @@ const expected=(name:string)=>({
  juror_or_reference_number:name==='action-first jury message'?'':name.includes('Connecticut sample')?'02-0140':name==='nonexistent private identifier'?'99999999':name==='degraded OCR text proxy'?'':'10472893',
  phone_numbers:name==='action-first jury message'?'2035550199':name==='genuine Connecticut sample PDF'?'18663882430':name==='altered Connecticut sample status phone'?'12035550199':name==='degraded OCR text proxy'||name==='single field altered phone'?'8665550199':name==='unsupported jurisdiction'?'8665550199':name==='official-source conflict'?'7603426264':'9512755076',
  case_or_docket_number:'',
- delivery_method:name==='action-first jury message'?'text message':'',
+ delivery_method:name==='action-first jury message'||name==='flagship mixed notice'?'text message':'',
  court_location:name==='action-first jury message'?'':name.includes('Connecticut sample')?'450 Main Street':name==='degraded OCR text proxy'?'':name==='unsupported jurisdiction'?'12 Cedar Street, Northbridge':'Riverside Historic Courthouse, 4050 Main Street, Riverside, CA 92501',
  urls:name==='action-first jury message'||name.includes('Connecticut sample')?'':name==='single field altered portal'?'rcvduty.com':name==='unsupported jurisdiction'||name==='degraded OCR text proxy'?'':'jurywest.riverside.courts.ca.gov',
  emails:'',
