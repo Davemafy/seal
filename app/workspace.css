@@ -11,7 +11,8 @@
  font-family:var(--font-uber-move),Arial,sans-serif;
 }
 .seal-app button,.seal-app textarea,.seal-app select{font:inherit}
-.seal-app button:disabled{opacity:.42;cursor:not-allowed}
+.seal-app button:disabled{cursor:not-allowed}
+.check-message:disabled,.run-button:disabled{opacity:1;background:#f3f3f3;color:#a6a6a6}
 .seal-app :is(button,a,select,textarea,summary):focus-visible{outline:2px solid var(--blue);outline-offset:3px}
 .workspace-rail{grid-column:1;grid-row:1/4;position:sticky;top:0;height:100svh;display:flex;flex-direction:column;padding:28px 14px 20px;border-right:1px solid var(--line);background:#fafafa}
 .rail-brand{padding:0 12px 38px;text-decoration:none;font-size:25px;line-height:32px;font-weight:700;letter-spacing:-.04em}
@@ -35,13 +36,9 @@
 .nav-action:hover,.demo-link:hover,.replay-button:hover{background:var(--tertiary)}
 .entry-shell{width:100%;max-width:1240px;min-height:calc(100svh - 148px);margin:0 auto;padding:42px 64px 72px;display:grid;grid-template-columns:minmax(0,1fr) 280px;grid-template-areas:"intro intro" "form guide";column-gap:36px;row-gap:30px;align-content:start;align-items:start}
 .entry-copy{grid-area:intro}
-.entry-kicker{margin:0 0 12px!important;color:var(--muted);font-size:14px!important;font-weight:500;line-height:16px;letter-spacing:0}
 .entry-copy h1{margin:0;max-width:800px;font-size:40px;font-weight:700;line-height:52px;letter-spacing:0}
 .entry-copy>p{max-width:750px;margin:12px 0 0;color:#4b4b4b;font-size:16px;line-height:24px}
-.intake{grid-area:form;display:flex;flex-direction:column;gap:12px;padding:24px;border:1px solid var(--line);border-radius:8px;background:#fff}
-.intake-heading{display:flex;justify-content:space-between;gap:16px;align-items:baseline}
-.intake-heading strong{font-size:20px;line-height:28px}
-.intake-heading span{color:var(--muted);font-size:13px}
+.intake{grid-area:form;display:flex;flex-direction:column;gap:16px;padding:0;border:0;border-radius:0;background:transparent}
 .entry-guide{grid-area:guide;padding-top:4px}
 .guide-heading{margin:0 0 12px;font-size:14px;font-weight:500;list-style:none}
 .guide-heading::-webkit-details-marker{display:none}
@@ -226,15 +223,13 @@
  .seal-nav,.seal-footer{padding-inline:16px}
  .seal-nav{min-height:60px}
  .seal-nav-note{display:none}
- .nav-trust{font-size:12px}
+ .nav-trust{display:none}
  .entry-shell,.review-shell{padding:40px 16px 64px}
  .entry-shell{row-gap:32px}
  .entry-copy h1{font-size:36px;line-height:44px}
  .entry-copy>p{font-size:16px;line-height:24px}
- .intake{margin-top:0;padding:20px 16px}
+ .intake{margin-top:0;padding:0}
  .upload-row{min-height:136px}
- .intake-heading{display:block}
- .intake-heading span{display:block;margin-top:4px}
  .entry-guide{padding:0 4px;border-radius:8px;background:var(--secondary)}
  .guide-heading{position:relative;margin:0;padding:16px 44px 16px 16px;cursor:pointer;font-size:16px;line-height:20px}
  .guide-heading::after{content:"+";position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:20px;font-weight:400;line-height:20px}
