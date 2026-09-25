@@ -660,3 +660,237 @@
 @media(prefers-reduced-motion:reduce){
  *,*:before,*:after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}
 }
+
+
+/* ------------------------------------------------------------
+   Human hierarchy pass
+   Replace rule-heavy wireframe structure with type, space, and tone.
+   ------------------------------------------------------------ */
+.seal-app{
+ font-family:var(--font-ui),Arial,Helvetica,sans-serif;
+ --bg:#f2f0ea;
+ --paper:#fffdfa;
+ --muted:#74756f;
+ --line:#d9d6ce;
+ --line-strong:#b8b6af;
+ --safe:#275b48;
+ --safe-soft:#e1e9e4;
+ --conflict:#a44738;
+}
+.seal-nav{border-bottom-color:#cbc8bf}
+.review-head{border-bottom:0;padding-bottom:8px}
+.review-context,.source-status,.decision-label,.signal-kind,.from-label,.source-label,.index-title,.source-timestamp,.contact-source,.resolution-disclaimer,.verification-caveat{
+ letter-spacing:0;
+ text-transform:none;
+}
+.entry-copy h1,.review-head h1,.precheck h2,.decision h2,.section-heading h2,.safe-route h2,.source-signal h3,.court-contact h3,.claim-value,.action-verb,.contact-phone{
+ font-family:var(--font-ui),Arial,Helvetica,sans-serif;
+}
+.message-line,.action-source,.exact-source,.source-quote,.additional-sources blockquote{
+ font-family:var(--font-source),Georgia,'Times New Roman',serif;
+}
+.message-line{font-size:14px;line-height:1.66}
+.action-source{font-size:14px;line-height:1.62}
+.exact-source{font-size:14px;line-height:1.65}
+.source-quote{font-size:15px;line-height:1.65}
+
+/* Major sections no longer use full-width rules as their visual grammar. */
+.requested-actions,.source-resolution,.contact-section,.record-section{
+ border-top:0;
+}
+.requested-actions{
+ margin-inline:calc(clamp(20px,3.2vw,48px) * -1);
+ padding:58px clamp(20px,3.2vw,48px) 64px;
+ background:#f7f5ef;
+ display:grid;
+ grid-template-columns:minmax(230px,.36fr) minmax(0,.64fr);
+ gap:clamp(44px,6vw,96px);
+ align-items:start;
+}
+.requested-actions .section-heading{
+ display:block;
+ margin:0;
+}
+.requested-actions .section-heading h2{
+ max-width:330px;
+ font-size:clamp(30px,3vw,42px);
+ line-height:1.03;
+ letter-spacing:-.045em;
+}
+.requested-actions .section-heading>p{
+ margin-top:13px;
+ max-width:310px;
+ font-size:13px;
+ line-height:1.55;
+}
+.action-list{
+ margin:0;
+ border-top:0;
+ display:grid;
+ gap:24px;
+}
+.action-row{
+ grid-template-columns:minmax(0,1fr) auto;
+ grid-template-areas:
+  "verb state"
+  "source source";
+ gap:8px 20px;
+ padding:0;
+ border:0;
+ background:transparent;
+ align-items:baseline;
+ transition:opacity .18s ease,transform .18s ease;
+}
+.action-row:hover{background:transparent;transform:translateX(3px)}
+.action-row+.action-row{padding-top:8px}
+.action-verb{grid-area:verb;font-size:clamp(25px,2.3vw,34px);line-height:1;font-weight:620;letter-spacing:-.04em}
+.action-source{grid-area:source;color:#5d5e58;max-width:720px}
+.action-state{
+ grid-area:state;
+ align-self:start;
+ justify-self:end;
+ padding-top:3px;
+ font-size:11px;
+ font-weight:600;
+ letter-spacing:0;
+}
+.action-state.mismatch{color:var(--conflict)}
+.action-state.match{color:var(--safe)}
+.action-state.could_not_verify{color:#777871}
+
+/* Evidence gets its own tone instead of another ruled section. */
+.source-resolution{
+ margin-inline:calc(clamp(20px,3.2vw,48px) * -1);
+ padding:64px clamp(20px,3.2vw,48px) 72px;
+ background:#ebe8df;
+}
+.source-resolution .section-heading{margin-bottom:34px}
+.source-signals{
+ margin:0 0 14px;
+ border-top:0;
+ display:grid;
+ grid-template-columns:repeat(12,1fr);
+ column-gap:clamp(18px,2vw,30px);
+ row-gap:24px;
+}
+.source-signal{
+ grid-column:span 6;
+ display:block;
+ padding:24px 0 10px;
+ border-bottom:0;
+}
+.source-signal:nth-child(3n){grid-column:span 12;max-width:820px}
+.signal-kind{margin-bottom:8px;font-size:12px;color:#686961}
+.source-signal h3{font-size:clamp(24px,2.4vw,34px);line-height:1.08}
+.source-signal p{font-size:14px;line-height:1.62;max-width:680px}
+.signal-links{padding-top:14px;gap:8px}
+.signal-links a,.official-link,.additional-sources a,.contact-actions a{
+ font-size:12px;
+ text-decoration-thickness:1px;
+ text-decoration-color:#8f9089;
+}
+.safe-route{
+ margin-top:52px;
+ border-radius:0;
+ box-shadow:none;
+}
+
+/* Independent contact reads as the destination, not another ledger row. */
+.contact-section{
+ margin-inline:calc(clamp(20px,3.2vw,48px) * -1);
+ padding:54px clamp(20px,3.2vw,48px) 60px;
+ background:#dfe8e3;
+}
+.court-contact{
+ margin:0;
+ padding:0;
+ border-top:0;
+ grid-template-columns:minmax(220px,.5fr) minmax(0,1fr);
+ gap:clamp(46px,7vw,120px);
+ align-items:start;
+}
+.court-contact h3{
+ font-size:clamp(24px,2.5vw,34px);
+ letter-spacing:-.035em;
+}
+.court-contact>div:first-child p{font-size:13px;line-height:1.5;max-width:260px}
+.contact-phone{
+ border-bottom:0;
+ margin:0 0 18px;
+ font-size:clamp(38px,4.6vw,64px);
+ line-height:.95;
+ letter-spacing:-.055em;
+}
+.contact-actions{gap:24px}
+.contact-actions button{
+ border-bottom:0;
+ text-decoration:underline;
+ text-underline-offset:4px;
+ text-decoration-color:#7d8e85;
+ font-size:12px;
+}
+.contact-source{margin-top:18px;font-size:11px;max-width:680px}
+
+/* The dense record is the place where separators are still useful. */
+.record-section{
+ padding-top:68px;
+}
+.record-heading{margin-bottom:34px}
+.claim-index{border-top:1px solid var(--line)}
+.index-title,.index-item,.focused-evidence .focus-number,.why-line,.technical-record{
+ border-color:var(--line);
+}
+.focus-rule{background:var(--line)}
+.why-line{border-top:1px solid var(--line)}
+.technical-record{border-top:1px solid var(--line)}
+.additional-sources>div{border-bottom:1px solid var(--line)}
+
+/* The top result uses space, not extra dividers. */
+.action-callout{
+ margin-top:30px;
+ padding:0;
+ border:0;
+ gap:7px;
+}
+.action-callout span{font-size:12px}
+.action-callout strong{font-size:20px;line-height:1.4}
+.review-progress{
+ margin-top:18px;
+ color:#7a7b75;
+ font-size:10px;
+}
+.decision-disclaimer{font-size:12px;line-height:1.5}
+
+/* Forms and buttons inherit the new type system. */
+button,select,textarea,input{font-family:var(--font-ui),Arial,Helvetica,sans-serif}
+.paste-field textarea{font-family:var(--font-ui),Arial,Helvetica,sans-serif}
+
+@media(max-width:900px){
+ .requested-actions{
+  grid-template-columns:1fr;
+  gap:30px;
+ }
+ .requested-actions .section-heading h2,.requested-actions .section-heading>p{max-width:620px}
+ .source-signals{display:block}
+ .source-signal{max-width:none!important;padding:18px 0 12px}
+}
+
+@media(max-width:760px){
+ .requested-actions,.source-resolution,.contact-section{
+  margin-inline:-18px;
+  padding-left:18px;
+  padding-right:18px;
+ }
+ .requested-actions{padding-top:38px;padding-bottom:44px;gap:24px}
+ .requested-actions .section-heading h2{font-size:30px}
+ .action-list{gap:21px}
+ .action-row{grid-template-columns:1fr auto}
+ .action-verb{font-size:25px}
+ .action-source{font-size:13px;line-height:1.58}
+ .source-resolution{padding-top:42px;padding-bottom:48px}
+ .safe-route{margin-top:34px}
+ .contact-section{padding-top:40px;padding-bottom:44px}
+ .court-contact{grid-template-columns:1fr;gap:24px}
+ .contact-phone{font-size:clamp(38px,12vw,52px)}
+ .record-section{padding-top:46px}
+}
