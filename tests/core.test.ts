@@ -100,6 +100,12 @@ describe('Action-first jury scam flow',()=>{
 
 
 describe('image jurisdiction routing',()=>{
+ it('matches the Connecticut court identity when OCR leaves terminal heading punctuation',async()=>{
+  const claim={id:'c0',type:'court' as const,label:'Court identity',value:'UNITED STATES DISTRICT COURT —',exact_source_text:'UNITED STATES DISTRICT COURT —',page:1,context:'UNITED STATES DISTRICT COURT —'};
+  const v=await verifyClaims([claim],'UNITED STATES DISTRICT COURT —','SNAPSHOT','DISTRICT OF CONNECTICUT');
+  expect(v.resolver_id).toBe('connecticut');
+  expect(v.results[0].verdict).toBe('MATCH');
+ });
  it('recognizes Connecticut when the OCR court heading wraps across lines',async()=>{
   const claim={id:'c1',type:'court' as const,label:'Court identity',value:'UNITED STATES DISTRICT COURT',exact_source_text:'UNITED STATES DISTRICT COURT — DISTRICT OF\nCONNECTICUT',page:1,context:'UNITED STATES DISTRICT COURT — DISTRICT OF\nCONNECTICUT'};
   const v=await verifyClaims([claim],'UNITED STATES DISTRICT COURT','SNAPSHOT','District of Connecticut');
