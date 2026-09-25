@@ -3,7 +3,7 @@ import {useEffect,useRef,useState} from 'react';import type {Claim} from '@/lib/
 
 async function restoreInvisibleText(page:Awaited<ReturnType<Awaited<ReturnType<typeof import('pdfjs-dist')['getDocument']>['promise']>['getPage']>>,context:CanvasRenderingContext2D,scale:number){
  const content=await page.getTextContent();
- const horizontal=content.items.filter((item):item is Extract<(typeof content.items)[number],{str:string}>=>'str' in item&&/[A-Za-z]/.test(item.str)&&Math.abs(item.transform[1])<.01&&item.height>5);
+ const horizontal=content.items.filter((item):item is Extract<(typeof content.items)[number],{str:string}>=>'str' in item&&/[A-Za-z0-9]/.test(item.str)&&Math.abs(item.transform[1])<.01&&item.height>5);
  const first=horizontal.slice(0,10);
  let ink=0;
  for(const item of first){
@@ -16,6 +16,7 @@ async function restoreInvisibleText(page:Awaited<ReturnType<Awaited<ReturnType<t
  if(ink>40||!first.length)return;
  context.save();context.fillStyle='#242424';context.textBaseline='alphabetic';
  for(const item of horizontal){
+  if(item.str.length>10&&item.str.replace(/[IiLl|1 ,.'r]/g,'').length<item.str.length*.15)continue;
   const fontSize=Math.hypot(item.transform[0],item.transform[1])*scale;
   if(fontSize<4||fontSize>80)continue;
   context.font=`${fontSize}px Arial, sans-serif`;

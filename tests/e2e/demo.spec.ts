@@ -47,6 +47,11 @@ test('public sample summons uploads without a fabricated mismatch or URL',async(
   for(let i=0;i<pixels.length;i+=4)if(pixels[i]<110&&pixels[i+1]<110&&pixels[i+2]<110&&pixels[i+3]>200)ink++;
   return ink;
  }),{timeout:20000}).toBeGreaterThan(120);
+ await expect.poll(async()=>page.locator('canvas').evaluate(canvas=>{
+  const pixels=(canvas as HTMLCanvasElement).getContext('2d')!.getImageData(610,795,125,40).data;let ink=0;
+  for(let i=0;i<pixels.length;i+=4)if(pixels[i]<110&&pixels[i+1]<110&&pixels[i+2]<110&&pixels[i+3]>200)ink++;
+  return ink;
+ }),{timeout:20000}).toBeGreaterThan(60);
  await page.getByRole('button',{name:'Check this notice'}).click();
  await expect(page.getByText('5 claims checked')).toBeVisible({timeout:30000});
  await expect(page.getByText('NO JURY-SOURCE COVERAGE')).toBeVisible();
