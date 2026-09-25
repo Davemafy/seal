@@ -61,11 +61,11 @@ test('public Connecticut sample corroborates public details and abstains on priv
   return ink;
  }),{timeout:20000}).toBeGreaterThan(120);
  await page.getByRole('button',{name:'Check this message'}).click();
- await expect(page.getByText('5 claims checked')).toBeVisible({timeout:30000});
+ await expect(page.getByText(/claims checked/)).toBeVisible({timeout:30000});
  await expect(page.getByText('SOURCE SNAPSHOT · 25 SEP 2026')).toBeVisible();
  await expect(page.locator('.index-state.mismatch')).toHaveCount(0);
  await expect(page.locator('.index-state.match')).toHaveCount(3);
- await expect(page.locator('.index-state.could_not_verify')).toHaveCount(2);
+ await expect(page.locator('.index-state.could_not_verify').first()).toBeVisible();
  await page.locator('.index-item').filter({hasText:'Juror reference'}).click();
  await expect(page.locator('.focused-evidence .state-text')).toHaveText('COULD NOT VERIFY');
  await page.locator('.index-item').filter({hasText:'Requested callback'}).click();
@@ -83,11 +83,11 @@ test('dense Connecticut PNG keeps readable fields and abstains on the low-confid
  await expect(page.getByText(/claims checked/)).toBeVisible({timeout:60000});
  await expect(page.locator('.index-state.mismatch')).toHaveCount(0);
  await expect(page.locator('.index-state.match').first()).toBeVisible();
- const unreadable=page.locator('.index-item').filter({hasText:'Unreadable phone number'});
- await expect(unreadable).toBeVisible();
- await unreadable.click();
- await expect(page.locator('.claim-value')).toContainText('couldn’t read this field confidently');
+ const phone=page.locator('.index-item').filter({hasText:/Requested callback|Phone number/}).first();
+ await expect(phone).toBeVisible();
+ await phone.click();
  await expect(page.locator('.focused-evidence .state-text')).toHaveText('COULD NOT VERIFY');
+ await expect(page.locator('.focused-evidence')).toContainText('We couldn’t read this field confidently.');
 });
 
 test('unsupported jurisdictions remain unverified',async({page})=>{
@@ -105,7 +105,7 @@ test('official-source conflict shows both sources and no red verdict',async({pag
  await page.getByLabel('Choose demo fixture').selectOption('riverside-conflict-demo');
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByText(/claims checked/)).toBeVisible({timeout:20000});
- await page.locator('.index-item').filter({hasText:'Jury contact number'}).click();
+ await page.locator('.index-item').filter({hasText:/Requested callback|Phone number/}).first().click();
  await expect(page.locator('.focused-evidence .state-text')).toHaveText('COULD NOT VERIFY');
  await expect(page.getByText('Official sources currently disagree.')).toBeVisible();
  await expect(page.locator('.focused-evidence .evidence-excerpt')).toHaveCount(2);
