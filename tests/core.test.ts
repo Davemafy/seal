@@ -1,4 +1,4 @@
-import {describe,it,expect,vi} from 'vitest';import {fallbackExtract,claimsFromExtraction,extractActionGraph,extractAuthorityCitations,locatePhrase,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '../lib/extract';import {ocrScaleForSize} from '../lib/browser-file';import {extractionSchema,type Token} from '../lib/types';import {verdict,verifyClaims,phoneDigits,domain,address,FederalCourtListenerResolver} from '../lib/resolver';import {fixtures} from '../lib/fixtures';
+import {describe,it,expect,vi} from 'vitest';import {fallbackExtract,claimsFromExtraction,extractActionGraph,extractAuthorityCitations,locatePhrase,recoverLabeledJurorNumber,recoverLabeledReportingDate,sanitizeStructuredExtraction} from '../lib/extract';import {ocrScaleForSize} from '../lib/browser-file';import {extractionSchema,type Token} from '../lib/types';import {verdict,verifyClaims,phoneDigits,domain,address,FederalCourtListenerResolver} from '../lib/resolver';import {fixtures} from '../lib/fixtures';
 import {readFileSync} from 'node:fs';
 const claims=(key:keyof typeof fixtures)=>{const t=fixtures[key].text,e=fallbackExtract(t);return {t,e,c:claimsFromExtraction(e,t)}};
 describe('extraction and source links',()=>{
@@ -220,6 +220,24 @@ describe('review-surface boundaries',()=>{
  });
 });
 
+
+describe('structured extraction grounding',()=>{
+ it('drops a model-inferred juror reference when the printed text has no juror field',()=>{
+  const text='COMMONWEALTH OF VIRGINIA\nCASE NO.: VA-26-TR-273196\nFailure to Pay Electronic Toll\nSCAN TO PAY';
+  const model={...fallbackExtract(text),juror_or_reference_number:'273196',delivery_method:'text message'};
+  const clean=sanitizeStructuredExtraction(model,text);
+  expect(clean.juror_or_reference_number).toBe('');
+  expect(clean.delivery_method).toBe('');
+ });
+ it('keeps an explicitly labeled juror number and explicit delivery channel as metadata',()=>{
+  const text='Text message\nJuror number: 10472893\nReport as directed.';
+  const model={...fallbackExtract(text),juror_or_reference_number:'10472893',delivery_method:'text message'};
+  const clean=sanitizeStructuredExtraction(model,text);
+  expect(clean.juror_or_reference_number).toBe('10472893');
+  expect(clean.delivery_method).toBe('text message');
+  expect(claimsFromExtraction(clean,text).some(c=>c.type==='delivery')).toBe(false);
+ });
+});
 
 describe('public-source intelligence layer',()=>{
  const notice=[

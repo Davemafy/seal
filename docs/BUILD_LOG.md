@@ -143,3 +143,15 @@ No architecture or evidence-model changes. This pass only removes presentation d
 - The number of authority conflicts remains evidence-driven; SEAL reports only the citations OCR recovered confidently enough to check.
 
 This is the presentation freeze. CI/browser regression is the final release gate; no further product expansion is planned in this batch.
+
+
+### Structured extraction grounding hotfix
+
+A live GROQ run on the Facebook traffic notice exposed two unsupported structured fields in the review ledger: a juror/reference value inferred from an existing number and a delivery method inferred without explicit printed evidence.
+
+The structured extractor now post-validates those fields against the recovered text:
+- a juror/reference value survives only when it is locally anchored to an explicit juror, badge, or participant label;
+- delivery method is derived deterministically only from explicit phrases such as `text message`, `SMS`, `email message`, or `phone call`;
+- delivery channel remains extraction metadata and is no longer promoted to a separately checked claim.
+
+This is a correctness/noise hotfix only. Source intelligence, verdict rules, evidence sources, and safe-resolution behavior are unchanged.

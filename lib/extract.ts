@@ -116,6 +116,23 @@ export function extractActionGraph(text:string,tokens:Token[]=[]):ActionNode[]{
  }
  return actions;
 }
+export function sanitizeStructuredExtraction(extraction:Extraction,text:string):Extraction{
+ const next:Extraction={...extraction,payment_demand:{...extraction.payment_demand},phone_numbers:[...extraction.phone_numbers],emails:[...extraction.emails],urls:[...extraction.urls],information_requests:[...extraction.information_requests],threats:[...extraction.threats],uncertain_fields:[...extraction.uncertain_fields]};
+ const value=next.juror_or_reference_number.trim();
+ if(value){
+  const lower=text.toLowerCase(),needle=value.toLowerCase();
+  let at=lower.indexOf(needle),grounded=false;
+  while(at>=0&&!grounded){
+   const nearby=lower.slice(Math.max(0,at-120),Math.min(lower.length,at+needle.length+120));
+   grounded=/\b(?:juror|badge|participant)\b[\s\S]{0,80}\b(?:number|no\.?|id)\b/.test(nearby)||/\b(?:juror|badge|participant)\s*(?:number|no\.?|#|id)?\s*[:#-]?\s*$/.test(nearby.slice(0,Math.max(0,nearby.indexOf(needle))));
+   at=lower.indexOf(needle,at+needle.length);
+  }
+  if(!grounded)next.juror_or_reference_number='';
+ }
+ next.delivery_method=/\btext message|\bsms\b/i.test(text)?'text message':/\bemail(?: message)?\b/i.test(text)?'email':/\bphone call\b/i.test(text)?'phone call':'';
+ return next;
+}
+
 export function fallbackExtract(text:string):Extraction {
  const e=emptyExtraction();
  const lines=text.split(/\n/).map(s=>s.trim()).filter(Boolean);
@@ -260,7 +277,7 @@ export function claimsFromExtraction(e:Extraction,text:string,tokens:Token[]=[])
  for(const p of e.phone_numbers)if(!consumedPhones.has(clean(p))){const fallback=text.split(/\n/).find(s=>s.includes(p))||'';const context=spatialContext(p,tokens,fallback);add('phone',/\b(?:call|contact|phone)\b/i.test(context)?'Requested callback':'Phone number',p,context,undefined,p)}
  for(const u of e.urls)if(!consumedUrls.has(clean(u))){const fallback=text.split(/\n/).find(s=>s.includes(u))||'';const context=spatialContext(u,tokens,fallback);add('url',/\b(?:visit|open|click|go|pay)\b/i.test(context)?'Requested link':'Website',u,context,undefined,u)}
  for(const mail of e.emails)add('email','Email address',mail);
- // Consequence/threat language remains extraction context. It is not a separately verifiable public claim.
- if(e.delivery_method)add('delivery','Delivery method',e.delivery_method);
+ // Consequence/threat and delivery-channel metadata remain extraction context.
+ // The checked-detail ledger is reserved for requested actions and independently checkable details.
  return result;
 }
