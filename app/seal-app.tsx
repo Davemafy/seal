@@ -301,13 +301,15 @@ async function upload(uploaded:File){
       <p>Your uploaded file does not leave the browser. Extracted text can be sent to the SEAL server and, when configured, to Groq for claim structuring. SEAL does not store the uploaded file or extracted claims.</p>
      </details>
     </div>
-    <aside className="entry-guide" aria-label="Questions SEAL can help answer">
-     <p className="guide-heading">Questions this can help answer</p>
-     <div><p><strong>What am I being asked to do?</strong><small>See the requests in the message together.</small></p></div>
-     <div><p><strong>What can the court confirm?</strong><small>Check supported details against court sources.</small></p></div>
-     <div><p><strong>How do I check the next step?</strong><small>When available, find court contact outside the message.</small></p></div>
-     <p className="guide-limit">A source match cannot prove who sent a message.</p>
-    </aside>
+    <details className="entry-guide" aria-label="Questions SEAL can help answer">
+     <summary className="guide-heading">Questions this can help answer</summary>
+     <div className="entry-guide-body">
+      <div><p><strong>What am I being asked to do?</strong><small>See the requests in the message together.</small></p></div>
+      <div><p><strong>What can the court confirm?</strong><small>Check supported details against court sources.</small></p></div>
+      <div><p><strong>How do I check the next step?</strong><small>When available, find court contact outside the message.</small></p></div>
+      <p className="guide-limit">A source match cannot prove who sent a message.</p>
+     </div>
+    </details>
    </section>
    :
    <section className="review-shell" onDragOver={event=>{if(event.dataTransfer.types.includes('Files'))event.preventDefault()}} onDrop={event=>{if(event.dataTransfer.files.length){event.preventDefault();upload(event.dataTransfer.files[0])}}}>
