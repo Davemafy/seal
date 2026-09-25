@@ -332,20 +332,22 @@ async function upload(uploaded:File){
 
     {file?.sample&&<div className="source-failure" role="status">This document is marked SAMPLE. It is an example form, not a summons to act on. Claim checks below do not authenticate an individual notice.</div>}
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
-    {error&&<div role="alert" className="inspection-error"><span>{error}</span><button type="button" onClick={()=>run()} disabled={busy}>Retry check</button></div>}
-
     <div className="review-hero">
      <div className="decision-pane" id="review-summary">
       {!verification?
-       <div className="precheck">
-        <h2>{busy?'Checking the details…':'Ready to review this message.'}</h2>
-        <p>{busy?'SEAL is finding requested actions and comparing available details with independent sources.':'Review the original alongside the details SEAL can check.'}</p>
+       <div className={`precheck ${error?'has-error':''}`}>
+        <h2>{busy?'Checking your message':error?(file?'We couldn’t check this image.':'We couldn’t check this message.'):'Ready to review this message.'}</h2>
+        <p>{busy?(status||'Working through the message…'):error?error:'Review the original alongside the details SEAL can check.'}</p>
         {busy?
-         <ol className="processing-list" aria-live="polite">
-          <li className={status==='Reading requested actions'?'active':''}>Read requested actions</li>
-          <li className={status==='Checking independent sources'?'active':''}>Check independent sources</li>
-          <li>Find a safer route</li>
-         </ol>
+         <div className="check-loader" role="status" aria-live="polite" aria-label={status||'Checking the message'}>
+          <div className="check-loader-track"><span/></div>
+          <small>{status==='Reading text from the image'?'The first image can take longer while the on-device reader starts.':'Keep this tab open while SEAL checks the message.'}</small>
+         </div>
+         :error?
+         <div className="precheck-actions">
+          <button type="button" className="run-button" onClick={clear}>{file?'Choose another file':'Start again'}</button>
+          {text.trim()&&<button type="button" className="replay-button" onClick={()=>run()}>Try again</button>}
+         </div>
          :
          <button type="button" className="run-button" disabled={busy||!text.trim()||!hydrated} onClick={()=>run()}>Check this message</button>}
         <p className="precheck-note">{file?'The original file stays in this browser. Only extracted text is sent for claim structuring.':'Pasted text can be sent for claim structuring; SEAL does not store it.'}</p>
