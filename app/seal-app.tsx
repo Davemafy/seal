@@ -64,7 +64,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
    for(const unreadable of file?.unreadableFields||[])found.push({id:`c${found.length+1}`,type:unreadable.type,label:unreadable.label,value:'We couldn’t read this field confidently.',exact_source_text:'Unreadable field',page:unreadable.page,source_bbox:unreadable.source_bbox,context:''});
    if(!found.length)throw new Error('We couldn’t read enough of this message to check it reliably. Try a clearer screenshot or paste the message text.');
    setClaims(found);setStatus('Checking court sources');
-   const response=await fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({claims:found,court_name:extraction.court_name,jurisdiction_hint:text.match(/\bdistrict of connecticut\b/i)?.[0]||'',mode:sourceMode})});
+   const response=await fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({claims:found,court_name:extraction.court_name,jurisdiction_hint:/\bdistrict\s+of\s+connecticut\b/i.test(text)?'District of Connecticut':'',mode:sourceMode})});
    if(!response.ok)throw new Error('The source check could not finish. Try again.');
    const checked=await response.json() as Verification;
    if(runId.current!==id)return;
