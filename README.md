@@ -19,7 +19,7 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000/demo`. The deterministic demo requires no key. Click **Run verification**; later **Check live sources** fetches Riverside pages. The landing page accepts PDF, JPG, and PNG. The original binary is read only in the browser. PDF text is extracted with PDF.js; scanned PDFs and images use lazily loaded Tesseract.js. If extraction is too uncertain, SEAL abstains rather than supplying guessed facts. The demo source snapshot is dated and identified as such.
+Open `http://localhost:3000/demo`. The deterministic demo requires no key. Click **Check this notice**; later **Check live sources** fetches Riverside pages. Select a marked phrase on the notice or a detail in the index to see its exact verdict, official excerpt, link, and check date together. The landing page accepts PDF, JPG, and PNG. The original binary is read only in the browser. PDF text is extracted with PDF.js; scanned PDFs and images use lazily loaded Tesseract.js. If extraction is too uncertain, SEAL abstains rather than supplying guessed facts. The demo source snapshot is dated and identified as such.
 
 Set optional variables from `.env.example`: `GROQ_API_KEY` for model claim structuring; `GROQ_BASE_URL` (default `https://api.groq.com/openai/v1`); `GROQ_MODEL` (default `openai/gpt-oss-20b`); `COURTLISTENER_TOKEN` for secondary federal docket search. Without the keys, local extraction and Riverside remain usable.
 
@@ -36,6 +36,6 @@ npm run e2e
 npm run build
 ```
 
-Tests use saved court excerpts and avoid live dependencies. The current benchmark uses fictional fixtures and one generated degraded-photo OCR case; it is not a measurement on genuine summons photos. Live checks can fail or change; when they fail, results abstain. CourtListener is an index, so no result never means contradiction. Riverside official pages currently disagree about the Desert Region jury number, and SEAL shows both rather than choosing one. The 2026 payment warning expressly addresses calls and texts; paper payment demands without matching direct evidence remain unverified.
+Tests use saved court excerpts and avoid live dependencies. The current benchmark uses fictional fixtures and one generated degraded-photo OCR case; it is not a measurement on genuine summons photos. Live checks can fail or change; when they fail, results abstain and the court contact uses a clearly labeled, dated official snapshot. CourtListener is an index, so no result never means contradiction. Riverside official pages currently disagree about the Desert Region jury number, and SEAL shows both, with their check dates, rather than choosing one. The 2026 payment warning expressly addresses calls and texts; paper payment demands without matching direct evidence remain unverified.
 
 Architecture and verdict rules are in `docs/`. Further court coverage requires reviewed resolvers and source-specific contradiction rules. Related prior art includes court scam alerts and legal citation checking tools; SEAL’s distinctive workflow connects claims printed in a notice to independently sourced, conservative verdicts.

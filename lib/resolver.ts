@@ -1,5 +1,5 @@
 import type {Claim,Result,Evidence,Verification} from './types';
-import {getSources,cite,type SourceKey,type Source} from './sources';
+import {getSources,cite,snapshot,type SourceKey,type Source} from './sources';
 export const phoneDigits=(s:string)=>s.replace(/\D/g,'').replace(/^1(?=\d{10}$)/,'');
 export const domain=(s:string)=>{try{return new URL(/^https?:\/\//i.test(s)?s:'https://'+s).hostname.toLowerCase().replace(/^www\./,'');}catch{return '';}};
 export const address=(s:string)=>s.toLowerCase().replace(/\bstreet\b/g,'st').replace(/[^a-z0-9]/g,'');
@@ -48,7 +48,7 @@ function resolveRiverside(c:Claim,s:Sources):Result{
  return unknown(c);
 }
 export interface CourtResolver{id:string;supportedCourt(name:string):boolean;resolve(claims:Claim[],mode:'LIVE'|'SNAPSHOT',courtName?:string):Promise<Verification>}
-export const RiversideSuperiorCourtResolver:CourtResolver={id:'riverside',supportedCourt:n=>/riverside/i.test(n)&&/superior court/i.test(n),async resolve(claims,mode){const s=await getSources(mode);const contact=proof(s,'jury','951-275-5076');return {results:claims.map(c=>resolveRiverside(c,s)),resolver_id:this.id,contact:contact?{phone:'951-275-5076',website:'https://www.riverside.courts.ca.gov/divisions/jury-services',source:contact}:undefined};}};
+export const RiversideSuperiorCourtResolver:CourtResolver={id:'riverside',supportedCourt:n=>/riverside/i.test(n)&&/superior court/i.test(n),async resolve(claims,mode){const s=await getSources(mode);const contact=proof(s,'jury','951-275-5076')||cite(snapshot('jury'),'951-275-5076');return {results:claims.map(c=>resolveRiverside(c,s)),resolver_id:this.id,contact:contact?{phone:'951-275-5076',website:'https://www.riverside.courts.ca.gov/divisions/jury-services',source:contact}:undefined};}};
 export const UnsupportedCourtResolver:CourtResolver={id:'unsupported',supportedCourt:()=>true,async resolve(claims){return {results:claims.map(c=>unknown(c,'This jurisdiction is not supported by an official-source resolver.','unsupported')),resolver_id:this.id};}};
 export const FederalCourtListenerResolver:CourtResolver={id:'courtlistener',supportedCourt:n=>/united states (district|court of appeals|bankruptcy) court/i.test(n),async resolve(claims,_mode,courtName=''){const results:Result[]=await Promise.all(claims.map(async c=>{
  if(c.type!=='docket')return unknown(c,'CourtListener does not independently confirm this notice detail.','courtlistener');

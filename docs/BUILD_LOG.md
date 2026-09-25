@@ -14,3 +14,11 @@ Twelve cases include the flagship mixed notice, an unmodified official public no
 
 ## 5. Deploy/harden — build passed; deployment pending
 Typecheck, unit tests, benchmark, lint, and production build pass. Local browser run blocked by missing binary. CI is configured to install Chromium and run the flagship Playwright flow. Preview deployment requires an authenticated Vercel project connection.
+
+## Founder-grade product pass · 25 Sep 2026
+
+1. **Extraction — passed.** Re-ran extraction tests and typecheck. Nine demo claims still map to atomic source phrases; OCR uncertainty still abstains. No change to guessed-field policy.
+2. **Official-source resolver — passed.** Audited the deployed live-source failure, then preserved a dated official snapshot for the safe court contact when live pages fail. Added a regression test that forces all five live fetches to fail and proves every verdict abstains while contact remains visibly `SNAPSHOT`. Ten unit tests pass. Official Desert Region conflict remains two-source `COULD_NOT_VERIFY`.
+3. **Product UI — build passed; visual verification after deploy.** Rebuilt the review as a readable notice with inline claim marks, one focused evidence panel, a compact claim index, a single selected connector, and a compact mobile evidence sheet. A mismatch, match, or abstention remains attached to its precise claim. Conflicting official excerpts and timestamps appear together. Typecheck, lint (warnings only), and production build pass. Updated the Playwright flow for the new interface.
+4. **Benchmark — passed.** Twelve cases repeated: field extraction accuracy 0.917–1.0 by field, MISMATCH precision 1.0, **false MISMATCH count 0**, COULD_NOT_VERIFY rate 0.459, full-flow success 0.917. This is a small fixture set; the degraded photo still loses fields.
+5. **Deploy/harden — in progress.** Re-run CI browser flow and inspect the production URL after publishing. Local Chromium remains unavailable in this workspace.
