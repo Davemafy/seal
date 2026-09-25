@@ -22,13 +22,15 @@ export function warmOcr(){
  return ocrWorkerPromise;
 }
 
-export async function readInBrowser(file:File):Promise<BrowserDocument>{
+export async function readInBrowser(file:File,onStatus:(status:string)=>void=()=>{}):Promise<BrowserDocument>{
  if(file.size>16_000_000)throw new Error('Maximum file size is 16 MB.');
  if(!['application/pdf','image/jpeg','image/png'].includes(file.type))throw new Error('Choose a PDF, JPG, or PNG.');
  const preview=URL.createObjectURL(file);
  if(file.type==='application/pdf'){
+  onStatus('Opening the PDF');
   const pdfjs=await import('pdfjs-dist');pdfjs.GlobalWorkerOptions.workerSrc='/pdf.worker.min.mjs';
   const doc=await pdfjs.getDocument({data:await file.arrayBuffer(),standardFontDataUrl:'/standard_fonts/',useSystemFonts:true}).promise;const pages:string[]=[];const tokens:Token[]=[];let sample=false;
+  onStatus('Reading text from the PDF');
   for(let i=1;i<=Math.min(doc.numPages,8);i++){
    const page=await doc.getPage(i);const viewport=page.getViewport({scale:1});const content=await page.getTextContent();let pageText='';
    for(const item of content.items){
@@ -42,10 +44,14 @@ export async function readInBrowser(file:File):Promise<BrowserDocument>{
    pages.push(pageText.trim());
   }
   const text=pages.join('\n');if(text.trim().length>20)return {text,tokens,preview,kind:'pdf',uncertain:false,sample,unreadableFields:[]};
+  onStatus('Scanning the first page');
   const page=await doc.getPage(1);const viewport=page.getViewport({scale:2});const canvas=document.createElement('canvas');canvas.width=viewport.width;canvas.height=viewport.height;await page.render({canvas,canvasContext:canvas.getContext('2d')!,viewport}).promise;
   const recognized=await ocr(canvas);return {...recognized,preview,kind:'pdf',sample};
  }
- const image=new Image();image.src=preview;await image.decode();return {...await ocr(normalizeForOcr(image)),preview,kind:'image',sample:false};
+ onStatus('Preparing the image');
+ const image=new Image();image.src=preview;await image.decode();
+ onStatus('Reading text from the image');
+ return {...await ocr(normalizeForOcr(image)),preview,kind:'image',sample:false};
 }
 
 function normalizeForOcr(image:HTMLImageElement){
