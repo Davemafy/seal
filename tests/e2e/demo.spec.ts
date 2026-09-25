@@ -9,7 +9,7 @@ test('demo connects each claim to an independent source and safe contact',async(
  await expect(page.locator('.index-state.mismatch').first()).toBeVisible();
  await expect(page.locator('.index-state.match').first()).toBeVisible();
  await expect(page.locator('.index-state.could_not_verify').first()).toBeVisible();
- await page.getByRole('button',{name:/Official jury portal:/}).click();
+ await page.getByRole('button',{name:/Jury service website:/}).click();
  await expect(page.locator('.claim-value')).toHaveText('rcvduty.com');
  await expect(page.getByRole('link',{name:/Open official source/}).first()).toHaveAttribute('href',/riverside.courts.ca.gov/);
  await expect(page.locator('.contact-phone')).toHaveAttribute('href','tel:951-275-5076');

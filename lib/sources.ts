@@ -35,5 +35,8 @@ export async function getSources(mode:'LIVE'|'SNAPSHOT'):Promise<Partial<Record<
 }
 export function cite(source:Source,phrase:string):Evidence|undefined {
  const index=source.text.toLowerCase().indexOf(phrase.toLowerCase());if(index<0)return;
- return {...source.evidence,excerpt:source.text.slice(Math.max(0,index-75),Math.min(source.text.length,index+phrase.length+90))};
+ let start=Math.max(0,index-85),end=Math.min(source.text.length,index+phrase.length+90);
+ if(start>0){const boundary=source.text.indexOf(' ',start);if(boundary>=0&&boundary<index)start=boundary+1;}
+ if(end<source.text.length){const boundary=source.text.lastIndexOf(' ',end);if(boundary>index+phrase.length)end=boundary;}
+ return {...source.evidence,excerpt:`${start?'…':''}${source.text.slice(start,end)}${end<source.text.length?'…':''}`};
 }

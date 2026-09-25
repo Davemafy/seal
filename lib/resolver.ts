@@ -39,7 +39,7 @@ function resolveRiverside(c:Claim,s:Sources):Result{
  if(c.type==='payment'){
   const p=proof(s,'warning','will not call or send text messages');const payment=proof(s,'warning','make a payment');
   if(!p||!payment)return !s.warning?noSource():unknown(c);
-  if(/(?:text message|sms|call|by phone)/i.test(c.context||'' )&&/\bpay|payment|make a payment/i.test(c.context||''))return verdict(c,'MISMATCH','The court says it will not demand payment in jury-related calls or texts.',[p,payment]);
+  if(/(?:text message|sms|call|by phone)/i.test(c.context||'' )&&/\bpay|payment|make a payment/i.test(c.context||''))return verdict(c,'MISMATCH','The court says it will not demand payment in jury-related calls or texts.',[payment,p]);
   return unknown(c,'The official warning covers jury-related calls and texts; this payment request has not been directly contradicted in its stated context.');
  }
  if(c.type==='email')return unknown(c,'The available official pages do not establish an exhaustive list of jury email addresses.');
