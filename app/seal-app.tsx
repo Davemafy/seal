@@ -14,8 +14,9 @@ const stateWord=(value:Result['verdict'])=>value==='MATCH'?'Matches':value==='MI
 
 export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
  const [hydrated,setHydrated]=useState(false);
- const [fixture,setFixture]=useState<FixtureKey>('riverside-mismatch-demo');
- const [text,setText]=useState(initialDemo?fixtures['riverside-mismatch-demo'].text:'');
+ const [fixture,setFixture]=useState<FixtureKey>('action-message-demo');
+ const [text,setText]=useState(initialDemo?fixtures['action-message-demo'].text:'');
+ const [draft,setDraft]=useState('');
  const [file,setFile]=useState<BrowserDocument|null>(null);
  const [claims,setClaims]=useState<Claim[]>([]);
  const [verification,setVerification]=useState<Verification|null>(null);
@@ -34,7 +35,8 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
  const evidenceAnchor=useRef<HTMLDivElement>(null);
  const anchors=useRef<Record<string,HTMLElement|null>>({});
  const runId=useRef(0);
- const isDemo=!file&&text.startsWith('DEMO / FICTIONAL NOTICE');
+ const isDemo=!file&&/^DEMO \/ (?:FICTIONAL NOTICE|SYNTHETIC MESSAGE)/.test(text);
+ const isActionDemo=isDemo&&text.startsWith('DEMO / SYNTHETIC MESSAGE');
  const resultById=useMemo(()=>new Map(verification?.results.map(r=>[r.claim_id,r])||[]),[verification]);
  const current=claims.find(c=>c.id===selected)||claims[0];
  const currentResult=current&&resultById.get(current.id);
@@ -44,8 +46,9 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
  const sourceLabel=verification?.resolver_id==='riverside'?(mode==='LIVE'?'LIVE SOURCE CHECK':'SOURCE SNAPSHOT · 24 SEP 2026'):verification?.resolver_id==='connecticut'?(mode==='LIVE'?'LIVE SOURCE CHECK':'SOURCE SNAPSHOT · 25 SEP 2026'):verification?.resolver_id==='courtlistener'?(claims.some(c=>c.type==='docket')?'FEDERAL DOCKET INDEX':'NO JURY-SOURCE COVERAGE'):verification?.resolver_id==='ocr'?'LOW CONFIDENCE OCR':verification?'NO SUPPORTED SOURCE':isDemo?'SOURCE SNAPSHOT · 24 SEP 2026':'SOURCE CHECK PENDING';
  useEffect(()=>{const timer=window.setTimeout(()=>setHydrated(true),0);return()=>clearTimeout(timer)},[]);
 
- function clear(){runId.current++;if(file)URL.revokeObjectURL(file.preview);setFile(null);setText('');setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setMode('SNAPSHOT')}
+ function clear(){runId.current++;if(file)URL.revokeObjectURL(file.preview);setFile(null);setText('');setDraft('');setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setMode('SNAPSHOT')}
  function chooseFixture(key:FixtureKey){clear();setFixture(key);setText(fixtures[key].text)}
+ function submitPaste(){const value=draft.trim();if(!value)return;clear();setText(value)}
  async function upload(uploaded:File){clear();setBusy(true);setStatus('Reading document');try{const doc=await readInBrowser(uploaded);setFile(doc);setText(doc.text);if(!doc.text.trim())setError('We couldn’t read enough of this notice to verify it reliably. Try a clearer copy.')}catch(e){setError(e instanceof Error?e.message:'Could not read this file.')}finally{setBusy(false);setStatus('')}}
  async function run(sourceMode:Mode=mode){
   const id=++runId.current;setBusy(true);setError('');setVerification(null);setRevealed(0);setSelected('');setMode(sourceMode);setStatus('Identifying claims');
@@ -57,18 +60,19 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
    if(runId.current!==id)return;
    setExtractionMode(extractor);
    const found=claimsFromExtraction(extraction,text,file?.tokens||[]);
-   if(!found.length)throw new Error('We couldn’t read enough of this notice to verify it reliably. Try a clearer copy.');
+   for(const unreadable of file?.unreadableFields||[])found.push({id:`c${found.length+1}`,type:unreadable.type,label:unreadable.label,value:'We couldn’t read this field confidently.',exact_source_text:'Unreadable field',page:unreadable.page,source_bbox:unreadable.source_bbox,context:''});
+   if(!found.length)throw new Error('We couldn’t read enough of this message to check it reliably. Try a clearer screenshot or paste the message text.');
    setClaims(found);setStatus('Checking court sources');
    const response=await fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({claims:found,court_name:extraction.court_name,jurisdiction_hint:text.match(/\bdistrict of connecticut\b/i)?.[0]||'',mode:sourceMode})});
    if(!response.ok)throw new Error('The source check could not finish. Try again.');
    const checked=await response.json() as Verification;
    if(runId.current!==id)return;
    setVerification(checked);
-   if(isDemo&&sourceMode==='SNAPSHOT'&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+   if(isDemo&&!isActionDemo&&sourceMode==='SNAPSHOT'&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
     const order=[0,1,2,4,7,5,3,6,8].filter(i=>i<found.length);
     for(let step=0;step<order.length;step++){await new Promise(resolve=>setTimeout(resolve,step===0?300:420));if(runId.current!==id)return;setSelected(found[order[step]].id);setRevealed(step+1)}
     setRevealed(found.length);setSelected(found[7]?.id||found[0].id);
-   }else{setRevealed(found.length);setSelected(found.find(c=>checked.results.find(r=>r.claim_id===c.id)?.verdict==='MISMATCH')?.id||found[0].id)}
+   }else{setRevealed(found.length);const requested=found.find(c=>c.type==='payment'&&checked.results.find(r=>r.claim_id===c.id)?.verdict==='MISMATCH')||found.find(c=>['phone','url','information'].includes(c.type)&&checked.results.find(r=>r.claim_id===c.id)?.verdict==='MISMATCH')||found.find(c=>checked.results.find(r=>r.claim_id===c.id)?.verdict==='MISMATCH')||found[0];setSelected(requested.id)}
   }catch(e){if(runId.current===id)setError(e instanceof Error?e.message:'The source check could not finish.')}finally{if(runId.current===id){setBusy(false);setStatus('')}}
  }
  const select=useCallback((id:string)=>{if(!verification||!resultById.has(id))return;setSelected(id);setShowIndex(false)},[verification,resultById]);
