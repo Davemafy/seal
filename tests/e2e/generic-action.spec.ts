@@ -81,7 +81,7 @@ test('unsupported court still reaches official scam, statute, and safe-path inte
  await expect(page.locator('.index-item').filter({hasText:'Cited authority'})).toHaveCount(3);
  await expect(page.locator('.index-state.mismatch')).toHaveCount(3);
  await expect(page.locator('.focused-evidence .state-text')).toHaveText('MISMATCH');
- await expect(page.locator('.focused-evidence')).toContainText('CITED AUTHORITY');
+ await expect(page.locator('.focused-evidence')).toContainText(/Cited authority/i);
  await expect(page.locator('.focused-evidence .claim-value')).toHaveText(/Va\. Code § 46\.2-\d+/);
  await expect(page.locator('.contact-phone')).toHaveAttribute('href','tel:804-646-6431');
  await expect(page.locator('.safe-primary')).toHaveAttribute('href','https://vacourts.gov/caseinfo/home');
