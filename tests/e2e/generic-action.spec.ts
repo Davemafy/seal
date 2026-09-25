@@ -10,6 +10,7 @@ test('small unsupported image still yields a generic action graph before abstain
  test.setTimeout(120000);
  const path='test-results/generic-small-notice.png';
  await makeSmallGenericNotice(page,path);
+ await page.setViewportSize({width:1180,height:860});
  await page.goto('/');
  await page.locator('input[type="file"]').setInputFiles(path);
  await expect(page.getByRole('heading',{name:'Uploaded notice'})).toBeVisible({timeout:60000});
