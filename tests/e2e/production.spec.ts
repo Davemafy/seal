@@ -39,6 +39,9 @@ test('deployed browser checks a synthetic image and a single-field altered image
  await page.locator('.index-item').filter({hasText:'Requested callback'}).click();
  await expect(page.locator('.claim-value')).toHaveText('1-203-555-0199');
  await expect(page.locator('.focused-evidence .state-text')).toHaveText('MISMATCH');
- await expect(page.locator('.focused-evidence .evidence-excerpt')).toHaveCount(2);
+ await expect(page.locator('.focused-evidence .evidence-excerpt')).toHaveCount(1);
+ await expect(page.locator('.focused-evidence .additional-sources')).toHaveCount(1);
+ await expect(page.locator('.technical-record')).toContainText('Jury Service Contact & Parking Information');
+ await expect(page.locator('.technical-record')).toContainText('District of Connecticut jury FAQs');
  await expect(page.locator('.contact-phone')).toHaveAttribute('href','tel:800-827-8224');
 });
