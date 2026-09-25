@@ -63,3 +63,37 @@ describe('Connecticut court-source coverage',()=>{
   try{const phone={id:'p',type:'phone' as const,label:'Phone',value:'1-866-388-2430',exact_source_text:'1-866-388-2430',page:1};const r=await verifyClaims([phone],court,'LIVE',hint);expect(r.results[0].verdict).toBe('COULD_NOT_VERIFY');expect(r.contact?.phone).toBe('800-827-8224');expect(r.contact?.source.source_mode).toBe('SNAPSHOT')}finally{globalThis.fetch=original}
  });
 });
+
+
+describe('Action-first jury scam flow',()=>{
+ it('extracts the requested callback, payment, and information request as separate atomic actions',()=>{
+  const {t,e,c}=claims('action-message-demo');
+  expect(e.payment_demand).toEqual({amount:'$750',method:'payment app',url:''});
+  expect(e.information_requests).toHaveLength(1);
+  expect(e.delivery_method).toBe('text message');
+  expect(c.find(x=>x.type==='phone')?.context).toContain('payment instructions');
+  expect(c.find(x=>x.type==='information')?.exact_source_text).toContain('Social Security');
+  expect(t).toContain('SYNTHETIC MESSAGE');
+ });
+ it('directly contradicts only action claims covered by official guidance and keeps an independent court contact',async()=>{
+  const {c,e}=claims('action-message-demo');const v=await verifyClaims(c,e.court_name,'SNAPSHOT','District of Connecticut');
+  const byType=(type:string)=>v.results.find(r=>c.find(x=>x.id===r.claim_id)?.type===type);
+  expect(byType('court')?.verdict).toBe('MATCH');
+  expect(byType('phone')?.verdict).toBe('MISMATCH');
+  expect(byType('payment')?.verdict).toBe('MISMATCH');
+  expect(byType('information')?.verdict).toBe('MISMATCH');
+  expect(v.results.filter(r=>r.verdict==='MISMATCH')).toHaveLength(3);
+  expect(v.results.filter(r=>r.verdict==='MISMATCH').every(r=>r.evidence.length>0&&r.evidence.every(e=>e.url.startsWith('https://consumer.ftc.gov/')))).toBe(true);
+  expect(v.contact?.phone).toBe('800-827-8224');
+ });
+ it('contradicts a jury-fine link action without claiming the domain itself is fake',async()=>{
+  const claim={id:'u1',type:'url' as const,label:'Requested link',value:'ctd-jury-help.com',exact_source_text:'Visit ctd-jury-help.com to pay your jury fine.',page:1,context:'Visit ctd-jury-help.com to pay your jury fine.'};
+  const v=await verifyClaims([claim],'UNITED STATES DISTRICT COURT — DISTRICT OF CONNECTICUT','SNAPSHOT');
+  expect(v.results[0].verdict).toBe('MISMATCH');expect(v.results[0].explanation).toContain('message directs you to use its link');
+ });
+ it('does not turn an unrelated unfamiliar phone into a mismatch',async()=>{
+  const claim={id:'p1',type:'phone' as const,label:'Phone',value:'203-555-0199',exact_source_text:'Reference phone: 203-555-0199',page:1,context:'Reference phone: 203-555-0199'};
+  const v=await verifyClaims([claim],'UNITED STATES DISTRICT COURT — DISTRICT OF CONNECTICUT','SNAPSHOT');
+  expect(v.results[0].verdict).toBe('COULD_NOT_VERIFY');
+ });
+});
