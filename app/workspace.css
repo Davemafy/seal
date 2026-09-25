@@ -441,6 +441,10 @@
 .safe-route .safe-primary{background:#fff;color:var(--safe);border-color:#fff}
 .safe-route .safe-primary:hover{background:#ecf2ef}
 
+.contact-section{
+ border-top:1px solid var(--ink);
+ padding:0 0 54px;
+}
 .court-contact{
  display:grid;
  grid-template-columns:minmax(240px,.62fr) minmax(0,1fr);
