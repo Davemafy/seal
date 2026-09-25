@@ -2,7 +2,7 @@
 
 The 50 links in this index were supplied as references. The notes below are **design hypotheses from their titles and the SEAL brief**, not findings from inspecting the Figma canvases. The Community listing URLs were not accessible through the available page reader, and their numeric listing IDs are not Figma design file keys. Do not cite these notes as evidence that the files were opened or studied.
 
-Prioritize visual inspection of the sources most relevant to the current problems: [Article App](https://www.figma.com/community/file/1174812137272978612), [Case Study Presentation Template](https://www.figma.com/community/file/892528949344124083), [Case Study Elements](https://www.figma.com/community/file/1182331333206978506), [Bulletproof Forms](https://www.figma.com/community/file/1209089636584712632), [Responsive Design for Development](https://www.figma.com/community/file/1230850200547605128), and [Contra Wireframe Kit](https://www.figma.com/community/file/833515051385038928). Record specific screenshots, frames, and observed patterns before attributing a design decision to one of them.
+Metadata screening of all 50 IDs is recorded in `UX_REFERENCE_STUDY.md`. Prioritize visual inspection of [Material 3](https://www.figma.com/community/file/1035203688168086460), [Base Gallery](https://www.figma.com/community/file/805195278314519508), [VENCE](https://www.figma.com/community/file/1191668129102392941), [Visual Portfolio](https://www.figma.com/community/file/877919752473077115), and [Contra Wireframe Kit](https://www.figma.com/community/file/833515051385038928) if their frames become accessible. Record specific screenshots, frames, and observed patterns before attributing a design decision to one of them.
 
 The implementation direction came from the task itself: show the document, decision, independent evidence, and safe route in that order. The reference names below are prompts for comparison, not a visual audit.
 
@@ -41,7 +41,7 @@ The implementation direction came from the task itself: show the document, decis
 25. **UI/UX Case Study Template** — Useful for explaining reasoning. Learn: show source, interpretation, and outcome next to each other. Avoid: process-diagram clutter.
 26. **Xoppin.k UX/UI Case Study** — Useful for pacing. Learn: one strong point per section. Avoid: resume/portfolio tropes.
 27. **Case Study Template That Lands You the Job** — Useful for priority. Learn: lead with the decision and only then show process. Avoid: interview-deck tone.
-28. **Case Study Elements** — Useful for modular evidence. Learn: evidence modules can differ based on content. Avoid: identical cards.
+28. **Case Study Elements** — Creator describes branded client-work sections for the Jellypepper site. Possible presentation pacing reference only; no evidence-specific interaction has been verified.
 29. **UX Documentation Templates** — Useful for traceability. Learn: provenance can be detailed without dominating the reading path. Avoid: workshop-board visuals.
 30. **Customer Journey Map** — Useful for decision path. Learn: the safe route is a sequence, not a CTA floating outside context. Avoid: sticky-note aesthetics.
 
@@ -50,7 +50,7 @@ The implementation direction came from the task itself: show the document, decis
 31. **Charts & Infographics UI Kit** — Useful for compact comparative information. Learn: dense material needs consistent axes/labels and hierarchy. Avoid: decorative data-viz.
 32. **Identify Leads Dashboard** — Useful only as a density reference. Learn: repeated rows can be compact. Avoid: dashboard shell, nav, KPI cards.
 33. **Sales Dashboard** — Useful only for compact information grouping. Avoid: analytics visual language.
-34. **Article App** — Useful for reading hierarchy. Learn: long-form source text needs generous line-height and narrow measure. Avoid: feed/card patterns.
+34. **Article App** — Creator describes an iOS/mobile design-system UI kit and their creation process. Do not use it as evidence for a long-form reading layout.
 35. **Bulletproof Forms** — Useful for field states. Learn: validation belongs at the exact field, not as a global warning. Avoid: form-heavy composition.
 36. **Omnichart** — Useful for relationships. Learn: source → claim → outcome needs explicit connection. Avoid: visible flowchart arrows as decoration.
 37. **Grids** — Useful for discipline. Learn: use a repeatable desktop/tablet/mobile grid rather than arbitrary offsets. Avoid: showing the grid.
@@ -82,11 +82,11 @@ Chosen references: Whitespace, AstroPaper, Visual Portfolio Template, Minimalist
 Direction: the source document is the largest object; the decision and safe route are the second-largest object. Rules and whitespace replace cards.
 
 ### SEAL / document inspection
-Chosen references: Article App, UX Documentation Templates, Grids.
+Candidate references: VENCE and Material 3, pending actual frame inspection.
 Direction: preserve readable source material, exact highlights where provenance supports them, and avoid invented spatial annotations.
 
 ### SEAL / evidence
-Chosen references: Case Study Presentation Template, UI/UX Case Study Template, Case Study Elements, VENCE.
+Candidate references: VENCE and Base Gallery for reading and controls, pending actual frame inspection. The listed case-study templates are portfolio or marketing resources rather than verified claim/evidence patterns.
 Direction: each contradiction reads as claim → official source → explanation. Known-pattern evidence gets its own rhythm instead of a generic signal card.
 
 ### SEAL / safe action
