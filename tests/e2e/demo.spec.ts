@@ -7,7 +7,7 @@ test('action-first demo connects requested actions to official guidance and a sa
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByText(/\d+ claims checked/)).toBeVisible({timeout:20000});
  await expect(page.locator('.index-state.mismatch')).toHaveCount(3);
- await expect(page.locator('.action-callout')).toContainText(/pay \$750 today using Cash App/i);
+ await expect(page.locator('.action-callout strong')).toHaveText('3 actions: Pay $750 · Call · Provide information');
  await expect(page.locator('.claim-value')).toContainText(/pay \$750 today using Cash App/i);
  await expect(page.locator('.focused-evidence .state-text')).toHaveText('MISMATCH');
  await expect(page.locator('.focused-evidence .official-link')).toHaveAttribute('href',/consumer\.ftc\.gov/);
@@ -39,7 +39,7 @@ test('mobile review keeps action, verdict, evidence, and contact legible',async(
  await page.goto('/demo');
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByText(/claims checked/)).toBeVisible({timeout:20000});
- await expect(page.locator('.action-callout')).toContainText(/pay \$750 today using Cash App/i);
+ await expect(page.locator('.action-callout strong')).toHaveText('3 actions: Pay $750 · Call · Provide information');
  await page.getByRole('button',{name:/Show list/}).click();
  await page.locator('.index-item').filter({hasText:'Requested callback'}).click();
  await expect(page.locator('.claim-value')).toHaveText('203-555-0199');

@@ -234,7 +234,7 @@ export function claimsFromExtraction(e:Extraction,text:string,tokens:Token[]=[])
  for(const p of e.phone_numbers)if(!consumedPhones.has(clean(p))){const fallback=text.split(/\n/).find(s=>s.includes(p))||'';const context=spatialContext(p,tokens,fallback);add('phone',/\b(?:call|contact|phone)\b/i.test(context)?'Requested callback':'Phone number',p,context,undefined,p)}
  for(const u of e.urls)if(!consumedUrls.has(clean(u))){const fallback=text.split(/\n/).find(s=>s.includes(u))||'';const context=spatialContext(u,tokens,fallback);add('url',/\b(?:visit|open|click|go|pay)\b/i.test(context)?'Requested link':'Website',u,context,undefined,u)}
  for(const mail of e.emails)add('email','Email address',mail);
- for(const t of e.threats)add('threat','Threat or consequence',t,t);
+ // Consequence/threat language remains extraction context. It is not a separately verifiable public claim.
  if(e.delivery_method)add('delivery','Delivery method',e.delivery_method);
  return result;
 }

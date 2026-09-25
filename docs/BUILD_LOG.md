@@ -91,3 +91,23 @@ A new browser kill test creates a **526×791 synthetic notice from a fictional u
 GitHub Actions run [#89](https://github.com/Davemafy/seal/actions/runs/36141561316) passed 29 unit tests, the 15-case benchmark, 9 normal browser tests (plus the production-only test skipped locally), build, exact-production-SHA synchronization, and the deployed production image pair. Benchmark after correcting the ground truth for generic court extraction: court-name extraction 0.9333, MISMATCH precision 1.00, false-MISMATCH count 0, COULD_NOT_VERIFY rate 0.5376, and full-flow success 0.9333. The higher abstention rate is expected because the action graph now preserves additional requested actions that do not have a supported official-source rule instead of silently dropping them.
 
 No Virginia resolver or Virginia-specific extraction rule was added.
+
+
+### Deployment freeze + batch workflow — 25 Sep 2026
+
+SEAL no longer uses the production deployment as part of the edit/test loop.
+
+- Automatic Git deployments are disabled in `vercel.json` with `git.deploymentEnabled: false`. The last working production deployment stays live while engineering continues.
+- Product changes are batched on `batch/seal-final-freeze` instead of being pushed incrementally to `main`.
+- GitHub Actions owns normal validation: typecheck, lint, unit tests, benchmark, generated dense image, browser E2E, screenshots, and Next.js build.
+- CI no longer waits for or tests the Vercel production alias on every push.
+- Production smoke is an explicit `workflow_dispatch` input and is only used after one intentional manual production deployment.
+- The dense-enforcement regression is jurisdiction-agnostic: a fictional low-resolution notice contains a descriptive “Failure to Pay” violation, a real payment directive repeated in a payment-instruction column, an appearance instruction, and a scan instruction. The expected action set is exactly payment + appearance + scan, with one payment action and no cross-column “Time … submit payment” claim.
+- When Vercel capacity resets: merge/fast-forward the validated batch, make one manual production deployment, run the manual production smoke gate, then freeze.
+
+
+#### Review-surface reduction
+
+A real-looking unsupported notice exposed a second kind of noise: repeated consequence/warning language was being rendered as separate `Threat or consequence` rows, even though resolvers intentionally abstain on those lines. SEAL now retains extracted consequence text as context but does not promote it into the independently checked claim list. The result surface is for requested actions and details that can plausibly connect to an independent source, not a line-by-line OCR inventory.
+
+The structured extractor also enforces the semantic meaning of `reporting_date`: an ordinary hearing, court, due, or notice date cannot be inserted into that field unless the recovered text actually associates the date with reporting instructions.

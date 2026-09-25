@@ -185,3 +185,37 @@ describe('input-agnostic extraction architecture',()=>{
   expect(ocrScaleForSize(3200,4100)).toBe(1);
  });
 });
+
+
+describe('dense enforcement notice action boundary',()=>{
+ it('keeps violation labels descriptive, merges repeated payment instructions, and preserves distinct actions',()=>{
+  const text=[
+   'VIOLATION:',
+   'Failure to Pay Electronic Toll / Toll Evasion',
+   'MANDATORY COMPLIANCE ORDER',
+   '1. Remit FULL PAYMENT IN TOTAL of all outstanding fines, penalties, court costs, and applicable enforcement fees; OR',
+   '2. Appear before the Court at the scheduled hearing date to respond to this matter',
+   'PAYMENT INSTRUCTION',
+   'To resolve this matter before the hearing date, submit payment through the official court payment system.',
+   'SCAN TO PAY'
+  ].join('\n');
+  const graph=extractActionGraph(text);
+  expect(graph.map(action=>action.kind)).toEqual(['pay','appear','navigate']);
+  expect(graph.filter(action=>action.kind==='pay')).toHaveLength(1);
+  expect(graph.some(action=>/Failure to Pay Electronic Toll/i.test(action.source_text))).toBe(false);
+  expect(graph.find(action=>action.kind==='navigate')).toMatchObject({verb:'scan'});
+ });
+});
+
+
+describe('review-surface boundaries',()=>{
+ it('keeps consequence language out of checked claims while preserving it in extraction context',()=>{
+  const text='You are required to pay the balance. Failure to comply may result in arrest. A warrant may issue.';
+  const e=fallbackExtract(text);
+  e.threats=['Failure to comply may result in arrest.','A warrant may issue.'];
+  const claims=claimsFromExtraction(e,text);
+  expect(e.threats).toHaveLength(2);
+  expect(claims.filter(claim=>claim.type==='threat')).toHaveLength(0);
+  expect(claims.some(claim=>claim.action?.kind==='pay')).toBe(true);
+ });
+});
