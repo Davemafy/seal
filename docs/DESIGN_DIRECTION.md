@@ -18,7 +18,7 @@ Claim counts never lead the experience.
 
 ## Type
 
-Use a restrained sans stack for product text and Georgia only inside reproduced/source-document text where it helps distinguish source material. No decorative monospace layer. Uppercase is limited to real source text and short state labels such as MATCH / CONTRADICTS / COULD NOT VERIFY.
+Instrument Sans is the product font for headings, body copy, controls, and labels. Source Serif 4 is reserved for reproduced source-document text, message excerpts, and official-source quotations. Georgia and Arial remain only fallback faces. No decorative monospace layer. Uppercase is limited to real source text and short state labels such as MATCH / CONTRADICTS / COULD NOT VERIFY.
 
 ## Color
 
@@ -30,7 +30,7 @@ The document stays visually dominant on desktop. Exact bounding-box highlights a
 
 ## Evidence behavior
 
-Evidence is rendered as a vertical reading sequence, not equal cards. Each item names what the message says, what an independent source establishes, and why that matters. Official links are plain text links with no decorative arrow suffix.
+Evidence is rendered as a reading sequence, not equal cards. Each item names what the message says, what an independent source establishes, and why that matters. Official links are plain text links with no decorative arrow suffix. Major sections use spacing and restrained tone shifts; rules remain inside the dense verification record where they mark item boundaries.
 
 ## Mobile order
 

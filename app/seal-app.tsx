@@ -31,16 +31,16 @@ function decisionCopy(verification:Verification|null){
  const mismatches=verification.results.filter(result=>result.verdict==='MISMATCH').length;
  const matches=verification.results.filter(result=>result.verdict==='MATCH').length;
  if(mismatches)return {
-  title:"Something here doesn't line up.",
-  summary:'One or more claims conflict with the independent source SEAL checked.'
+  title:'Some details conflict with official sources.',
+  summary:'Review the highlighted details and use the official route below for your next step.'
  };
  if(matches)return {
-  title:'These details match the official source.',
-  summary:'That does not authenticate the message. Continue through an independent official route where possible.'
+  title:'Some details match official sources.',
+  summary:'You can review each match below. Use an independently found official channel for any next step.'
  };
  return {
-  title:"We couldn't verify enough to tell you to act.",
-  summary:'Use an independent official channel before following the message.'
+  title:'These details need a closer check.',
+  summary:'SEAL could not confirm them from the sources available. The record below shows what was checked.'
  };
 }
 
@@ -57,6 +57,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
  const [status,setStatus]=useState('');
  const [error,setError]=useState('');
  const [busy,setBusy]=useState(false);
+ const [dragging,setDragging]=useState(false);
  const [revealed,setRevealed]=useState(0);
  const [selected,setSelected]=useState('');
  const [hovered,setHovered]=useState('');
@@ -103,39 +104,44 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
   setFile(null);setText('');setDraft('');setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setMode('SNAPSHOT');
  }
 
- function chooseFixture(key:FixtureKey){clear();setFixture(key);setText(fixtures[key].text)}
- function submitPaste(){const value=draft.trim();if(!value)return;clear();setText(value)}
+ function chooseFixture(key:FixtureKey){clear();setFixture(key);setText(fixtures[key].text);void run('SNAPSHOT',{text:fixtures[key].text,file:null})}
+ function submitPaste(){const value=draft.trim();if(!value)return;clear();setText(value);void run('SNAPSHOT',{text:value,file:null})}
 
- async function upload(uploaded:File){
-  clear();setBusy(true);setStatus('Reading the document');
+async function upload(uploaded:File){
+  clear();const uploadId=runId.current;setBusy(true);setStatus('Reading the document');
   try{
    const doc=await readInBrowser(uploaded);
+   if(runId.current!==uploadId){URL.revokeObjectURL(doc.preview);return}
    setFile(doc);setText(doc.text);
-   if(!doc.text.trim())setError('We couldn’t read enough of this notice to verify it reliably. Try a clearer copy.');
+   if(!doc.text.trim()&&!doc.uncertain)setError('We couldn’t read enough from this file. Try a clearer image or paste the message.');
+   else await run('SNAPSHOT',{text:doc.text,file:doc});
   }catch(e){
-   setError(e instanceof Error?e.message:'Could not read this file.');
+   if(runId.current===uploadId)setError(e instanceof Error?e.message:'Could not read this file.');
   }finally{
-   setBusy(false);setStatus('');
+   if(runId.current===uploadId){setBusy(false);setStatus('')}
   }
  }
 
- async function run(sourceMode:Mode=mode){
+ async function run(sourceMode:Mode=mode,source?:{text:string;file:BrowserDocument|null}){
+  const sourceText=source?.text??text;
+  const sourceFile=source?source.file:file;
+  const sourceIsDemo=!sourceFile&&/^DEMO \/ (?:FICTIONAL NOTICE|SYNTHETIC MESSAGE)/.test(sourceText);
   const id=++runId.current;
   setBusy(true);setError('');setVerification(null);setRevealed(0);setSelected('');setMode(sourceMode);setStatus('Reading requested actions');
   try{
-   if(file?.uncertain){
+   if(sourceFile?.uncertain){
     const unclear:Claim={id:'c1',type:'official',label:'Unreadable field',value:'Could not read confidently',exact_source_text:'Unreadable field',page:1};
     setClaims([unclear]);setExtractionMode('OCR / LOW CONFIDENCE');
     setVerification({results:[{claim_id:'c1',verdict:'COULD_NOT_VERIFY',explanation:'We couldn’t read this field confidently.',evidence:[],resolver_id:'ocr'}],resolver_id:'ocr'});
     setRevealed(1);setSelected('c1');return;
    }
 
-   let extraction:Extraction=fallbackExtract(text);
+   let extraction:Extraction=fallbackExtract(sourceText);
    let extractor='DETERMINISTIC';
 
-   if(!isDemo){
+   if(!sourceIsDemo){
     try{
-     const response=await fetch('/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+     const response=await fetch('/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:sourceText})});
      if(response.ok){
       const data=await response.json();
       extraction=data.extraction;
@@ -144,16 +150,16 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
     }catch{}
    }
 
-   if(file?.kind==='pdf'){
-    const juror=recoverLabeledJurorNumber(file.tokens);
-    const date=recoverLabeledReportingDate(file.tokens);
+   if(sourceFile?.kind==='pdf'){
+    const juror=recoverLabeledJurorNumber(sourceFile.tokens);
+    const date=recoverLabeledReportingDate(sourceFile.tokens);
     extraction={...extraction,juror_or_reference_number:juror||extraction.juror_or_reference_number,reporting_date:date||extraction.reporting_date};
    }
 
    if(runId.current!==id)return;
    setExtractionMode(extractor);
 
-   const found=claimsFromExtraction(extraction,text,file?.tokens||[]);
+   const found=claimsFromExtraction(extraction,sourceText,sourceFile?.tokens||[]);
    if(!found.length)throw new Error('We couldn’t read enough of this message to check it reliably. Try a clearer screenshot or paste the message text.');
 
    setClaims(found);
@@ -166,7 +172,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
    const response=await fetch('/api/verify',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({claims:verifiable,court_name:routingCourt,jurisdiction_hint:'',mode:sourceMode,text})
+    body:JSON.stringify({claims:verifiable,court_name:routingCourt,jurisdiction_hint:'',mode:sourceMode,text:sourceText})
    });
    if(!response.ok)throw new Error('The source check could not finish. Try again.');
 
@@ -242,36 +248,47 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
  })}</div>;
 
  return <main className="seal-app">
+  <aside className="workspace-rail" aria-label="Workspace">
+   <Link href="/" className="rail-brand">SEAL<span>®</span></Link>
+   <div className="rail-group-label">WORKSPACE</div>
+   <button className={`rail-item ${!text?'is-current':''}`} type="button" onClick={clear}><span className="rail-item-mark" aria-hidden="true">+</span> New check</button>
+   <button className="rail-item" type="button" disabled={!hydrated} onClick={()=>chooseFixture('action-message-demo')}><span className="rail-item-mark" aria-hidden="true">↗</span> Explore example</button>
+   <div className="rail-spacer"/>
+   <div className="rail-foot"><strong>Source-led review</strong><span>Each finding links back to what SEAL checked.</span></div>
+  </aside>
   <header className="seal-nav">
-   <Link href="/" className="seal-mark">SEAL<span>®</span></Link>
-   <div className="seal-nav-note">Independent court message check</div>
-   {text?<button className="nav-action" type="button" onClick={clear}>New check</button>:<div className="nav-trust">No authenticity score</div>}
+   <Link href="/" className="mobile-brand">SEAL</Link>
+   <div className="seal-nav-note">Workspace <span aria-hidden="true">/</span> {text?'Message review':'New check'}</div>
+   {text?<button className="nav-action" type="button" onClick={clear}>Start another check</button>:<div className="nav-trust">Court message review</div>}
   </header>
 
   {!text?
    <section className="entry-shell">
-    <div className="entry-copy">
-     <h1>Before you call, click, pay, scan, or reply.</h1>
-     <p>SEAL separates what the message asks you to do from what independent official sources can actually establish before you follow it.</p>
-     <p className="entry-principle">A court name, seal, or threatening tone is not proof. The requested action is checked separately.</p>
+   <div className="entry-copy">
+     <p className="entry-kicker">NEW CHECK</p>
+     <h1>Check a court message.</h1>
+     <p>Add a notice, screenshot, or message. SEAL shows the actions it asks for, checks details against available official sources, and helps you find a clearer next step.</p>
     </div>
 
     <div className="intake">
-     <button className="upload-row" type="button" disabled={busy||!hydrated} onClick={()=>input.current?.click()}>
+     <div className="intake-heading"><strong>Add your message</strong><span>Choose a file or paste its text</span></div>
+     <button className={`upload-row ${dragging?'is-dragging':''}`} type="button" disabled={busy||!hydrated} onClick={()=>input.current?.click()}
+      onDragOver={event=>{if(event.dataTransfer.types.includes('Files')){event.preventDefault();setDragging(true)}}}
+      onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
+      onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
       <span className="upload-plus" aria-hidden="true">+</span>
-      <span><strong>{busy?status:'Upload a screenshot, image, or PDF'}</strong><small>PNG, JPG, or PDF. The original file stays in this browser.</small></span>
-      <span className="upload-browse">Browse</span>
+      <span><strong>{busy?status:'Drop a file here or browse'}</strong><small>PNG, JPG, or PDF · The file stays in your browser</small></span>
+      <span className="upload-browse">Choose file</span>
      </button>
 
-     <div className="paste-divider"><span>or paste the message</span></div>
+     <div className="paste-divider"><span>Or paste text</span></div>
      <label className="paste-field">
       <span className="field-label">Message text</span>
-      <textarea aria-label="Paste the court message" value={draft} onChange={event=>setDraft(event.target.value)} placeholder="Paste the text, email, or message here. Include the part that asks you to call, click, pay, scan, appear, or provide information."/>
+      <textarea aria-label="Paste the court message" value={draft} onChange={event=>setDraft(event.target.value)} placeholder="Paste the email, text message, or notice here..."/>
      </label>
 
      <div className="intake-actions">
-      <button className="check-message" type="button" disabled={!draft.trim()||!hydrated} onClick={submitPaste}>Check this message</button>
-      <button className="demo-link" type="button" disabled={!hydrated} onClick={()=>chooseFixture('action-message-demo')}>Use a synthetic example</button>
+      <button className="check-message" type="button" disabled={!draft.trim()||!hydrated} onClick={submitPaste}>Check pasted text <span aria-hidden="true">→</span></button>
      </div>
 
      {error&&<div role="alert" className="inspection-error">{error}</div>}
@@ -281,13 +298,20 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
       <p>Your uploaded file does not leave the browser. Extracted text can be sent to the SEAL server and, when configured, to Groq for claim structuring. SEAL does not store the uploaded file or extracted claims.</p>
      </details>
     </div>
+    <aside className="entry-guide" aria-label="What you will get">
+     <p className="guide-heading">What you’ll get</p>
+     <div><span>01</span><p><strong>Requested actions</strong><small>See what the message is asking you to do.</small></p></div>
+     <div><span>02</span><p><strong>Source checks</strong><small>Compare details with the official sources available to SEAL.</small></p></div>
+     <div><span>03</span><p><strong>A way forward</strong><small>Find an independent route to check the next step.</small></p></div>
+     <p className="guide-limit">SEAL checks claims. It cannot authenticate a document or a sender.</p>
+    </aside>
    </section>
    :
    <section className="review-shell" onDragOver={event=>{if(event.dataTransfer.types.includes('Files'))event.preventDefault()}} onDrop={event=>{if(event.dataTransfer.files.length){event.preventDefault();upload(event.dataTransfer.files[0])}}}>
     <div className="review-head">
      <div>
-      <p className="review-context">{isActionDemo?'Synthetic test message':isDemo?'Fictional demonstration':file?.kind==='pdf'?'PDF document':file?'Image or screenshot':'Pasted message'}</p>
-      <h1>{isActionDemo?'Suspicious jury-duty message':isDemo?'Riverside notice':file?'Uploaded notice':'Pasted message'}</h1>
+      <p className="review-context">{isDemo?'EXAMPLE CHECK':file?.kind==='pdf'?'PDF DOCUMENT':file?'IMAGE OR SCREENSHOT':'PASTED MESSAGE'}</p>
+      <h1>{isActionDemo?'Jury-duty message example':isDemo?'Court notice example':'Message review'}</h1>
      </div>
      <div className="review-head-actions">
       {isDemo&&<select aria-label="Choose demo fixture" value={fixture} onChange={event=>chooseFixture(event.target.value as FixtureKey)}>
@@ -296,16 +320,23 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
       <span className="source-status">{sourceLabel}</span>
      </div>
     </div>
+    {verification&&<nav className="review-tabs" aria-label="Review sections">
+     <a href="#review-summary">Summary</a>
+     <a href="#original-message">Message</a>
+     {verification.safe_action&&<a href="#source-checks">Next step</a>}
+     <a href="#checked-details">Checked details</a>
+    </nav>}
 
     {file?.sample&&<div className="source-failure" role="status">This document is marked SAMPLE. It is an example form, not a summons to act on. Claim checks below do not authenticate an individual notice.</div>}
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
+    {error&&<div role="alert" className="inspection-error"><span>{error}</span><button type="button" onClick={()=>run()} disabled={busy}>Retry check</button></div>}
 
     <div className="review-hero">
-     <div className="decision-pane">
+     <div className="decision-pane" id="review-summary">
       {!verification?
        <div className="precheck">
-        <h2>{busy?'Checking this message.':'Ready to check what this message asks you to do.'}</h2>
-        <p>{busy?'SEAL is separating requested actions from surrounding language, then checking the parts that can be reproduced against independent sources.':'The document stays visible while SEAL checks the requested actions and independently verifiable details.'}</p>
+        <h2>{busy?'Checking the details…':'Ready to review this message.'}</h2>
+        <p>{busy?'SEAL is finding requested actions and comparing available details with independent sources.':'Review the original alongside the details SEAL can check.'}</p>
         {busy?
          <ol className="processing-list" aria-live="polite">
           <li className={status==='Reading requested actions'?'active':''}>Read requested actions</li>
@@ -322,7 +353,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
         <h2>{decision.title}</h2>
         <p className="decision-summary">{decision.summary}</p>
         {verification.safe_action&&<a className="safe-primary" href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>}
-        <p className="decision-disclaimer">This check does not authenticate this message. It compares requested actions and claims with independent sources.</p>
+        <p className="decision-disclaimer">These source checks do not authenticate the sender or document.</p>
         {primaryAction&&<button type="button" className="action-callout" onClick={()=>select(primaryAction.id)}>
          <span>What the message asks</span>
          <strong>{actionSummary}</strong>
@@ -331,7 +362,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
        </div>}
      </div>
 
-     <div className="document-zone">
+     <div className="document-zone" id="original-message">
       <div className="document-heading"><span>Original message</span><span>{file?.kind==='pdf'?'PDF':file?'Image':'Text'}</span></div>
       <div className="document-paper">
        {isActionDemo?
@@ -373,7 +404,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
      </div>
     </div>
 
-    {ready&&requestedActions.length>0&&<section className="requested-actions" aria-labelledby="requested-actions-title">
+    {ready&&requestedActions.length>0&&<section className={`requested-actions ${requestedActions.length===1?'single-action':''}`} aria-labelledby="requested-actions-title">
      <div className="section-heading">
       <h2 id="requested-actions-title">What the message asks you to do</h2>
       <p>These are extracted requests, not instructions from SEAL.</p>
@@ -390,7 +421,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
      </div>
     </section>}
 
-    {ready&&verification?.safe_action&&<section className="source-resolution" aria-label="Safe next step">
+    {ready&&verification?.safe_action&&<section className="source-resolution" id="source-checks" aria-label="Safe next step">
      <div className="section-heading evidence-heading">
       <h2>What the independent sources change</h2>
       <p>{verification.safe_action.title}</p>
@@ -440,7 +471,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
      </div>
     </section>}
 
-    {ready&&<section className="record-section">
+    {ready&&<section className="record-section" id="checked-details">
      <div className="section-heading record-heading">
       <h2>Full verification record</h2>
       <p>Select a row to inspect the exact source text, result, and supporting evidence.</p>
@@ -507,14 +538,13 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
      {isDemo&&<button className="replay-button" onClick={()=>run('SNAPSHOT')}>Replay check</button>}
     </section>}
 
-    {error&&<div role="alert" className="inspection-error">{error} <button type="button" onClick={()=>input.current?.click()}>Choose another file</button></div>}
    </section>}
 
   <input ref={input} hidden type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" onChange={event=>{const next=event.target.files?.[0];if(next)upload(next);event.target.value=''}}/>
 
   <footer className="seal-footer">
    <span>SEAL is not affiliated with any court.</span>
-   <span>Requested actions. Independent sources. No authenticity claim.</span>
+   <span>Review the message, the sources, and your next step.</span>
   </footer>
  </main>;
 }
