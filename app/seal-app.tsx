@@ -336,7 +336,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
       <div className="document-paper">
        {isActionDemo?
         <div className="message-card">
-         <div className="message-card-head"><span>Synthetic test message</span><span>Not a real person</span></div>
+         <div className="message-card-head"><span>DEMO / SYNTHETIC MESSAGE</span><span>NOT A REAL PERSON</span></div>
          <div className="message-sender"><span>Unknown sender</span><strong>Claims to be a federal court</strong></div>
          {renderTextLines(text.split('\n').slice(1))}
          <div className="notice-end">Synthetic engineering example based on published jury-scam patterns. It does not prove real-world accuracy or demand. SEAL is not affiliated with any court.</div>
@@ -440,7 +440,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
     {ready&&<section className="record-section">
      <div className="section-heading record-heading">
       <h2>Full verification record</h2>
-      <p>{claims.length} claims checked. Select a row to inspect the exact source and evidence.</p>
+      <p>Select a row to inspect the exact source text, result, and supporting evidence.</p>
      </div>
 
      <div className="record-layout">
