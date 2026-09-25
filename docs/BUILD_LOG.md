@@ -111,3 +111,24 @@ SEAL no longer uses the production deployment as part of the edit/test loop.
 A real-looking unsupported notice exposed a second kind of noise: repeated consequence/warning language was being rendered as separate `Threat or consequence` rows, even though resolvers intentionally abstain on those lines. SEAL now retains extracted consequence text as context but does not promote it into the independently checked claim list. The result surface is for requested actions and details that can plausibly connect to an independent source, not a line-by-line OCR inventory.
 
 The structured extractor also enforces the semantic meaning of `reporting_date`: an ordinary hearing, court, due, or notice date cannot be inserted into that field unless the recovered text actually associates the date with reporting instructions.
+
+
+### Source intelligence layer — competition-grade final batch
+
+A real traffic-enforcement notice found on Facebook exposed the remaining product failure: extraction could be correct while the user still received only `COULD_NOT_VERIFY`. SEAL now treats court resolution as one evidence lane rather than the boundary of usefulness.
+
+The new pipeline is:
+
+`message → generic action graph + explicit authorities → court resolver + public-source intelligence → source-backed conflicts/patterns → safe independent next step`
+
+New behavior:
+- explicit legal citations become first-class `authority` claims;
+- an official-source authority adapter can contradict the notice’s claimed legal basis without making an authenticity claim;
+- a high-specificity FTC traffic-hearing/QR/payment pattern is surfaced as an official warning, not as a probabilistic “scam score”;
+- the repeated `26-TR-273196` core case number is cross-referenced against official Dallas and Miami-Dade scam-alert examples;
+- Virginia notices with source findings receive the official Virginia case-search/payment path; Richmond notices also receive the independently sourced Richmond City General District Court Criminal/Traffic phone number;
+- the outcome panel leads with a safe next step and source findings before the lower-level claim ledger.
+
+The decisive-verdict law is unchanged: every MISMATCH still requires direct official evidence. Known-pattern signals are separate from claim verdicts and never authenticate or de-authenticate the notice by themselves.
+
+Automatic Git deployments remain disabled. This batch is validated in GitHub CI before any production action.

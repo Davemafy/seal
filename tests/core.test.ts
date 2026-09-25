@@ -1,4 +1,4 @@
-import {describe,it,expect,vi} from 'vitest';import {fallbackExtract,claimsFromExtraction,extractActionGraph,locatePhrase,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '../lib/extract';import {ocrScaleForSize} from '../lib/browser-file';import {extractionSchema,type Token} from '../lib/types';import {verdict,verifyClaims,phoneDigits,domain,address,FederalCourtListenerResolver} from '../lib/resolver';import {fixtures} from '../lib/fixtures';
+import {describe,it,expect,vi} from 'vitest';import {fallbackExtract,claimsFromExtraction,extractActionGraph,extractAuthorityCitations,locatePhrase,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '../lib/extract';import {ocrScaleForSize} from '../lib/browser-file';import {extractionSchema,type Token} from '../lib/types';import {verdict,verifyClaims,phoneDigits,domain,address,FederalCourtListenerResolver} from '../lib/resolver';import {fixtures} from '../lib/fixtures';
 import {readFileSync} from 'node:fs';
 const claims=(key:keyof typeof fixtures)=>{const t=fixtures[key].text,e=fallbackExtract(t);return {t,e,c:claimsFromExtraction(e,t)}};
 describe('extraction and source links',()=>{
@@ -217,5 +217,46 @@ describe('review-surface boundaries',()=>{
   expect(e.threats).toHaveLength(2);
   expect(claims.filter(claim=>claim.type==='threat')).toHaveLength(0);
   expect(claims.some(claim=>claim.action?.kind==='pay')).toBe(true);
+ });
+});
+
+
+describe('public-source intelligence layer',()=>{
+ const notice=[
+  'COMMONWEALTH OF VIRGINIA',
+  'IN THE DISTRICT COURT OF VIRGINIA FOR RICHMOND',
+  'TRAFFIC DIVISION',
+  'CASE NO.: VA-26-TR-273196',
+  'VIOLATION: Failure to Pay Electronic Toll / Toll Evasion',
+  'AUTHORITY: Va. Code § 46.2-1229',
+  'RELATED AUTHORITY: Va. Code, Transportation § 46.2-862',
+  'RELATED AUTHORITY: Va. Code § 46.2-882',
+  '1. Remit FULL PAYMENT IN TOTAL of all outstanding fines and court costs; OR',
+  '2. Appear before the Court at the scheduled hearing date.',
+  'SCAN TO PAY'
+ ].join('\n');
+ it('extracts explicit legal authorities as first-class claims',()=>{
+  const citations=extractAuthorityCitations(notice);
+  expect(citations.map(c=>c.section)).toEqual(['46.2-1229','46.2-862','46.2-882']);
+  const claims=claimsFromExtraction(fallbackExtract(notice),notice);
+  expect(claims.filter(c=>c.type==='authority')).toHaveLength(3);
+ });
+ it('finds source-backed authority conflicts, official scam patterns, and a safe independent path',async()=>{
+  const e=fallbackExtract(notice),claims=claimsFromExtraction(e,notice);
+  const v=await verifyClaims(claims,e.court_name,'SNAPSHOT','',notice);
+  const authority=claims.filter(c=>c.type==='authority');
+  expect(authority).toHaveLength(3);
+  expect(authority.map(c=>v.results.find(r=>r.claim_id===c.id)?.verdict)).toEqual(['MISMATCH','MISMATCH','MISMATCH']);
+  expect(v.signals?.map(s=>s.id)).toEqual(expect.arrayContaining(['traffic-qr-warning','reused-case-pattern','authority-conflict']));
+  expect(v.safe_action?.primary_url).toBe('https://vacourts.gov/caseinfo/home');
+  expect(v.contact?.phone).toBe('804-646-6431');
+  expect(v.results.filter(r=>r.verdict==='MISMATCH').every(r=>r.evidence.length>0)).toBe(true);
+ });
+ it('does not turn a generic pay-or-appear message into a scam-pattern signal without the traffic/QR/case combination',async()=>{
+  const text='IN THE MUNICIPAL COURT OF NORTHBRIDGE\nRemit the balance or appear at the hearing.';
+  const e=fallbackExtract(text),claims=claimsFromExtraction(e,text);
+  const v=await verifyClaims(claims,e.court_name,'SNAPSHOT','',text);
+  expect(v.signals||[]).toHaveLength(0);
+  expect(v.results.every(r=>r.verdict==='COULD_NOT_VERIFY')).toBe(true);
  });
 });

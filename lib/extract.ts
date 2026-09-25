@@ -205,6 +205,22 @@ function spatialContext(value:string,tokens:Token[],fallback:string){
  return line||fallback;
 }
 
+export function extractAuthorityCitations(text:string):Array<{raw:string;section:string;context:string;jurisdiction:string}>{
+ const lines=text.split(/\n/).map(line=>line.trim()).filter(Boolean),out:Array<{raw:string;section:string;context:string;jurisdiction:string}>=[],seen=new Set<string>();
+ const documentVirginia=/\b(?:commonwealth of virginia|virginia court|district court of virginia|richmond,?\s*va|va\.?\s*code|virginia code)\b/i.test(text);
+ for(let i=0;i<lines.length;i++){
+  const line=lines[i],re=/(?:\b(?:Va\.?\s*Code|Virginia\s+Code)(?:\s*,\s*[^§\n]{0,60})?\s*)?§{1,2}\s*(46\.2-\d+(?:\.\d+)?(?::\d+)?)/gi;
+  for(const match of line.matchAll(re)){
+   const section=match[1],key=section.toLowerCase();if(seen.has(key))continue;seen.add(key);
+   const raw=(match[0]||`§ ${section}`).replace(/\s+/g,' ').trim();
+   const context=[lines[i-1],line,lines[i+1]].filter(Boolean).join(' ');
+   const jurisdiction=/\b(?:Va\.?\s*Code|Virginia\s+Code)\b/i.test(raw)||documentVirginia?'Virginia':'';
+   out.push({raw,section,context,jurisdiction});
+  }
+ }
+ return out;
+}
+
 export function claimsFromExtraction(e:Extraction,text:string,tokens:Token[]=[]):Claim[]{
  const result:Claim[]=[];
  const add=(type:ClaimType,label:string,value:string,context='',action?:ActionNode,confidenceBasis?:string)=>{
@@ -220,6 +236,10 @@ export function claimsFromExtraction(e:Extraction,text:string,tokens:Token[]=[])
  add('juror','Juror reference',e.juror_or_reference_number);
  add('reporting_date','Reporting date',e.reporting_date);
  add('docket','Case docket',e.case_or_docket_number);
+ for(const citation of extractAuthorityCitations(text)){
+  add('authority','Cited authority',citation.raw,citation.context,undefined,citation.raw);
+  const created=result[result.length-1];if(created)created.normalization={section:citation.section,jurisdiction:citation.jurisdiction};
+ }
 
  const actions=extractActionGraph(text,tokens),consumedPhones=new Set<string>(),consumedUrls=new Set<string>();
  for(const action of actions){

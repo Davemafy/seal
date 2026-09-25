@@ -66,3 +66,22 @@
  .message-card-head span{display:block}
  .message-card-head span+span{margin-top:2px}
 }
+
+
+/* Source intelligence — outcome first, without converting SEAL into an authenticity scorer. */
+.source-resolution{margin:0 0 18px;border:1px solid #1e1e1e;background:#f7f4ed;padding:18px 18px 16px;box-shadow:0 8px 26px rgba(0,0,0,.055)}
+.resolution-kicker{font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;margin-bottom:8px}
+.source-resolution h2{font-size:clamp(22px,2.1vw,32px);line-height:1.03;letter-spacing:-.035em;margin:0;max-width:720px}
+.resolution-summary{font-size:14px;line-height:1.55;max-width:760px;margin:9px 0 15px;color:#333}
+.source-signals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 14px}
+.source-signal{background:#fff;border:1px solid #d9d4c9;padding:12px;min-width:0}
+.signal-kind{font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#6a6257;margin-bottom:6px}
+.source-signal h3{font-size:14px;line-height:1.18;letter-spacing:-.015em;margin:0 0 6px}
+.source-signal p{font-size:11px;line-height:1.45;color:#4a4741;margin:0 0 9px}
+.signal-links{display:flex;flex-direction:column;gap:4px}
+.signal-links a{font-size:10px;line-height:1.3;text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
+.safe-steps{margin:13px 0 14px;padding-left:20px;display:grid;gap:6px}
+.safe-steps li{font-size:12px;line-height:1.45;padding-left:3px}
+.safe-primary{display:inline-flex;align-items:center;gap:12px;border:1px solid #111;background:#111;color:#fff;padding:10px 12px;font-size:11px;font-weight:750;text-decoration:none}
+.resolution-disclaimer{font-size:10px!important;color:#6a6257!important;margin:10px 0 0!important}
+@media(max-width:900px){.source-signals{grid-template-columns:1fr}.source-resolution{padding:15px}.source-resolution h2{font-size:25px}}

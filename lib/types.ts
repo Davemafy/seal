@@ -22,7 +22,7 @@ export type ActionNode={
 
 export const verdictSchema=z.enum(['MATCH','MISMATCH','COULD_NOT_VERIFY']);
 export type Verdict=z.infer<typeof verdictSchema>;
-export type ClaimType='court'|'location'|'docket'|'juror'|'reporting_date'|'phone'|'email'|'url'|'payment'|'information'|'threat'|'official'|'delivery'|'notice_date'|'action';
+export type ClaimType='court'|'location'|'docket'|'juror'|'reporting_date'|'phone'|'email'|'url'|'payment'|'information'|'threat'|'official'|'delivery'|'notice_date'|'action'|'authority';
 export type Token={page:number;text:string;x:number;y:number;width:number;height:number;start:number;end:number;confidence?:number};
 export type Claim={
  id:string;
@@ -41,11 +41,13 @@ export type Claim={
 };
 export type Evidence={title:string;url:string;excerpt:string;checked_at:string;source_mode:'LIVE'|'SNAPSHOT'};
 export type Result={claim_id:string;verdict:Verdict;explanation:string;evidence:Evidence[];resolver_id:string;normalized_comparison?:Record<string,string>};
-export type Verification={results:Result[];contact?:{phone:string;website:string;source:Evidence};resolver_id:string};
+export type SourceSignal={id:string;kind:'OFFICIAL_WARNING'|'KNOWN_PATTERN'|'SOURCE_CONFLICT';title:string;summary:string;evidence:Evidence[]};
+export type SafeAction={title:string;summary:string;primary_url:string;primary_label:string;steps:string[];evidence:Evidence[]};
+export type Verification={results:Result[];contact?:{name?:string;phone:string;website:string;source:Evidence};resolver_id:string;signals?:SourceSignal[];safe_action?:SafeAction};
 
 export const claimSchema=z.object({
  id:z.string(),
- type:z.enum(['court','location','docket','juror','reporting_date','phone','email','url','payment','information','threat','official','delivery','notice_date','action']),
+ type:z.enum(['court','location','docket','juror','reporting_date','phone','email','url','payment','information','threat','official','delivery','notice_date','action','authority']),
  label:z.string(),
  value:z.string(),
  exact_source_text:z.string(),
