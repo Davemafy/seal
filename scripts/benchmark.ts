@@ -35,7 +35,7 @@ function expectedVerdict(name:string,c:Claim):Verdict{
 }
 const fieldStats:Record<string,{correct:number,total:number}>={};
 const expected=(name:string)=>({
- court_name:name==='action-first jury message'?'Claimed sender: UNITED STATES DISTRICT COURT — DISTRICT OF CONNECTICUT':name==='degraded OCR text proxy'?'':name.includes('Connecticut sample')?'UNITED STATES DISTRICT COURT':'SUPERIOR COURT OF CALIFORNIA, COUNTY OF RIVERSIDE',
+ court_name:name==='action-first jury message'?'Claimed sender: UNITED STATES DISTRICT COURT — DISTRICT OF CONNECTICUT':name==='degraded OCR text proxy'?'':name.includes('Connecticut sample')?'UNITED STATES DISTRICT COURT District of Connecticut':name==='unsupported jurisdiction'?'High Court of Northbridge, Republic of Alder':'SUPERIOR COURT OF CALIFORNIA, COUNTY OF RIVERSIDE',
  juror_or_reference_number:name==='action-first jury message'?'':name.includes('Connecticut sample')?'02-0140':name==='nonexistent private identifier'?'99999999':name==='degraded OCR text proxy'?'':'10472893',
  phone_numbers:name==='action-first jury message'?'2035550199':name==='genuine Connecticut sample PDF'?'18663882430':name==='altered Connecticut sample status phone'?'12035550199':name==='degraded OCR text proxy'||name==='single field altered phone'?'8665550199':name==='unsupported jurisdiction'?'8665550199':name==='official-source conflict'?'7603426264':'9512755076',
  case_or_docket_number:'',
@@ -51,6 +51,6 @@ for(const item of cases){const e=fallbackExtract(item.text);const tokens='tokens
  if(item.name==='flagship mixed notice'){ground.phone_numbers='8665550199';ground.urls='rcvduty.com';ground.emails='jurysupport@riverside-court.org';ground.payment_amount='$50'}
  if(item.name==='genuine court public notice excerpt'){ground.court_name=item.text;ground.court_location='';ground.juror_or_reference_number='';ground.phone_numbers='';ground.urls=''}
  if(item.name==='degraded photo OCR'){ground.phone_numbers='8665550199';ground.urls='rcvduty.com'}
- if(item.name==='unsupported jurisdiction'){ground.court_name='';ground.juror_or_reference_number='ABC98233'}
+ if(item.name==='unsupported jurisdiction'){ground.juror_or_reference_number='ABC98233'}
  let extractionExact=true;for(const [field,value] of Object.entries(ground)){const stats=fieldStats[field]||={correct:0,total:0};stats.total++;const actual=field==='phone_numbers'?e.phone_numbers.map(v=>v.replace(/\D/g,'')).join(','):field==='urls'?e.urls.join(','):field==='emails'?e.emails.join(','):field==='payment_amount'?e.payment_demand.amount:field==='information_requests'?e.information_requests.join('|'):String(e[field as keyof typeof e]);if(actual.toLowerCase()===value.toLowerCase())stats.correct++;else{extractionExact=false;console.log(`  ${field}: expected ${JSON.stringify(value)}, extracted ${JSON.stringify(actual)}`)}}if(exact&&extractionExact)full++;console.log(`${item.name}: ${reds} MISMATCH, ${v.results.length} claims`)}
 console.log(JSON.stringify({cases:cases.length,extraction_accuracy_by_field:Object.fromEntries(Object.entries(fieldStats).map(([field,stat])=>[field,stat.correct/stat.total])),mismatch_precision:mismatch?trueMismatch/mismatch:1,false_mismatch_count:falseMismatch,could_not_verify_rate:total?unknown/total:0,full_flow_success_rate:full/cases.length},null,2));if(falseMismatch)process.exitCode=1;
