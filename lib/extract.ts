@@ -2,7 +2,14 @@ import {emptyExtraction,type Extraction,type Claim,type Token} from './types';
 export function fallbackExtract(text:string):Extraction {
  const e=emptyExtraction();
  const lines=text.split(/\n/).map(s=>s.trim()).filter(Boolean);
- e.court_name=lines.find(s=>/superior court of california|united states district court/i.test(s))||'';
+ const courtIndex=lines.findIndex(s=>/superior court of california|united states district court/i.test(s));
+ if(courtIndex>=0){
+  e.court_name=lines[courtIndex];
+  if(/united states district court/i.test(e.court_name)&&!/district of connecticut/i.test(e.court_name)){
+   const next=lines[courtIndex+1]||'';
+   if(/^(?:district of\s+)?connecticut\b/i.test(next))e.court_name=`${e.court_name} ${next}`.replace(/\s+/g,' ').trim();
+  }
+ }
  e.court_location=(lines.find(s=>/\d{2,5}\s+[^\n]{3,80}\b(?:street|st\.?|avenue|ave\.?|road|rd\.?)\b/i.test(s))||'').replace(/\s+/g,' ');
  e.juror_or_reference_number=lines.find(s=>/\b(?:juror|badge|reference)\s*(?:number|no\.?|#|id)\s*[:#]?\s*[A-Z0-9-]{4,}/i.test(s))?.match(/(?:number|no\.?|#|id)\s*[:#]?\s*([A-Z0-9-]{4,})/i)?.[1]||'';
  e.case_or_docket_number=lines.find(s=>/\b(?:case|docket)\s*(?:number|no\.?|#)\s*[:#]?\s*[\w-]{4,}/i.test(s))?.match(/(?:number|no\.?|#)\s*[:#]?\s*([\w-]{4,})/i)?.[1]||'';
