@@ -282,21 +282,26 @@ async function upload(uploaded:File){
       {busy&&<span className="upload-progress" aria-hidden="true"><span/></span>}
      </button>
 
-     <div className="paste-divider"><span>Have an email or text instead?</span></div>
-     <label className="paste-field">
-      <span className="field-label">Paste the message</span>
-      <textarea aria-label="Paste the court message" value={draft} onChange={event=>setDraft(event.target.value)} placeholder="Paste the message exactly as you received it"/>
-     </label>
-
-     <div className="intake-actions">
-      <button className="check-message" type="button" disabled={!draft.trim()||!hydrated} onClick={submitPaste}>Check this message</button>
-     </div>
+     <details className="paste-disclosure">
+      <summary>Paste text instead</summary>
+      <div className="paste-disclosure-body">
+       <label className="paste-field">
+        <span className="field-label">Message text</span>
+        <textarea aria-label="Paste the court message" value={draft} onChange={event=>setDraft(event.target.value)} placeholder="Paste the message exactly as you received it"/>
+       </label>
+       <div className="intake-actions">
+        <button className="check-message" type="button" disabled={!draft.trim()||!hydrated} onClick={submitPaste}>Check this message</button>
+       </div>
+      </div>
+     </details>
 
      {error&&<div role="alert" className="inspection-error">{error}</div>}
 
-     <details className="privacy">
+     <details className="privacy disclosure-row">
       <summary>Privacy and processing</summary>
-      <p>Your uploaded file does not leave the browser. Extracted text can be sent to the SEAL server and, when configured, to Groq for claim structuring. SEAL does not store the uploaded file or extracted claims.</p>
+      <div className="disclosure-body">
+       <p>Your uploaded file does not leave the browser. Extracted text can be sent to the SEAL server and, when configured, to Groq for claim structuring. SEAL does not store the uploaded file or extracted claims.</p>
+      </div>
      </details>
     </div>
     <details className="entry-guide" aria-label="Questions SEAL can help answer">
