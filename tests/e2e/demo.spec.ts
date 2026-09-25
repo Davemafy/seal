@@ -33,7 +33,7 @@ test('mobile review keeps the chosen claim and its evidence together',async({pag
  await expect(page.locator('.claim-index-list')).toHaveClass(/mobile-open/);
 });
 
-test('public sample summons uploads without a fabricated mismatch or URL',async({page})=>{
+test('public sample summons connects public details to official sources and abstains on private details',async({page})=>{
  await page.goto('/');
  await page.locator('input[type="file"]').setInputFiles('tests/fixtures/connecticut-sample-jury-summons.pdf');
  await expect(page.getByRole('heading',{name:'Uploaded notice'})).toBeVisible({timeout:20000});
@@ -54,14 +54,21 @@ test('public sample summons uploads without a fabricated mismatch or URL',async(
  }),{timeout:20000}).toBeGreaterThan(60);
  await page.getByRole('button',{name:'Check this notice'}).click();
  await expect(page.getByText('5 claims checked')).toBeVisible({timeout:30000});
- await expect(page.getByText('NO JURY-SOURCE COVERAGE')).toBeVisible();
+ await expect(page.getByText('SOURCE SNAPSHOT · 25 SEP 2026')).toBeVisible();
  await expect(page.locator('.index-state.mismatch')).toHaveCount(0);
  await expect(page.locator('.index-item')).toHaveCount(5);
+ await expect(page.locator('.index-state.match')).toHaveCount(3);
+ await expect(page.locator('.index-state.could_not_verify')).toHaveCount(2);
+ await page.locator('.index-item').filter({hasText:'Court identity'}).click();
+ await expect(page.locator('.focused-evidence .official-link')).toHaveAttribute('href',/ctd.uscourts.gov\/content\/hartford/);
  await page.locator('.index-item').filter({hasText:'Juror reference'}).click();
  await expect(page.locator('.claim-value')).toHaveText('02-0140');
+ await expect(page.locator('.focused-evidence .state-text')).toHaveText('COULD NOT VERIFY');
  await page.locator('.index-item').filter({hasText:'Reporting date'}).click();
  await expect(page.locator('.claim-value')).toContainText('March 28(Tue.), May 3(Wed.)');
  await page.locator('.index-item').filter({hasText:'Jury contact number'}).click();
  await expect(page.locator('.claim-value')).toHaveText('1-866-388-2430');
+ await expect(page.locator('.focused-evidence .state-text')).toHaveText('MATCH');
+ await expect(page.locator('.contact-phone')).toHaveAttribute('href','tel:800-827-8224');
  await expect(page.getByText('g.AREyOUASALARIEDEMPLoYEE')).toHaveCount(0);
 });
