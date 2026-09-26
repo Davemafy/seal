@@ -189,8 +189,10 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   const words=[...new Set(requestedActions.map(actionSummaryWord).filter(Boolean))];
   return words.length?`${words.length} action${words.length===1?'':'s'}: ${words.join(' · ')}`:'';
  },[requestedActions]);
- const storySignal=verification?.signals?.find(signal=>signal.id==='traffic-qr-warning')
-  ||verification?.signals?.find(signal=>signal.kind==='SOURCE_CONFLICT');
+ const storySignal=verification?.signals?.find(signal=>signal.id.startsWith('curated-'))
+  ||verification?.signals?.find(signal=>signal.id==='traffic-qr-warning')
+  ||verification?.signals?.find(signal=>signal.kind==='SOURCE_CONFLICT')
+  ||verification?.signals?.[0];
  const decisionClaim=verification?chooseDecisionClaim(claims,verification):undefined;
  const storyClaim=decisionClaim;
  const storyResult=storyClaim?resultById.get(storyClaim.id):undefined;
@@ -215,9 +217,11 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    :undefined;
  const storySourceCopy=storySignal?.summary||storyEvidence?.excerpt||storyResult?.explanation||'SEAL could not establish this detail from a supported source.';
  const storySourceDisplay=cinematicExcerpt(storySourceCopy);
- const storyVerdict=storySignal?.id==='traffic-qr-warning'
-  ?'This pattern matches an official scam warning.'
-  :storyResult?.verdict==='MATCH'
+ const storyVerdict=storySignal?.id.startsWith('curated-')
+  ?'The issuing authority published this example as a scam.'
+  :storySignal?.id==='traffic-qr-warning'
+   ?'This pattern matches an official scam warning.'
+   :storyResult?.verdict==='MATCH'
    ?'This detail matches the source.'
    :storyResult?.verdict==='MISMATCH'
     ?'This detail conflicts with the source.'
@@ -239,7 +243,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
       :'Use the court’s own website or independently sourced contact information before responding.');
  const storySourceLabel=!storyEvidence
   ?'Source check'
-  :storySignal?.id==='traffic-qr-warning'&&/ftc\.gov/i.test(storyEvidence.url)
+  :storySignal?.id.startsWith('curated-')
+   ?'Issuing authority'
+   :storySignal?.id==='traffic-qr-warning'&&/ftc\.gov/i.test(storyEvidence.url)
    ?'Federal consumer guidance'
    :storySignal?.kind==='SOURCE_CONFLICT'
     ?'State law'
@@ -256,9 +262,11 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   :[];
  const directCourtUnavailable=verification?.resolver_id==='unsupported';
  const directCheckSummary=directCourtUnavailable?'No supported direct court check is available for this jurisdiction.':'';
- const decisionRelationship=storySignal?.kind==='SOURCE_CONFLICT'
-  ?'This detail conflicts with an official source.'
-  :storySignal?.id==='traffic-qr-warning'
+ const decisionRelationship=storySignal?.id.startsWith('curated-')
+  ?'The issuing authority published this artifact as a scam example.'
+  :storySignal?.kind==='SOURCE_CONFLICT'
+   ?'This detail conflicts with an official source.'
+   :storySignal?.id==='traffic-qr-warning'
    ?'Published official warnings match this payment pattern.'
    :storySignal
     ?'Published official warnings match this pattern.'
@@ -579,7 +587,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      setText(analysisText);
      setBusy(false);
      setStatus('');
-     await run('SNAPSHOT',{text:analysisText,file:doc,curated:true});
+     await run('SNAPSHOT',{text:analysisText,file:doc,curated:true,curatedCaseId:caseId});
      return;
     }
 
@@ -587,7 +595,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
     setBusy(false);
     setStatus('');
     setText(seededText);
-    await run('SNAPSHOT',{text:seededText,file:null});
+    await run('SNAPSHOT',{text:seededText,file:null,curated:true,curatedCaseId:caseId});
    }catch{
     setBusy(false);
     setStatus('');
@@ -628,8 +636,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   setReviewCountdown(3);
   setReviewOfferPaused(false);
   if(!reviewWorthWatching){setReviewOffer('skipped');return}
-  const reduce=typeof window!=='undefined'&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  setReviewOffer(reduce?'idle':'counting');
+  setReviewOffer('idle');
  },[verification,ready,text,claims.length,reviewWorthWatching]);
 
  useEffect(()=>{
@@ -734,10 +741,11 @@ async function upload(uploaded:File){
   }
  }
 
- async function run(sourceMode:Mode=mode,source?:{text:string;file:BrowserDocument|null;curated?:boolean}){
+ async function run(sourceMode:Mode=mode,source?:{text:string;file:BrowserDocument|null;curated?:boolean;curatedCaseId?:string}){
   const sourceText=source?.text??text;
   const sourceFile=source?source.file:file;
   const sourceCurated=Boolean(source?.curated);
+  const curatedCaseId=source?.curatedCaseId;
   const sourceIsDemo=!sourceFile&&/^DEMO \/ (?:FICTIONAL NOTICE|SYNTHETIC MESSAGE)/.test(sourceText);
   const id=++runId.current;
   setBusy(true);setError('');setVerification(null);setRevealed(0);setSelected('');setTechnicalOpen(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryStartPending(false);setMode(sourceMode);setStatus('Reading requested actions');
@@ -792,7 +800,7 @@ async function upload(uploaded:File){
    const response=await fetch('/api/verify',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({claims:verifiable,court_name:routingCourt,jurisdiction_hint:'',mode:sourceMode,text:sourceText})
+    body:JSON.stringify({claims:verifiable,court_name:routingCourt,jurisdiction_hint:'',mode:sourceMode,text:sourceText,curated_case_id:curatedCaseId})
    });
    if(!response.ok)throw new Error('The source check could not finish. Try again.');
 
@@ -895,10 +903,10 @@ async function upload(uploaded:File){
         onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
         onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
         <span className="upload-group">
-         <span className="upload-copy"><strong>{busy?status:'Upload a notice or screenshot'}</strong><small>{busy?'This can take a little longer the first time.':'Drop here or browse files · PDF, PNG, or JPG · up to 16 MB'}</small></span>
+         <span className="upload-copy">{busy&&<span className="upload-process-label">LOCAL DOCUMENT READ</span>}<strong>{busy?(status==='Reading text from the image'?'Reading document':status):'Upload a notice or screenshot'}</strong><small>{busy?'Finding the instruction that changes what you do next.':'Drop here or browse files · PDF, PNG, or JPG · up to 16 MB'}</small></span>
          {!busy&&<span className="upload-browse">Browse files</span>}
         </span>
-        {busy&&<span className="upload-progress" aria-hidden="true"><span/></span>}
+        {busy&&<span className="upload-readline" aria-hidden="true"/>}
        </button>
        <button className="paste-mode-switch" type="button" onClick={()=>setPasteMode(true)}>Paste text instead <span aria-hidden="true">→</span></button>
        <p className="privacy-note">Original file stays on this device. Extracted text may be sent for checking.</p>
@@ -1131,6 +1139,11 @@ async function upload(uploaded:File){
          <strong>{decisionRelationship}</strong>
          {directCheckSummary&&<small className="decision-direct-check">{directCheckSummary}</small>}
         </div>
+
+        {reviewWorthWatching&&!storyOpen&&<button type="button" className="decision-review-player" onClick={replayStory}>
+         <span className="decision-review-play" aria-hidden="true">▶</span>
+         <span><strong>Play evidence review</strong><small>17 sec · message → source → next step</small></span>
+        </button>}
        </div>}
      </div>
 
