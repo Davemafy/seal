@@ -24,7 +24,8 @@ const cases=[
 const base=process.env.SEAL_BASE_URL;
 if(!base)throw new Error('Set SEAL_BASE_URL to a preview deployment with GROQ_API_KEY configured.');
 let passed=0;
-for(const item of cases){
+for(const [index,item] of cases.entries()){
+ if(index)await new Promise(resolve=>setTimeout(resolve,8000));
  let response:Response;
  try{response=await fetch(new URL('/api/extract',base),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:item.text}),signal:AbortSignal.timeout(30000)});}
  catch(error){console.log(`FAIL ${item.name}: request failed (${error instanceof Error?error.name:'unknown'})`);continue;}
