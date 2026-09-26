@@ -159,6 +159,29 @@ export function extractActionGraph(text:string,tokens:Token[]=[]):ActionNode[]{
  }
  return actions;
 }
+export function groundedModelActions(extraction:Extraction,text:string):ActionNode[]{
+ const actions:ActionNode[]=[];
+ for(const candidate of extraction.requested_actions||[]){
+  const quote=candidate.exact_quote.trim();
+  if(quote.length<8||quote.length>350||candidate.confidence<65)continue;
+  const pattern=quote.split(/\s+/).map(part=>part.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('\\s+');
+  const source=text.match(new RegExp(pattern,'i'))?.[0];
+  if(!source)continue;
+  const compact=source.replace(/\s/g,'');
+  if((compact.match(/[a-z]/gi)||[]).length<5)continue;
+  if((compact.match(/[^a-z0-9.,:;()/#$%&@'’"!?+\-–—]/gi)||[]).length>Math.max(2,Math.floor(compact.length*.08)))continue;
+  const target=candidate.target_value.trim();
+  const targetGrounded=target&&source.toLowerCase().includes(target.toLowerCase());
+  const deadline=candidate.deadline.trim();
+  const node:ActionNode={
+   verb:candidate.verb.toLowerCase().trim(),kind:candidate.kind,object:source,
+   target_type:targetGrounded?candidate.target_type:candidate.target_type==='qr'&&/\bqr\b/i.test(source)?'qr':'unknown',
+   target_value:targetGrounded?target:'',qualifiers:deadline&&source.toLowerCase().includes(deadline.toLowerCase())?[deadline]:[],source_text:source
+  };
+  if(!actions.some(existing=>existing.kind===node.kind&&existing.source_text.toLowerCase()===source.toLowerCase()))actions.push(node);
+ }
+ return actions;
+}
 export function sanitizeStructuredExtraction(extraction:Extraction,text:string):Extraction{
  const next:Extraction={...extraction,payment_demand:{...extraction.payment_demand},phone_numbers:[...extraction.phone_numbers],emails:[...extraction.emails],urls:[...extraction.urls],information_requests:[...extraction.information_requests],threats:[...extraction.threats],uncertain_fields:[...extraction.uncertain_fields]};
  const recoveredCourt=extractCourtName(text.split(/\n/).map(s=>s.trim()).filter(Boolean));
@@ -334,8 +357,9 @@ export function claimsFromExtraction(e:Extraction,text:string,tokens:Token[]=[])
   }
  }
 
- const actions=extractActionGraph(text,tokens),consumedPhones=new Set<string>(),consumedUrls=new Set<string>();
- for(const action of actions){
+ const selectedActions=e.requested_actions?groundedModelActions(e,text):extractActionGraph(text,tokens);
+ const consumedPhones=new Set<string>(),consumedUrls=new Set<string>();
+ for(const action of selectedActions){
   const type=claimTypeForAction(action),label=labelForAction(action);
   if(action.target_type==='phone'&&action.target_value)consumedPhones.add(clean(action.target_value));
   if(action.target_type==='url'&&action.target_value)consumedUrls.add(clean(action.target_value));

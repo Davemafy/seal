@@ -112,7 +112,7 @@ function chooseDecisionClaim(claims:Claim[],verification:Verification){
   ||reliable[0];
 }
 
-function decisionCopy(verification:Verification|null){
+function decisionCopy(verification:Verification|null,claim?:Claim){
  if(!verification)return {title:'',summary:''};
  if(verification.safe_action)return {title:verification.safe_action.title,summary:verification.safe_action.summary};
  const mismatches=verification.results.filter(result=>result.verdict==='MISMATCH').length;
@@ -124,6 +124,10 @@ function decisionCopy(verification:Verification|null){
  if(matches)return {
   title:'Some details match official sources.',
   summary:'See what matched below. A matching detail alone does not confirm who sent the message.'
+ };
+ if(claim?.action)return {
+  title:'What this message asks you to do',
+  summary:'SEAL could read the requested action, but the available official sources cannot confirm this case or sender. Verify through a court website or phone number you find independently before acting.'
  };
  return {
   title:'We could not confirm these details.',
@@ -284,7 +288,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   &&storyHasIndependentEvidence
  );
  const count=(value:Result['verdict'])=>verification?.results.filter(result=>result.verdict===value).length||0;
- const decision=decisionCopy(verification);
+ const decision=decisionCopy(verification,decisionClaim);
  const technicalEvidence=useMemo(()=>{
   if(!verification)return [];
   const all=[
@@ -739,12 +743,7 @@ async function upload(uploaded:File){
   const id=++runId.current;
   setBusy(true);setError('');setVerification(null);setRevealed(0);setSelected('');setTechnicalOpen(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryStartPending(false);setMode(sourceMode);setStatus('Reading requested actions');
   try{
-   if(sourceFile?.uncertain){
-    const unclear:Claim={id:'c1',type:'official',label:'Unreadable field',value:'Could not read confidently',exact_source_text:'Unreadable field',page:1};
-    setClaims([unclear]);setExtractionMode('OCR / LOW CONFIDENCE');
-    setVerification({results:[{claim_id:'c1',verdict:'COULD_NOT_VERIFY',explanation:'We couldn’t read this field confidently.',evidence:[],resolver_id:'ocr'}],resolver_id:'ocr'});
-    setRevealed(1);setSelected('c1');return;
-   }
+   if(sourceFile?.uncertain)throw new Error('We couldn’t reliably read the important instructions in this document. Try a clearer image or paste the message text.');
 
    let extraction:Extraction=fallbackExtract(sourceText);
    let extractor='DETERMINISTIC';
@@ -775,6 +774,11 @@ async function upload(uploaded:File){
    const found=sourceCurated
     ?extractedClaims.map(claim=>({...claim,verification_eligible:true}))
     :extractedClaims;
+   const reliableAction=found.some(claim=>Boolean(claim.action)&&claimReliable(claim));
+   const courtRelated=/\b(?:court|jury|summons|hearing|case|docket|judge|tribunal|magistrate|citation|parking violation)\b/i.test(sourceText);
+   if(!sourceCurated&&(!courtRelated||!reliableAction))throw new Error(!courtRelated
+    ?'This does not look like a court message SEAL can check. Try a court notice, text, or email.'
+    :'We couldn’t reliably read the important instructions in this document. Try a clearer image or paste the message text.');
    if(!found.length){
     if(sourceFile&&sourceText.trim().length>=40)throw new Error('We could read text in this image, but SEAL couldn’t find a court message or notice to check. Try another image or paste the message text.');
     throw new Error('We couldn’t read enough of this message to check it reliably. Try a clearer screenshot or paste the message text.');
@@ -802,12 +806,6 @@ async function upload(uploaded:File){
      ?{claim_id:claim.id,verdict:'COULD_NOT_VERIFY',explanation:'We couldn’t read this field confidently.',evidence:[],resolver_id:'ocr'}
      :checkedById.get(claim.id)||{claim_id:claim.id,verdict:'COULD_NOT_VERIFY',explanation:'No supported official-source check applies to this extracted action.',evidence:[],resolver_id:checkedServer.resolver_id})
    };
-
-   const reliableAction=found.some(claim=>Boolean(claim.action)&&claimReliable(claim));
-   const independentlyUseful=Boolean(checked.signals?.length||checked.safe_action||checked.results.some(result=>result.verdict!=='COULD_NOT_VERIFY'||result.evidence.length));
-   if(sourceFile?.kind==='image'&&!sourceCurated&&!reliableAction&&!independentlyUseful){
-    throw new Error('We could read this document, but not enough of the important instructions reliably. Try a clearer image or paste the message text.');
-   }
 
    if(runId.current!==id)return;
    setVerification(checked);
@@ -966,8 +964,8 @@ async function upload(uploaded:File){
      {verification&&<nav className="result-chapters" aria-label="Result sections">
       <a href="#review-summary" className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={()=>setActiveResultSection('summary')}>Summary</a>
       <a href="#original-message" className={activeResultSection==='message'?'is-current':''} aria-current={activeResultSection==='message'?'location':undefined} onClick={()=>setActiveResultSection('message')}>Message</a>
-      <a href={verification.safe_action||verification.contact?'#next-step':'#source-checks'} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={()=>setActiveResultSection('next')}>Next step</a>
-      <a href="#checked-details" className={activeResultSection==='checked'?'is-current':''} aria-current={activeResultSection==='checked'?'location':undefined} onClick={()=>setActiveResultSection('checked')}>Checked details</a>
+      <a href={verification.safe_action||verification.contact||decisionClaim?.action?'#next-step':'#source-checks'} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={()=>setActiveResultSection('next')}>Next step</a>
+      {!directCourtUnavailable&&<a href="#checked-details" className={activeResultSection==='checked'?'is-current':''} aria-current={activeResultSection==='checked'?'location':undefined} onClick={()=>setActiveResultSection('checked')}>Checked details</a>}
      </nav>}
     </header>
 
@@ -1223,11 +1221,14 @@ async function upload(uploaded:File){
       :<div className="source-signals source-evidence-empty">
        <article className="source-signal is-primary">
         <p className="signal-kind">Source coverage</p>
-        <h3>No independent source evidence was available for this result.</h3>
-        <p>The inspection below shows what SEAL could and could not establish from its supported sources.</p>
+        <h3>{directCourtUnavailable?'Direct court check unavailable':'No independent source evidence was available for this result.'}</h3>
+        <p>{directCourtUnavailable?'SEAL can describe the action in this message, but cannot confirm this case with the issuing court.':'The inspection below shows what SEAL could and could not establish from its supported sources.'}</p>
        </article>
       </div>}
 
+     {verification&&!verification.safe_action&&decisionClaim?.action&&<div className="safe-route" id="next-step">
+      <div><h2>Safest next step</h2><p>Find the court’s website or phone number independently and ask about the case before paying, sharing information, or following a link in this message.</p></div>
+     </div>}
      {verification?.safe_action&&<div className="safe-route" id="next-step">
       <div>
        <h2>Safest next step</h2>
@@ -1265,7 +1266,7 @@ async function upload(uploaded:File){
      </div>
     </section>}
 
-    {ready&&<section className="record-section" id="checked-details">
+    {ready&&!directCourtUnavailable&&<section className="record-section" id="checked-details">
      <div className="section-heading record-heading">
       <h2>What was checked</h2>
       <p>Inspect each extracted detail and the source evidence available for it.</p>
