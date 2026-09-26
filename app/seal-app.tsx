@@ -4,6 +4,7 @@ import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'rea
 import {gsap} from 'gsap';
 import PDFPreview from './pdf-preview';
 import StoryPdfPage from './story-pdf-page';
+import EntryEvidenceReel from './entry-evidence-reel';
 import {fixtures,type FixtureKey} from '@/lib/fixtures';
 import {fallbackExtract,claimsFromExtraction,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '@/lib/extract';
 import {readInBrowser,warmOcr,type BrowserDocument} from '@/lib/browser-file';
@@ -887,6 +888,8 @@ async function upload(uploaded:File){
 
      {error&&<div role="alert" className="inspection-error">{error}</div>}
     </div>
+
+    <EntryEvidenceReel/>
    </section>
    :
    <section className="review-shell"
