@@ -417,7 +417,7 @@ async function upload(uploaded:File){
    <button className={`rail-item ${!text?'is-current':''}`} type="button" onClick={clear}>Check a message</button>
    <a className="rail-item" href="/browse">Browse real cases</a>
    <div className="rail-spacer"/>
-   <div className="rail-foot"><strong>Check the source</strong><span>Open the court pages behind each finding.</span></div>
+   <div className="rail-foot"><strong>Public sources only</strong><span>Every item links back to the issuing court or agency.</span></div>
   </aside>
   <header className="seal-nav mobile-only-nav">
    <a href="/" className="mobile-brand">SEAL</a>
