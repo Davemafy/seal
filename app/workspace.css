@@ -34,12 +34,12 @@
 .nav-trust,.nav-action{justify-self:end}
 .nav-action{border:0;border-radius:8px;padding:10px 16px;background:var(--secondary);font-size:14px;font-weight:600}
 .nav-action:hover,.demo-link:hover,.replay-button:hover{background:var(--tertiary)}
-.entry-shell{width:100%;max-width:980px;min-height:calc(100svh - 148px);margin:0 auto;padding:36px 64px 72px;display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"intro" "form";row-gap:24px;align-content:start;align-items:start}
+.entry-shell{width:100%;max-width:1180px;min-height:calc(100svh - 148px);margin:0 auto;padding:56px 64px 72px;display:grid;grid-template-columns:minmax(260px,.72fr) minmax(420px,1.28fr);grid-template-areas:"intro form";column-gap:56px;align-content:center;align-items:center}
 .entry-copy{grid-area:intro}
-.entry-copy h1{margin:0;max-width:800px;font-size:40px;font-weight:700;line-height:52px;letter-spacing:0}
-.entry-copy>p{max-width:750px;margin:12px 0 0;color:#4b4b4b;font-size:16px;line-height:24px}
-.intake{grid-area:form;display:flex;flex-direction:column;gap:16px;padding:0;border:0;border-radius:0;background:transparent}
-.upload-row{position:relative;width:100%;min-height:136px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px;text-align:center;border:1px dashed var(--line-strong);border-radius:8px;background:var(--secondary);color:var(--ink);overflow:hidden}
+.entry-copy h1{margin:0;max-width:440px;font-size:52px;font-weight:700;line-height:60px;letter-spacing:-.02em}
+.entry-copy>p{max-width:420px;margin:20px 0 0;color:#4b4b4b;font-size:18px;line-height:28px}
+.intake{grid-area:form;display:flex;flex-direction:column;gap:0;min-height:420px;padding:24px;border:0;border-radius:8px;background:var(--secondary)}
+.upload-row{position:relative;width:100%;min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:28px;text-align:center;border:1px dashed var(--line-strong);border-radius:8px;background:#fff;color:var(--ink);overflow:hidden}
 .upload-row:hover,.upload-row.is-dragging{border-color:var(--blue);background:#eff4fe}
 .upload-row strong{display:block;color:var(--muted);font-size:14px;font-weight:500;line-height:16px}
 .upload-row small{display:block;margin-top:6px;font-size:12px;line-height:20px;color:var(--muted)}
@@ -51,13 +51,13 @@
 .upload-progress span,.check-loader-track span{display:block;height:100%;width:38%;background:var(--blue);animation:seal-progress 1.15s ease-in-out infinite}
 .upload-plus{display:none}
 .upload-browse{flex:none;min-width:103px;margin-top:2px;padding:10px 12px;background:var(--tertiary);border-radius:9999px;font-size:14px;font-weight:500;line-height:16px}
-.paste-disclosure{border-radius:8px;background:var(--secondary);overflow:hidden}
-.paste-disclosure>summary{position:relative;display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:14px 16px;list-style:none;cursor:pointer;color:var(--ink);font-size:14px;font-weight:500;line-height:20px}
+.paste-disclosure{margin-top:16px;border-top:1px solid var(--line);border-radius:0;background:transparent;overflow:hidden}
+.paste-disclosure>summary{position:relative;display:flex;align-items:center;justify-content:space-between;min-height:56px;padding:16px 0;list-style:none;cursor:pointer;color:var(--ink);font-size:14px;font-weight:500;line-height:20px}
 .paste-disclosure>summary::-webkit-details-marker{display:none}
 .paste-disclosure>summary::marker{content:""}
 .paste-disclosure>summary::after{content:"Show";margin-left:16px;color:var(--muted);font-weight:400}
 .paste-disclosure[open]>summary::after{content:"Hide"}
-.paste-disclosure-body{display:grid;gap:16px;padding:0 16px 16px}
+.paste-disclosure-body{display:grid;gap:16px;padding:0 0 8px}
 .paste-field{display:block}
 .field-label{display:block;margin-bottom:8px;font-size:14px;font-weight:500;line-height:16px}
 .paste-field textarea{width:100%;height:104px;resize:vertical;padding:16px;border:2px solid transparent;border-radius:8px;outline:0;background:var(--tertiary);color:var(--ink);font-size:14px;line-height:20px}
@@ -68,7 +68,7 @@
 .check-message,.run-button,.safe-primary{min-height:48px;display:inline-flex;align-items:center;justify-content:center;padding:12px 20px;border:0;border-radius:8px;background:#000;color:#fff;text-decoration:none;font-size:16px;font-weight:500;line-height:20px}
 .check-message:hover,.run-button:hover,.safe-primary:hover{background:#333}
 .demo-link,.replay-button{min-height:48px;padding:12px 16px;border:0;border-radius:8px;background:var(--secondary);font-size:14px;font-weight:500}
-.privacy-note{max-width:620px;margin:0;color:var(--muted);font-size:12px;line-height:20px}
+.privacy-note{max-width:620px;margin:12px 0 0;color:var(--muted);font-size:12px;line-height:20px}
 .technical-record summary,.additional-sources summary{cursor:pointer}
 .review-shell{width:100%;max-width:1440px;margin:auto;padding:36px 64px 96px}
 .review-head{display:flex;align-items:end;justify-content:space-between;gap:24px}
@@ -205,7 +205,7 @@
  .workspace-rail{display:none}
  .seal-nav{padding-inline:36px}
  .mobile-brand{display:block;text-decoration:none;font-size:21px;font-weight:700}
- .entry-shell{grid-template-columns:1fr;grid-template-areas:"intro" "form";max-width:760px;min-height:auto;padding-block:40px}
+ .entry-shell{grid-template-columns:1fr;grid-template-areas:"intro" "form";max-width:760px;min-height:auto;padding-block:40px;row-gap:28px}
  .review-hero{grid-template-columns:1fr;grid-template-areas:"decision" "document"}
  .decision-pane{position:static}
  .source-signal{grid-template-columns:1fr}
@@ -215,12 +215,12 @@
  .seal-nav{min-height:60px}
  .seal-nav-note{display:none}
  .nav-trust{display:none}
- .entry-shell,.review-shell{padding:32px 16px 40px}
- .entry-shell{row-gap:24px}
- .entry-copy h1{font-size:36px;line-height:44px}
- .entry-copy>p{font-size:16px;line-height:24px}
- .intake{margin-top:0;padding:0}
- .upload-row{min-height:136px}
+ .entry-shell,.review-shell{padding:28px 16px 40px}
+ .entry-shell{row-gap:28px;align-content:start}
+ .entry-copy h1{max-width:360px;font-size:40px;line-height:48px;letter-spacing:-.015em}
+ .entry-copy>p{max-width:34rem;margin-top:12px;font-size:16px;line-height:24px}
+ .intake{min-height:0;margin-top:0;padding:16px}
+ .upload-row{min-height:220px;padding:24px 16px}
  .intake-actions{align-items:stretch;flex-direction:column}
  .check-message,.demo-link{width:100%}
  .review-head{align-items:start;flex-direction:column}
