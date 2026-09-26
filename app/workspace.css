@@ -34,15 +34,11 @@
 .nav-trust,.nav-action{justify-self:end}
 .nav-action{border:0;border-radius:8px;padding:10px 16px;background:var(--secondary);font-size:14px;font-weight:600}
 .nav-action:hover,.demo-link:hover,.replay-button:hover{background:var(--tertiary)}
-.entry-shell{width:100%;max-width:1240px;min-height:calc(100svh - 148px);margin:0 auto;padding:36px 64px 72px;display:grid;grid-template-columns:minmax(0,1fr) 280px;grid-template-areas:"intro intro" "form guide";column-gap:36px;row-gap:24px;align-content:start;align-items:start}
+.entry-shell{width:100%;max-width:980px;min-height:calc(100svh - 148px);margin:0 auto;padding:36px 64px 72px;display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"intro" "form";row-gap:24px;align-content:start;align-items:start}
 .entry-copy{grid-area:intro}
 .entry-copy h1{margin:0;max-width:800px;font-size:40px;font-weight:700;line-height:52px;letter-spacing:0}
 .entry-copy>p{max-width:750px;margin:12px 0 0;color:#4b4b4b;font-size:16px;line-height:24px}
 .intake{grid-area:form;display:flex;flex-direction:column;gap:16px;padding:0;border:0;border-radius:0;background:transparent}
-.entry-guide{grid-area:guide;padding-top:4px}
-.guide-heading{margin:0 0 8px;color:var(--muted);font-size:12px;font-weight:500;line-height:20px}
-.guide-sentence{max-width:280px;margin:0;color:#4b4b4b;font-size:14px;line-height:20px}
-.guide-limit{margin:18px 0 0;color:var(--muted);font-size:12px;line-height:19px}
 .upload-row{position:relative;width:100%;min-height:136px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px;text-align:center;border:1px dashed var(--line-strong);border-radius:8px;background:var(--secondary);color:var(--ink);overflow:hidden}
 .upload-row:hover,.upload-row.is-dragging{border-color:var(--blue);background:#eff4fe}
 .upload-row strong{display:block;color:var(--muted);font-size:14px;font-weight:500;line-height:16px}
@@ -72,13 +68,7 @@
 .check-message,.run-button,.safe-primary{min-height:48px;display:inline-flex;align-items:center;justify-content:center;padding:12px 20px;border:0;border-radius:8px;background:#000;color:#fff;text-decoration:none;font-size:16px;font-weight:500;line-height:20px}
 .check-message:hover,.run-button:hover,.safe-primary:hover{background:#333}
 .demo-link,.replay-button{min-height:48px;padding:12px 16px;border:0;border-radius:8px;background:var(--secondary);font-size:14px;font-weight:500}
-.privacy{margin-top:0;color:var(--muted);font-size:12px;line-height:20px}
-.privacy summary{display:inline-flex;align-items:center;gap:8px;padding:0;list-style:none;cursor:pointer;color:var(--muted);font-size:12px;font-weight:500;line-height:20px;text-decoration:underline;text-underline-offset:3px}
-.privacy summary::-webkit-details-marker{display:none}
-.privacy summary::marker{content:""}
-.privacy summary::after{content:"Show";color:#a6a6a6;font-weight:400;text-decoration:none}
-.privacy[open] summary::after{content:"Hide"}
-.privacy p{max-width:620px;margin:8px 0 0;color:var(--muted)}
+.privacy-note{max-width:620px;margin:0;color:var(--muted);font-size:12px;line-height:20px}
 .technical-record summary,.additional-sources summary{cursor:pointer}
 .review-shell{width:100%;max-width:1440px;margin:auto;padding:36px 64px 96px}
 .review-head{display:flex;align-items:end;justify-content:space-between;gap:24px}
@@ -215,8 +205,7 @@
  .workspace-rail{display:none}
  .seal-nav{padding-inline:36px}
  .mobile-brand{display:block;text-decoration:none;font-size:21px;font-weight:700}
- .entry-shell{grid-template-columns:1fr;grid-template-areas:"intro" "form" "guide";max-width:760px;min-height:auto;padding-block:40px}
- .entry-guide{max-width:580px}
+ .entry-shell{grid-template-columns:1fr;grid-template-areas:"intro" "form";max-width:760px;min-height:auto;padding-block:40px}
  .review-hero{grid-template-columns:1fr;grid-template-areas:"decision" "document"}
  .decision-pane{position:static}
  .source-signal{grid-template-columns:1fr}
@@ -232,10 +221,6 @@
  .entry-copy>p{font-size:16px;line-height:24px}
  .intake{margin-top:0;padding:0}
  .upload-row{min-height:136px}
- .entry-guide{padding:8px 0 0;border-radius:0;background:transparent}
- .guide-heading{margin:0 0 8px;padding:0;font-size:12px;line-height:20px}
- .guide-sentence{max-width:34rem;font-size:14px;line-height:20px}
- .guide-limit{margin:16px 0 0}
  .intake-actions{align-items:stretch;flex-direction:column}
  .check-message,.demo-link{width:100%}
  .review-head{align-items:start;flex-direction:column}
