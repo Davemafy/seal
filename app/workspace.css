@@ -35,9 +35,15 @@
 .nav-action{border:0;border-radius:8px;padding:10px 16px;background:var(--secondary);font-size:14px;font-weight:600}
 .nav-action:hover,.demo-link:hover,.replay-button:hover{background:var(--tertiary)}
 .entry-shell{width:100%;max-width:1240px;min-height:calc(100svh - 148px);margin:0 auto;padding:36px 64px 72px;display:grid;grid-template-columns:minmax(0,1fr) 280px;grid-template-areas:"intro intro" "form guide";column-gap:36px;row-gap:24px;align-content:start;align-items:start}
+.entry-mode{--bg:#f5f1e8;--ink:#20211d;--brand:#356b5a}
+.entry-mode .seal-nav{background:var(--bg);border-bottom-color:#d9d4c9}
+.entry-mode .seal-footer{border-top-color:#d9d4c9}
+.entry-mode .entry-shell{background:var(--bg)}
 .entry-copy{grid-area:intro}
+.brand-statement{max-width:760px!important;margin:0 0 28px!important;color:var(--ink)!important;font-family:Georgia,'Times New Roman',serif!important;font-size:56px!important;font-weight:400!important;line-height:1.02!important;letter-spacing:-.035em!important}
+.brand-statement em{color:var(--brand);font-weight:400}
 .entry-copy h1{margin:0;max-width:800px;font-size:40px;font-weight:700;line-height:52px;letter-spacing:0}
-.entry-copy>p{max-width:750px;margin:12px 0 0;color:#4b4b4b;font-size:16px;line-height:24px}
+.entry-copy>p:not(.brand-statement){max-width:750px;margin:12px 0 0;color:#4b4b4b;font-size:16px;line-height:24px}
 .intake{grid-area:form;display:flex;flex-direction:column;gap:16px;padding:0;border:0;border-radius:0;background:transparent}
 .entry-guide{grid-area:guide;padding-top:4px}
 .guide-heading{margin:0 0 12px;font-size:14px;font-weight:500;line-height:20px}
@@ -231,8 +237,9 @@
  .nav-trust{display:none}
  .entry-shell,.review-shell{padding:32px 16px 40px}
  .entry-shell{row-gap:24px}
+ .brand-statement{max-width:560px!important;margin-bottom:24px!important;font-size:46px!important;line-height:1.04!important}
  .entry-copy h1{font-size:36px;line-height:44px}
- .entry-copy>p{font-size:16px;line-height:24px}
+ .entry-copy>p:not(.brand-statement){font-size:16px;line-height:24px}
  .intake{margin-top:0;padding:0}
  .upload-row{min-height:136px}
  .entry-guide{padding:8px 0 0;border-radius:0;background:transparent}
