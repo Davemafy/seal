@@ -189,6 +189,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const messageDetails=useMemo(()=>claims.filter(claim=>
   ['court','location','docket','reporting_date'].includes(claim.type)&&claimReliable(claim)
  ),[claims]);
+ const scheduleQuote=useMemo(()=>text.match(/\b(?:hearing|conference|appearance|court date)\b[^.!?\n]{0,90}\b(?:scheduled for|set for|on)\b[^.!?\n]{0,120}/i)?.[0].trim()||'',[text]);
  const primaryAction=requestedActions[0];
  const actionSummary=useMemo(()=>{
   const words=[...new Set(requestedActions.map(actionSummaryWord).filter(Boolean))];
@@ -1264,7 +1265,7 @@ async function upload(uploaded:File){
      {verification&&!verification.safe_action&&decisionClaim?.action&&<div className="unsupported-next-step" id="next-step">
       <span>What SEAL could establish</span>
       <h2>The message contains these details</h2>
-      {messageDetails.length>0?<dl className="message-detail-list">{messageDetails.map(claim=><div key={claim.id}><dt>{claim.label}</dt><dd>{cleanDisplayText(claim.value)}</dd></div>)}</dl>:<p>No court or case details could be read reliably.</p>}
+      {messageDetails.length>0||scheduleQuote?<dl className="message-detail-list">{messageDetails.map(claim=><div key={claim.id}><dt>{claim.type==='location'?'Location named':claim.label}</dt><dd>{cleanDisplayText(claim.value)}</dd></div>)}{scheduleQuote&&<div><dt>Schedule stated</dt><dd>{cleanDisplayText(scheduleQuote)}</dd></div>}</dl>:<p>No court or case details could be read reliably.</p>}
       <p>These are details printed in the message, not facts confirmed by a court. SEAL cannot establish whether the case exists or who sent it.</p>
       <p>If you need to respond, give the court name and case number above to a clerk reached through an official court site. Do not use payment or contact details supplied in the message until the court confirms them.</p>
       {/\b(?:united states district court|u\.?s\.? district court|federal court)\b/i.test(text)&&<a href="https://www.uscourts.gov/federal-court-finder/find" target="_blank" rel="noopener noreferrer">Find the court through the U.S. Courts directory →</a>}
