@@ -32,8 +32,8 @@ export default function Browse(){
   <section className="browse-shell">
    <header className="browse-intro">
     <h1>Browse real cases</h1>
-    <p>Public court pages, official scam warnings, and payment guidance. Every record below keeps its source visible.</p>
-    <p className="browse-method">Run in SEAL uses the public excerpt shown here. Missing notice text is never reconstructed.</p>
+    <p>Actual public court PDFs and published scam-message images, shown from their original sources.</p>
+    <p className="browse-method">No recreated thumbnails. Run in SEAL uses source text only; missing notice text is never invented.</p>
    </header>
 
    <nav className="browse-index" aria-label="Case categories">
@@ -42,13 +42,13 @@ export default function Browse(){
 
    <div className="case-archive">
     {browseCases.map((item,index)=><article className={`archive-entry archive-entry-${index+1}`} id={item.category} key={item.id}>
-     <div className="case-visual" aria-hidden="true">
-      <div className="case-sheet">
-       <span>{item.issuer}</span>
-       <div className="case-sheet-rule"/>
-       <strong>{item.title}</strong>
-       <p>{item.excerpt}</p>
-      </div>
+     <div className="case-visual">
+      {item.preview.type==='image'
+       ?<img className="case-source-image" src={item.preview.url} alt={item.preview.alt} loading="lazy"/>
+       :<object className="case-source-pdf" data={`${item.preview.url}#page=1&toolbar=0&navpanes=0&scrollbar=0&view=FitH`} type="application/pdf" aria-label={item.preview.alt}>
+         <a href={item.preview.url} target="_blank" rel="noopener noreferrer">Open source PDF</a>
+        </object>}
+      <a className="case-media-link" href={item.preview.url} target="_blank" rel="noopener noreferrer" aria-label={`Open original source document for ${item.title}`}>Open original</a>
      </div>
      <div className="case-copy">
       <p className="case-category">{item.categoryLabel}</p>

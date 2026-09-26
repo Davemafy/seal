@@ -13,13 +13,12 @@
 .archive-entry-1,.archive-entry-4{grid-column:span 7}
 .archive-entry-2,.archive-entry-3,.archive-entry-5,.archive-entry-6{grid-column:span 5}
 .archive-entry-3,.archive-entry-6{grid-template-columns:1fr}
-.case-visual{min-height:330px;display:grid;place-items:center;padding:24px;background:#f3f3f3}
-.case-sheet{width:min(100%,320px);min-height:280px;padding:24px;background:#fff;box-shadow:0 12px 34px rgba(0,0,0,.08);transform:rotate(-.5deg);overflow:hidden}
-.archive-entry:nth-child(even) .case-sheet{transform:rotate(.45deg)}
-.case-sheet>span{display:block;color:#777;font-size:10px;line-height:16px}
-.case-sheet-rule{height:1px;margin:18px 0;background:#d8d8d8}
-.case-sheet strong{display:block;font-size:20px;line-height:27px}
-.case-sheet p{display:-webkit-box;margin:18px 0 0;color:#4b4b4b;font-size:12px;line-height:18px;overflow:hidden;-webkit-line-clamp:7;-webkit-box-orient:vertical}
+.case-visual{position:relative;min-height:380px;overflow:hidden;background:#ececec}
+.case-source-pdf,.case-source-image{display:block;width:100%;height:380px;border:0;background:#fff}
+.case-source-pdf{pointer-events:none}
+.case-source-image{object-fit:contain}
+.case-media-link{position:absolute;right:12px;bottom:12px;z-index:2;padding:8px 10px;border-radius:8px;background:#fff;color:#000;box-shadow:0 2px 10px rgba(0,0,0,.12);font-size:12px;font-weight:500;text-decoration:none}
+.case-media-link:hover{text-decoration:underline;text-underline-offset:2px}
 .case-copy{padding-top:4px}
 .case-category,.case-classification{margin:0;color:#777;font-size:12px;line-height:18px}
 .case-copy h2{margin:10px 0 0;font-size:30px;line-height:38px;letter-spacing:-.01em}
@@ -46,7 +45,7 @@
  .browse-index a{margin-right:18px;padding-right:18px}
  .case-archive{margin-top:40px;gap:48px}
  .archive-entry{grid-template-columns:1fr;gap:20px}
- .case-visual{min-height:280px;padding:18px}
- .case-sheet{min-height:250px;padding:20px}
+ .case-visual{min-height:320px}
+ .case-source-pdf,.case-source-image{height:320px}
  .case-copy h2{font-size:26px;line-height:34px}
 }
