@@ -4,6 +4,7 @@ import Link from 'next/link';
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import PDFPreview from './pdf-preview';
 import {fixtures,type FixtureKey} from '@/lib/fixtures';
+import {getBrowseCase} from '@/lib/browse-cases';
 import {fallbackExtract,claimsFromExtraction,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '@/lib/extract';
 import {readInBrowser,warmOcr,type BrowserDocument} from '@/lib/browser-file';
 import type {Claim,Extraction,Result,Verification} from '@/lib/types';
@@ -181,9 +182,13 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  useEffect(()=>{const timer=window.setTimeout(()=>setHydrated(true),0);return()=>clearTimeout(timer)},[]);
 
  useEffect(()=>{
-  if(!hydrated||!initialRun||!initialText||initialRunStarted.current)return;
+  if(!hydrated||initialRunStarted.current)return;
+  const browserCase=typeof window!=='undefined'?getBrowseCase(new URLSearchParams(window.location.search).get('case')||undefined):undefined;
+  const seededText=initialText||browserCase?.runText||'';
+  if(!(initialRun||browserCase)||!seededText)return;
   initialRunStarted.current=true;
-  void run('SNAPSHOT',{text:initialText,file:null});
+  if(!initialText)setText(seededText);
+  void run('SNAPSHOT',{text:seededText,file:null});
  },[hydrated,initialRun,initialText]);
 
  useEffect(()=>{
