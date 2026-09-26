@@ -62,6 +62,10 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
  const [selected,setSelected]=useState('');
  const [hovered,setHovered]=useState('');
  const [showIndex,setShowIndex]=useState(false);
+ const [storyOpen,setStoryOpen]=useState(false);
+ const [storyStep,setStoryStep]=useState(0);
+ const [storyPlaying,setStoryPlaying]=useState(true);
+ const storyKey=useRef('');
  const input=useRef<HTMLInputElement>(null);
  const anchors=useRef<Record<string,HTMLElement|null>>({});
  const runId=useRef(0);
@@ -75,6 +79,16 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
   const words=[...new Set(requestedActions.map(actionSummaryWord).filter(Boolean))];
   return words.length?`${words.length} action${words.length===1?'':'s'}: ${words.join(' · ')}`:'';
  },[requestedActions]);
+ const storyClaim=verification
+  ?claims.find(claim=>resultById.get(claim.id)?.verdict==='MISMATCH')||primaryAction||claims[0]
+  :undefined;
+ const storyResult=storyClaim?resultById.get(storyClaim.id):undefined;
+ const storyEvidence=storyResult?.evidence?.[0];
+ const storyVerdict=storyResult?.verdict==='MATCH'
+  ?'This detail matches the source.'
+  :storyResult?.verdict==='MISMATCH'
+   ?'This detail conflicts with the source.'
+   :'We couldn’t confirm this detail.';
  const current=claims.find(claim=>claim.id===selected)||claims[0];
  const currentResult=current&&resultById.get(current.id);
  const active=hovered||selected;
@@ -98,10 +112,54 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
 
  useEffect(()=>{const timer=window.setTimeout(()=>setHydrated(true),0);return()=>clearTimeout(timer)},[]);
 
+ useEffect(()=>{
+  if(!verification||!ready)return;
+  const key=\`\${text.slice(0,96)}:\${claims.length}:\${verification.resolver_id}\`;
+  if(storyKey.current===key)return;
+  storyKey.current=key;
+  setStoryStep(0);
+  setStoryPlaying(true);
+  setStoryOpen(true);
+ },[verification,ready,text,claims.length]);
+
+ useEffect(()=>{
+  if(!storyOpen||!storyPlaying||!verification)return;
+  const timer=window.setTimeout(()=>{
+   setStoryStep(step=>{
+    if(step>=3){setStoryPlaying(false);return step}
+    return step+1;
+   });
+  },4300);
+  return()=>window.clearTimeout(timer);
+ },[storyOpen,storyPlaying,storyStep,verification]);
+
+ useEffect(()=>{
+  if(!storyOpen)return;
+  const previous=document.body.style.overflow;
+  document.body.style.overflow='hidden';
+  const onKey=(event:KeyboardEvent)=>{
+   if(event.key==='Escape')setStoryOpen(false);
+   if(event.key==='ArrowRight')storyNext();
+   if(event.key==='ArrowLeft')storyBack();
+   if(event.key===' ')setStoryPlaying(value=>!value);
+  };
+  window.addEventListener('keydown',onKey);
+  return()=>{document.body.style.overflow=previous;window.removeEventListener('keydown',onKey)};
+ },[storyOpen]);
+
+ function storyNext(){
+  setStoryStep(step=>{
+   if(step>=3){setStoryPlaying(false);return 3}
+   return step+1;
+  });
+ }
+ function storyBack(){setStoryStep(step=>Math.max(0,step-1))}
+ function replayStory(){setStoryStep(0);setStoryPlaying(true);setStoryOpen(true)}
+
  function clear(){
   runId.current++;
   if(file)URL.revokeObjectURL(file.preview);
-  setFile(null);setText('');setDraft('');setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setMode('SNAPSHOT');
+  setFile(null);setText('');setDraft('');setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);storyKey.current='';
  }
 
  function chooseFixture(key:FixtureKey){clear();setFixture(key);setText(fixtures[key].text);void run('SNAPSHOT',{text:fixtures[key].text,file:null})}
@@ -311,6 +369,7 @@ async function upload(uploaded:File){
       {isDemo&&<select aria-label="Choose demo fixture" value={fixture} onChange={event=>chooseFixture(event.target.value as FixtureKey)}>
        {Object.entries(fixtures).map(([key,value])=><option value={key} key={key}>{value.title}</option>)}
       </select>}
+      {verification&&<button type="button" className="story-replay" onClick={replayStory}>Play review</button>}
       <span className="source-status">{sourceLabel}</span>
      </div>
     </div>
@@ -323,6 +382,90 @@ async function upload(uploaded:File){
 
     {file?.sample&&<div className="source-failure" role="status">This document is marked SAMPLE. It is an example form, not a summons to act on. Claim checks below do not authenticate an individual notice.</div>}
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
+
+    {verification&&ready&&storyOpen&&<div className="story-overlay" role="dialog" aria-modal="true" aria-label="SEAL review presentation">
+     <div className={\`story-player \${storyPlaying?'is-playing':'is-paused'}\`}>
+      <div className="story-topbar">
+       <span className="story-brand">SEAL</span>
+       <button type="button" onClick={()=>setStoryOpen(false)}>Full details</button>
+      </div>
+      <div className="story-progress" aria-label={\`Frame \${storyStep+1} of 4\`}>
+       {[0,1,2,3].map(step=><span key={step} className={step<storyStep?'is-done':step===storyStep?'is-active':''}><i/></span>)}
+      </div>
+
+      <div className="story-stage">
+       <div className="story-frame" key={storyStep} aria-live="polite">
+        {storyStep===0&&<>
+         <div className="story-media">
+          {file?.kind==='image'?<img src={file.preview} alt="Your uploaded notice"/>:
+           file?.kind==='pdf'?<div className="story-document-card"><span>PDF DOCUMENT</span><p>{text.slice(0,520)}</p></div>:
+           <div className="story-document-card"><span>PASTED MESSAGE</span><p>{text.slice(0,520)}</p></div>}
+         </div>
+         <div className="story-copy">
+          <p className="story-kicker">YOUR MESSAGE</p>
+          <h2>First, the message itself.</h2>
+          <p>SEAL reads what you received before it checks anything outside the message.</p>
+         </div>
+        </>}
+
+        {storyStep===1&&<>
+         <div className="story-media story-media-focus">
+          {file?.kind==='image'?<>
+           <img src={file.preview} alt="Your uploaded notice"/>
+           {storyClaim?.source_bbox&&storyClaim.page===1&&<span className="story-highlight" style={{left:\`\${storyClaim.source_bbox.x*100}%\`,top:\`\${storyClaim.source_bbox.y*100}%\`,width:\`\${storyClaim.source_bbox.width*100}%\`,height:\`\${storyClaim.source_bbox.height*100}%\`}}/>}
+          </>:<div className="story-document-card"><span>{file?.kind==='pdf'?'PDF DOCUMENT':'MESSAGE TEXT'}</span><p>{storyClaim?.exact_source_text||text.slice(0,520)}</p></div>}
+         </div>
+         <div className="story-copy">
+          <p className="story-kicker">WHAT IT ASKS</p>
+          <h2>{primaryAction?actionSummary:\`\${claims.length} detail\${claims.length===1?'':'s'} worth checking.\`}</h2>
+          <p>{storyClaim?.exact_source_text||'SEAL separated the checkable detail from the rest of the message.'}</p>
+         </div>
+        </>}
+
+        {storyStep===2&&<>
+         <div className="story-media story-source-stage">
+          <div className="story-source-card">
+           <span>{storyEvidence?'INDEPENDENT SOURCE':'SOURCE CHECK'}</span>
+           <strong>{storyEvidence?.title||'No supported public source available'}</strong>
+           <p>{storyEvidence?.excerpt||storyResult?.explanation||'SEAL could not establish this detail from a supported source.'}</p>
+          </div>
+         </div>
+         <div className="story-copy">
+          <p className="story-kicker">SOURCE CHECK</p>
+          <h2>{storyVerdict}</h2>
+          <p>{storyResult?.explanation||decision.summary}</p>
+         </div>
+        </>}
+
+        {storyStep===3&&<>
+         <div className="story-media story-next-stage">
+          <div className="story-next-card">
+           <span>BEFORE YOU ACT</span>
+           <strong>{verification.safe_action?.title||'Check through the court’s own channel.'}</strong>
+           {verification.contact?.name&&<p>{verification.contact.name}{verification.contact.phone?\` · \${verification.contact.phone}\`:''}</p>}
+          </div>
+         </div>
+         <div className="story-copy story-copy-final">
+          <p className="story-kicker">NEXT STEP</p>
+          <h2>{verification.safe_action?.title||'Use an independent court source before you act.'}</h2>
+          <p>{verification.safe_action?.summary||'SEAL could not confirm this detail. Use the court’s own website or independently sourced contact information before responding.'}</p>
+          <div className="story-final-actions">
+           {verification.safe_action&&<a href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>}
+           <button type="button" onClick={()=>setStoryOpen(false)}>View full details</button>
+          </div>
+         </div>
+        </>}
+       </div>
+      </div>
+
+      <div className="story-controls">
+       <button type="button" onClick={storyBack} disabled={storyStep===0}>Back</button>
+       <button type="button" className="story-play" onClick={()=>setStoryPlaying(value=>!value)}>{storyPlaying?'Pause':'Play'}</button>
+       <button type="button" onClick={storyNext} disabled={storyStep===3}>Next</button>
+      </div>
+     </div>
+    </div>}
+
     <div className="review-hero">
      <div className="decision-pane" id="review-summary">
       {!verification?
