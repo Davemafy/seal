@@ -114,7 +114,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
 
  useEffect(()=>{
   if(!verification||!ready)return;
-  const key=\`\${text.slice(0,96)}:\${claims.length}:\${verification.resolver_id}\`;
+  const key=`${text.slice(0,96)}:${claims.length}:${verification.resolver_id}`;
   if(storyKey.current===key)return;
   storyKey.current=key;
   setStoryStep(0);
@@ -384,12 +384,12 @@ async function upload(uploaded:File){
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
 
     {verification&&ready&&storyOpen&&<div className="story-overlay" role="dialog" aria-modal="true" aria-label="SEAL review presentation">
-     <div className={\`story-player \${storyPlaying?'is-playing':'is-paused'}\`}>
+     <div className={`story-player ${storyPlaying?'is-playing':'is-paused'}`}>
       <div className="story-topbar">
        <span className="story-brand">SEAL</span>
        <button type="button" onClick={()=>setStoryOpen(false)}>Full details</button>
       </div>
-      <div className="story-progress" aria-label={\`Frame \${storyStep+1} of 4\`}>
+      <div className="story-progress" aria-label={`Frame ${storyStep+1} of 4`}>
        {[0,1,2,3].map(step=><span key={step} className={step<storyStep?'is-done':step===storyStep?'is-active':''}><i/></span>)}
       </div>
 
@@ -412,12 +412,12 @@ async function upload(uploaded:File){
          <div className="story-media story-media-focus">
           {file?.kind==='image'?<>
            <img src={file.preview} alt="Your uploaded notice"/>
-           {storyClaim?.source_bbox&&storyClaim.page===1&&<span className="story-highlight" style={{left:\`\${storyClaim.source_bbox.x*100}%\`,top:\`\${storyClaim.source_bbox.y*100}%\`,width:\`\${storyClaim.source_bbox.width*100}%\`,height:\`\${storyClaim.source_bbox.height*100}%\`}}/>}
+           {storyClaim?.source_bbox&&storyClaim.page===1&&<span className="story-highlight" style={{left:`${storyClaim.source_bbox.x*100}%`,top:`${storyClaim.source_bbox.y*100}%`,width:`${storyClaim.source_bbox.width*100}%`,height:`${storyClaim.source_bbox.height*100}%`}}/>}
           </>:<div className="story-document-card"><span>{file?.kind==='pdf'?'PDF DOCUMENT':'MESSAGE TEXT'}</span><p>{storyClaim?.exact_source_text||text.slice(0,520)}</p></div>}
          </div>
          <div className="story-copy">
           <p className="story-kicker">WHAT IT ASKS</p>
-          <h2>{primaryAction?actionSummary:\`\${claims.length} detail\${claims.length===1?'':'s'} worth checking.\`}</h2>
+          <h2>{primaryAction?actionSummary:`${claims.length} detail${claims.length===1?'':'s'} worth checking.`}</h2>
           <p>{storyClaim?.exact_source_text||'SEAL separated the checkable detail from the rest of the message.'}</p>
          </div>
         </>}
@@ -442,7 +442,7 @@ async function upload(uploaded:File){
           <div className="story-next-card">
            <span>BEFORE YOU ACT</span>
            <strong>{verification.safe_action?.title||'Check through the court’s own channel.'}</strong>
-           {verification.contact?.name&&<p>{verification.contact.name}{verification.contact.phone?\` · \${verification.contact.phone}\`:''}</p>}
+           {verification.contact?.name&&<p>{verification.contact.name}{verification.contact.phone?` · ${verification.contact.phone}`:''}</p>}
           </div>
          </div>
          <div className="story-copy story-copy-final">
