@@ -249,14 +249,36 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   initialRunStarted.current=true;
   void (async()=>{
    try{
-    const response=await fetch(`/api/browse-case?id=${encodeURIComponent(caseId)}`);
-    if(!response.ok)throw new Error('Case unavailable');
-    const payload=await response.json() as {runText?:string};
+    setBusy(true);
+    setStatus('Opening the source document');
+    const [caseResponse,assetResponse]=await Promise.all([
+     fetch(`/api/browse-case?id=${encodeURIComponent(caseId)}`),
+     fetch(`/api/browse-asset?id=${encodeURIComponent(caseId)}`)
+    ]);
+    if(!caseResponse.ok)throw new Error('Case unavailable');
+    const payload=await caseResponse.json() as {runText?:string;assetType?:'pdf'|'image';title?:string};
     const seededText=payload.runText?.trim()||'';
-    if(!seededText)throw new Error('Case text unavailable');
+
+    if(assetResponse.ok&&payload.assetType){
+     const blob=await assetResponse.blob();
+     const isPdf=payload.assetType==='pdf';
+     const type=isPdf?'application/pdf':blob.type.startsWith('image/')?blob.type:'image/jpeg';
+     const extension=isPdf?'pdf':type.includes('png')?'png':'jpg';
+     const sourceFile=new File([blob],`${caseId}.${extension}`,{type});
+     setBusy(false);
+     setStatus('');
+     await upload(sourceFile);
+     return;
+    }
+
+    if(!seededText)throw new Error('Case asset unavailable');
+    setBusy(false);
+    setStatus('');
     setText(seededText);
     await run('SNAPSHOT',{text:seededText,file:null});
    }catch{
+    setBusy(false);
+    setStatus('');
     initialRunStarted.current=false;
     setError('This browse case could not be opened. You can still upload or paste a message.');
    }
