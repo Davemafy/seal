@@ -10,7 +10,7 @@ import './workspace.css';
 
 type Mode='SNAPSHOT'|'LIVE';
 
-const verdictLabel=(value:Result['verdict'])=>value==='MATCH'?'Matches':value==='MISMATCH'?'Conflicts':'Unverified';
+const verdictLabel=(value:Result['verdict'])=>value==='MATCH'?'Matches':value==='MISMATCH'?'Conflicts':'Could not verify';
 const stateWord=verdictLabel;
 const cleanDisplayText=(value:string)=>value
  .replace(/\[\s*=\s*\]/g,' ')
@@ -146,17 +146,22 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    :verification?.safe_action?.summary||'Use the court’s own website or independently sourced contact information before responding.';
  const storyDurations=[2800,3600,5000,3200,0];
  const decisionEvidence=storySignal?.evidence?.[0]||storyEvidence;
- const decisionEvidenceTitle=storySignal?.title||decisionEvidence?.title||'Independent source';
- const decisionEvidenceSummary=storySignal?.summary||decisionEvidence?.excerpt||storyResult?.explanation||'No supported public source independently confirms this detail.';
+ const directCourtUnavailable=verification?.resolver_id==='unsupported';
+ const decisionEvidenceLabel=storySignal
+  ?storySignal.kind==='KNOWN_PATTERN'||storySignal.id==='traffic-qr-warning'?'Official pattern evidence':'Official source finding'
+  :'Direct court check';
+ const decisionEvidenceTitle=storySignal?.title||decisionEvidence?.title||(directCourtUnavailable?'No supported direct court check':'Independent official source');
+ const decisionEvidenceSummary=storySignal?.summary||decisionEvidence?.excerpt||storyResult?.explanation||(directCourtUnavailable?'SEAL does not have a supported direct court-source resolver for this jurisdiction.':'No supported public source independently confirms this detail.');
+ const directCheckSummary=storySignal&&directCourtUnavailable?'Direct court check: no supported court resolver is available for this jurisdiction.':'';
  const decisionRelationship=storySignal?.kind==='SOURCE_CONFLICT'
   ?'Conflicts with the printed claim.'
   :storySignal
-   ?'Matches an official warning pattern.'
+   ?'Published official warnings match this pattern.'
    :storyResult?.verdict==='MATCH'
     ?'Matches the independent source.'
     :storyResult?.verdict==='MISMATCH'
      ?'Conflicts with the independent source.'
-     :'Could not be confirmed independently.';
+     :'No direct case confirmation.';
  const current=claims.find(claim=>claim.id===selected)||claims[0];
  const currentResult=current&&resultById.get(current.id);
  const active=hovered||selected;
@@ -587,26 +592,20 @@ async function upload(uploaded:File){
         </div>}
 
         <div className="decision-evidence">
-         <span>Independent source</span>
+         <span>{decisionEvidenceLabel}</span>
          <strong>{decisionEvidenceTitle}</strong>
          <p>{decisionEvidenceSummary}</p>
          {decisionEvidence&&<a href={decisionEvidence.url} target="_blank" rel="noopener noreferrer">Open source</a>}
+         {directCheckSummary&&<small className="decision-direct-check">{directCheckSummary}</small>}
         </div>
 
         <p className={`decision-relationship ${storyResult?.verdict==='MISMATCH'||storySignal?'is-conflict':''}`}>{decisionRelationship}</p>
-
-        {verification.safe_action&&<div className="decision-safe">
-         <h2>{verification.safe_action.title}</h2>
-         <p>{verification.safe_action.summary}</p>
-         <a className="safe-primary" href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>
-         <small>{verification.safe_action.evidence[0]?.title||decisionEvidence?.title||'Independent official source'}</small>
-        </div>}
        </div>}
      </div>
 
      <div className="document-zone" id="original-message">
       <div className="document-heading"><span>Original message</span><span>{file?.kind==='pdf'?'PDF':file?'Image':'Text'}</span></div>
-      <div className="document-paper">
+      <div className={`document-paper ${!file?'is-text-document':''}`}>
        {isActionDemo?
         <div className="message-card">
          <div className="message-card-head"><span>DEMO / SYNTHETIC MESSAGE</span><span>NOT A REAL PERSON</span></div>
@@ -648,54 +647,40 @@ async function upload(uploaded:File){
 
     {ready&&<div id="full-evidence" className="full-evidence-anchor" aria-hidden="true"/>}
 
-    {ready&&requestedActions.length>0&&<section className={`requested-actions ${requestedActions.length===1?'single-action':''}`} aria-labelledby="requested-actions-title">
-     <div className="section-heading">
-      <h2 id="requested-actions-title">What the message asks you to do</h2>
-      <p>These are extracted requests, not instructions from SEAL.</p>
-     </div>
-     <div className="action-list">
-      {requestedActions.map(claim=>{
-       const result=resultById.get(claim.id);
-       return <button type="button" className="action-row" key={claim.id} onClick={()=>select(claim.id)}>
-        <span className="action-verb">{actionSummaryWord(claim)}</span>
-        <span className="action-source">{cleanDisplayText(claim.exact_source_text)}</span>
-        <span className={`action-state ${result?.verdict.toLowerCase()||''}`}>{result?stateWord(result.verdict):'Not checked'}</span>
-       </button>;
-      })}
-     </div>
-    </section>}
-
-    {ready&&verification?.safe_action&&<section className="source-resolution" id="source-checks" aria-label="Safe next step">
+    {ready&&(Boolean(verification?.signals?.length)||Boolean(verification?.safe_action))&&<section className="source-resolution" id="source-checks" aria-label="Evidence and safe next step">
      <div className="section-heading evidence-heading">
       <h2>Independent evidence</h2>
-      <p>{verification.safe_action.title}</p>
      </div>
 
-     {verification.signals&&verification.signals.length>0&&<div className="source-signals">
+     {verification?.signals&&verification.signals.length>0&&<div className="source-signals">
       {verification.signals.map(signal=><article className="source-signal" key={signal.id}>
-       <div className="signal-copy">
-        <p className="signal-kind">{signal.kind==='SOURCE_CONFLICT'?'Source conflict':signal.kind==='KNOWN_PATTERN'?'Known pattern':'Official warning'}</p>
-        <h3>{signal.title}</h3>
-        <p>{signal.summary}</p>
-       </div>
-       <div className="signal-links">
-        {signal.evidence.map((evidence,index)=><a href={evidence.url} target="_blank" rel="noopener noreferrer" key={`${signal.id}-${index}`}>{evidence.title}</a>)}
-       </div>
+       <p className="signal-kind">{signal.kind==='SOURCE_CONFLICT'?'Source conflict':signal.kind==='KNOWN_PATTERN'?'Known pattern':'Official warning'}</p>
+       <h3>{signal.title}</h3>
+       <p>{signal.summary}</p>
+       {signal.evidence.length>0&&<div className="signal-links">
+        {signal.evidence.map((evidence,index)=><a href={evidence.url} target="_blank" rel="noopener noreferrer" key={`${signal.id}-${index}`}>{evidence.title} <span aria-hidden="true">→</span></a>)}
+       </div>}
       </article>)}
      </div>}
 
-     <div className="safe-route">
+     {verification?.safe_action&&<div className="safe-route">
       <div>
-       <h2>{verification.safe_action.title}</h2>
+       <h2>Safest next step</h2>
        <p>{verification.safe_action.summary}</p>
       </div>
       <div>
        <ol className="safe-steps">{verification.safe_action.steps.map((step,index)=><li key={index}>{step}</li>)}</ol>
-       <a className="safe-primary" href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>
+       <div className="safe-route-actions">
+        {verification.contact?.website&&<a className="safe-primary" href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open official court website</a>}
+        {verification.safe_action.primary_url&&verification.safe_action.primary_url!==verification.contact?.website&&<div className="safe-supporting">
+         <span>Supporting guidance</span>
+         <a href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label} <span aria-hidden="true">→</span></a>
+        </div>}
+       </div>
       </div>
-     </div>
+     </div>}
 
-     <p className="resolution-disclaimer">These sources cannot confirm who sent the message.</p>
+     <p className="resolution-disclaimer">These sources can inform the check, but they cannot confirm who sent the message.</p>
     </section>}
 
     {ready&&verification?.contact&&<section className="contact-section" aria-label="Independent court contact">
@@ -718,7 +703,7 @@ async function upload(uploaded:File){
     {ready&&<section className="record-section" id="checked-details">
      <div className="section-heading record-heading">
       <h2>What was checked</h2>
-      <p>Choose a detail to see the message text alongside the court source.</p>
+      <p>Inspect each extracted detail and the source evidence available for it.</p>
      </div>
 
      <div className="record-layout">
@@ -746,15 +731,15 @@ async function upload(uploaded:File){
        </div>
        <div className="from-label">In the message</div>
        <div className="claim-value">{cleanDisplayText(current.value)}</div>
-       <p className="exact-source">“{cleanDisplayText(current.exact_source_text)}”</p>
+       {cleanDisplayText(current.exact_source_text)!==cleanDisplayText(current.value)&&<p className="exact-source">“{cleanDisplayText(current.exact_source_text)}”</p>}
        <div className="focus-rule"/>
-       <div className="source-label">{currentResult.evidence.length?'Independent official source':'What we can establish'}</div>
+       <div className="source-label">{currentResult.evidence.length?'Official source evidence':'What we can establish'}</div>
        {currentResult.evidence.length?<>
         {(currentResult.explanation==='Official sources currently disagree.'?currentResult.evidence:currentResult.evidence.slice(0,1)).map((evidence,index)=><div className="evidence-excerpt" key={`${evidence.url}-${index}`}>
          <div className="source-name">{evidence.title}</div>
          <div className="source-quote">“{evidence.excerpt}”</div>
          <a className="official-link" href={evidence.url} target="_blank" rel="noopener noreferrer">Open official source</a>
-         <div className="source-timestamp">{evidence.source_mode==='LIVE'?'LIVE OFFICIAL SOURCE':'SOURCE SNAPSHOT'} · {new Date(evidence.checked_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'})}</div>
+         <div className="source-timestamp">{evidence.source_mode==='LIVE'?'Live official source':'Source snapshot'} · {new Date(evidence.checked_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'})}</div>
         </div>)}
         {currentResult.evidence.length>1&&currentResult.explanation!=='Official sources currently disagree.'&&<details className="additional-sources">
          <summary>{currentResult.evidence.length-1} more source excerpt{currentResult.evidence.length>2?'s':''}</summary>
@@ -767,11 +752,9 @@ async function upload(uploaded:File){
         </details>}
        </>:<div className="no-source">{currentResult.explanation}</div>}
        <div className="why-line">{currentResult.evidence.length?currentResult.explanation:'This does not mean the detail is wrong.'}</div>
-       {!currentResult.evidence.length&&<div className="source-timestamp">NO PUBLIC CONFIRMATION</div>}
+       {!currentResult.evidence.length&&<div className="source-timestamp">No public confirmation</div>}
       </div>}
      </div>
-
-     <p className="verification-caveat">A matching detail does not authenticate this message or prove that every requested action is legitimate.</p>
 
      <details className="technical-record">
       <summary>Technical record <span>+</span></summary>
