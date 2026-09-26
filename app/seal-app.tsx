@@ -125,12 +125,12 @@ function decisionCopy(verification:Verification|null,claim?:Claim){
   summary:'See what matched below. A matching detail alone does not confirm who sent the message.'
  };
  if(claim?.action)return {
-  title:'What this message asks you to do',
-  summary:'SEAL could read the requested action, but the available official sources cannot confirm this case or sender. Verify through a court website or phone number you find independently before acting.'
+  title:'Limited result',
+  summary:'SEAL found the requested action, but this court is outside the current direct-check coverage. Nothing in this result confirms the case or sender.'
  };
  return {
-  title:'We could not confirm these details.',
-  summary:'See what was checked below, then contact the court through its own website if you need to act.'
+  title:'No supported check',
+  summary:'SEAL does not have enough independent source coverage for this message.'
  };
 }
 
@@ -261,7 +261,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    })
   :[];
  const directCourtUnavailable=verification?.resolver_id==='unsupported';
- const directCheckSummary=directCourtUnavailable?'No supported direct court check is available for this jurisdiction.':'';
+ const directCheckSummary=directCourtUnavailable?'This jurisdiction is outside SEAL’s current direct-check coverage.':'';
  const decisionRelationship=storySignal?.id.startsWith('curated-')
   ?'The issuing authority published this artifact as a scam example.'
   :storySignal?.kind==='SOURCE_CONFLICT'
@@ -274,7 +274,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      ?'This detail matches the independent source.'
      :decisionResult?.verdict==='MISMATCH'
       ?'This detail conflicts with the independent source.'
-      :'No direct case confirmation.';
+      :'No supported court source.';
  const decisionRelationshipConflict=storySignal?.kind==='SOURCE_CONFLICT'||(!storySignal&&decisionResult?.verdict==='MISMATCH');
  const current=claims.find(claim=>claim.id===selected)||claims[0];
  const currentResult=current&&resultById.get(current.id);
