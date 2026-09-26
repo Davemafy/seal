@@ -126,10 +126,10 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
   if(!storyOpen||!storyPlaying||!verification)return;
   const timer=window.setTimeout(()=>{
    setStoryStep(step=>{
-    if(step>=3){setStoryPlaying(false);return step}
+    if(step>=4){setStoryPlaying(false);return step}
     return step+1;
    });
-  },4300);
+  },4000);
   return()=>window.clearTimeout(timer);
  },[storyOpen,storyPlaying,storyStep,verification]);
 
@@ -149,7 +149,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
 
  function storyNext(){
   setStoryStep(step=>{
-   if(step>=3){setStoryPlaying(false);return 3}
+   if(step>=4){setStoryPlaying(false);return 4}
    return step+1;
   });
  }
@@ -384,84 +384,88 @@ async function upload(uploaded:File){
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
 
     {verification&&ready&&storyOpen&&<div className="story-overlay" role="dialog" aria-modal="true" aria-label="SEAL review presentation">
-     <div className={`story-player ${storyPlaying?'is-playing':'is-paused'}`}>
+     <div className={\`story-player story-step-\${storyStep} \${storyPlaying?'is-playing':'is-paused'}\`}>
       <div className="story-topbar">
        <span className="story-brand">SEAL</span>
-       <button type="button" onClick={()=>setStoryOpen(false)}>Full details</button>
+       <div className="story-top-actions">
+        <button type="button" className="story-pause" onClick={()=>setStoryPlaying(value=>!value)}>{storyPlaying?'Pause':'Play'}</button>
+        <button type="button" onClick={()=>setStoryOpen(false)}>Details</button>
+       </div>
       </div>
-      <div className="story-progress" aria-label={`Frame ${storyStep+1} of 4`}>
-       {[0,1,2,3].map(step=><span key={step} className={step<storyStep?'is-done':step===storyStep?'is-active':''}><i/></span>)}
+
+      <div className="story-progress" aria-label={\`Frame \${storyStep+1} of 5\`}>
+       {[0,1,2,3,4].map(step=><span key={step} className={step<storyStep?'is-done':step===storyStep?'is-active':''}><i/></span>)}
       </div>
 
       <div className="story-stage">
-       <div className="story-frame" key={storyStep} aria-live="polite">
+       <div className="story-document-stage">
+        {file?.kind==='image'?<div
+          className="story-image-wrap"
+          style={{transformOrigin:storyClaim?.source_bbox?\`\${(storyClaim.source_bbox.x+storyClaim.source_bbox.width/2)*100}% \${(storyClaim.source_bbox.y+storyClaim.source_bbox.height/2)*100}%\`:'50% 50%'}}
+         >
+          <img src={file.preview} alt="Your uploaded notice"/>
+          {storyClaim?.source_bbox&&storyClaim.page===1&&<span className="story-highlight" style={{left:\`\${storyClaim.source_bbox.x*100}%\`,top:\`\${storyClaim.source_bbox.y*100}%\`,width:\`\${storyClaim.source_bbox.width*100}%\`,height:\`\${storyClaim.source_bbox.height*100}%\`}}/>}
+         </div>
+         :<div className="story-text-document">
+          <span>{file?.kind==='pdf'?'PDF DOCUMENT':'PASTED MESSAGE'}</span>
+          <p>{storyStep>0&&storyClaim?.exact_source_text?storyClaim.exact_source_text:text.slice(0,620)}</p>
+         </div>}
+
+        <div className="story-source-panel" aria-hidden={storyStep<2||storyStep>3}>
+         <span>{storyEvidence?'INDEPENDENT COURT SOURCE':'SOURCE CHECK'}</span>
+         <strong>{storyEvidence?.title||'No supported public source available'}</strong>
+         <p>{storyEvidence?.excerpt||storyResult?.explanation||'SEAL could not establish this detail from a supported source.'}</p>
+         {storyEvidence&&<a href={storyEvidence.url} target="_blank" rel="noopener noreferrer">Open source</a>}
+        </div>
+
+        <div className="story-verdict-panel" aria-hidden={storyStep!==3}>
+         <strong>{storyVerdict}</strong>
+         <p>{storyResult?.explanation||decision.summary}</p>
+        </div>
+
+        <div className="story-action-panel" aria-hidden={storyStep!==4}>
+         <span>BEFORE YOU ACT</span>
+         <strong>{verification.safe_action?.title||'Check through the court’s own channel.'}</strong>
+         <p>{verification.safe_action?.summary||'Use the court’s own website or independently sourced contact information before responding.'}</p>
+         {verification.contact?.name&&<small>{verification.contact.name}{verification.contact.phone?\` · \${verification.contact.phone}\`:''}</small>}
+         <div className="story-final-actions">
+          {verification.safe_action&&<a href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>}
+          <button type="button" onClick={()=>setStoryOpen(false)}>Full evidence</button>
+         </div>
+        </div>
+       </div>
+
+       <div className="story-caption" aria-live="polite">
         {storyStep===0&&<>
-         <div className="story-media">
-          {file?.kind==='image'?<img src={file.preview} alt="Your uploaded notice"/>:
-           file?.kind==='pdf'?<div className="story-document-card"><span>PDF DOCUMENT</span><p>{text.slice(0,520)}</p></div>:
-           <div className="story-document-card"><span>PASTED MESSAGE</span><p>{text.slice(0,520)}</p></div>}
-         </div>
-         <div className="story-copy">
-          <p className="story-kicker">YOUR MESSAGE</p>
-          <h2>First, the message itself.</h2>
-          <p>SEAL reads what you received before it checks anything outside the message.</p>
-         </div>
+         <h2>This is what you sent.</h2>
+         <p>SEAL starts with the message itself.</p>
         </>}
-
         {storyStep===1&&<>
-         <div className="story-media story-media-focus">
-          {file?.kind==='image'?<>
-           <img src={file.preview} alt="Your uploaded notice"/>
-           {storyClaim?.source_bbox&&storyClaim.page===1&&<span className="story-highlight" style={{left:`${storyClaim.source_bbox.x*100}%`,top:`${storyClaim.source_bbox.y*100}%`,width:`${storyClaim.source_bbox.width*100}%`,height:`${storyClaim.source_bbox.height*100}%`}}/>}
-          </>:<div className="story-document-card"><span>{file?.kind==='pdf'?'PDF DOCUMENT':'MESSAGE TEXT'}</span><p>{storyClaim?.exact_source_text||text.slice(0,520)}</p></div>}
-         </div>
-         <div className="story-copy">
-          <p className="story-kicker">WHAT IT ASKS</p>
-          <h2>{primaryAction?actionSummary:`${claims.length} detail${claims.length===1?'':'s'} worth checking.`}</h2>
-          <p>{storyClaim?.exact_source_text||'SEAL separated the checkable detail from the rest of the message.'}</p>
-         </div>
+         <h2>{primaryAction?actionSummary:\`\${claims.length} detail\${claims.length===1?'':'s'} worth checking.\`}</h2>
+         <p>{storyClaim?.exact_source_text||'This is the part SEAL pulled out to verify.'}</p>
         </>}
-
         {storyStep===2&&<>
-         <div className="story-media story-source-stage">
-          <div className="story-source-card">
-           <span>{storyEvidence?'INDEPENDENT SOURCE':'SOURCE CHECK'}</span>
-           <strong>{storyEvidence?.title||'No supported public source available'}</strong>
-           <p>{storyEvidence?.excerpt||storyResult?.explanation||'SEAL could not establish this detail from a supported source.'}</p>
-          </div>
-         </div>
-         <div className="story-copy">
-          <p className="story-kicker">SOURCE CHECK</p>
-          <h2>{storyVerdict}</h2>
-          <p>{storyResult?.explanation||decision.summary}</p>
-         </div>
+         <h2>Now compare it with the source.</h2>
+         <p>{storyEvidence?'The uploaded claim stays on screen while the independent source enters beside it.':'There is no supported public source for this detail.'}</p>
         </>}
-
         {storyStep===3&&<>
-         <div className="story-media story-next-stage">
-          <div className="story-next-card">
-           <span>BEFORE YOU ACT</span>
-           <strong>{verification.safe_action?.title||'Check through the court’s own channel.'}</strong>
-           {verification.contact?.name&&<p>{verification.contact.name}{verification.contact.phone?` · ${verification.contact.phone}`:''}</p>}
-          </div>
-         </div>
-         <div className="story-copy story-copy-final">
-          <p className="story-kicker">NEXT STEP</p>
-          <h2>{verification.safe_action?.title||'Use an independent court source before you act.'}</h2>
-          <p>{verification.safe_action?.summary||'SEAL could not confirm this detail. Use the court’s own website or independently sourced contact information before responding.'}</p>
-          <div className="story-final-actions">
-           {verification.safe_action&&<a href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>}
-           <button type="button" onClick={()=>setStoryOpen(false)}>View full details</button>
-          </div>
-         </div>
+         <h2>{storyVerdict}</h2>
+         <p>The verdict comes from the relationship between the message and the source, not from how official the message looks.</p>
+        </>}
+        {storyStep===4&&<>
+         <h2>{verification.safe_action?.title||'Verify independently before you respond.'}</h2>
+         <p>The safest route comes from the court source, not from the uploaded message.</p>
         </>}
        </div>
+
+       <button type="button" className="story-hit story-hit-left" aria-label="Previous frame" onClick={storyBack} disabled={storyStep===0}/>
+       <button type="button" className="story-hit story-hit-right" aria-label="Next frame" onClick={storyNext} disabled={storyStep===4}/>
       </div>
 
       <div className="story-controls">
        <button type="button" onClick={storyBack} disabled={storyStep===0}>Back</button>
        <button type="button" className="story-play" onClick={()=>setStoryPlaying(value=>!value)}>{storyPlaying?'Pause':'Play'}</button>
-       <button type="button" onClick={storyNext} disabled={storyStep===3}>Next</button>
+       <button type="button" onClick={storyNext} disabled={storyStep===4}>Next</button>
       </div>
      </div>
     </div>}
