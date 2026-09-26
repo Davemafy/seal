@@ -1233,7 +1233,7 @@ async function upload(uploaded:File){
          <p>{signal.summary}</p>
          {signal.evidence.length>0&&<div className="signal-links">
           {signal.evidence.length>1&&<span className="signal-links-label">Sources</span>}
-          {signal.evidence.map((evidence,index)=><a href={evidence.url} target="_blank" rel="noopener noreferrer" key={`${signal.id}-${index}`}>{compactEvidenceTitle(evidence.title,index,evidenceTitles)} <span aria-hidden="true">→</span></a>)}
+          {signal.evidence.map((evidence,index)=><a href={evidence.url} target="_blank" rel="noopener noreferrer" key={`${signal.id}-${index}`}>{compactEvidenceTitle(evidence.title,index,evidenceTitles)}</a>)}
          </div>}
         </article>;
        })}
@@ -1249,7 +1249,7 @@ async function upload(uploaded:File){
          <p>{result.explanation}</p>
          <div className="signal-links">
           {result.evidence.length>1&&<span className="signal-links-label">Sources</span>}
-          {result.evidence.map((evidence,index)=><a href={evidence.url} target="_blank" rel="noopener noreferrer" key={`${claim.id}-${index}`}>{compactEvidenceTitle(evidence.title,index,evidenceTitles)} <span aria-hidden="true">→</span></a>)}
+          {result.evidence.map((evidence,index)=><a href={evidence.url} target="_blank" rel="noopener noreferrer" key={`${claim.id}-${index}`}>{compactEvidenceTitle(evidence.title,index,evidenceTitles)}</a>)}
          </div>
         </article>;
        })}
