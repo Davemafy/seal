@@ -304,11 +304,7 @@ async function upload(uploaded:File){
     </div>
     <section className="entry-guide" aria-label="What SEAL checks">
      <p className="guide-heading">After you add a message</p>
-     <div className="guide-flow">
-      <div><span>01</span><p><strong>Requests</strong><small>What it asks you to do.</small></p></div>
-      <div><span>02</span><p><strong>Source</strong><small>What court sources can confirm.</small></p></div>
-      <div><span>03</span><p><strong>Next step</strong><small>Where to check safely.</small></p></div>
-     </div>
+     <p className="guide-sentence">SEAL pulls out what it asks you to do, checks what court sources can confirm, and shows where to verify the next step.</p>
      <p className="guide-limit">A source match cannot prove who sent a message.</p>
     </section>
    </section>
