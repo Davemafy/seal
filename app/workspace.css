@@ -40,14 +40,9 @@
 .entry-copy>p{max-width:750px;margin:12px 0 0;color:#4b4b4b;font-size:16px;line-height:24px}
 .intake{grid-area:form;display:flex;flex-direction:column;gap:16px;padding:0;border:0;border-radius:0;background:transparent}
 .entry-guide{grid-area:guide;padding-top:4px}
-.guide-heading{margin:0 0 16px;color:var(--muted);font-size:12px;font-weight:500;line-height:20px}
-.guide-flow{display:grid;gap:16px}
-.guide-flow>div{display:grid;grid-template-columns:28px minmax(0,1fr);gap:8px;align-items:start}
-.guide-flow>div>span{color:#a6a6a6;font-size:12px;font-weight:500;line-height:20px}
-.guide-flow p{display:grid;gap:2px;margin:0}
-.guide-flow strong{font-size:14px;font-weight:500;line-height:20px}
-.guide-flow small{color:var(--muted);font-size:13px;line-height:19px}
-.guide-limit{margin:20px 0 0;color:var(--muted);font-size:12px;line-height:19px}
+.guide-heading{margin:0 0 8px;color:var(--muted);font-size:12px;font-weight:500;line-height:20px}
+.guide-sentence{max-width:280px;margin:0;color:#4b4b4b;font-size:14px;line-height:20px}
+.guide-limit{margin:18px 0 0;color:var(--muted);font-size:12px;line-height:19px}
 .upload-row{position:relative;width:100%;min-height:136px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px;text-align:center;border:1px dashed var(--line-strong);border-radius:8px;background:var(--secondary);color:var(--ink);overflow:hidden}
 .upload-row:hover,.upload-row.is-dragging{border-color:var(--blue);background:#eff4fe}
 .upload-row strong{display:block;color:var(--muted);font-size:14px;font-weight:500;line-height:16px}
@@ -238,14 +233,9 @@
  .intake{margin-top:0;padding:0}
  .upload-row{min-height:136px}
  .entry-guide{padding:8px 0 0;border-radius:0;background:transparent}
- .guide-heading{margin:0 0 14px;padding:0;font-size:12px;line-height:20px}
- .guide-flow{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
- .guide-flow>div{display:block}
- .guide-flow>div>span{display:block;margin-bottom:6px}
- .guide-flow p{gap:4px}
- .guide-flow strong{font-size:13px;line-height:18px}
- .guide-flow small{font-size:12px;line-height:18px}
- .guide-limit{margin:18px 0 0}
+ .guide-heading{margin:0 0 8px;padding:0;font-size:12px;line-height:20px}
+ .guide-sentence{max-width:34rem;font-size:14px;line-height:20px}
+ .guide-limit{margin:16px 0 0}
  .intake-actions{align-items:stretch;flex-direction:column}
  .check-message,.demo-link{width:100%}
  .review-head{align-items:start;flex-direction:column}
