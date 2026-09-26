@@ -66,6 +66,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const [error,setError]=useState('');
  const [busy,setBusy]=useState(false);
  const [dragging,setDragging]=useState(false);
+ const [pasteMode,setPasteMode]=useState(false);
  const [revealed,setRevealed]=useState(0);
  const [selected,setSelected]=useState('');
  const [hovered,setHovered]=useState('');
@@ -260,7 +261,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  function clear(){
   runId.current++;
   if(file)URL.revokeObjectURL(file.preview);
-  setFile(null);setText('');setDraft('');setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);storyKey.current='';
+  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);storyKey.current='';
  }
 
  function chooseFixture(key:FixtureKey){clear();setFixture(key);setText(fixtures[key].text);void run('SNAPSHOT',{text:fixtures[key].text,file:null})}
@@ -432,29 +433,33 @@ async function upload(uploaded:File){
      <p>See what it asks you to do, what the court can confirm, and where to check next.</p>
     </div>
 
-    <div className="intake">
-     <button className={`upload-row ${dragging?'is-dragging':''} ${busy?'is-busy':''}`} type="button" disabled={busy||!hydrated} onPointerDown={()=>{void warmOcr()}} onClick={()=>input.current?.click()}
-      onDragOver={event=>{if(event.dataTransfer.types.includes('Files')){event.preventDefault();setDragging(true)}}}
-      onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
-      onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
-      <span className="upload-sheet" aria-hidden="true"><i/><i/><i/></span>
-      <span className="upload-copy"><strong>{busy?status:'Drop a court message here'}</strong><small>{busy?'This can take a little longer the first time.':'PDF, PNG or JPG · up to 16 MB'}</small></span>
-      {!busy&&<span className="upload-browse">Choose file</span>}
-      {busy&&<span className="upload-progress" aria-hidden="true"><span/></span>}
-     </button>
-
-     <details className="paste-disclosure">
-      <summary><span>Paste the message instead</span><i aria-hidden="true">→</i></summary>
-      <div className="paste-disclosure-body">
+    <div className={`intake ${pasteMode?'is-paste-mode':'is-upload-mode'}`}>
+     {!pasteMode?
+      <>
+       <button className={`upload-row ${dragging?'is-dragging':''} ${busy?'is-busy':''}`} type="button" disabled={busy||!hydrated} onPointerDown={()=>{void warmOcr()}} onClick={()=>input.current?.click()}
+        onDragOver={event=>{if(event.dataTransfer.types.includes('Files')){event.preventDefault();setDragging(true)}}}
+        onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
+        onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
+        <span className="upload-copy">
+         <strong>{busy?status:'Drop a court message here'}</strong>
+         <small>{busy?'This can take a little longer the first time.':'PDF, PNG or JPG · up to 16 MB'}</small>
+         {!busy&&<span className="upload-browse">Choose file</span>}
+        </span>
+        {busy&&<span className="upload-progress" aria-hidden="true"><span/></span>}
+       </button>
+       <button className="mode-switch" type="button" onClick={()=>setPasteMode(true)}>Paste text instead <span aria-hidden="true">→</span></button>
+      </>
+      :
+      <div className="paste-panel">
+       <button className="mode-switch mode-switch-back" type="button" onClick={()=>setPasteMode(false)}><span aria-hidden="true">←</span> Upload a file instead</button>
        <label className="paste-field">
         <span className="field-label">Message text</span>
-        <textarea aria-label="Paste the court message" value={draft} onChange={event=>setDraft(event.target.value)} placeholder="Paste the message exactly as you received it"/>
+        <textarea autoFocus aria-label="Paste the court message" value={draft} onChange={event=>setDraft(event.target.value)} placeholder="Paste the message exactly as you received it"/>
        </label>
        <div className="intake-actions">
         <button className="check-message" type="button" disabled={!draft.trim()||!hydrated} onClick={submitPaste}>Check this message</button>
        </div>
-      </div>
-     </details>
+      </div>}
 
      {error&&<div role="alert" className="inspection-error">{error}</div>}
 
