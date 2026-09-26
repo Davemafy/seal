@@ -1271,16 +1271,15 @@ async function upload(uploaded:File){
       {/\b(?:united states district court|u\.?s\.? district court|federal court)\b/i.test(text)&&<a href="https://www.uscourts.gov/federal-court-finder/find" target="_blank" rel="noopener noreferrer">Find the court through the U.S. Courts directory →</a>}
      </div>}
      {verification?.safe_action&&<div className="safe-route" id="next-step">
-      <div className="safe-route-heading">
-       <span>{curatedSignal?'Resolved action':'Next step'}</span>
+      <div>
        <h2>{verification.safe_action.title}</h2>
        <p>{verification.safe_action.summary}</p>
       </div>
-      <div className="safe-route-body">
+      <div>
        <ol className="safe-steps">{verification.safe_action.steps.map((step,index)=><li key={index}>{step}</li>)}</ol>
        <div className="safe-route-actions">
         {verification.contact?.website&&<a className="safe-primary" href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open official court website</a>}
-        {verification.safe_action.primary_url&&verification.safe_action.primary_url!==verification.contact?.website&&<a className="safe-source-link" href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label} <span aria-hidden="true">↗</span></a>}
+        {verification.safe_action.primary_url&&verification.safe_action.primary_url!==verification.contact?.website&&<a className="safe-source-link" href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>}
        </div>
       </div>
      </div>}
