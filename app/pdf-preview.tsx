@@ -29,60 +29,127 @@ async function restoreInvisibleText(page:Awaited<ReturnType<Awaited<ReturnType<t
 
 export default function PDFPreview({url,claims,active,anchors,onSelect}:{url:string;claims:Claim[];active:string;anchors:React.RefObject<Record<string,HTMLElement|null>>;onSelect:(id:string)=>void}){
  const canvas=useRef<HTMLCanvasElement>(null);
+ const documentRef=useRef<any>(null);
+ const loadingTaskRef=useRef<any>(null);
+ const renderTaskRef=useRef<any>(null);
+ const [documentVersion,setDocumentVersion]=useState(0);
  const [page,setPage]=useState(1);
  const [total,setTotal]=useState(1);
  const [error,setError]=useState('');
  const [rendering,setRendering]=useState(true);
 
+ // Load the PDF document once per URL. Page navigation must not destroy/recreate
+ // the document handle; doing that races pdf.js teardown against the next render.
  useEffect(()=>{
   let cancelled=false;
-  let loadingTask:any;
-  let documentHandle:any;
-  let renderTask:any;
-  setRendering(true);setError('');
+  setPage(1);
+  setTotal(1);
+  setRendering(true);
+  setError('');
+  setDocumentVersion(0);
+  documentRef.current=null;
 
   void (async()=>{
+   let localTask:any;
+   let localDocument:any;
    try{
     const pdfjs=await import('pdfjs-dist');
     pdfjs.GlobalWorkerOptions.workerSrc='/pdf.worker.min.mjs';
-    loadingTask=pdfjs.getDocument({url,standardFontDataUrl:'/standard_fonts/',disableFontFace:true});
-    const doc=await loadingTask.promise;
-    documentHandle=doc;
+    localTask=pdfjs.getDocument({url,standardFontDataUrl:'/standard_fonts/',disableFontFace:true});
+    loadingTaskRef.current=localTask;
+    localDocument=await localTask.promise;
+
+    if(cancelled){
+     try{await localDocument.destroy()}catch{}
+     return;
+    }
+
+    documentRef.current=localDocument;
+    loadingTaskRef.current=null;
+    setTotal(localDocument.numPages);
+    setDocumentVersion(version=>version+1);
+   }catch(error){
     if(cancelled)return;
-    setTotal(doc.numPages);
-    const currentPage=Math.min(page,doc.numPages);
-    const p=await doc.getPage(currentPage);
-    if(cancelled)return;
-    const viewport=p.getViewport({scale:1.8});
+    const name=error&&typeof error==='object'&&'name' in error?String((error as {name?:unknown}).name):'';
+    if(name==='PasswordException'){
+     setError('This PDF is password protected and cannot be previewed here.');
+    }else{
+     setError('Could not open this PDF. Extracted text is still available in claim rows.');
+    }
+    setRendering(false);
+   }
+  })();
+
+  return()=>{
+   cancelled=true;
+   try{renderTaskRef.current?.cancel()}catch{}
+   renderTaskRef.current=null;
+
+   const doc=documentRef.current;
+   documentRef.current=null;
+   if(doc){
+    void Promise.resolve(doc.destroy()).catch(()=>{});
+   }else{
+    const task=loadingTaskRef.current;
+    loadingTaskRef.current=null;
+    if(task)void Promise.resolve(task.destroy()).catch(()=>{});
+   }
+  };
+ },[url]);
+
+ // Render only the requested page. Changing page cancels the previous page render
+ // but deliberately keeps the shared PDF document alive.
+ useEffect(()=>{
+  if(!documentVersion||!documentRef.current)return;
+
+  let cancelled=false;
+  const doc=documentRef.current;
+  setRendering(true);
+  setError('');
+
+  void (async()=>{
+   try{
+    const requestedPage=Math.max(1,Math.min(page,doc.numPages));
+    const pdfPage=await doc.getPage(requestedPage);
+    if(cancelled||documentRef.current!==doc)return;
+
+    const viewport=pdfPage.getViewport({scale:1.8});
     const c=canvas.current;
     if(!c||cancelled)return;
-    c.width=viewport.width;c.height=viewport.height;
+
+    c.width=viewport.width;
+    c.height=viewport.height;
     const context=c.getContext('2d');
     if(!context)throw new Error('Canvas unavailable');
-    renderTask=p.render({canvas:c,canvasContext:context,viewport});
+
+    const renderTask=pdfPage.render({canvas:c,canvasContext:context,viewport});
+    renderTaskRef.current=renderTask;
     await renderTask.promise;
-    if(cancelled)return;
-    await restoreInvisibleText(p,context,1.8);
-    if(!cancelled)setRendering(false);
+
+    if(cancelled||documentRef.current!==doc)return;
+    await restoreInvisibleText(pdfPage,context,1.8);
+
+    if(!cancelled&&documentRef.current===doc)setRendering(false);
    }catch(error){
     if(cancelled)return;
     const name=error&&typeof error==='object'&&'name' in error?String((error as {name?:unknown}).name):'';
     if(name==='RenderingCancelledException')return;
     setRendering(false);
     setError('Could not render this PDF page. Extracted text is still available in claim rows.');
+   }finally{
+    renderTaskRef.current=null;
    }
   })();
 
   return()=>{
    cancelled=true;
-   try{renderTask?.cancel()}catch{}
-   if(documentHandle)void documentHandle.destroy().catch(()=>{});
-   else if(loadingTask)void loadingTask.destroy().catch(()=>{});
+   try{renderTaskRef.current?.cancel()}catch{}
+   renderTaskRef.current=null;
   };
- },[url,page]);
+ },[page,documentVersion]);
 
  return <>
-  {total>1&&<div className="pdf-toolbar"><button type="button" disabled={page<=1} onClick={()=>setPage(p=>p-1)}>Previous</button><span>Page {page} of {total}</span><button type="button" disabled={page>=total} onClick={()=>setPage(p=>p+1)}>Next</button></div>}
+  {total>1&&<div className="pdf-toolbar"><button type="button" disabled={page<=1||rendering} onClick={()=>setPage(current=>Math.max(1,current-1))}>Previous</button><span>Page {page} of {total}</span><button type="button" disabled={page>=total||rendering} onClick={()=>setPage(current=>Math.min(total,current+1))}>Next</button></div>}
   <div className="preview-box">
    {rendering&&<span className="pdf-rendering-note" role="status">Preparing document preview…</span>}
    <canvas ref={canvas} style={{width:'100%',height:'auto',display:'block'}} aria-label={`Uploaded PDF page ${page}`}/>
