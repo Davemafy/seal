@@ -53,7 +53,7 @@ function decisionCopy(verification:Verification|null){
  };
 }
 
-export default function SealApp({initialDemo=false,initialText=''}:{initialDemo?:boolean;initialText?:string}){
+export default function SealApp({initialDemo=false,initialText='',initialRun=false}:{initialDemo?:boolean;initialText?:string;initialRun?:boolean}){
  const [hydrated,setHydrated]=useState(false);
  const [fixture,setFixture]=useState<FixtureKey>('action-message-demo');
  const [text,setText]=useState(initialText||(initialDemo?fixtures['action-message-demo'].text:''));
@@ -76,6 +76,7 @@ export default function SealApp({initialDemo=false,initialText=''}:{initialDemo?
  const [storyPlaying,setStoryPlaying]=useState(true);
  const [storyClosing,setStoryClosing]=useState(false);
  const storyKey=useRef('');
+ const initialRunStarted=useRef(false);
  const input=useRef<HTMLInputElement>(null);
  const anchors=useRef<Record<string,HTMLElement|null>>({});
  const runId=useRef(0);
@@ -178,6 +179,12 @@ export default function SealApp({initialDemo=false,initialText=''}:{initialDemo?
  const sourceLabel=verification?.signals?.length?'OFFICIAL SOURCE FINDINGS':verification?.resolver_id==='riverside'?(mode==='LIVE'?'LIVE SOURCE CHECK':'SOURCE SNAPSHOT · 24 SEP 2026'):verification?.resolver_id==='connecticut'?(mode==='LIVE'?'LIVE SOURCE CHECK':'SOURCE SNAPSHOT · 25 SEP 2026'):verification?.resolver_id==='courtlistener'?(claims.some(claim=>claim.type==='docket')?'FEDERAL DOCKET INDEX':'NO JURY-SOURCE COVERAGE'):verification?.resolver_id==='ocr'?'LOW CONFIDENCE OCR':verification?'NO SUPPORTED SOURCE':error?'NOT CHECKED':isActionDemo?'SOURCE SNAPSHOT · 25 SEP 2026':isDemo?'SOURCE SNAPSHOT · 24 SEP 2026':'SOURCE CHECK PENDING';
 
  useEffect(()=>{const timer=window.setTimeout(()=>setHydrated(true),0);return()=>clearTimeout(timer)},[]);
+
+ useEffect(()=>{
+  if(!hydrated||!initialRun||!initialText||initialRunStarted.current)return;
+  initialRunStarted.current=true;
+  void run('SNAPSHOT',{text:initialText,file:null});
+ },[hydrated,initialRun,initialText]);
 
  useEffect(()=>{
   if(!verification||!ready)return;
@@ -389,7 +396,6 @@ async function upload(uploaded:File){
    <div className="rail-group-label">WORKSPACE</div>
    <button className={`rail-item ${!text?'is-current':''}`} type="button" onClick={clear}>Check a message</button>
    <Link className="rail-item" href="/browse">Browse real cases</Link>
-   <button className="rail-item rail-example" type="button" disabled={!hydrated} onClick={()=>chooseFixture('action-message-demo')}>Synthetic test</button>
    <div className="rail-spacer"/>
    <div className="rail-foot"><strong>Check the source</strong><span>Open the court pages behind each finding.</span></div>
   </aside>
@@ -526,7 +532,7 @@ async function upload(uploaded:File){
         {Object.entries(fixtures).map(([key,value])=><option value={key} key={key}>{value.title}</option>)}
        </select>}
        {verification&&<button type="button" className="story-replay" onClick={replayStory}>Play review</button>}
-       {verification&&<a href="#checked-details" className="full-evidence-link">Full evidence</a>}
+       {verification&&<a href="#full-evidence" className="full-evidence-link">Full evidence</a>}
       </div>
 
       {!verification?
@@ -617,7 +623,9 @@ async function upload(uploaded:File){
      </div>
     </div>
 
-    {ready&&requestedActions.length>0&&<section className={`requested-actions ${requestedActions.length===1?'single-action':''}`} id="full-evidence" aria-labelledby="requested-actions-title">
+    {ready&&<div id="full-evidence" className="full-evidence-anchor" aria-hidden="true"/>}
+
+    {ready&&requestedActions.length>0&&<section className={`requested-actions ${requestedActions.length===1?'single-action':''}`} aria-labelledby="requested-actions-title">
      <div className="section-heading">
       <h2 id="requested-actions-title">What the message asks you to do</h2>
       <p>These are extracted requests, not instructions from SEAL.</p>
