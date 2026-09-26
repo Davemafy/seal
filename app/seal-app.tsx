@@ -297,16 +297,8 @@ async function upload(uploaded:File){
 
      {error&&<div role="alert" className="inspection-error">{error}</div>}
 
-     <details className="privacy">
-      <summary>Privacy and processing</summary>
-      <p>Your uploaded file does not leave the browser. Extracted text can be sent to the SEAL server and, when configured, to Groq for claim structuring. SEAL does not store the uploaded file or extracted claims.</p>
-     </details>
+     <p className="privacy-note">Your file stays in this browser. SEAL may send extracted text for checking, but doesn’t store the file or extracted claims.</p>
     </div>
-    <section className="entry-guide" aria-label="What SEAL checks">
-     <p className="guide-heading">After you add a message</p>
-     <p className="guide-sentence">SEAL pulls out what it asks you to do, checks what court sources can confirm, and shows where to verify the next step.</p>
-     <p className="guide-limit">A source match cannot prove who sent a message.</p>
-    </section>
    </section>
    :
    <section className="review-shell" onDragOver={event=>{if(event.dataTransfer.types.includes('Files'))event.preventDefault()}} onDrop={event=>{if(event.dataTransfer.files.length){event.preventDefault();upload(event.dataTransfer.files[0])}}}>
