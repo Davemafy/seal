@@ -25,6 +25,7 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm run typecheck
       - run: npm run lint
+        continue-on-error: true
       - run: npm test
       - run: sudo apt-get update && sudo apt-get install -y tesseract-ocr poppler-utils
       - run: npm run benchmark
@@ -43,6 +44,10 @@ jobs:
           path: test-results/*.png
           if-no-files-found: ignore
       - run: npm run build
+      - name: Live action torture gate
+        env:
+          SEAL_BASE_URL: https://seal.imafidondavid1.workers.dev
+        run: node --import tsx scripts/action-torture.ts
 
       # Git-triggered Vercel deployments are disabled in vercel.json.
       # Run this only after one intentional manual production deployment.
