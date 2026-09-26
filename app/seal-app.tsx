@@ -80,10 +80,29 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
   return words.length?`${words.length} action${words.length===1?'':'s'}: ${words.join(' · ')}`:'';
  },[requestedActions]);
  const storyClaim=verification
-  ?claims.find(claim=>resultById.get(claim.id)?.verdict==='MISMATCH')||primaryAction||claims[0]
+  ?claims.find(claim=>Boolean(claim.action)&&resultById.get(claim.id)?.verdict==='MISMATCH'&&Boolean(resultById.get(claim.id)?.evidence?.length))
+   ||claims.find(claim=>Boolean(claim.action)&&Boolean(resultById.get(claim.id)?.evidence?.length))
+   ||claims.find(claim=>resultById.get(claim.id)?.verdict==='MISMATCH'&&Boolean(resultById.get(claim.id)?.evidence?.length))
+   ||claims.find(claim=>Boolean(resultById.get(claim.id)?.evidence?.length))
+   ||claims.find(claim=>resultById.get(claim.id)?.verdict==='MISMATCH')
+   ||primaryAction
+   ||claims[0]
   :undefined;
  const storyResult=storyClaim?resultById.get(storyClaim.id):undefined;
  const storyEvidence=storyResult?.evidence?.[0];
+ const storyClaimHeading=storyClaim?.action
+  ?actionSummaryWord(storyClaim)
+  :storyClaim?.label&&storyClaim?.value
+   ?`${storyClaim.label}: ${storyClaim.value}`
+   :'This detail needs checking.';
+ const storyFocusBox=storyClaim?.source_bbox
+  &&storyClaim.page===1
+  &&storyClaim.source_bbox.width>=.015
+  &&storyClaim.source_bbox.width<=.72
+  &&storyClaim.source_bbox.height>=.014
+  &&storyClaim.source_bbox.height<=.18
+   ?storyClaim.source_bbox
+   :undefined;
  const storyVerdict=storyResult?.verdict==='MATCH'
   ?'This detail matches the source.'
   :storyResult?.verdict==='MISMATCH'
@@ -384,7 +403,7 @@ async function upload(uploaded:File){
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
 
     {verification&&ready&&storyOpen&&<div className="story-overlay" role="dialog" aria-modal="true" aria-label="SEAL review presentation">
-     <div className={`story-player story-step-${storyStep} ${storyPlaying?'is-playing':'is-paused'}`}>
+     <div className={`story-player story-step-${storyStep} ${storyPlaying?'is-playing':'is-paused'} ${storyFocusBox?'has-story-focus':'no-story-focus'}`}>
       <div className="story-topbar">
        <span className="story-brand">SEAL</span>
        <div className="story-top-actions">
@@ -401,10 +420,10 @@ async function upload(uploaded:File){
        <div className="story-document-stage">
         {file?.kind==='image'?<div
           className="story-image-wrap"
-          style={{transformOrigin:storyClaim?.source_bbox?`${(storyClaim.source_bbox.x+storyClaim.source_bbox.width/2)*100}% ${(storyClaim.source_bbox.y+storyClaim.source_bbox.height/2)*100}%`:'50% 50%'}}
+          style={{transformOrigin:storyFocusBox?`${(storyFocusBox.x+storyFocusBox.width/2)*100}% ${(storyFocusBox.y+storyFocusBox.height/2)*100}%`:'50% 50%'}}
          >
           <img src={file.preview} alt="Your uploaded notice"/>
-          {storyClaim?.source_bbox&&storyClaim.page===1&&<span className="story-highlight" style={{left:`${storyClaim.source_bbox.x*100}%`,top:`${storyClaim.source_bbox.y*100}%`,width:`${storyClaim.source_bbox.width*100}%`,height:`${storyClaim.source_bbox.height*100}%`}}/>}
+          {storyFocusBox&&<span className="story-highlight" style={{left:`${storyFocusBox.x*100}%`,top:`${storyFocusBox.y*100}%`,width:`${storyFocusBox.width*100}%`,height:`${storyFocusBox.height*100}%`}}/>}
          </div>
          :<div className="story-text-document">
           <span>{file?.kind==='pdf'?'PDF DOCUMENT':'PASTED MESSAGE'}</span>
@@ -412,7 +431,7 @@ async function upload(uploaded:File){
          </div>}
 
         <div className="story-source-panel" aria-hidden={storyStep<2||storyStep>3}>
-         <span>{storyEvidence?'INDEPENDENT COURT SOURCE':'SOURCE CHECK'}</span>
+         <span>{storyEvidence?'INDEPENDENT SOURCE':'SOURCE CHECK'}</span>
          <strong>{storyEvidence?.title||'No supported public source available'}</strong>
          <p>{storyEvidence?.excerpt||storyResult?.explanation||'SEAL could not establish this detail from a supported source.'}</p>
          {storyEvidence&&<a href={storyEvidence.url} target="_blank" rel="noopener noreferrer">Open source</a>}
@@ -425,7 +444,7 @@ async function upload(uploaded:File){
 
         <div className="story-action-panel" aria-hidden={storyStep!==4}>
          <span>BEFORE YOU ACT</span>
-         <strong>{verification.safe_action?.title||'Check through the court’s own channel.'}</strong>
+         <strong>{verification.safe_action?.title||'Verify independently before you respond.'}</strong>
          <p>{verification.safe_action?.summary||'Use the court’s own website or independently sourced contact information before responding.'}</p>
          {verification.contact?.name&&<small>{verification.contact.name}{verification.contact.phone?` · ${verification.contact.phone}`:''}</small>}
          <div className="story-final-actions">
@@ -435,37 +454,19 @@ async function upload(uploaded:File){
         </div>
        </div>
 
-       <div className="story-caption" aria-live="polite">
+       {storyStep<2&&<div className="story-caption" aria-live="polite">
         {storyStep===0&&<>
          <h2>This is what you sent.</h2>
-         <p>SEAL starts with the message itself.</p>
+         <p>SEAL follows one checkable detail from this message to an independent source.</p>
         </>}
         {storyStep===1&&<>
-         <h2>{primaryAction?actionSummary:`${claims.length} detail${claims.length===1?'':'s'} worth checking.`}</h2>
-         <p>{storyClaim?.exact_source_text||'This is the part SEAL pulled out to verify.'}</p>
+         <h2>{storyClaimHeading}</h2>
+         <p>{storyClaim?.exact_source_text||storyClaim?.value||'This is the detail SEAL is checking.'}</p>
         </>}
-        {storyStep===2&&<>
-         <h2>Now compare it with the source.</h2>
-         <p>{storyEvidence?'The uploaded claim stays on screen while the independent source enters beside it.':'There is no supported public source for this detail.'}</p>
-        </>}
-        {storyStep===3&&<>
-         <h2>{storyVerdict}</h2>
-         <p>The verdict comes from the relationship between the message and the source, not from how official the message looks.</p>
-        </>}
-        {storyStep===4&&<>
-         <h2>{verification.safe_action?.title||'Verify independently before you respond.'}</h2>
-         <p>The safest route comes from the court source, not from the uploaded message.</p>
-        </>}
-       </div>
+       </div>}
 
        <button type="button" className="story-hit story-hit-left" aria-label="Previous frame" onClick={storyBack} disabled={storyStep===0}/>
        <button type="button" className="story-hit story-hit-right" aria-label="Next frame" onClick={storyNext} disabled={storyStep===4}/>
-      </div>
-
-      <div className="story-controls">
-       <button type="button" onClick={storyBack} disabled={storyStep===0}>Back</button>
-       <button type="button" className="story-play" onClick={()=>setStoryPlaying(value=>!value)}>{storyPlaying?'Pause':'Play'}</button>
-       <button type="button" onClick={storyNext} disabled={storyStep===4}>Next</button>
       </div>
      </div>
     </div>}
