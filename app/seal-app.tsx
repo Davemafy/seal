@@ -560,6 +560,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   }
   const caseId=typeof window!=='undefined'?new URLSearchParams(window.location.search).get('case'):null;
   if(!caseId)return;
+  // A Browse handoff is a one-shot action, not persistent app state.
+  // Consume the query immediately so refresh/back-to-home never re-runs a file.
+  window.history.replaceState(null,'',window.location.pathname);
   initialRunStarted.current=true;
   void (async()=>{
    try{
@@ -715,6 +718,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  function replayStory(){startStory()}
 
  function clear(){
+  if(typeof window!=='undefined'&&(window.location.search||window.location.hash)){
+   window.history.replaceState(null,'',window.location.pathname);
+  }
   storyTimelineRef.current?.kill();
   storyTimelineTime.current=0;
   storyPhaseRef.current=0;
@@ -903,10 +909,10 @@ async function upload(uploaded:File){
         onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
         onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
         <span className="upload-group">
-         <span className="upload-copy">{busy&&<span className="upload-process-label">LOCAL DOCUMENT READ</span>}<strong>{busy?(status==='Reading text from the image'?'Reading document':status):'Upload a notice or screenshot'}</strong><small>{busy?'Finding the instruction that changes what you do next.':'Drop here or browse files · PDF, PNG, or JPG · up to 16 MB'}</small></span>
+         <span className="upload-copy">{busy&&<span className="upload-process-label">ON THIS DEVICE</span>}<strong>{busy?(status==='Reading text from the image'?'Reading image':status==='Reading text from the PDF'?'Reading PDF':status):'Upload a notice or screenshot'}</strong><small>{busy?(status==='Reading text from the image'?'Reading the words in your image. Nothing has been sent yet.':status==='Reading text from the PDF'?'Reading the text layer in this PDF. Nothing has been sent yet.':'Preparing the file locally.'):'Drop here or browse files · PDF, PNG, or JPG · up to 16 MB'}</small></span>
          {!busy&&<span className="upload-browse">Browse files</span>}
         </span>
-        {busy&&<span className="upload-readline" aria-hidden="true"/>}
+        {busy&&<span className="upload-busy-rule" aria-hidden="true"/>}
        </button>
        <button className="paste-mode-switch" type="button" onClick={()=>setPasteMode(true)}>Paste text instead <span aria-hidden="true">→</span></button>
        <p className="privacy-note">Original file stays on this device. Extracted text may be sent for checking.</p>
@@ -1111,9 +1117,9 @@ async function upload(uploaded:File){
         <h1>{busy?'Checking this message':error?(file?'We couldn’t check this image.':'We couldn’t check this message.'):'Ready to check this message.'}</h1>
         <p>{busy?(status||'Working through the message…'):error?error:'Keep the original beside the result while SEAL checks independently sourced information.'}</p>
         {busy?
-         <div className="check-loader" role="status" aria-live="polite" aria-label={status||'Checking the message'}>
-          <div className="check-loader-track"><span/></div>
-          <small>{status==='Reading text from the image'?'The first image can take a little longer while the on-device reader starts.':'Keep this tab open while SEAL checks the message.'}</small>
+         <div className="check-status" role="status" aria-live="polite" aria-label={status||'Checking the message'}>
+          <span>{status||'Checking the message'}</span>
+          <small>{status==='Reading text from the image'?'Reading locally before any text is checked.':'Keep this tab open while this check finishes.'}</small>
          </div>
          :error?
          <div className="precheck-actions">
