@@ -437,14 +437,13 @@ async function upload(uploaded:File){
       onDragOver={event=>{if(event.dataTransfer.types.includes('Files')){event.preventDefault();setDragging(true)}}}
       onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
       onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
-      <span className="upload-sheet" aria-hidden="true"><i/><i/><i/></span>
-      <span className="upload-copy"><strong>{busy?status:'Drop a court message here'}</strong><small>{busy?'This can take a little longer the first time.':'PDF, PNG or JPG · up to 16 MB'}</small></span>
-      {!busy&&<span className="upload-browse">Choose file</span>}
+      <span><strong>{busy?status:'Upload a notice or screenshot'}</strong><small>{busy?'This can take a little longer the first time.':'PDF, PNG, or JPG · Your file stays in this browser'}</small></span>
+      {!busy&&<span className="upload-browse">Browse files</span>}
       {busy&&<span className="upload-progress" aria-hidden="true"><span/></span>}
      </button>
 
      <details className="paste-disclosure">
-      <summary><span>Paste the message instead</span><i aria-hidden="true">→</i></summary>
+      <summary>Paste text instead</summary>
       <div className="paste-disclosure-body">
        <label className="paste-field">
         <span className="field-label">Message text</span>
@@ -458,7 +457,7 @@ async function upload(uploaded:File){
 
      {error&&<div role="alert" className="inspection-error">{error}</div>}
 
-     <p className="privacy-note">Original file stays on this device. Extracted text may be sent for checking.</p>
+     <p className="privacy-note">SEAL may send extracted text for checking, but doesn’t store the file or extracted claims.</p>
     </div>
    </section>
    :
