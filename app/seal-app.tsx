@@ -11,8 +11,17 @@ import './workspace.css';
 
 type Mode='SNAPSHOT'|'LIVE';
 
-const verdictLabel=(value:Result['verdict'])=>value.replaceAll('_',' ');
-const stateWord=(value:Result['verdict'])=>value==='MATCH'?'Matches':value==='MISMATCH'?'Contradicts':'Unverified';
+const verdictLabel=(value:Result['verdict'])=>value==='MATCH'?'Matches':value==='MISMATCH'?'Conflicts':'Unverified';
+const stateWord=verdictLabel;
+const cleanDisplayText=(value:string)=>value
+ .replace(/\[\s*=\s*\]/g,' ')
+ .replace(/(?:^|\s)[*•]+\s*/g,' ')
+ .replace(/\s*\/\s*/g,' · ')
+ .replace(/\s+,/g,',')
+ .replace(/,\s*,+/g,', ')
+ .replace(/\s+/g,' ')
+ .replace(/^(?:[·|:;,.\-–—]\s*)+|(?:\s*[·|:;,.\-–—])+$/g,'')
+ .trim();
 
 const actionSummaryWord=(claim:Claim)=>{
  const action=claim.action;
@@ -65,6 +74,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
  const [storyOpen,setStoryOpen]=useState(false);
  const [storyStep,setStoryStep]=useState(0);
  const [storyPlaying,setStoryPlaying]=useState(true);
+ const [storyClosing,setStoryClosing]=useState(false);
  const storyKey=useRef('');
  const input=useRef<HTMLInputElement>(null);
  const anchors=useRef<Record<string,HTMLElement|null>>({});
@@ -79,8 +89,16 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
   const words=[...new Set(requestedActions.map(actionSummaryWord).filter(Boolean))];
   return words.length?`${words.length} action${words.length===1?'':'s'}: ${words.join(' · ')}`:'';
  },[requestedActions]);
+ const storySignal=verification?.signals?.find(signal=>signal.id==='traffic-qr-warning')
+  ||verification?.signals?.find(signal=>signal.kind==='SOURCE_CONFLICT');
+ const signalAction=storySignal?.id==='traffic-qr-warning'
+  ?requestedActions.find(claim=>claim.action?.kind==='pay')
+   ||requestedActions.find(claim=>claim.action?.verb==='scan')
+   ||requestedActions.find(claim=>claim.action?.kind==='appear')
+  :undefined;
  const storyClaim=verification
-  ?claims.find(claim=>Boolean(claim.action)&&resultById.get(claim.id)?.verdict==='MISMATCH'&&Boolean(resultById.get(claim.id)?.evidence?.length))
+  ?signalAction
+   ||claims.find(claim=>Boolean(claim.action)&&resultById.get(claim.id)?.verdict==='MISMATCH'&&Boolean(resultById.get(claim.id)?.evidence?.length))
    ||claims.find(claim=>Boolean(claim.action)&&Boolean(resultById.get(claim.id)?.evidence?.length))
    ||claims.find(claim=>resultById.get(claim.id)?.verdict==='MISMATCH'&&Boolean(resultById.get(claim.id)?.evidence?.length))
    ||claims.find(claim=>Boolean(resultById.get(claim.id)?.evidence?.length))
@@ -89,12 +107,15 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
    ||claims[0]
   :undefined;
  const storyResult=storyClaim?resultById.get(storyClaim.id):undefined;
- const storyEvidence=storyResult?.evidence?.[0];
- const storyClaimHeading=storyClaim?.action
+ const storyEvidence=storySignal?.evidence?.[0]||storyResult?.evidence?.[0];
+ const storyClaimHeading=storySignal?.id==='traffic-qr-warning'&&storyClaim?.action
   ?actionSummaryWord(storyClaim)
-  :storyClaim?.label&&storyClaim?.value
-   ?`${storyClaim.label}: ${storyClaim.value}`
-   :'This detail needs checking.';
+  :storyClaim?.action
+   ?actionSummaryWord(storyClaim)
+   :storyClaim?.label&&storyClaim?.value
+    ?`${storyClaim.label}: ${cleanDisplayText(storyClaim.value)}`
+    :'This detail needs checking.';
+ const storyClaimDisplay=cleanDisplayText(storyClaim?.action?.source_text||storyClaim?.exact_source_text||storyClaim?.value||'');
  const storyFocusBox=storyClaim?.source_bbox
   &&storyClaim.page===1
   &&storyClaim.source_bbox.width>=.015
@@ -103,11 +124,26 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
   &&storyClaim.source_bbox.height<=.18
    ?storyClaim.source_bbox
    :undefined;
- const storyVerdict=storyResult?.verdict==='MATCH'
-  ?'This detail matches the source.'
-  :storyResult?.verdict==='MISMATCH'
-   ?'This detail conflicts with the source.'
-   :'We couldn’t confirm this detail.';
+ const storySourceCopy=storySignal?.summary||storyEvidence?.excerpt||storyResult?.explanation||'SEAL could not establish this detail from a supported source.';
+ const storyVerdict=storySignal?.id==='traffic-qr-warning'
+  ?'This pattern matches an official scam warning.'
+  :storyResult?.verdict==='MATCH'
+   ?'This detail matches the source.'
+   :storyResult?.verdict==='MISMATCH'
+    ?'This detail conflicts with the source.'
+    :'We couldn’t confirm this detail.';
+ const storyVerdictCopy=storySignal?.summary||storyResult?.explanation||decisionCopy(verification).summary;
+ const storyFinalTitle=storySignal?.id==='traffic-qr-warning'
+  ?verification.safe_action?.title||'Verify independently before you pay.'
+  :storyClaim?.type==='authority'&&verification.safe_action
+   ?'Verify this notice in Virginia’s official court system.'
+   :verification.safe_action?.title||'Verify independently before you respond.';
+ const storyFinalSummary=storySignal?.id==='traffic-qr-warning'
+  ?verification.safe_action?.summary||'Do not use the payment route in this message until the case is independently verified.'
+  :storyClaim?.type==='authority'&&verification.safe_action
+   ?'The cited law does not match the printed toll claim. Search the case independently before relying on the notice.'
+   :verification.safe_action?.summary||'Use the court’s own website or independently sourced contact information before responding.';
+ const storyDurations=[2800,3600,5000,3200,0];
  const current=claims.find(claim=>claim.id===selected)||claims[0];
  const currentResult=current&&resultById.get(current.id);
  const active=hovered||selected;
@@ -138,17 +174,18 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
   storyKey.current=key;
   setStoryStep(0);
   setStoryPlaying(true);
+  setStoryClosing(false);
   setStoryOpen(true);
  },[verification,ready,text,claims.length]);
 
  useEffect(()=>{
-  if(!storyOpen||!storyPlaying||!verification)return;
+  if(!storyOpen||!storyPlaying||!verification||storyStep>=4)return;
   const timer=window.setTimeout(()=>{
    setStoryStep(step=>{
-    if(step>=4){setStoryPlaying(false);return step}
+    if(step>=3){setStoryPlaying(false);return 4}
     return step+1;
    });
-  },4000);
+  },storyDurations[storyStep]||4000);
   return()=>window.clearTimeout(timer);
  },[storyOpen,storyPlaying,storyStep,verification]);
 
@@ -157,7 +194,7 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
   const previous=document.body.style.overflow;
   document.body.style.overflow='hidden';
   const onKey=(event:KeyboardEvent)=>{
-   if(event.key==='Escape')setStoryOpen(false);
+   if(event.key==='Escape')closeStory();
    if(event.key==='ArrowRight')storyNext();
    if(event.key==='ArrowLeft')storyBack();
    if(event.key===' ')setStoryPlaying(value=>!value);
@@ -169,16 +206,23 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
  function storyNext(){
   setStoryStep(step=>{
    if(step>=4){setStoryPlaying(false);return 4}
+   if(step===3)setStoryPlaying(false);
    return step+1;
   });
  }
  function storyBack(){setStoryStep(step=>Math.max(0,step-1))}
- function replayStory(){setStoryStep(0);setStoryPlaying(true);setStoryOpen(true)}
+ function closeStory(){
+  if(storyClosing)return;
+  setStoryClosing(true);
+  setStoryPlaying(false);
+  window.setTimeout(()=>{setStoryOpen(false);setStoryClosing(false)},190);
+ }
+ function replayStory(){setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);setStoryOpen(true)}
 
  function clear(){
   runId.current++;
   if(file)URL.revokeObjectURL(file.preview);
-  setFile(null);setText('');setDraft('');setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);storyKey.current='';
+  setFile(null);setText('');setDraft('');setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);storyKey.current='';
  }
 
  function chooseFixture(key:FixtureKey){clear();setFixture(key);setText(fixtures[key].text);void run('SNAPSHOT',{text:fixtures[key].text,file:null})}
@@ -354,7 +398,7 @@ async function upload(uploaded:File){
       onDragOver={event=>{if(event.dataTransfer.types.includes('Files')){event.preventDefault();setDragging(true)}}}
       onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
       onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
-      <span><strong>{busy?status:'Upload a notice or screenshot'}</strong><small>{busy?'This can take longer the first time on a phone.':'PDF, PNG, or JPG · Your file stays in this browser'}</small></span>
+      <span><strong>{busy?status:'Upload a notice or screenshot'}</strong><small>{busy?'This can take a little longer the first time.':'PDF, PNG, or JPG · Your file stays in this browser'}</small></span>
       {!busy&&<span className="upload-browse">Browse files</span>}
       {busy&&<span className="upload-progress" aria-hidden="true"><span/></span>}
      </button>
@@ -402,18 +446,18 @@ async function upload(uploaded:File){
     {file?.sample&&<div className="source-failure" role="status">This document is marked SAMPLE. It is an example form, not a summons to act on. Claim checks below do not authenticate an individual notice.</div>}
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
 
-    {verification&&ready&&storyOpen&&<div className="story-overlay" role="dialog" aria-modal="true" aria-label="SEAL review presentation">
+    {verification&&ready&&storyOpen&&<div className={`story-overlay ${storyClosing?'is-closing':''}`} role="dialog" aria-modal="true" aria-label="SEAL review presentation">
      <div className={`story-player story-step-${storyStep} ${storyPlaying?'is-playing':'is-paused'} ${storyFocusBox?'has-story-focus':'no-story-focus'}`}>
       <div className="story-topbar">
        <span className="story-brand">SEAL</span>
        <div className="story-top-actions">
         <button type="button" className="story-pause" onClick={()=>setStoryPlaying(value=>!value)}>{storyPlaying?'Pause':'Play'}</button>
-        <button type="button" onClick={()=>setStoryOpen(false)}>Details</button>
+        <button type="button" onClick={closeStory}>Details</button>
        </div>
       </div>
 
       <div className="story-progress" aria-label={`Frame ${storyStep+1} of 5`}>
-       {[0,1,2,3,4].map(step=><span key={step} className={step<storyStep?'is-done':step===storyStep?'is-active':''}><i/></span>)}
+       {[0,1,2,3,4].map(step=><span key={step} className={step<storyStep?'is-done':step===storyStep?'is-active':''}><i style={step===storyStep&&storyDurations[storyStep]?{animationDuration:`${storyDurations[storyStep]}ms`}:undefined}/></span>)}
       </div>
 
       <div className="story-stage">
@@ -427,43 +471,51 @@ async function upload(uploaded:File){
          </div>
          :<div className="story-text-document">
           <span>{file?.kind==='pdf'?'PDF DOCUMENT':'PASTED MESSAGE'}</span>
-          <p>{storyStep>0&&storyClaim?.exact_source_text?storyClaim.exact_source_text:text.slice(0,620)}</p>
+          <p>{storyStep>0&&storyClaimDisplay?storyClaimDisplay:cleanDisplayText(text.slice(0,620))}</p>
          </div>}
+
+        <div className="story-claim-anchor" aria-hidden={storyStep!==2}>
+         <span>IN THE MESSAGE</span>
+         <strong>{storyClaimHeading}</strong>
+         <p>{storyClaimDisplay||'This is the detail SEAL is checking.'}</p>
+        </div>
 
         <div className="story-source-panel" aria-hidden={storyStep<2||storyStep>3}>
          <span>{storyEvidence?'INDEPENDENT SOURCE':'SOURCE CHECK'}</span>
          <strong>{storyEvidence?.title||'No supported public source available'}</strong>
-         <p>{storyEvidence?.excerpt||storyResult?.explanation||'SEAL could not establish this detail from a supported source.'}</p>
+         <p>{storySourceCopy}</p>
          {storyEvidence&&<a href={storyEvidence.url} target="_blank" rel="noopener noreferrer">Open source</a>}
         </div>
 
         <div className="story-verdict-panel" aria-hidden={storyStep!==3}>
          <strong>{storyVerdict}</strong>
-         <p>{storyResult?.explanation||decision.summary}</p>
+         <p>{storyVerdictCopy}</p>
         </div>
 
         <div className="story-action-panel" aria-hidden={storyStep!==4}>
          <span>BEFORE YOU ACT</span>
-         <strong>{verification.safe_action?.title||'Verify independently before you respond.'}</strong>
-         <p>{verification.safe_action?.summary||'Use the court’s own website or independently sourced contact information before responding.'}</p>
+         <strong>{storyFinalTitle}</strong>
+         <p>{storyFinalSummary}</p>
          {verification.contact?.name&&<small>{verification.contact.name}{verification.contact.phone?` · ${verification.contact.phone}`:''}</small>}
          <div className="story-final-actions">
           {verification.safe_action&&<a href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>}
-          <button type="button" onClick={()=>setStoryOpen(false)}>Full evidence</button>
+          <button type="button" onClick={closeStory}>Full evidence</button>
          </div>
         </div>
        </div>
 
-       {storyStep<2&&<div className="story-caption" aria-live="polite">
-        {storyStep===0&&<>
-         <h2>This is what you sent.</h2>
-         <p>SEAL follows one checkable detail from this message to an independent source.</p>
-        </>}
-        {storyStep===1&&<>
-         <h2>{storyClaimHeading}</h2>
-         <p>{storyClaim?.exact_source_text||storyClaim?.value||'This is the detail SEAL is checking.'}</p>
-        </>}
-       </div>}
+       <div className={`story-caption ${storyStep>1?'is-hidden':''}`} aria-hidden={storyStep>1}>
+        <div className="story-caption-copy" key={storyStep} aria-live="polite">
+         {storyStep===0&&<>
+          <h2>This is what you sent.</h2>
+          <p>SEAL follows one decision-relevant detail from this message to an independent source.</p>
+         </>}
+         {storyStep===1&&<>
+          <h2>{storyClaimHeading}</h2>
+          <p>{storyClaimDisplay||'This is the detail SEAL is checking.'}</p>
+         </>}
+        </div>
+       </div>
 
        <button type="button" className="story-hit story-hit-left" aria-label="Previous frame" onClick={storyBack} disabled={storyStep===0}/>
        <button type="button" className="story-hit story-hit-right" aria-label="Next frame" onClick={storyNext} disabled={storyStep===4}/>
@@ -558,7 +610,7 @@ async function upload(uploaded:File){
        const result=resultById.get(claim.id);
        return <button type="button" className="action-row" key={claim.id} onClick={()=>select(claim.id)}>
         <span className="action-verb">{actionSummaryWord(claim)}</span>
-        <span className="action-source">{claim.exact_source_text}</span>
+        <span className="action-source">{cleanDisplayText(claim.exact_source_text)}</span>
         <span className={`action-state ${result?.verdict.toLowerCase()||''}`}>{result?stateWord(result.verdict):'Not checked'}</span>
        </button>;
       })}
@@ -632,7 +684,7 @@ async function upload(uploaded:File){
          const result=resultById.get(claim.id);
          return <button type="button" key={claim.id} className={`index-item ${selected===claim.id?'selected':''}`} disabled={!result} onClick={()=>select(claim.id)}>
           <span className="index-ordinal">{String(index+1).padStart(2,'0')}</span>
-          <span className="index-claim">{claim.label}</span>
+          <span className="index-claim">{claim.type==='authority'?`${claim.label} · ${cleanDisplayText(claim.value)}`:claim.label}</span>
           <span className={`index-state ${result?result.verdict.toLowerCase():''}`}>{result?stateWord(result.verdict):'—'}</span>
          </button>;
         })}
@@ -645,8 +697,8 @@ async function upload(uploaded:File){
         <span className={`state-text ${currentResult.verdict.toLowerCase()}`}>{verdictLabel(currentResult.verdict)}</span>
        </div>
        <div className="from-label">In the message</div>
-       <div className="claim-value">{current.value}</div>
-       <p className="exact-source">“{current.exact_source_text}”</p>
+       <div className="claim-value">{cleanDisplayText(current.value)}</div>
+       <p className="exact-source">“{cleanDisplayText(current.exact_source_text)}”</p>
        <div className="focus-rule"/>
        <div className="source-label">{currentResult.evidence.length?'Independent official source':'What we can establish'}</div>
        {currentResult.evidence.length?<>
