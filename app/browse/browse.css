@@ -1,4 +1,5 @@
 .browse-page{background:#fff;overflow-x:hidden}
+.browse-page .workspace-rail{position:fixed;inset:0 auto 0 0;z-index:30;width:224px;height:100dvh;overflow-y:auto;overscroll-behavior:contain}
 .browse-check-link{text-decoration:none;color:#000}
 .browse-shell{grid-column:2;width:100%;max-width:1320px;margin:0 auto;padding:58px 64px 100px}
 .browse-intro{max-width:760px}
