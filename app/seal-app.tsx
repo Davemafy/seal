@@ -37,6 +37,26 @@ const actionSummaryWord=(claim:Claim)=>{
  return action.verb?action.verb.charAt(0).toUpperCase()+action.verb.slice(1):'Act';
 };
 
+function chooseDecisionClaim(claims:Claim[],verification:Verification){
+ const resultById=new Map(verification.results.map(result=>[result.claim_id,result]));
+ const actions=claims.filter(claim=>Boolean(claim.action));
+ const trafficSignal=verification.signals?.find(signal=>signal.id==='traffic-qr-warning');
+ if(trafficSignal){
+  return actions.find(claim=>claim.action?.kind==='pay')
+   ||actions.find(claim=>claim.action?.verb==='scan')
+   ||actions.find(claim=>claim.action?.kind==='appear')
+   ||claims[0];
+ }
+ return actions.find(claim=>resultById.get(claim.id)?.verdict==='MISMATCH'&&Boolean(resultById.get(claim.id)?.evidence?.length))
+  ||claims.find(claim=>resultById.get(claim.id)?.verdict==='MISMATCH'&&Boolean(resultById.get(claim.id)?.evidence?.length))
+  ||claims.find(claim=>resultById.get(claim.id)?.verdict==='MATCH'&&Boolean(resultById.get(claim.id)?.evidence?.length))
+  ||actions.find(claim=>Boolean(resultById.get(claim.id)?.evidence?.length))
+  ||claims.find(claim=>Boolean(resultById.get(claim.id)?.evidence?.length))
+  ||claims.find(claim=>resultById.get(claim.id)?.verdict==='MISMATCH')
+  ||actions[0]
+  ||claims[0];
+}
+
 function decisionCopy(verification:Verification|null){
  if(!verification)return {title:'',summary:''};
  if(verification.safe_action)return {title:verification.safe_action.title,summary:verification.safe_action.summary};
@@ -75,6 +95,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const [selected,setSelected]=useState('');
  const [hovered,setHovered]=useState('');
  const [showIndex,setShowIndex]=useState(false);
+ const [technicalOpen,setTechnicalOpen]=useState(false);
  const [storyOpen,setStoryOpen]=useState(false);
  const [storyStep,setStoryStep]=useState(0);
  const [storyPlaying,setStoryPlaying]=useState(true);
@@ -149,6 +170,15 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    ?'The cited law does not match the printed toll claim. Search the case independently before relying on the notice.'
    :verification?.safe_action?.summary||'Use the court’s own website or independently sourced contact information before responding.';
  const storyDurations=[2800,3600,5000,3200,0];
+ const decisionClaim=verification?chooseDecisionClaim(claims,verification):undefined;
+ const decisionResult=decisionClaim?resultById.get(decisionClaim.id):undefined;
+ const decisionClaimDisplay=cleanDisplayText(decisionClaim?.action?.source_text||decisionClaim?.exact_source_text||decisionClaim?.value||'');
+ const directEvidenceFindings=verification
+  ?claims.flatMap(claim=>{
+    const result=resultById.get(claim.id);
+    return result?.evidence?.length?[{claim,result}]:[];
+   })
+  :[];
  const directCourtUnavailable=verification?.resolver_id==='unsupported';
  const directCheckSummary=directCourtUnavailable?'No supported direct court check is available for this jurisdiction.':'';
  const decisionRelationship=storySignal?.kind==='SOURCE_CONFLICT'
@@ -157,12 +187,12 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    ?'Published official warnings match this payment pattern.'
    :storySignal
     ?'Published official warnings match this pattern.'
-    :storyResult?.verdict==='MATCH'
+    :decisionResult?.verdict==='MATCH'
      ?'This detail matches the independent source.'
-     :storyResult?.verdict==='MISMATCH'
+     :decisionResult?.verdict==='MISMATCH'
       ?'This detail conflicts with the independent source.'
       :'No direct case confirmation.';
- const decisionRelationshipConflict=storySignal?.kind==='SOURCE_CONFLICT'||(!storySignal&&storyResult?.verdict==='MISMATCH');
+ const decisionRelationshipConflict=storySignal?.kind==='SOURCE_CONFLICT'||(!storySignal&&decisionResult?.verdict==='MISMATCH');
  const current=claims.find(claim=>claim.id===selected)||claims[0];
  const currentResult=current&&resultById.get(current.id);
  const active=hovered||selected;
@@ -267,7 +297,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  function clear(){
   runId.current++;
   if(file)URL.revokeObjectURL(file.preview);
-  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);storyKey.current='';
+  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setTechnicalOpen(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);storyKey.current='';
  }
 
  function chooseFixture(key:FixtureKey){clear();setFixture(key);setText(fixtures[key].text);void run('SNAPSHOT',{text:fixtures[key].text,file:null})}
@@ -293,7 +323,7 @@ async function upload(uploaded:File){
   const sourceFile=source?source.file:file;
   const sourceIsDemo=!sourceFile&&/^DEMO \/ (?:FICTIONAL NOTICE|SYNTHETIC MESSAGE)/.test(sourceText);
   const id=++runId.current;
-  setBusy(true);setError('');setVerification(null);setRevealed(0);setSelected('');setMode(sourceMode);setStatus('Reading requested actions');
+  setBusy(true);setError('');setVerification(null);setRevealed(0);setSelected('');setTechnicalOpen(false);setMode(sourceMode);setStatus('Reading requested actions');
   try{
    if(sourceFile?.uncertain){
     const unclear:Claim={id:'c1',type:'official',label:'Unreadable field',value:'Could not read confidently',exact_source_text:'Unreadable field',page:1};
@@ -358,18 +388,7 @@ async function upload(uploaded:File){
    setVerification(checked);
    setRevealed(found.length);
 
-   const trafficSignal=checked.signals?.find(signal=>signal.id==='traffic-qr-warning');
-   const decisionDriven=trafficSignal
-    ?found.find(claim=>claim.action?.kind==='pay')
-     ||found.find(claim=>claim.action?.verb==='scan')
-     ||found.find(claim=>claim.action?.kind==='appear')
-    :undefined;
-   const requested=
-    decisionDriven||
-    found.find(claim=>claim.action&&checked.results.find(result=>result.claim_id===claim.id)?.verdict==='MISMATCH')||
-    found.find(claim=>checked.results.find(result=>result.claim_id===claim.id)?.verdict==='MISMATCH')||
-    found.find(claim=>claim.action)||
-    found[0];
+   const requested=chooseDecisionClaim(found,checked);
    setSelected(requested.id);
   }catch(e){
    if(runId.current===id)setError(e instanceof Error?e.message:'The source check could not finish.');
@@ -480,7 +499,7 @@ async function upload(uploaded:File){
    </section>
    :
    <section className="review-shell" onDragOver={event=>{if(event.dataTransfer.types.includes('Files'))event.preventDefault()}} onDrop={event=>{if(event.dataTransfer.files.length){event.preventDefault();upload(event.dataTransfer.files[0])}}}>
-    {file?.sample&&<div className="source-failure" role="status">This document is marked SAMPLE. It is an example form, not a summons to act on. Claim checks below do not authenticate an individual notice.</div>}
+    {file?.sample&&<div className="source-failure sample-warning" role="status">This document is marked SAMPLE. It is an example form, not a summons to act on. Claim checks below do not authenticate an individual notice.</div>}
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
 
     {verification&&ready&&storyOpen&&<div className={`story-overlay ${storyClosing?'is-closing':''}`} role="dialog" aria-modal="true" aria-label="SEAL review presentation">
@@ -594,9 +613,9 @@ async function upload(uploaded:File){
         <h1>{decision.title}</h1>
         <p className="decision-summary">{decision.summary}</p>
 
-        {storyClaim&&<div className="decision-claim">
+        {decisionClaim&&<div className="decision-claim">
          <span>From the message</span>
-         <p>{storyClaimDisplay||cleanDisplayText(storyClaim.value)}</p>
+         <p>{decisionClaimDisplay||cleanDisplayText(decisionClaim.value)}</p>
         </div>}
 
         <div className={`decision-evidence decision-relationship-block ${decisionRelationshipConflict?'is-conflict':''}`}>
@@ -651,26 +670,50 @@ async function upload(uploaded:File){
 
     {ready&&<div id="full-evidence" className="full-evidence-anchor" aria-hidden="true"/>}
 
-    {ready&&(Boolean(verification?.signals?.length)||Boolean(verification?.safe_action))&&<section className="source-resolution" id="source-checks" aria-label="Evidence and safe next step">
+    {ready&&verification&&<section className="source-resolution" id="source-checks" aria-label="Evidence and safe next step">
      <div className="section-heading evidence-heading">
       <h2>Independent evidence</h2>
      </div>
 
-     {verification?.signals&&verification.signals.length>0&&<div className="source-signals">
-      {verification.signals.map(signal=>{
-       const primary=signal.id===storySignal?.id;
-       const evidenceTitles=signal.evidence.map(evidence=>evidence.title);
-       return <article className={`source-signal ${primary?'is-primary':'is-secondary'}`} key={signal.id}>
-        <p className="signal-kind">{signal.kind==='SOURCE_CONFLICT'?'Source conflict':signal.kind==='KNOWN_PATTERN'?'Known pattern':'Official warning'}</p>
-        <h3>{signal.title}</h3>
-        <p>{signal.summary}</p>
-        {signal.evidence.length>0&&<div className="signal-links">
-         {signal.evidence.length>1&&<span className="signal-links-label">Sources</span>}
-         {signal.evidence.map((evidence,index)=><a href={evidence.url} target="_blank" rel="noopener noreferrer" key={`${signal.id}-${index}`}>{compactEvidenceTitle(evidence.title,index,evidenceTitles)} <span aria-hidden="true">→</span></a>)}
-        </div>}
-       </article>;
-      })}
-     </div>}
+     {verification.signals&&verification.signals.length>0?
+      <div className="source-signals">
+       {verification.signals.map(signal=>{
+        const primary=signal.id===storySignal?.id;
+        const evidenceTitles=signal.evidence.map(evidence=>evidence.title);
+        return <article className={`source-signal ${primary?'is-primary':'is-secondary'}`} key={signal.id}>
+         <p className="signal-kind">{signal.kind==='SOURCE_CONFLICT'?'Source conflict':signal.kind==='KNOWN_PATTERN'?'Known pattern':'Official warning'}</p>
+         <h3>{signal.title}</h3>
+         <p>{signal.summary}</p>
+         {signal.evidence.length>0&&<div className="signal-links">
+          {signal.evidence.length>1&&<span className="signal-links-label">Sources</span>}
+          {signal.evidence.map((evidence,index)=><a href={evidence.url} target="_blank" rel="noopener noreferrer" key={`${signal.id}-${index}`}>{compactEvidenceTitle(evidence.title,index,evidenceTitles)} <span aria-hidden="true">→</span></a>)}
+         </div>}
+        </article>;
+       })}
+      </div>
+      :directEvidenceFindings.length>0?
+      <div className="source-signals direct-evidence-findings">
+       {directEvidenceFindings.map(({claim,result})=>{
+        const primary=claim.id===decisionClaim?.id;
+        const evidenceTitles=result.evidence.map(evidence=>evidence.title);
+        return <article className={`source-signal direct-evidence-finding ${primary?'is-primary':'is-secondary'}`} key={claim.id}>
+         <p className="signal-kind">{result.verdict==='MATCH'?'Official source match':result.verdict==='MISMATCH'?'Official source conflict':'Source evidence'}</p>
+         <h3>{claim.label}{claim.value?`: ${cleanDisplayText(claim.value)}`:''}</h3>
+         <p>{result.explanation}</p>
+         <div className="signal-links">
+          {result.evidence.length>1&&<span className="signal-links-label">Sources</span>}
+          {result.evidence.map((evidence,index)=><a href={evidence.url} target="_blank" rel="noopener noreferrer" key={`${claim.id}-${index}`}>{compactEvidenceTitle(evidence.title,index,evidenceTitles)} <span aria-hidden="true">→</span></a>)}
+         </div>
+        </article>;
+       })}
+      </div>
+      :<div className="source-signals source-evidence-empty">
+       <article className="source-signal is-primary">
+        <p className="signal-kind">Source coverage</p>
+        <h3>No independent source evidence was available for this result.</h3>
+        <p>The inspection below shows what SEAL could and could not establish from its supported sources.</p>
+       </article>
+      </div>}
 
      {verification?.safe_action&&<div className="safe-route">
       <div>
@@ -764,8 +807,8 @@ async function upload(uploaded:File){
       </div>}
      </div>
 
-     <details className="technical-record">
-      <summary>Technical record <span>+</span></summary>
+     <details className="technical-record" open={technicalOpen} onToggle={event=>setTechnicalOpen(event.currentTarget.open)}>
+      <summary>Technical record <span>{technicalOpen?'−':'+'}</span></summary>
       <p>Extractor: {extractionMode} · {resolverSummary}</p>
       {technicalEvidence.map((evidence,index)=><p key={evidence.url||index}>{evidence.title} · {evidence.source_mode} · {evidence.checked_at} · <a href={evidence.url} target="_blank" rel="noopener noreferrer">Original source</a></p>)}
      </details>

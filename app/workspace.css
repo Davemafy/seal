@@ -394,6 +394,7 @@
 /* Result final hierarchy and claim continuity pass */
 .rail-item{text-decoration:none}
 .review-shell{padding-top:28px}
+.sample-warning{margin-top:12px;padding:10px 12px;font-size:12px;line-height:18px}
 .review-hero{grid-template-columns:minmax(350px,.72fr) minmax(0,1.28fr);gap:56px;align-items:start;padding:12px 0 52px}
 .decision-pane{position:static;top:auto}
 .review-tools{min-height:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:24px}
@@ -439,6 +440,8 @@
 .source-signal.is-secondary h3{max-width:680px;margin:0;font-size:21px;line-height:28px;font-weight:700;letter-spacing:-.006em}
 .source-signal>p:not(.signal-kind){max-width:680px;margin:9px 0 0;color:#4b4b4b;font-size:15px;line-height:23px}
 .source-signal.is-secondary>p:not(.signal-kind){font-size:14px;line-height:21px}
+.direct-evidence-finding h3{overflow-wrap:anywhere}
+.source-evidence-empty .source-signal{padding-bottom:0}
 .signal-links{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:14px}
 .signal-links-label{color:#777;font-size:12px;line-height:18px}
 .signal-links a{color:#000;font-size:13px;line-height:20px;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
@@ -491,6 +494,11 @@
 .additional-sources{margin-top:14px;font-size:13px}
 .verification-caveat{display:none}
 .technical-record{margin-top:22px;padding:14px 16px;border-radius:8px;background:var(--secondary);color:var(--muted);font-size:13px}
+.technical-record:not([open])>:not(summary){display:none}
+.technical-record summary{align-items:center;cursor:pointer}
+.technical-record summary span{font-size:14px;line-height:18px}
+.technical-record[open] summary{margin-bottom:12px}
+.technical-record p{margin:8px 0 0}
 .replay-button{margin-top:16px}
 
 @media(max-width:1135px){
