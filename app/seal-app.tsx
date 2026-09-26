@@ -4,7 +4,6 @@ import Link from 'next/link';
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import PDFPreview from './pdf-preview';
 import {fixtures,type FixtureKey} from '@/lib/fixtures';
-import {getBrowseCase} from '@/lib/browse-cases';
 import {fallbackExtract,claimsFromExtraction,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '@/lib/extract';
 import {readInBrowser,warmOcr,type BrowserDocument} from '@/lib/browser-file';
 import type {Claim,Extraction,Result,Verification} from '@/lib/types';
@@ -183,12 +182,28 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
 
  useEffect(()=>{
   if(!hydrated||initialRunStarted.current)return;
-  const browserCase=typeof window!=='undefined'?getBrowseCase(new URLSearchParams(window.location.search).get('case')||undefined):undefined;
-  const seededText=initialText||browserCase?.runText||'';
-  if(!(initialRun||browserCase)||!seededText)return;
+  if(initialRun&&initialText){
+   initialRunStarted.current=true;
+   void run('SNAPSHOT',{text:initialText,file:null});
+   return;
+  }
+  const caseId=typeof window!=='undefined'?new URLSearchParams(window.location.search).get('case'):null;
+  if(!caseId)return;
   initialRunStarted.current=true;
-  if(!initialText)setText(seededText);
-  void run('SNAPSHOT',{text:seededText,file:null});
+  void (async()=>{
+   try{
+    const response=await fetch(`/api/browse-case?id=${encodeURIComponent(caseId)}`);
+    if(!response.ok)throw new Error('Case unavailable');
+    const payload=await response.json() as {runText?:string};
+    const seededText=payload.runText?.trim()||'';
+    if(!seededText)throw new Error('Case text unavailable');
+    setText(seededText);
+    await run('SNAPSHOT',{text:seededText,file:null});
+   }catch{
+    initialRunStarted.current=false;
+    setError('This browse case could not be opened. You can still upload or paste a message.');
+   }
+  })();
  },[hydrated,initialRun,initialText]);
 
  useEffect(()=>{
