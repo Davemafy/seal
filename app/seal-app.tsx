@@ -96,6 +96,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const [selected,setSelected]=useState('');
  const [hovered,setHovered]=useState('');
  const [showIndex,setShowIndex]=useState(false);
+ const [activeResultSection,setActiveResultSection]=useState<'summary'|'message'|'next'|'checked'>('summary');
  const [technicalOpen,setTechnicalOpen]=useState(false);
  const [reviewOffer,setReviewOffer]=useState<'idle'|'counting'|'skipped'|'watching'|'completed'>('idle');
  const [reviewCountdown,setReviewCountdown]=useState(3);
@@ -337,7 +338,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  function clear(){
   runId.current++;
   if(file)URL.revokeObjectURL(file.preview);
-  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setTechnicalOpen(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);storyKey.current='';
+  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setActiveResultSection('summary');setTechnicalOpen(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);storyKey.current='';
  }
 
  function chooseFixture(key:FixtureKey){clear();setFixture(key);setText(fixtures[key].text);void run('SNAPSHOT',{text:fixtures[key].text,file:null})}
@@ -542,30 +543,49 @@ async function upload(uploaded:File){
     onPointerDownCapture={event=>{if(reviewOffer==='counting'&&!(event.target as Element).closest('[data-review-offer]'))skipReviewOffer()}}
     onDragOver={event=>{if(event.dataTransfer.types.includes('Files'))event.preventDefault()}}
     onDrop={event=>{if(event.dataTransfer.files.length){event.preventDefault();skipReviewOffer();upload(event.dataTransfer.files[0])}}}>
+    <header className="result-masthead" id="result-top">
+     <div className="result-masthead-row">
+      <h1>Your message</h1>
+
+      {verification&&ready&&!storyOpen&&(reviewOffer==='counting'||reviewOffer==='idle')?
+       <div
+        className={`review-offer ${reviewOffer==='counting'?'is-counting':'is-explicit'} ${reviewOfferPaused?'is-paused':''}`}
+        data-review-offer
+        onMouseEnter={()=>setReviewOfferPaused(true)}
+        onMouseLeave={()=>setReviewOfferPaused(false)}
+        onFocusCapture={()=>setReviewOfferPaused(true)}
+        onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setReviewOfferPaused(false)}}
+        role="status"
+        aria-live="polite"
+       >
+        {reviewOffer==='counting'&&<div className="review-timer" aria-hidden="true">
+         <svg viewBox="0 0 44 44" focusable="false">
+          <circle className="review-timer-track" cx="22" cy="22" r="19" pathLength="100"/>
+          <circle className="review-timer-progress" cx="22" cy="22" r="19" pathLength="100"/>
+         </svg>
+         <span>{reviewCountdown}</span>
+        </div>}
+        <div className="review-offer-meta">
+         <strong>Review ready</strong>
+         <div className="review-offer-actions">
+          <button type="button" onClick={startStory}>{reviewOffer==='counting'?'Watch now':'Watch review'}</button>
+          <button type="button" onClick={skipReviewOffer}>Skip</button>
+         </div>
+        </div>
+       </div>
+       :verification&&<button ref={replayButton} type="button" className="masthead-play-review" onClick={replayStory}>Play review</button>}
+     </div>
+
+     {verification&&<nav className="result-chapters" aria-label="Result sections">
+      <a href="#review-summary" className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={()=>setActiveResultSection('summary')}>Summary</a>
+      <a href="#original-message" className={activeResultSection==='message'?'is-current':''} aria-current={activeResultSection==='message'?'location':undefined} onClick={()=>setActiveResultSection('message')}>Message</a>
+      <a href={verification.safe_action||verification.contact?'#next-step':'#source-checks'} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={()=>setActiveResultSection('next')}>Next step</a>
+      <a href="#checked-details" className={activeResultSection==='checked'?'is-current':''} aria-current={activeResultSection==='checked'?'location':undefined} onClick={()=>setActiveResultSection('checked')}>Checked details</a>
+     </nav>}
+    </header>
+
     {file?.sample&&<div className="source-failure sample-warning" role="status">This document is marked SAMPLE. It is an example form, not a summons to act on. Claim checks below do not authenticate an individual notice.</div>}
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
-
-    {verification&&ready&&!storyOpen&&(reviewOffer==='counting'||reviewOffer==='idle')&&<div
-     className={`review-offer ${reviewOffer==='counting'?'is-counting':'is-explicit'} ${reviewOfferPaused?'is-paused':''}`}
-     data-review-offer
-     onMouseEnter={()=>setReviewOfferPaused(true)}
-     onMouseLeave={()=>setReviewOfferPaused(false)}
-     onFocusCapture={()=>setReviewOfferPaused(true)}
-     onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setReviewOfferPaused(false)}}
-     role="status"
-     aria-live="polite"
-    >
-     <div className="review-offer-copy">
-      <strong>Review ready</strong>
-      <span>See how SEAL reached this result.</span>
-     </div>
-     {reviewOffer==='counting'&&<span className="review-countdown" aria-hidden="true">{reviewCountdown}</span>}
-     <div className="review-offer-progress" aria-hidden="true"><i/></div>
-     <div className="review-offer-actions">
-      <button type="button" onClick={startStory}>{reviewOffer==='counting'?'Watch now':'Watch review'}</button>
-      <button type="button" onClick={skipReviewOffer}>Skip</button>
-     </div>
-    </div>}
 
     {verification&&ready&&storyOpen&&<div className={`story-overlay ${storyClosing?'is-closing':''}`} role="dialog" aria-modal="true" aria-label="SEAL review presentation">
      <div className={`story-player story-step-${storyStep} ${storyPlaying?'is-playing':'is-paused'} ${storyFocusBox?'has-story-focus':'no-story-focus'}`}>
@@ -640,7 +660,6 @@ async function upload(uploaded:File){
        {isDemo&&<select aria-label="Choose demo fixture" value={fixture} onChange={event=>chooseFixture(event.target.value as FixtureKey)}>
         {Object.entries(fixtures).map(([key,value])=><option value={key} key={key}>{value.title}</option>)}
        </select>}
-       {verification&&<button ref={replayButton} type="button" className="story-replay" onClick={replayStory}>Play review</button>}
        {verification&&<a href="#full-evidence" className="full-evidence-link">Full evidence</a>}
        <button type="button" className="review-new-check" onClick={clear}>Check another message</button>
       </div>
@@ -770,7 +789,7 @@ async function upload(uploaded:File){
        </article>
       </div>}
 
-     {verification?.safe_action&&<div className="safe-route">
+     {verification?.safe_action&&<div className="safe-route" id="next-step">
       <div>
        <h2>Safest next step</h2>
        <p>{verification.safe_action.summary}</p>
@@ -790,7 +809,7 @@ async function upload(uploaded:File){
      <p className="resolution-disclaimer">These sources can inform the check, but they cannot confirm who sent the message.</p>
     </section>}
 
-    {ready&&verification?.contact&&<section className="contact-section" aria-label="Independent court contact">
+    {ready&&verification?.contact&&<section className="contact-section" id={verification.safe_action?undefined:'next-step'} aria-label="Independent court contact">
      <div className="court-contact">
       <div>
        <h3>Independent court contact</h3>

@@ -70,12 +70,34 @@
 
 .story-replay{min-height:0;padding:0;border:0;border-radius:0;background:transparent;color:#5e5e5e;font-size:13px;line-height:20px;font-weight:400}
 .story-replay:hover{background:transparent;color:#000;text-decoration:underline;text-underline-offset:4px}
-.review-offer{position:relative;width:min(520px,100%);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 20px;margin:0 0 20px;padding:16px 18px;border:1px solid var(--line);border-radius:8px;background:#fff}
-.review-offer-copy{display:grid;gap:2px}.review-offer-copy strong{font-size:14px;line-height:20px;font-weight:500}.review-offer-copy span{color:var(--muted);font-size:12px;line-height:18px}
-.review-countdown{grid-column:2;grid-row:1;font-size:30px;line-height:36px;font-weight:700;letter-spacing:-.02em}
-.review-offer-progress{grid-column:1/-1;height:2px;overflow:hidden;background:var(--line)}.review-offer-progress i{display:block;width:100%;height:100%;transform-origin:left;background:#000;animation:review-offer-progress 3s linear forwards}.review-offer.is-paused .review-offer-progress i{animation-play-state:paused}.review-offer.is-explicit .review-offer-progress{display:none}
-@keyframes review-offer-progress{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-.review-offer-actions{grid-column:1/-1;display:flex;gap:16px;align-items:center}.review-offer-actions button{border:0;padding:0;background:transparent;color:#000;font-size:13px;line-height:20px;font-weight:500}.review-offer-actions button+button{color:#5e5e5e;font-weight:400}.review-offer-actions button:hover{text-decoration:underline;text-underline-offset:4px}
+.result-masthead{position:relative;margin:0 0 28px;padding:4px 0 0;border-bottom:1px solid var(--line)}
+.result-masthead-row{min-height:72px;display:flex;align-items:flex-start;justify-content:space-between;gap:32px}
+.result-masthead h1{margin:0;font-size:42px;line-height:50px;font-weight:700;letter-spacing:-.02em}
+.masthead-play-review{min-height:46px;padding:12px 16px;border:0;border-radius:8px;background:var(--secondary);color:#000;font-size:14px;line-height:20px;font-weight:500}
+.masthead-play-review:hover{background:var(--tertiary)}
+
+.result-chapters{display:flex;align-items:center;gap:34px;overflow-x:auto;margin-top:4px}
+.result-chapters a{position:relative;flex:none;display:block;padding:0 0 14px;color:#5e5e5e;text-decoration:none;font-size:14px;line-height:20px;font-weight:500}
+.result-chapters a:hover{color:#000}
+.result-chapters a.is-current{color:#000}
+.result-chapters a.is-current::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:#000}
+
+.review-offer{position:absolute;top:-10px;right:0;z-index:18;display:flex;align-items:center;gap:12px;padding:8px 0 8px 12px;background:rgba(255,255,255,.96)}
+.review-timer{position:relative;width:58px;height:58px;flex:0 0 58px;display:grid;place-items:center}
+.review-timer svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.review-timer circle{fill:none;stroke-width:1.5}
+.review-timer-track{stroke:#dedede}
+.review-timer-progress{stroke:#000;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;animation:review-ring-progress 3s linear forwards}
+.review-offer.is-paused .review-timer-progress{animation-play-state:paused}
+.review-timer>span{position:relative;z-index:1;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-.02em}
+@keyframes review-ring-progress{from{stroke-dashoffset:100}to{stroke-dashoffset:0}}
+
+.review-offer-meta{display:grid;gap:4px;min-width:132px}
+.review-offer-meta>strong{font-size:12px;line-height:18px;font-weight:500}
+.review-offer-actions{display:flex;gap:12px;align-items:center}
+.review-offer-actions button{border:0;padding:0;background:transparent;color:#000;font-size:12px;line-height:18px;font-weight:500}
+.review-offer-actions button+button{color:#777;font-weight:400}
+.review-offer-actions button:hover{text-decoration:underline;text-underline-offset:3px}
 
 .story-overlay{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:24px;background:rgba(0,0,0,.82);animation:story-overlay-in .22s ease-out both}
 .story-player{width:min(1120px,100%);height:min(800px,calc(100dvh - 48px));display:grid;grid-template-rows:auto auto minmax(0,1fr);overflow:hidden;border-radius:12px;background:#0b0b0b;color:#fff;box-shadow:0 28px 90px rgba(0,0,0,.42);animation:story-player-in .28s cubic-bezier(.2,.8,.2,1) both}
@@ -512,4 +534,26 @@
  .story-final-actions{margin-top:20px}
  .story-final-actions a{width:100%}
  .story-hit{width:16%}
+}
+
+/* Result masthead + circular review timer */
+@media(max-width:900px){
+ .result-masthead{margin-bottom:24px}
+ .result-masthead-row{min-height:64px}
+ .result-masthead h1{font-size:36px;line-height:44px}
+ .result-chapters{gap:26px}
+ .review-offer{top:-8px}
+}
+@media(max-width:599px){
+ .result-masthead{margin-bottom:20px;padding-top:0}
+ .result-masthead-row{min-height:58px;align-items:flex-start}
+ .result-masthead h1{max-width:210px;font-size:32px;line-height:40px}
+ .result-chapters{gap:24px;margin-top:8px;padding-right:8px}
+ .result-chapters a{padding-bottom:12px;font-size:13px}
+ .masthead-play-review{min-height:40px;padding:10px 12px;font-size:13px}
+ .review-offer{top:-4px;right:0;gap:9px;padding-left:8px}
+ .review-timer{width:50px;height:50px;flex-basis:50px}
+ .review-timer>span{font-size:20px;line-height:26px}
+ .review-offer-meta{min-width:112px}
+ .review-offer-meta>strong,.review-offer-actions button{font-size:11px;line-height:17px}
 }
