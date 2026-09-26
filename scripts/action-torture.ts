@@ -22,7 +22,19 @@ const cases=[
 ] as const;
 
 const base=process.env.SEAL_BASE_URL;
-if(!base)throw new Error('Set SEAL_BASE_URL to a preview deployment with GROQ_API_KEY configured.');
+if(!base)throw new Error('Set SEAL_BASE_URL to a deployed SEAL instance.');
+
+const [homeResponse,browseResponse,versionResponse]=await Promise.all([
+ fetch(new URL('/',base),{signal:AbortSignal.timeout(15000)}),
+ fetch(new URL('/browse',base),{signal:AbortSignal.timeout(15000)}),
+ fetch(new URL('/api/version',base),{signal:AbortSignal.timeout(15000)})
+]);
+if(!homeResponse.ok||!browseResponse.ok||!versionResponse.ok)throw new Error(`Live surface unavailable: home=${homeResponse.status} browse=${browseResponse.status} version=${versionResponse.status}`);
+const [homeHtml,browseHtml]=await Promise.all([homeResponse.text(),browseResponse.text()]);
+if(!homeHtml.includes('Check a court message'))throw new Error('Live home surface is missing the current intake heading.');
+if(!browseHtml.includes('Browse real cases'))throw new Error('Live browse surface is missing the case archive heading.');
+console.log('PASS live surface: home + browse + version');
+
 let passed=0;
 for(const item of cases){
  let response:Response;
