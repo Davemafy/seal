@@ -114,7 +114,7 @@ export const browseCases:BrowseCase[]=[
   classification:'Legitimate sample/form',
   visualNote:'A court-published reference artifact for the structure and density of an official jury summons.',
   excerpt:'Official sample jury-summons form published on the District of Connecticut court domain.',
-  runText:'UNITED STATES DISTRICT COURT — DISTRICT OF CONNECTICUT. JURY SUMMONS. Official sample form.',
+  runText:'UNITED STATES DISTRICT COURT — DISTRICT OF CONNECTICUT\n450 Main Street, Hartford, CT 06103\nJURY SUMMONS\nJuror No.: 02-0140\nREPORTING DATES: March 28(Tue.), May 3(Wed.) & May 4(Thu.), 2017\nPHONE TO CALL: Status Check Only: Call 1-866-388-2430 after 5:30 PM.',
   preview:{type:'pdf',url:'https://coop.ctd.uscourts.gov/sites/default/files/Sample%20Jury%20Summons%20Form.pdf',alt:'District of Connecticut official sample jury summons PDF'}
  }
 ];
