@@ -2,6 +2,7 @@
 
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import PDFPreview from './pdf-preview';
+import StoryPdfPage from './story-pdf-page';
 import {fixtures,type FixtureKey} from '@/lib/fixtures';
 import {fallbackExtract,claimsFromExtraction,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '@/lib/extract';
 import {readInBrowser,warmOcr,type BrowserDocument} from '@/lib/browser-file';
@@ -96,11 +97,17 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const [hovered,setHovered]=useState('');
  const [showIndex,setShowIndex]=useState(false);
  const [technicalOpen,setTechnicalOpen]=useState(false);
+ const [reviewOffer,setReviewOffer]=useState<'idle'|'counting'|'skipped'|'watching'|'completed'>('idle');
+ const [reviewCountdown,setReviewCountdown]=useState(3);
+ const [reviewOfferPaused,setReviewOfferPaused]=useState(false);
  const [storyOpen,setStoryOpen]=useState(false);
  const [storyStep,setStoryStep]=useState(0);
  const [storyPlaying,setStoryPlaying]=useState(true);
  const [storyClosing,setStoryClosing]=useState(false);
  const storyKey=useRef('');
+ const storyCloseTimer=useRef<number|undefined>(undefined);
+ const replayButton=useRef<HTMLButtonElement>(null);
+ const storyPauseButton=useRef<HTMLButtonElement>(null);
  const initialRunStarted=useRef(false);
  const input=useRef<HTMLInputElement>(null);
  const anchors=useRef<Record<string,HTMLElement|null>>({});
@@ -117,21 +124,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  },[requestedActions]);
  const storySignal=verification?.signals?.find(signal=>signal.id==='traffic-qr-warning')
   ||verification?.signals?.find(signal=>signal.kind==='SOURCE_CONFLICT');
- const signalAction=storySignal?.id==='traffic-qr-warning'
-  ?requestedActions.find(claim=>claim.action?.kind==='pay')
-   ||requestedActions.find(claim=>claim.action?.verb==='scan')
-   ||requestedActions.find(claim=>claim.action?.kind==='appear')
-  :undefined;
- const storyClaim=verification
-  ?signalAction
-   ||claims.find(claim=>Boolean(claim.action)&&resultById.get(claim.id)?.verdict==='MISMATCH'&&Boolean(resultById.get(claim.id)?.evidence?.length))
-   ||claims.find(claim=>Boolean(claim.action)&&Boolean(resultById.get(claim.id)?.evidence?.length))
-   ||claims.find(claim=>resultById.get(claim.id)?.verdict==='MISMATCH'&&Boolean(resultById.get(claim.id)?.evidence?.length))
-   ||claims.find(claim=>Boolean(resultById.get(claim.id)?.evidence?.length))
-   ||claims.find(claim=>resultById.get(claim.id)?.verdict==='MISMATCH')
-   ||primaryAction
-   ||claims[0]
-  :undefined;
+ const decisionClaim=verification?chooseDecisionClaim(claims,verification):undefined;
+ const storyClaim=decisionClaim;
  const storyResult=storyClaim?resultById.get(storyClaim.id):undefined;
  const storyEvidence=storySignal?.evidence?.[0]||storyResult?.evidence?.[0];
  const storyClaimHeading=storySignal?.id==='traffic-qr-warning'&&storyClaim?.action
@@ -169,8 +163,16 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   :storyClaim?.type==='authority'&&verification?.safe_action
    ?'The cited law does not match the printed toll claim. Search the case independently before relying on the notice.'
    :verification?.safe_action?.summary||'Use the court’s own website or independently sourced contact information before responding.';
- const storyDurations=[2800,3600,5000,3200,0];
- const decisionClaim=verification?chooseDecisionClaim(claims,verification):undefined;
+ const storyDurations=[3000,3500,5000,3500,3200];
+ const storySourceLabel=!storyEvidence
+  ?'Source check'
+  :storySignal?.id==='traffic-qr-warning'&&/ftc\.gov/i.test(storyEvidence.url)
+   ?'Federal consumer guidance'
+   :storySignal?.kind==='SOURCE_CONFLICT'
+    ?'State law'
+    :['connecticut','riverside','courtlistener'].includes(storyResult?.resolver_id||verification?.resolver_id||'')
+     ?'Official court source'
+     :'Independent official source';
  const decisionResult=decisionClaim?resultById.get(decisionClaim.id):undefined;
  const decisionClaimDisplay=cleanDisplayText(decisionClaim?.action?.source_text||decisionClaim?.exact_source_text||decisionClaim?.value||'');
  const directEvidenceFindings=verification
@@ -214,7 +216,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const liveFailed=mode==='LIVE'&&['riverside','connecticut'].includes(verification?.resolver_id||'')&&verification?.results.some(result=>result.explanation==='Official source could not be reached during this check.');
  const sourceLabel=verification?.signals?.length?'OFFICIAL SOURCE FINDINGS':verification?.resolver_id==='riverside'?(mode==='LIVE'?'LIVE SOURCE CHECK':'SOURCE SNAPSHOT · 24 SEP 2026'):verification?.resolver_id==='connecticut'?(mode==='LIVE'?'LIVE SOURCE CHECK':'SOURCE SNAPSHOT · 25 SEP 2026'):verification?.resolver_id==='courtlistener'?(claims.some(claim=>claim.type==='docket')?'FEDERAL DOCKET INDEX':'NO JURY-SOURCE COVERAGE'):verification?.resolver_id==='ocr'?'LOW CONFIDENCE OCR':verification?'NO SUPPORTED SOURCE':error?'NOT CHECKED':isActionDemo?'SOURCE SNAPSHOT · 25 SEP 2026':isDemo?'SOURCE SNAPSHOT · 24 SEP 2026':'SOURCE CHECK PENDING';
 
- useEffect(()=>{const timer=window.setTimeout(()=>setHydrated(true),0);return()=>clearTimeout(timer)},[]);
+ useEffect(()=>{const timer=window.setTimeout(()=>setHydrated(true),0);return()=>{clearTimeout(timer);if(storyCloseTimer.current)window.clearTimeout(storyCloseTimer.current)}},[]);
 
  useEffect(()=>{
   if(!hydrated||initialRunStarted.current)return;
@@ -247,20 +249,41 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   const key=`${text.slice(0,96)}:${claims.length}:${verification.resolver_id}`;
   if(storyKey.current===key)return;
   storyKey.current=key;
+  setStoryOpen(false);
   setStoryStep(0);
-  setStoryPlaying(true);
+  setStoryPlaying(false);
   setStoryClosing(false);
-  setStoryOpen(true);
+  setReviewCountdown(3);
+  setReviewOfferPaused(false);
+  const reduce=typeof window!=='undefined'&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  setReviewOffer(reduce?'idle':'counting');
  },[verification,ready,text,claims.length]);
 
  useEffect(()=>{
-  if(!storyOpen||!storyPlaying||!verification||storyStep>=4)return;
+  if(reviewOffer!=='counting'||reviewOfferPaused)return;
   const timer=window.setTimeout(()=>{
-   setStoryStep(step=>{
-    if(step>=3){setStoryPlaying(false);return 4}
-    return step+1;
-   });
-  },storyDurations[storyStep]||4000);
+   if(reviewCountdown<=1){startStory();return}
+   setReviewCountdown(value=>Math.max(1,value-1));
+  },1000);
+  return()=>window.clearTimeout(timer);
+ },[reviewOffer,reviewOfferPaused,reviewCountdown]);
+
+ useEffect(()=>{
+  if(reviewOffer!=='counting')return;
+  const startY=window.scrollY;
+  const onScroll=()=>{if(Math.abs(window.scrollY-startY)>18)skipReviewOffer()};
+  const onKey=(event:KeyboardEvent)=>{if(event.key==='Escape')skipReviewOffer()};
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('keydown',onKey);
+  return()=>{window.removeEventListener('scroll',onScroll);window.removeEventListener('keydown',onKey)};
+ },[reviewOffer]);
+
+ useEffect(()=>{
+  if(!storyOpen||!storyPlaying||!verification)return;
+  const timer=window.setTimeout(()=>{
+   if(storyStep>=4){closeStory();return}
+   setStoryStep(step=>Math.min(4,step+1));
+  },storyDurations[storyStep]||3200);
   return()=>window.clearTimeout(timer);
  },[storyOpen,storyPlaying,storyStep,verification]);
 
@@ -278,26 +301,43 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   return()=>{document.body.style.overflow=previous;window.removeEventListener('keydown',onKey)};
  },[storyOpen]);
 
+ function startStory(){
+  if(storyCloseTimer.current)window.clearTimeout(storyCloseTimer.current);
+  setReviewOffer('watching');
+  setReviewCountdown(3);
+  setStoryStep(0);
+  setStoryPlaying(true);
+  setStoryClosing(false);
+  setStoryOpen(true);
+  window.requestAnimationFrame(()=>storyPauseButton.current?.focus());
+ }
+ function skipReviewOffer(){
+  setReviewOffer('skipped');
+  setReviewCountdown(3);
+  setReviewOfferPaused(false);
+ }
  function storyNext(){
-  setStoryStep(step=>{
-   if(step>=4){setStoryPlaying(false);return 4}
-   if(step===3)setStoryPlaying(false);
-   return step+1;
-  });
+  if(storyStep>=4){closeStory();return}
+  setStoryStep(step=>Math.min(4,step+1));
  }
  function storyBack(){setStoryStep(step=>Math.max(0,step-1))}
  function closeStory(){
   if(storyClosing)return;
   setStoryClosing(true);
   setStoryPlaying(false);
-  window.setTimeout(()=>{setStoryOpen(false);setStoryClosing(false)},190);
+  setReviewOffer('completed');
+  storyCloseTimer.current=window.setTimeout(()=>{
+   setStoryOpen(false);
+   setStoryClosing(false);
+   replayButton.current?.focus();
+  },260);
  }
- function replayStory(){setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);setStoryOpen(true)}
+ function replayStory(){startStory()}
 
  function clear(){
   runId.current++;
   if(file)URL.revokeObjectURL(file.preview);
-  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setTechnicalOpen(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);storyKey.current='';
+  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setTechnicalOpen(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);storyKey.current='';
  }
 
  function chooseFixture(key:FixtureKey){clear();setFixture(key);setText(fixtures[key].text);void run('SNAPSHOT',{text:fixtures[key].text,file:null})}
@@ -323,7 +363,7 @@ async function upload(uploaded:File){
   const sourceFile=source?source.file:file;
   const sourceIsDemo=!sourceFile&&/^DEMO \/ (?:FICTIONAL NOTICE|SYNTHETIC MESSAGE)/.test(sourceText);
   const id=++runId.current;
-  setBusy(true);setError('');setVerification(null);setRevealed(0);setSelected('');setTechnicalOpen(false);setMode(sourceMode);setStatus('Reading requested actions');
+  setBusy(true);setError('');setVerification(null);setRevealed(0);setSelected('');setTechnicalOpen(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setMode(sourceMode);setStatus('Reading requested actions');
   try{
    if(sourceFile?.uncertain){
     const unclear:Claim={id:'c1',type:'official',label:'Unreadable field',value:'Could not read confidently',exact_source_text:'Unreadable field',page:1};
@@ -498,26 +538,53 @@ async function upload(uploaded:File){
     </div>
    </section>
    :
-   <section className="review-shell" onDragOver={event=>{if(event.dataTransfer.types.includes('Files'))event.preventDefault()}} onDrop={event=>{if(event.dataTransfer.files.length){event.preventDefault();upload(event.dataTransfer.files[0])}}}>
+   <section className="review-shell"
+    onPointerDownCapture={event=>{if(reviewOffer==='counting'&&!(event.target as Element).closest('[data-review-offer]'))skipReviewOffer()}}
+    onDragOver={event=>{if(event.dataTransfer.types.includes('Files'))event.preventDefault()}}
+    onDrop={event=>{if(event.dataTransfer.files.length){event.preventDefault();skipReviewOffer();upload(event.dataTransfer.files[0])}}}>
     {file?.sample&&<div className="source-failure sample-warning" role="status">This document is marked SAMPLE. It is an example form, not a summons to act on. Claim checks below do not authenticate an individual notice.</div>}
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
+
+    {verification&&ready&&!storyOpen&&(reviewOffer==='counting'||reviewOffer==='idle')&&<div
+     className={`review-offer ${reviewOffer==='counting'?'is-counting':'is-explicit'} ${reviewOfferPaused?'is-paused':''}`}
+     data-review-offer
+     onMouseEnter={()=>setReviewOfferPaused(true)}
+     onMouseLeave={()=>setReviewOfferPaused(false)}
+     onFocusCapture={()=>setReviewOfferPaused(true)}
+     onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setReviewOfferPaused(false)}}
+     role="status"
+     aria-live="polite"
+    >
+     <div className="review-offer-copy">
+      <strong>Review ready</strong>
+      <span>See how SEAL reached this result.</span>
+     </div>
+     {reviewOffer==='counting'&&<span className="review-countdown" aria-hidden="true">{reviewCountdown}</span>}
+     <div className="review-offer-progress" aria-hidden="true"><i/></div>
+     <div className="review-offer-actions">
+      <button type="button" onClick={startStory}>{reviewOffer==='counting'?'Watch now':'Watch review'}</button>
+      <button type="button" onClick={skipReviewOffer}>Skip</button>
+     </div>
+    </div>}
 
     {verification&&ready&&storyOpen&&<div className={`story-overlay ${storyClosing?'is-closing':''}`} role="dialog" aria-modal="true" aria-label="SEAL review presentation">
      <div className={`story-player story-step-${storyStep} ${storyPlaying?'is-playing':'is-paused'} ${storyFocusBox?'has-story-focus':'no-story-focus'}`}>
       <div className="story-topbar">
        <span className="story-brand">SEAL</span>
        <div className="story-top-actions">
-        <button type="button" className="story-pause" onClick={()=>setStoryPlaying(value=>!value)}>{storyPlaying?'Pause':'Play'}</button>
-        <button type="button" onClick={closeStory}>Details</button>
+        <button ref={storyPauseButton} type="button" className="story-pause" onClick={()=>setStoryPlaying(value=>!value)}>{storyPlaying?'Pause':'Play'}</button>
+        <button type="button" onClick={closeStory}>Full evidence</button>
        </div>
       </div>
 
       <div className="story-progress" aria-label={`Frame ${storyStep+1} of 5`}>
-       {[0,1,2,3,4].map(step=><span key={step} className={step<storyStep?'is-done':step===storyStep?'is-active':''}><i style={step===storyStep&&storyDurations[storyStep]?{animationDuration:`${storyDurations[storyStep]}ms`}:undefined}/></span>)}
+       {[0,1,2,3,4].map(step=><span key={step} className={step<storyStep?'is-done':step===storyStep?'is-active':''}><i style={step===storyStep?{animationDuration:`${storyDurations[storyStep]}ms`}:undefined}/></span>)}
       </div>
 
       <div className="story-stage">
        <div className="story-document-stage">
+        <span className="story-stage-label" aria-hidden={storyStep!==0}>Your message</span>
+
         {file?.kind==='image'?<div
           className="story-image-wrap"
           style={{transformOrigin:storyFocusBox?`${(storyFocusBox.x+storyFocusBox.width/2)*100}% ${(storyFocusBox.y+storyFocusBox.height/2)*100}%`:'50% 50%'}}
@@ -525,56 +592,44 @@ async function upload(uploaded:File){
           <img src={file.preview} alt="Your uploaded notice"/>
           {storyFocusBox&&<span className="story-highlight" style={{left:`${storyFocusBox.x*100}%`,top:`${storyFocusBox.y*100}%`,width:`${storyFocusBox.width*100}%`,height:`${storyFocusBox.height*100}%`}}/>}
          </div>
+         :file?.kind==='pdf'?
+          <StoryPdfPage url={file.preview} focusBox={storyFocusBox}/>
          :<div className="story-text-document">
-          <span>{file?.kind==='pdf'?'PDF DOCUMENT':'PASTED MESSAGE'}</span>
-          <p>{storyStep>0&&storyClaimDisplay?storyClaimDisplay:cleanDisplayText(text.slice(0,620))}</p>
+          <span>Pasted message</span>
+          <p>{cleanDisplayText(text.slice(0,900))}</p>
          </div>}
 
-        <div className="story-claim-anchor" aria-hidden={storyStep!==2}>
-         <span>IN THE MESSAGE</span>
-         <strong>{storyClaimHeading}</strong>
-         <p>{storyClaimDisplay||'This is the detail SEAL is checking.'}</p>
+        <div className="story-claim-anchor" aria-hidden={storyStep<1||storyStep>3}>
+         <span>From the message</span>
+         <strong>{storyClaimDisplay||storyClaimHeading}</strong>
         </div>
 
         <div className="story-source-panel" aria-hidden={storyStep<2||storyStep>3}>
-         <span>{storyEvidence?'INDEPENDENT SOURCE':'SOURCE CHECK'}</span>
+         <span>{storySourceLabel}</span>
          <strong>{storyEvidence?.title||'No supported public source available'}</strong>
          <p>{storySourceCopy}</p>
          {storyEvidence&&<a href={storyEvidence.url} target="_blank" rel="noopener noreferrer">Open source</a>}
         </div>
 
-        <div className="story-verdict-panel" aria-hidden={storyStep!==3}>
+        <div className={`story-verdict-panel ${storyResult?.verdict==='MISMATCH'||storySignal?.kind==='SOURCE_CONFLICT'?'is-conflict':''}`} aria-hidden={storyStep!==3}>
          <strong>{storyVerdict}</strong>
-         <p>{storyVerdictCopy}</p>
         </div>
 
         <div className="story-action-panel" aria-hidden={storyStep!==4}>
-         <span>BEFORE YOU ACT</span>
+         <span>Safest next step</span>
          <strong>{storyFinalTitle}</strong>
          <p>{storyFinalSummary}</p>
          {verification.contact?.name&&<small>{verification.contact.name}{verification.contact.phone?` · ${verification.contact.phone}`:''}</small>}
          <div className="story-final-actions">
-          {verification.safe_action&&<a href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>}
+          {verification.contact?.website&&<a href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open official court website</a>}
+          {!verification.contact?.website&&verification.safe_action&&<a href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>}
           <button type="button" onClick={closeStory}>Full evidence</button>
          </div>
         </div>
        </div>
 
-       <div className={`story-caption ${storyStep>1?'is-hidden':''}`} aria-hidden={storyStep>1}>
-        <div className="story-caption-copy" key={storyStep} aria-live="polite">
-         {storyStep===0&&<>
-          <h2>This is what you sent.</h2>
-          <p>SEAL follows one decision-relevant detail from this message to an independent source.</p>
-         </>}
-         {storyStep===1&&<>
-          <h2>{storyClaimHeading}</h2>
-          <p>{storyClaimDisplay||'This is the detail SEAL is checking.'}</p>
-         </>}
-        </div>
-       </div>
-
        <button type="button" className="story-hit story-hit-left" aria-label="Previous frame" onClick={storyBack} disabled={storyStep===0}/>
-       <button type="button" className="story-hit story-hit-right" aria-label="Next frame" onClick={storyNext} disabled={storyStep===4}/>
+       <button type="button" className="story-hit story-hit-right" aria-label="Next frame" onClick={storyNext}/>
       </div>
      </div>
     </div>}
@@ -585,7 +640,7 @@ async function upload(uploaded:File){
        {isDemo&&<select aria-label="Choose demo fixture" value={fixture} onChange={event=>chooseFixture(event.target.value as FixtureKey)}>
         {Object.entries(fixtures).map(([key,value])=><option value={key} key={key}>{value.title}</option>)}
        </select>}
-       {verification&&<button type="button" className="story-replay" onClick={replayStory}>Play review</button>}
+       {verification&&<button ref={replayButton} type="button" className="story-replay" onClick={replayStory}>Play review</button>}
        {verification&&<a href="#full-evidence" className="full-evidence-link">Full evidence</a>}
        <button type="button" className="review-new-check" onClick={clear}>Check another message</button>
       </div>
