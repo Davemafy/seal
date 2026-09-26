@@ -1236,8 +1236,10 @@ async function upload(uploaded:File){
        </article>
       </div>}
 
-     {verification&&!verification.safe_action&&decisionClaim?.action&&<div className="safe-route" id="next-step">
-      <div><h2>Safest next step</h2><p>Find the court’s website or phone number independently and ask about the case before paying, sharing information, or following a link in this message.</p></div>
+     {verification&&!verification.safe_action&&decisionClaim?.action&&<div className="unsupported-next-step" id="next-step">
+      <span>Coverage limit</span>
+      <h2>SEAL could not add enough independent evidence for this message.</h2>
+      <p>Do not treat this result as approval or rejection of the message. If you need to act, start from the issuing court’s official site that you find independently rather than from a link, QR code, or phone number in the message.</p>
      </div>}
      {verification?.safe_action&&<div className="safe-route" id="next-step">
       <div>
