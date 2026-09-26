@@ -53,10 +53,10 @@ function decisionCopy(verification:Verification|null){
  };
 }
 
-export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
+export default function SealApp({initialDemo=false,initialText=''}:{initialDemo?:boolean;initialText?:string}){
  const [hydrated,setHydrated]=useState(false);
  const [fixture,setFixture]=useState<FixtureKey>('action-message-demo');
- const [text,setText]=useState(initialDemo?fixtures['action-message-demo'].text:'');
+ const [text,setText]=useState(initialText||(initialDemo?fixtures['action-message-demo'].text:''));
  const [draft,setDraft]=useState('');
  const [file,setFile]=useState<BrowserDocument|null>(null);
  const [claims,setClaims]=useState<Claim[]>([]);
@@ -144,6 +144,18 @@ export default function SealApp({initialDemo=false}:{initialDemo?:boolean}){
    ?'The cited law does not match the printed toll claim. Search the case independently before relying on the notice.'
    :verification.safe_action?.summary||'Use the court’s own website or independently sourced contact information before responding.';
  const storyDurations=[2800,3600,5000,3200,0];
+ const decisionEvidence=storySignal?.evidence?.[0]||storyEvidence;
+ const decisionEvidenceTitle=storySignal?.title||decisionEvidence?.title||'Independent source';
+ const decisionEvidenceSummary=storySignal?.summary||decisionEvidence?.excerpt||storyResult?.explanation||'No supported public source independently confirms this detail.';
+ const decisionRelationship=storySignal?.kind==='SOURCE_CONFLICT'
+  ?'Conflicts with the printed claim.'
+  :storySignal
+   ?'Matches an official warning pattern.'
+   :storyResult?.verdict==='MATCH'
+    ?'Matches the independent source.'
+    :storyResult?.verdict==='MISMATCH'
+     ?'Conflicts with the independent source.'
+     :'Could not be confirmed independently.';
  const current=claims.find(claim=>claim.id===selected)||claims[0];
  const currentResult=current&&resultById.get(current.id);
  const active=hovered||selected;
@@ -376,7 +388,8 @@ async function upload(uploaded:File){
    <Link href="/" className="rail-brand">SEAL<span>®</span></Link>
    <div className="rail-group-label">WORKSPACE</div>
    <button className={`rail-item ${!text?'is-current':''}`} type="button" onClick={clear}>Check a message</button>
-   <button className="rail-item" type="button" disabled={!hydrated} onClick={()=>chooseFixture('action-message-demo')}>See an example</button>
+   <Link className="rail-item" href="/browse">Browse real cases</Link>
+   <button className="rail-item rail-example" type="button" disabled={!hydrated} onClick={()=>chooseFixture('action-message-demo')}>Synthetic test</button>
    <div className="rail-spacer"/>
    <div className="rail-foot"><strong>Check the source</strong><span>Open the court pages behind each finding.</span></div>
   </aside>
@@ -418,31 +431,14 @@ async function upload(uploaded:File){
 
      {error&&<div role="alert" className="inspection-error">{error}</div>}
 
-     <p className="privacy-note">Your file stays in this browser. SEAL may send extracted text for checking, but doesn’t store the file or extracted claims.</p>
+     <div className="entry-foot">
+      <p className="privacy-note">Your file stays in this browser. SEAL may send extracted text for checking, but doesn’t store the file or extracted claims.</p>
+      <Link href="/browse" className="browse-entry-link">Browse real cases</Link>
+     </div>
     </div>
    </section>
    :
    <section className="review-shell" onDragOver={event=>{if(event.dataTransfer.types.includes('Files'))event.preventDefault()}} onDrop={event=>{if(event.dataTransfer.files.length){event.preventDefault();upload(event.dataTransfer.files[0])}}}>
-    <div className="review-head">
-     <div>
-      <p className="review-context">{isDemo?'EXAMPLE CHECK':file?.kind==='pdf'?'PDF DOCUMENT':file?'IMAGE OR SCREENSHOT':'PASTED MESSAGE'}</p>
-      <h1>{isActionDemo?'Jury-duty message example':isDemo?'Court notice example':'Your message'}</h1>
-     </div>
-     <div className="review-head-actions">
-      {isDemo&&<select aria-label="Choose demo fixture" value={fixture} onChange={event=>chooseFixture(event.target.value as FixtureKey)}>
-       {Object.entries(fixtures).map(([key,value])=><option value={key} key={key}>{value.title}</option>)}
-      </select>}
-      {verification&&<button type="button" className="story-replay" onClick={replayStory}>Play review</button>}
-      <span className="source-status">{sourceLabel}</span>
-     </div>
-    </div>
-    {verification&&<nav className="review-tabs" aria-label="Review sections">
-     <a href="#review-summary">Summary</a>
-     <a href="#original-message">Message</a>
-     {verification.safe_action&&<a href="#source-checks">Next step</a>}
-     <a href="#checked-details">Checked details</a>
-    </nav>}
-
     {file?.sample&&<div className="source-failure" role="status">This document is marked SAMPLE. It is an example form, not a summons to act on. Claim checks below do not authenticate an individual notice.</div>}
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
 
@@ -525,14 +521,22 @@ async function upload(uploaded:File){
 
     <div className="review-hero">
      <div className="decision-pane" id="review-summary">
+      <div className="review-tools">
+       {isDemo&&<select aria-label="Choose demo fixture" value={fixture} onChange={event=>chooseFixture(event.target.value as FixtureKey)}>
+        {Object.entries(fixtures).map(([key,value])=><option value={key} key={key}>{value.title}</option>)}
+       </select>}
+       {verification&&<button type="button" className="story-replay" onClick={replayStory}>Play review</button>}
+       {verification&&<a href="#checked-details" className="full-evidence-link">Full evidence</a>}
+      </div>
+
       {!verification?
        <div className={`precheck ${error?'has-error':''}`}>
-        <h2>{busy?'Checking your message':error?(file?'We couldn’t check this image.':'We couldn’t check this message.'):'Ready to review this message.'}</h2>
-        <p>{busy?(status||'Working through the message…'):error?error:'Review the original alongside the details SEAL can check.'}</p>
+        <h1>{busy?'Checking this message':error?(file?'We couldn’t check this image.':'We couldn’t check this message.'):'Ready to check this message.'}</h1>
+        <p>{busy?(status||'Working through the message…'):error?error:'Keep the original beside the result while SEAL checks independently sourced information.'}</p>
         {busy?
          <div className="check-loader" role="status" aria-live="polite" aria-label={status||'Checking the message'}>
           <div className="check-loader-track"><span/></div>
-          <small>{status==='Reading text from the image'?'The first image can take longer while the on-device reader starts.':'Keep this tab open while SEAL checks the message.'}</small>
+          <small>{status==='Reading text from the image'?'The first image can take a little longer while the on-device reader starts.':'Keep this tab open while SEAL checks the message.'}</small>
          </div>
          :error?
          <div className="precheck-actions">
@@ -545,16 +549,29 @@ async function upload(uploaded:File){
        </div>
        :
        <div className="decision">
-        <p className="decision-label">What we found</p>
-        <h2>{decision.title}</h2>
+        <h1>{decision.title}</h1>
         <p className="decision-summary">{decision.summary}</p>
-        {verification.safe_action&&<a className="safe-primary" href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>}
-        <p className="decision-disclaimer">These source checks do not authenticate the sender or document.</p>
-        {primaryAction&&<button type="button" className="action-callout" onClick={()=>select(primaryAction.id)}>
-         <span>What the message asks</span>
-         <strong>{actionSummary}</strong>
-        </button>}
-        <div className="review-progress"><span>{claims.length} details checked</span><span>{count('MISMATCH')} conflict · {count('MATCH')} match · {count('COULD_NOT_VERIFY')} could not verify</span></div>
+
+        {storyClaim&&<div className="decision-claim">
+         <span>From the message</span>
+         <p>{storyClaimDisplay||cleanDisplayText(storyClaim.value)}</p>
+        </div>}
+
+        <div className="decision-evidence">
+         <span>Independent source</span>
+         <strong>{decisionEvidenceTitle}</strong>
+         <p>{decisionEvidenceSummary}</p>
+         {decisionEvidence&&<a href={decisionEvidence.url} target="_blank" rel="noopener noreferrer">Open source</a>}
+        </div>
+
+        <p className={`decision-relationship ${storyResult?.verdict==='MISMATCH'||storySignal?'is-conflict':''}`}>{decisionRelationship}</p>
+
+        {verification.safe_action&&<div className="decision-safe">
+         <h2>{verification.safe_action.title}</h2>
+         <p>{verification.safe_action.summary}</p>
+         <a className="safe-primary" href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>
+         <small>{verification.safe_action.evidence[0]?.title||decisionEvidence?.title||'Independent official source'}</small>
+        </div>}
        </div>}
      </div>
 
@@ -600,7 +617,7 @@ async function upload(uploaded:File){
      </div>
     </div>
 
-    {ready&&requestedActions.length>0&&<section className={`requested-actions ${requestedActions.length===1?'single-action':''}`} aria-labelledby="requested-actions-title">
+    {ready&&requestedActions.length>0&&<section className={`requested-actions ${requestedActions.length===1?'single-action':''}`} id="full-evidence" aria-labelledby="requested-actions-title">
      <div className="section-heading">
       <h2 id="requested-actions-title">What the message asks you to do</h2>
       <p>These are extracted requests, not instructions from SEAL.</p>
@@ -619,7 +636,7 @@ async function upload(uploaded:File){
 
     {ready&&verification?.safe_action&&<section className="source-resolution" id="source-checks" aria-label="Safe next step">
      <div className="section-heading evidence-heading">
-      <h2>What the court sources say</h2>
+      <h2>Independent evidence</h2>
       <p>{verification.safe_action.title}</p>
      </div>
 

@@ -386,3 +386,65 @@
 @media(prefers-reduced-motion:reduce){.seal-app *{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}.story-progress .is-active i{width:100%}.story-source-panel::before{opacity:.08;transform:none}.story-image-wrap,.story-text-document{transform:none!important}}
 
 @media(prefers-reduced-motion:reduce){.upload-progress span,.check-loader-track span{animation:none;width:100%;opacity:.55}}
+
+
+/* Review composition pass */
+.rail-item{text-decoration:none}
+.rail-example{margin-top:2px;color:#777}
+.entry-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-top:12px}
+.entry-foot .privacy-note{margin:0}
+.browse-entry-link{flex:none;color:#000;font-size:13px;font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.review-shell{padding-top:28px}
+.review-hero{grid-template-columns:minmax(340px,.72fr) minmax(0,1fr);gap:56px;align-items:start;padding:12px 0 72px}
+.decision-pane{top:28px}
+.review-tools{min-height:40px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:28px}
+.review-tools select{max-width:290px;padding:10px 34px 10px 12px;border:0;border-radius:8px;background:var(--secondary);font-size:13px}
+.review-tools .story-replay{min-height:38px;padding:9px 13px}
+.full-evidence-link{color:#4b4b4b;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.precheck h1,.decision h1{max-width:560px;margin:0;font-size:44px;line-height:52px;font-weight:700;letter-spacing:-.02em}
+.precheck>p,.decision-summary{max-width:520px;margin:16px 0 0;color:#4b4b4b;font-size:16px;line-height:24px}
+.decision-claim{margin-top:30px;padding-top:20px;border-top:1px solid var(--line)}
+.decision-claim>span,.decision-evidence>span{display:block;margin-bottom:8px;color:#777;font-size:12px;line-height:18px}
+.decision-claim p{margin:0;font-size:18px;line-height:26px;font-weight:500}
+.decision-evidence{margin-top:24px;padding:20px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.decision-evidence strong{display:block;max-width:520px;font-size:21px;line-height:28px;font-weight:700}
+.decision-evidence p{max-width:520px;margin:10px 0 0;color:#4b4b4b;font-size:14px;line-height:21px}
+.decision-evidence a{display:inline-block;margin-top:12px;color:#000;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.decision-relationship{margin:16px 0 0;font-size:15px;line-height:22px;font-weight:500}
+.decision-relationship.is-conflict{color:var(--conflict)}
+.decision-safe{margin-top:32px}
+.decision-safe h2{max-width:520px;margin:0;font-size:28px;line-height:36px;font-weight:700;letter-spacing:-.01em}
+.decision-safe p{max-width:520px;margin:10px 0 0;color:#4b4b4b;font-size:15px;line-height:22px}
+.decision-safe .safe-primary{margin-top:20px}
+.decision-safe small{display:block;max-width:520px;margin-top:10px;color:#777;font-size:12px;line-height:18px}
+.document-zone{min-width:0}
+.document-heading{margin-bottom:10px}
+.document-paper{min-height:680px;padding:14px;background:#f5f5f5}
+.preview-box{min-height:650px;display:grid;place-items:center}
+.preview-box img{width:100%;max-height:74vh;object-fit:contain}
+.requested-actions{padding-top:52px}
+.requested-actions .section-heading{margin-bottom:12px}
+.source-resolution{padding-top:72px}
+@media(max-width:1135px){
+ .review-hero{gap:36px}
+ .precheck h1,.decision h1{font-size:40px;line-height:48px}
+}
+@media(max-width:900px){
+ .review-hero{grid-template-columns:1fr;grid-template-areas:"decision" "document";gap:36px}
+ .decision-pane{position:static}
+ .document-paper{min-height:0}
+ .preview-box{min-height:0}
+}
+@media(max-width:599px){
+ .entry-foot{align-items:flex-start;flex-direction:column;gap:8px}
+ .review-shell{padding-top:20px}
+ .review-hero{padding-top:0}
+ .review-tools{margin-bottom:20px}
+ .review-tools select{width:100%;max-width:none}
+ .precheck h1,.decision h1{font-size:32px;line-height:40px}
+ .decision-claim{margin-top:24px}
+ .decision-evidence{margin-top:20px}
+ .decision-safe{margin-top:28px}
+ .decision-safe h2{font-size:26px;line-height:34px}
+ .document-paper{padding:10px}
+}
