@@ -40,6 +40,20 @@ const cinematicExcerpt=(value:string,max=220)=>{
  return clean.slice(0,max).replace(/\s+\S*$/,'')+'…';
 };
 
+const STORY_CHAPTERS=[
+ {label:'Message',start:0},
+ {label:'Claim',start:2.6},
+ {label:'Source',start:5.8},
+ {label:'Finding',start:10.4},
+ {label:'Next step',start:13.2}
+] as const;
+const STORY_TOTAL=17.2;
+
+const formatStoryTime=(seconds:number)=>{
+ const whole=Math.max(0,Math.floor(seconds));
+ return `${Math.floor(whole/60)}:${String(whole%60).padStart(2,'0')}`;
+};
+
 const actionSummaryWord=(claim:Claim)=>{
  const action=claim.action;
  if(!action)return '';
@@ -150,8 +164,11 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const storyKey=useRef('');
  const storyPlayerRef=useRef<HTMLDivElement>(null);
  const storyTimelineRef=useRef<ReturnType<typeof gsap.timeline>|null>(null);
- const storyProgressTweenRef=useRef<ReturnType<typeof gsap.to>|null>(null);
- const previousStoryStep=useRef(0);
+ const storyScrubberRef=useRef<HTMLInputElement>(null);
+ const storyPlayedRef=useRef<HTMLSpanElement>(null);
+ const storyTimeLabelRef=useRef<HTMLSpanElement>(null);
+ const storyTimelineTime=useRef(0);
+ const storyPhaseRef=useRef(0);
  const storyCloseTimer=useRef<number|undefined>(undefined);
  const replayButton=useRef<HTMLButtonElement>(null);
  const storyPauseButton=useRef<HTMLButtonElement>(null);
@@ -217,7 +234,6 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
     ||(storyResult?.verdict==='MATCH'&&verification?.contact
       ?'Use the independently sourced court contact if you need to act.'
       :'Use the court’s own website or independently sourced contact information before responding.');
- const storyDurations=[2400,3200,4400,2800,3000];
  const storySourceLabel=!storyEvidence
   ?'Source check'
   :storySignal?.id==='traffic-qr-warning'&&/ftc\.gov/i.test(storyEvidence.url)
@@ -278,14 +294,28 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const liveFailed=mode==='LIVE'&&['riverside','connecticut'].includes(verification?.resolver_id||'')&&verification?.results.some(result=>result.explanation==='Official source could not be reached during this check.');
  const sourceLabel=verification?.signals?.length?'OFFICIAL SOURCE FINDINGS':verification?.resolver_id==='riverside'?(mode==='LIVE'?'LIVE SOURCE CHECK':'SOURCE SNAPSHOT · 24 SEP 2026'):verification?.resolver_id==='connecticut'?(mode==='LIVE'?'LIVE SOURCE CHECK':'SOURCE SNAPSHOT · 25 SEP 2026'):verification?.resolver_id==='courtlistener'?(claims.some(claim=>claim.type==='docket')?'FEDERAL DOCKET INDEX':'NO JURY-SOURCE COVERAGE'):verification?.resolver_id==='ocr'?'LOW CONFIDENCE OCR':verification?'NO SUPPORTED SOURCE':error?'NOT CHECKED':isActionDemo?'SOURCE SNAPSHOT · 25 SEP 2026':isDemo?'SOURCE SNAPSHOT · 24 SEP 2026':'SOURCE CHECK PENDING';
 
- const animateToStep=useCallback((nextStep:number)=>{
+ const syncStoryTime=useCallback((time:number)=>{
+  const clamped=Math.max(0,Math.min(STORY_TOTAL,time));
+  storyTimelineTime.current=clamped;
+  if(storyScrubberRef.current)storyScrubberRef.current.value=String(clamped);
+  if(storyPlayedRef.current)storyPlayedRef.current.style.transform=`scaleX(${clamped/STORY_TOTAL})`;
+  if(storyTimeLabelRef.current)storyTimeLabelRef.current.textContent=formatStoryTime(clamped);
+  let phase=0;
+  for(let i=STORY_CHAPTERS.length-1;i>=0;i--){
+   if(clamped>=STORY_CHAPTERS[i].start-.01){phase=i;break}
+  }
+  if(storyPhaseRef.current!==phase){
+   storyPhaseRef.current=phase;
+   setStoryStep(phase);
+  }
+ },[]);
+
+ const buildStoryTimeline=useCallback(()=>{
   const root=storyPlayerRef.current;
-  if(!root)return;
+  if(!root)return null;
 
   const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const mobile=window.matchMedia('(max-width: 599px)').matches;
-  const previous=previousStoryStep.current;
-
   const stage=root.querySelector<HTMLElement>('.story-document-stage');
   const documentRegion=root.querySelector<HTMLElement>('.story-document-region');
   const artifact=root.querySelector<HTMLElement>('[data-story-artifact]');
@@ -297,45 +327,31 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   const action=root.querySelector<HTMLElement>('.story-action-panel');
   const stageLabel=root.querySelector<HTMLElement>('.story-stage-label');
   const highlight=root.querySelector<HTMLElement>('.story-highlight');
-  const progressFills=Array.from(root.querySelectorAll<HTMLElement>('.story-progress i'));
   const sourceChildren=Array.from(root.querySelectorAll<HTMLElement>('.story-source-panel > span,.story-source-panel > strong,.story-source-panel > p,.story-source-panel > a'));
   const actionChildren=Array.from(root.querySelectorAll<HTMLElement>('.story-action-panel > span,.story-action-panel > strong,.story-action-panel > p,.story-action-panel > small,.story-action-panel > .story-final-actions'));
-  const targets=[documentRegion,sourceRegion,sourcePanel,claim,verdict,verdictScrim,action,stageLabel,highlight,...progressFills,...sourceChildren,...actionChildren].filter(Boolean) as HTMLElement[];
+  const targets=[documentRegion,sourceRegion,sourcePanel,claim,verdict,verdictScrim,action,stageLabel,highlight,...sourceChildren,...actionChildren].filter(Boolean) as HTMLElement[];
+  const clock={value:0};
 
   storyTimelineRef.current?.kill();
-  storyProgressTweenRef.current?.kill();
   gsap.killTweensOf(targets);
   targets.forEach(target=>{target.style.willChange='transform,opacity'});
 
-  const ease='expo.out';
-  const quick=reduced?.15:.26;
-  const major=reduced?.15:.68;
-  const camera=reduced?.15:.82;
-  const tl=gsap.timeline({defaults:{ease,overwrite:'auto'}});
+  const tl=gsap.timeline({
+   paused:true,
+   defaults:{ease:'expo.out',overwrite:'auto'},
+   onUpdate:()=>syncStoryTime(tl.time()),
+   onComplete:()=>{
+    syncStoryTime(STORY_TOTAL);
+    setStoryPlaying(false);
+    targets.forEach(target=>{target.style.willChange='auto'});
+   }
+  });
   storyTimelineRef.current=tl;
 
-  // Progress is time, not decoration: previous segments complete, current segment tracks the beat.
-  progressFills.forEach((fill,index)=>{
-   gsap.set(fill,{scaleX:index<nextStep?1:0,transformOrigin:'left center'});
-  });
-  const activeFill=progressFills[nextStep];
-  if(activeFill){
-   storyProgressTweenRef.current=gsap.to(activeFill,{
-    scaleX:1,
-    duration:reduced?.15:storyDurations[nextStep]/1000,
-    ease:'none',
-    overwrite:true
-   });
-   if(!storyPlaying)storyProgressTweenRef.current.pause();
-  }
-
-  if(stageLabel)tl.to(stageLabel,{opacity:nextStep===0?1:0,duration:quick},0);
-
-  // Measure the real rendered document, not its outer wrapper.
   const placeHighlight=()=>{
-   if(!storyFocusBox||!artifact||!highlight)return;
+   if(!storyFocusBox||!artifact||!highlight)return false;
    const parent=highlight.offsetParent as HTMLElement|null;
-   if(!parent)return;
+   if(!parent)return false;
    const artifactRect=artifact.getBoundingClientRect();
    const parentRect=parent.getBoundingClientRect();
    const parentScaleX=parent.offsetWidth?parentRect.width/parent.offsetWidth:1;
@@ -344,156 +360,177 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    const top=(artifactRect.top-parentRect.top)/parentScaleY+storyFocusBox.y*(artifactRect.height/parentScaleY);
    const width=storyFocusBox.width*(artifactRect.width/parentScaleX);
    const height=storyFocusBox.height*(artifactRect.height/parentScaleY);
-   gsap.set(highlight,{left,top,width,height});
+   gsap.set(highlight,{left,top,width,height,transformOrigin:'center center'});
+   return true;
   };
 
-  if(documentRegion){
-   const focusCenterX=storyFocusBox?storyFocusBox.x+storyFocusBox.width/2:.5;
-   const focusCenterY=storyFocusBox?storyFocusBox.y+storyFocusBox.height/2:.5;
-   const focusX=Math.max(-28,Math.min(28,(.5-focusCenterX)*54));
-   const focusY=Math.max(-18,Math.min(18,(.5-focusCenterY)*38));
+  const hasPlacedHighlight=placeHighlight();
+  const focusCenterX=storyFocusBox?storyFocusBox.x+storyFocusBox.width/2:.5;
+  const focusCenterY=storyFocusBox?storyFocusBox.y+storyFocusBox.height/2:.5;
+  const focusX=Math.max(-24,Math.min(24,(.5-focusCenterX)*48));
+  const focusY=Math.max(-16,Math.min(16,(.5-focusCenterY)*34));
 
-   const desktop=[
-    {x:0,y:0,xPercent:0,yPercent:0,scale:1,opacity:1,filter:'brightness(1)'},
-    {x:reduced?0:focusX,y:reduced?0:focusY,xPercent:0,yPercent:0,scale:reduced?1:1.055,opacity:1,filter:'brightness(.94)'},
-    {x:0,y:0,xPercent:reduced?0:-27,yPercent:reduced?0:-4,scale:reduced?1:.70,opacity:reduced?.8:.9,filter:'brightness(.76)'},
-    {x:0,y:0,xPercent:reduced?0:-27,yPercent:reduced?0:-4,scale:reduced?1:.70,opacity:reduced?.34:.18,filter:'brightness(.20)'},
-    {x:0,y:0,xPercent:reduced?0:-25,yPercent:reduced?0:0,scale:reduced?1:.64,opacity:reduced?.28:.13,filter:'brightness(.24)'}
-   ];
-   const narrow=[
-    {x:0,y:0,xPercent:0,yPercent:0,scale:1,opacity:1,filter:'brightness(1)'},
-    {x:reduced?0:focusX*.35,y:reduced?0:focusY*.35,xPercent:0,yPercent:0,scale:reduced?1:1.025,opacity:1,filter:'brightness(.95)'},
-    {x:0,y:0,xPercent:0,yPercent:reduced?0:-20,scale:reduced?1:.61,opacity:reduced?.76:.86,filter:'brightness(.72)'},
-    {x:0,y:0,xPercent:0,yPercent:reduced?0:-20,scale:reduced?1:.61,opacity:reduced?.32:.17,filter:'brightness(.2)'},
-    {x:0,y:0,xPercent:0,yPercent:reduced?0:-23,scale:reduced?1:.56,opacity:reduced?.26:.12,filter:'brightness(.24)'}
-   ];
-
-   tl.to(documentRegion,{...(mobile?narrow[nextStep]:desktop[nextStep]),duration:camera},0);
-  }
-
-  if(highlight){
-   if(storyFocusBox&&(nextStep===1||nextStep===2)){
-    placeHighlight();
-    if(previous===0&&nextStep===1)gsap.set(highlight,{opacity:0,scale:.9,transformOrigin:'center center'});
-    tl.to(highlight,{opacity:1,scale:1,duration:reduced?.15:.46},.04);
-   }else{
-    tl.to(highlight,{opacity:0,duration:reduced?.12:.18},0);
-   }
-  }
-
-  // Claim appears only after the camera settles, from the exact on-screen bbox position.
+  if(documentRegion)gsap.set(documentRegion,{
+   x:0,y:0,xPercent:0,yPercent:0,
+   scale:reduced?1:.97,
+   opacity:reduced?1:.92,
+   filter:'brightness(1)',
+   transformOrigin:'center center'
+  });
+  if(stageLabel)gsap.set(stageLabel,{opacity:1,y:0});
+  if(highlight)gsap.set(highlight,{opacity:0,scale:.92});
   if(claim){
-   if(nextStep===1){
-    tl.call(()=>{
-     if(!stage||!highlight)return;
-     const stageRect=stage.getBoundingClientRect();
-     const boxRect=highlight.getBoundingClientRect();
-     const claimWidth=Math.min(mobile?stageRect.width-36:430,stageRect.width*.42);
-     const desiredLeft=boxRect.left-stageRect.left;
-     const left=Math.max(mobile?18:24,Math.min(stageRect.width-claimWidth-(mobile?18:24),desiredLeft));
-     const desiredTop=boxRect.bottom-stageRect.top+12;
-     const top=Math.max(72,Math.min(stageRect.height-150,desiredTop));
-     gsap.set(claim,{
-      left,
-      right:'auto',
-      top,
-      bottom:'auto',
-      width:claimWidth,
-      opacity:0,
-      y:8,
-      scale:.985
-     });
-    },[],reduced?.02:.48);
-    tl.to(claim,{opacity:1,y:0,scale:1,duration:reduced?.15:.4},reduced?.04:.52);
-   }else if(nextStep===2){
-    tl.to(claim,{
-     left:mobile?'18px':'6%',
-     right:mobile?'18px':'auto',
-     top:'auto',
-     bottom:mobile?'51%':'5%',
-     width:mobile?'auto':'min(370px,32%)',
-     opacity:.94,
-     y:0,
-     scale:1,
-     duration:major
-    },0);
+   if(hasPlacedHighlight&&stage&&highlight){
+    const stageRect=stage.getBoundingClientRect();
+    const boxRect=highlight.getBoundingClientRect();
+    const claimWidth=Math.min(mobile?stageRect.width-36:430,stageRect.width*.42);
+    const desiredLeft=boxRect.left-stageRect.left;
+    const left=Math.max(mobile?18:24,Math.min(stageRect.width-claimWidth-(mobile?18:24),desiredLeft));
+    const desiredTop=boxRect.bottom-stageRect.top+12;
+    const top=Math.max(72,Math.min(stageRect.height-154,desiredTop));
+    gsap.set(claim,{left,right:'auto',top,bottom:'auto',width:claimWidth});
    }else{
-    tl.to(claim,{opacity:0,y:nextStep>2?-6:8,duration:quick},0);
+    gsap.set(claim,{left:mobile?'18px':'6%',right:mobile?'18px':'auto',top:'auto',bottom:mobile?'7%':'6%',width:mobile?'auto':'min(430px,42%)'});
    }
+   gsap.set(claim,{opacity:0,y:reduced?0:8,scale:reduced?1:.985});
   }
+  if(sourceRegion)gsap.set(sourceRegion,{opacity:0,x:reduced?0:20,pointerEvents:'none'});
+  if(sourcePanel)gsap.set(sourcePanel,{opacity:1,x:0});
+  if(sourceChildren.length)gsap.set(sourceChildren,{opacity:0,y:reduced?0:8,filter:reduced?'blur(0px)':'blur(1.5px)'});
+  if(verdictScrim)gsap.set(verdictScrim,{opacity:0});
+  if(verdict)gsap.set(verdict,{opacity:0,y:reduced?0:12,scale:reduced?1:.99});
+  if(action)gsap.set(action,{opacity:0,x:reduced?0:18});
+  if(actionChildren.length)gsap.set(actionChildren,{opacity:0,y:reduced?0:6});
 
-  // Comparison is one coordinated move: document first, source then its evidence hierarchy.
-  if(sourceRegion&&sourcePanel){
-   if(nextStep===2){
-    const entering=previous!==2;
-    if(entering){
-     gsap.set(sourceRegion,{opacity:0,x:reduced?0:18});
-     gsap.set(sourcePanel,{opacity:1,x:0});
-     gsap.set(sourceChildren,{opacity:0,y:8,filter:reduced?'blur(0px)':'blur(1.5px)'});
-    }
-    tl.set(sourceRegion,{pointerEvents:'auto'},.08);
-    tl.to(sourceRegion,{opacity:1,x:0,duration:reduced?.15:.5},.08);
-    sourceChildren.forEach((child,index)=>{
-     tl.to(child,{opacity:1,y:0,filter:'blur(0px)',duration:reduced?.15:.38},.15+index*.05);
-    });
-   }else if(nextStep===3){
-    tl.set(sourceRegion,{pointerEvents:'none'},0);
-    tl.to(sourceRegion,{opacity:.22,x:0,duration:major},0);
-    tl.to(sourceChildren,{opacity:.55,y:0,filter:'blur(0px)',duration:quick},0);
-   }else{
-    tl.set(sourceRegion,{pointerEvents:'none'},0);
-    tl.to(sourceRegion,{opacity:0,x:nextStep<2?18:0,duration:quick},0);
-   }
+  // A single clock guarantees a real continuous duration and makes scrubbing deterministic.
+  tl.to(clock,{value:1,duration:STORY_TOTAL,ease:'none'},0);
+
+  // 0.0–2.6 — establish the exact document.
+  if(documentRegion)tl.to(documentRegion,{scale:1,opacity:1,duration:reduced?.16:.72},0);
+  if(stageLabel)tl.to(stageLabel,{opacity:0,y:reduced?0:-3,duration:reduced?.16:.28},1.75);
+
+  // 2.6–5.8 — isolate the decision-driving instruction without pretending to know a bbox we do not have.
+  if(documentRegion)tl.to(documentRegion,{
+   x:reduced?0:(hasPlacedHighlight?focusX:0),
+   y:reduced?0:(hasPlacedHighlight?focusY:0),
+   scale:reduced?1:(hasPlacedHighlight?1.075:1),
+   filter:reduced?'brightness(1)':(hasPlacedHighlight?'brightness(.93)':'brightness(.82)'),
+   duration:reduced?.16:.88
+  },2.58);
+  if(highlight&&hasPlacedHighlight)tl.to(highlight,{opacity:1,scale:1,duration:reduced?.16:.42},2.88);
+  if(claim)tl.to(claim,{opacity:1,y:0,scale:1,duration:reduced?.16:.44},2.98);
+
+  // 5.8–10.4 — shared-element comparison: document glides left, independent source opens on the right.
+  if(documentRegion)tl.to(documentRegion,{
+   x:0,y:0,
+   xPercent:reduced?0:(mobile?0:-27),
+   yPercent:reduced?0:(mobile?-20:-4),
+   scale:reduced?1:(mobile?.61:.70),
+   opacity:reduced?.82:.9,
+   filter:reduced?'brightness(.86)':'brightness(.76)',
+   duration:reduced?.18:.88
+  },5.78);
+  if(highlight)tl.to(highlight,{opacity:hasPlacedHighlight?.82:0,duration:reduced?.14:.3},5.78);
+  if(claim)tl.to(claim,{
+   left:mobile?'18px':'6%',
+   right:mobile?'18px':'auto',
+   top:'auto',
+   bottom:mobile?'51%':'5%',
+   width:mobile?'auto':'min(370px,32%)',
+   opacity:.96,
+   y:0,
+   scale:1,
+   duration:reduced?.16:.72
+  },5.78);
+  if(sourceRegion){
+   tl.set(sourceRegion,{pointerEvents:'auto'},5.84);
+   tl.to(sourceRegion,{opacity:1,x:0,duration:reduced?.16:.55},5.86);
   }
+  sourceChildren.forEach((child,index)=>{
+   tl.to(child,{opacity:1,y:0,filter:'blur(0px)',duration:reduced?.14:.4},6.02+index*.055);
+  });
 
-  if(verdictScrim){
-   tl.to(verdictScrim,{opacity:nextStep===3?.72:nextStep===4?.42:0,duration:major},0);
-  }
+  // 10.4–13.2 — source + message recede together; the relationship becomes the focal point.
+  if(claim)tl.to(claim,{opacity:0,y:reduced?0:-6,duration:reduced?.14:.25},10.30);
+  if(documentRegion)tl.to(documentRegion,{opacity:reduced?.42:.18,filter:'brightness(.2)',duration:reduced?.18:.58},10.34);
+  if(sourceRegion)tl.to(sourceRegion,{opacity:reduced?.38:.22,duration:reduced?.18:.58},10.34);
+  if(sourceChildren.length)tl.to(sourceChildren,{opacity:.55,duration:reduced?.14:.28},10.34);
+  if(verdictScrim)tl.to(verdictScrim,{opacity:reduced?.52:.72,duration:reduced?.18:.58},10.34);
+  if(verdict)tl.to(verdict,{opacity:1,y:0,scale:1,duration:reduced?.16:.46},10.58);
 
-  if(verdict){
-   if(nextStep===3){
-    if(previous!==3)gsap.set(verdict,{opacity:0,y:12,scale:.99});
-    tl.to(verdict,{opacity:1,y:0,scale:1,duration:reduced?.15:.46},reduced?0:.18);
-   }else{
-    tl.to(verdict,{opacity:0,y:nextStep>3?-8:12,scale:.99,duration:quick},0);
-   }
-  }
+  // 13.2–17.2 — resolve into the safe action, then HOLD. The player does not auto-close.
+  if(verdict)tl.to(verdict,{opacity:0,y:reduced?0:-8,duration:reduced?.14:.26},13.10);
+  if(verdictScrim)tl.to(verdictScrim,{opacity:reduced?.36:.44,duration:reduced?.16:.48},13.12);
+  if(documentRegion)tl.to(documentRegion,{
+   xPercent:reduced?0:(mobile?0:-24),
+   yPercent:reduced?0:(mobile?-23:0),
+   scale:reduced?1:(mobile?.56:.64),
+   opacity:reduced?.28:.13,
+   filter:'brightness(.24)',
+   duration:reduced?.16:.52
+  },13.12);
+  if(sourceRegion)tl.to(sourceRegion,{opacity:reduced?.2:.1,duration:reduced?.16:.46},13.12);
+  if(action)tl.to(action,{opacity:1,x:0,duration:reduced?.16:.46},13.32);
+  actionChildren.forEach((child,index)=>{
+   tl.to(child,{opacity:1,y:0,duration:reduced?.14:.34},13.40+index*.055);
+  });
 
-  if(action){
-   if(nextStep===4){
-    if(previous!==4){
-     gsap.set(action,{opacity:0,x:reduced?0:18});
-     gsap.set(actionChildren,{opacity:0,y:6});
-    }
-    tl.to(action,{opacity:1,x:0,duration:reduced?.15:.46},.08);
-    actionChildren.forEach((child,index)=>{
-     tl.to(child,{opacity:1,y:0,duration:reduced?.15:.34},.14+index*.05);
-    });
-   }else{
-    tl.to(action,{opacity:0,x:nextStep<4?18:0,duration:quick},0);
-    tl.to(actionChildren,{opacity:0,y:6,duration:quick},0);
-   }
-  }
-
-  tl.eventCallback('onComplete',()=>targets.forEach(target=>{target.style.willChange='auto'}));
-  previousStoryStep.current=nextStep;
- },[storyFocusBox,storyPlaying]);
+  syncStoryTime(0);
+  return tl;
+ },[storyFocusBox,syncStoryTime]);
 
  useLayoutEffect(()=>{
   if(!storyOpen)return;
-  const frame=window.requestAnimationFrame(()=>animateToStep(storyStep));
+  let cancelled=false;
+  let frame=0;
+  frame=window.requestAnimationFrame(()=>{
+   if(cancelled)return;
+   const tl=buildStoryTimeline();
+   if(!tl)return;
+   setStoryPlaying(true);
+   tl.play(0);
+  });
   return()=>{
+   cancelled=true;
    window.cancelAnimationFrame(frame);
    storyTimelineRef.current?.kill();
   };
- },[storyOpen,storyStep,animateToStep]);
+ },[storyOpen,buildStoryTimeline]);
 
- useEffect(()=>{
-  if(storyPlaying)storyProgressTweenRef.current?.resume();
-  else storyProgressTweenRef.current?.pause();
- },[storyPlaying]);
+ useEffect(()=>()=>{storyTimelineRef.current?.kill()},[]);
 
- useEffect(()=>()=>{storyTimelineRef.current?.kill();storyProgressTweenRef.current?.kill()},[]);
+ const seekStory=useCallback((time:number)=>{
+  const tl=storyTimelineRef.current;
+  if(!tl)return;
+  const clamped=Math.max(0,Math.min(STORY_TOTAL,time));
+  tl.time(clamped,false);
+  syncStoryTime(clamped);
+ },[syncStoryTime]);
+
+ const seekStoryBy=useCallback((delta:number)=>{
+  seekStory(storyTimelineTime.current+delta);
+ },[seekStory]);
+
+ const toggleStoryPlayback=useCallback(()=>{
+  const tl=storyTimelineRef.current;
+  if(!tl)return;
+  if(tl.time()>=STORY_TOTAL-.04){
+   tl.pause(0,false);
+   syncStoryTime(0);
+   setStoryStep(0);
+   storyPhaseRef.current=0;
+   tl.play();
+   setStoryPlaying(true);
+   return;
+  }
+  if(tl.paused()){
+   tl.play();
+   setStoryPlaying(true);
+  }else{
+   tl.pause();
+   setStoryPlaying(false);
+  }
+ },[syncStoryTime]);
 
  useEffect(()=>{const timer=window.setTimeout(()=>setHydrated(true),0);return()=>{clearTimeout(timer);if(storyCloseTimer.current)window.clearTimeout(storyCloseTimer.current)}},[]);
 
@@ -606,27 +643,18 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  },[reviewOffer]);
 
  useEffect(()=>{
-  if(!storyOpen||!storyPlaying||!verification)return;
-  const timer=window.setTimeout(()=>{
-   if(storyStep>=4){closeStory();return}
-   setStoryStep(step=>Math.min(4,step+1));
-  },storyDurations[storyStep]||3200);
-  return()=>window.clearTimeout(timer);
- },[storyOpen,storyPlaying,storyStep,verification]);
-
- useEffect(()=>{
   if(!storyOpen)return;
   const previous=document.body.style.overflow;
   document.body.style.overflow='hidden';
   const onKey=(event:KeyboardEvent)=>{
-   if(event.key==='Escape')closeStory();
-   if(event.key==='ArrowRight')storyNext();
-   if(event.key==='ArrowLeft')storyBack();
-   if(event.key===' ')setStoryPlaying(value=>!value);
+   if(event.key==='Escape'){closeStory();return}
+   if(event.key==='ArrowRight'){event.preventDefault();seekStoryBy(5);return}
+   if(event.key==='ArrowLeft'){event.preventDefault();seekStoryBy(-5);return}
+   if(event.key===' '){event.preventDefault();toggleStoryPlayback()}
   };
   window.addEventListener('keydown',onKey);
   return()=>{document.body.style.overflow=previous;window.removeEventListener('keydown',onKey)};
- },[storyOpen]);
+ },[storyOpen,seekStoryBy,toggleStoryPlayback]);
 
  function startStory(){
   if(!storyArtifactReady){
@@ -640,8 +668,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   setReviewOfferPaused(false);
   setReviewOffer('watching');
   setReviewCountdown(3);
-  previousStoryStep.current=0;
   storyTimelineRef.current?.kill();
+  storyTimelineTime.current=0;
+  storyPhaseRef.current=0;
   setStoryStep(0);
   setStoryPlaying(true);
   setStoryClosing(false);
@@ -653,14 +682,10 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   setReviewCountdown(3);
   setReviewOfferPaused(false);
  }
- function storyNext(){
-  if(storyStep>=4){closeStory();return}
-  setStoryStep(step=>Math.min(4,step+1));
- }
- function storyBack(){setStoryStep(step=>Math.max(0,step-1))}
  function closeStory(){
   if(storyClosing)return;
   if(storyCloseTimer.current)window.clearTimeout(storyCloseTimer.current);
+  storyTimelineRef.current?.pause();
   setStoryClosing(true);
   setStoryPlaying(false);
   setReviewOffer('completed');
@@ -674,6 +699,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  function replayStory(){startStory()}
 
  function clear(){
+  storyTimelineRef.current?.kill();
+  storyTimelineTime.current=0;
+  storyPhaseRef.current=0;
   runId.current++;
   if(file)URL.revokeObjectURL(file.preview);
   setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setActiveResultSection('summary');setTechnicalOpen(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryArtifactReady(true);setStoryStartPending(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);storyKey.current='';
@@ -941,23 +969,19 @@ async function upload(uploaded:File){
     {file?.sample&&<div className="source-failure sample-warning" role="status">This document is marked SAMPLE. It is an example form, not a summons to act on. Claim checks below do not authenticate an individual notice.</div>}
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
 
-    {verification&&ready&&storyOpen&&<div className={`story-overlay ${storyClosing?'is-closing':''}`} role="dialog" aria-modal="true" aria-label="SEAL review presentation">
-     <div ref={storyPlayerRef} className={`story-player story-step-${storyStep} ${storyPlaying?'is-playing':'is-paused'} ${storyFocusBox?'has-story-focus':'no-story-focus'}`}>
+    {verification&&ready&&storyOpen&&<div className={`story-overlay ${storyClosing?'is-closing':''}`} role="dialog" aria-modal="true" aria-label="SEAL verification review">
+     <div ref={storyPlayerRef} className={`story-player ${storyPlaying?'is-playing':'is-paused'} ${storyFocusBox?'has-story-focus':'no-story-focus'}`}>
       <div className="story-topbar">
        <span className="story-brand"><img src="/brand/seal-mark-white.svg" alt=""/><span>SEAL</span></span>
        <div className="story-top-actions">
-        <button ref={storyPauseButton} type="button" className="story-pause" onClick={()=>setStoryPlaying(value=>!value)}>{storyPlaying?'Pause':'Play'}</button>
-        {storyStep<4&&<button type="button" onClick={closeStory}>Full evidence</button>}
+        <span className="story-chapter-label" aria-live="polite">{STORY_CHAPTERS[storyStep].label}</span>
+        <button type="button" onClick={closeStory}>Full evidence</button>
        </div>
-      </div>
-
-      <div className="story-progress" aria-label={`Frame ${storyStep+1} of 5`}>
-       {[0,1,2,3,4].map(step=><span key={step} aria-current={step===storyStep?'step':undefined}><i/></span>)}
       </div>
 
       <div className="story-stage">
        <div className="story-document-stage">
-        <span className="story-stage-label" aria-hidden={storyStep!==0}>Your message</span>
+        <span className="story-stage-label">Your message</span>
 
         <div className="story-comparison">
          <div className="story-document-region">
@@ -1004,14 +1028,63 @@ async function upload(uploaded:File){
          <div className="story-final-actions">
           {verification.contact?.website&&<a href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open official court website</a>}
           {!verification.contact?.website&&verification.safe_action&&<a href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>}
-          <button type="button" onClick={closeStory}>Full evidence</button>
          </div>
         </div>
        </div>
+      </div>
 
-       <button type="button" className="story-hit story-hit-left" aria-label="Previous frame" onClick={storyBack} disabled={storyStep===0}/>
-       <button type="button" className="story-hit story-hit-right" aria-label="Next frame" onClick={storyNext}/>
-      </div>     </div>
+      <div className="story-transport" aria-label="Review playback controls">
+       <button
+        ref={storyPauseButton}
+        type="button"
+        className="story-play-toggle"
+        onClick={toggleStoryPlayback}
+        aria-label={storyPlaying?'Pause review':storyTimelineTime.current>=STORY_TOTAL-.04?'Replay review':'Play review'}
+       >
+        <span className={`story-control-icon ${storyPlaying?'is-pause':'is-play'}`} aria-hidden="true"/>
+        <span>{storyPlaying?'Pause':storyTimelineTime.current>=STORY_TOTAL-.04?'Replay':'Play'}</span>
+       </button>
+
+       <div className="story-timeline">
+        <div className="story-timeline-track" aria-hidden="true">
+         <span className="story-played" ref={storyPlayedRef}/>
+         {STORY_CHAPTERS.slice(1).map(chapter=><span
+          key={chapter.label}
+          className="story-chapter-tick"
+          style={{left:`${(chapter.start/STORY_TOTAL)*100}%`}}
+         />)}
+        </div>
+        <input
+         ref={storyScrubberRef}
+         className="story-seek"
+         type="range"
+         min="0"
+         max={STORY_TOTAL}
+         step="0.01"
+         defaultValue="0"
+         aria-label="Review timeline"
+         onChange={event=>seekStory(Number(event.currentTarget.value))}
+        />
+        <div className="story-chapter-buttons" aria-hidden="false">
+         {STORY_CHAPTERS.map(chapter=><button
+          key={chapter.label}
+          type="button"
+          className={STORY_CHAPTERS[storyStep].label===chapter.label?'is-current':''}
+          style={{left:`${(chapter.start/STORY_TOTAL)*100}%`}}
+          onClick={()=>seekStory(chapter.start)}
+          aria-label={`Jump to ${chapter.label}`}
+          title={chapter.label}
+         />)}
+        </div>
+       </div>
+
+       <span className="story-timecode" aria-label="Review time">
+        <span ref={storyTimeLabelRef}>0:00</span>
+        <span aria-hidden="true"> / </span>
+        <span>{formatStoryTime(STORY_TOTAL)}</span>
+       </span>
+      </div>
+     </div>
     </div>}
 
     <div className="review-hero">
