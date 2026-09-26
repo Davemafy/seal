@@ -384,7 +384,7 @@ async function upload(uploaded:File){
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
 
     {verification&&ready&&storyOpen&&<div className="story-overlay" role="dialog" aria-modal="true" aria-label="SEAL review presentation">
-     <div className={\`story-player story-step-\${storyStep} \${storyPlaying?'is-playing':'is-paused'}\`}>
+     <div className={`story-player story-step-${storyStep} ${storyPlaying?'is-playing':'is-paused'}`}>
       <div className="story-topbar">
        <span className="story-brand">SEAL</span>
        <div className="story-top-actions">
@@ -393,7 +393,7 @@ async function upload(uploaded:File){
        </div>
       </div>
 
-      <div className="story-progress" aria-label={\`Frame \${storyStep+1} of 5\`}>
+      <div className="story-progress" aria-label={`Frame ${storyStep+1} of 5`}>
        {[0,1,2,3,4].map(step=><span key={step} className={step<storyStep?'is-done':step===storyStep?'is-active':''}><i/></span>)}
       </div>
 
@@ -401,10 +401,10 @@ async function upload(uploaded:File){
        <div className="story-document-stage">
         {file?.kind==='image'?<div
           className="story-image-wrap"
-          style={{transformOrigin:storyClaim?.source_bbox?\`\${(storyClaim.source_bbox.x+storyClaim.source_bbox.width/2)*100}% \${(storyClaim.source_bbox.y+storyClaim.source_bbox.height/2)*100}%\`:'50% 50%'}}
+          style={{transformOrigin:storyClaim?.source_bbox?`${(storyClaim.source_bbox.x+storyClaim.source_bbox.width/2)*100}% ${(storyClaim.source_bbox.y+storyClaim.source_bbox.height/2)*100}%`:'50% 50%'}}
          >
           <img src={file.preview} alt="Your uploaded notice"/>
-          {storyClaim?.source_bbox&&storyClaim.page===1&&<span className="story-highlight" style={{left:\`\${storyClaim.source_bbox.x*100}%\`,top:\`\${storyClaim.source_bbox.y*100}%\`,width:\`\${storyClaim.source_bbox.width*100}%\`,height:\`\${storyClaim.source_bbox.height*100}%\`}}/>}
+          {storyClaim?.source_bbox&&storyClaim.page===1&&<span className="story-highlight" style={{left:`${storyClaim.source_bbox.x*100}%`,top:`${storyClaim.source_bbox.y*100}%`,width:`${storyClaim.source_bbox.width*100}%`,height:`${storyClaim.source_bbox.height*100}%`}}/>}
          </div>
          :<div className="story-text-document">
           <span>{file?.kind==='pdf'?'PDF DOCUMENT':'PASTED MESSAGE'}</span>
@@ -427,7 +427,7 @@ async function upload(uploaded:File){
          <span>BEFORE YOU ACT</span>
          <strong>{verification.safe_action?.title||'Check through the court’s own channel.'}</strong>
          <p>{verification.safe_action?.summary||'Use the court’s own website or independently sourced contact information before responding.'}</p>
-         {verification.contact?.name&&<small>{verification.contact.name}{verification.contact.phone?\` · \${verification.contact.phone}\`:''}</small>}
+         {verification.contact?.name&&<small>{verification.contact.name}{verification.contact.phone?` · ${verification.contact.phone}`:''}</small>}
          <div className="story-final-actions">
           {verification.safe_action&&<a href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>}
           <button type="button" onClick={()=>setStoryOpen(false)}>Full evidence</button>
@@ -441,7 +441,7 @@ async function upload(uploaded:File){
          <p>SEAL starts with the message itself.</p>
         </>}
         {storyStep===1&&<>
-         <h2>{primaryAction?actionSummary:\`\${claims.length} detail\${claims.length===1?'':'s'} worth checking.\`}</h2>
+         <h2>{primaryAction?actionSummary:`${claims.length} detail${claims.length===1?'':'s'} worth checking.`}</h2>
          <p>{storyClaim?.exact_source_text||'This is the part SEAL pulled out to verify.'}</p>
         </>}
         {storyStep===2&&<>
