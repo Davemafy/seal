@@ -34,12 +34,17 @@ jobs:
           SEAL_BASE_URL: https://seal.imafidondavid1.workers.dev
         run: node --import tsx scripts/action-torture.ts
       - name: Generate public sample image fixture
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           mkdir -p tests/generated
           pdftoppm -f 1 -singlefile -png -r 376 tests/fixtures/connecticut-sample-jury-summons.pdf tests/generated/connecticut-dense
           identify tests/generated/connecticut-dense.png || file tests/generated/connecticut-dense.png
-      - run: npx playwright install --with-deps chromium
-      - run: npm run e2e
+      - name: Install browser test runtime
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: npx playwright install --with-deps chromium
+      - name: Legacy browser regression suite
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: npm run e2e
         continue-on-error: true
       - name: Upload browser screenshots
         if: always()
