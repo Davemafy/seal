@@ -176,6 +176,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const replayButton=useRef<HTMLButtonElement>(null);
  const storyPauseButton=useRef<HTMLButtonElement>(null);
  const initialRunStarted=useRef(false);
+ const filePickerArmed=useRef(false);
  const input=useRef<HTMLInputElement>(null);
  const anchors=useRef<Record<string,HTMLElement|null>>({});
  const runId=useRef(0);
@@ -554,7 +555,12 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   }
  },[syncStoryTime]);
 
- useEffect(()=>{const timer=window.setTimeout(()=>setHydrated(true),0);return()=>{clearTimeout(timer);if(storyCloseTimer.current)window.clearTimeout(storyCloseTimer.current)}},[]);
+ useEffect(()=>{
+  if(input.current)input.current.value='';
+  filePickerArmed.current=false;
+  const timer=window.setTimeout(()=>setHydrated(true),0);
+  return()=>{clearTimeout(timer);if(storyCloseTimer.current)window.clearTimeout(storyCloseTimer.current)};
+ },[]);
 
  useEffect(()=>{
   if(!hydrated||initialRunStarted.current)return;
@@ -565,6 +571,11 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   }
   const caseId=typeof window!=='undefined'?new URLSearchParams(window.location.search).get('case'):null;
   if(!caseId)return;
+  const navigation=performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming|undefined;
+  if(navigation?.type==='reload'||navigation?.type==='back_forward'){
+   window.history.replaceState(null,'',window.location.pathname);
+   return;
+  }
   // A Browse handoff is a one-shot action, not persistent app state.
   // Consume the query immediately so refresh/back-to-home never re-runs a file.
   window.history.replaceState(null,'',window.location.pathname);
@@ -909,7 +920,7 @@ async function upload(uploaded:File){
     <div className={`intake ${pasteMode?'is-paste-mode':'is-upload-mode'}`}>
      {!pasteMode?
       <>
-       <button className={`upload-row ${dragging?'is-dragging':''} ${busy?'is-busy':''}`} type="button" disabled={busy||!hydrated} onPointerDown={()=>{void warmOcr()}} onClick={()=>input.current?.click()}
+       <button className={`upload-row ${dragging?'is-dragging':''} ${busy?'is-busy':''}`} type="button" disabled={busy||!hydrated} onPointerDown={()=>{void warmOcr()}} onClick={()=>{filePickerArmed.current=true;input.current?.click()}}
         onDragOver={event=>{if(event.dataTransfer.types.includes('Files')){event.preventDefault();setDragging(true)}}}
         onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
         onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
@@ -1359,7 +1370,13 @@ async function upload(uploaded:File){
 
    </section>}
 
-  <input ref={input} hidden type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" onChange={event=>{const next=event.target.files?.[0];if(next)upload(next);event.target.value=''}}/>
+  <input ref={input} hidden type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" onChange={event=>{
+   const armed=filePickerArmed.current;
+   filePickerArmed.current=false;
+   const next=event.target.files?.[0];
+   event.target.value='';
+   if(armed&&next)upload(next);
+  }}/>
 
   <footer className="seal-footer">
    <span>SEAL is not affiliated with any court.</span>
