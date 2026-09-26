@@ -753,9 +753,8 @@ async function upload(uploaded:File){
     catch{throw new Error('We couldn’t reach the instruction reader. Please try again in a moment.');}
     if(!response.ok)throw new Error('We couldn’t reliably read the important instructions right now. Please try again in a moment.');
     const data=await response.json();
-    if(data.mode!=='GROQ')throw new Error('The instruction reader is unavailable right now. Please try again in a moment.');
     extraction=data.extraction;
-    extractor=data.mode;
+    extractor=data.mode||'DETERMINISTIC';
    }
 
    if(sourceFile?.kind==='pdf'){

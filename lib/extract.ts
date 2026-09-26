@@ -3,7 +3,7 @@ import {emptyExtraction,type Extraction,type Claim,type Token,type ActionNode,ty
 const PHONE=/(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}/;
 const URL=/(?:https?:\/\/)?(?:[a-z0-9-]+\.)+(?:gov|com|org|edu|net|mil|us|ca|io|uk|co|info|int)\b(?:\/[\w./?=&%-]*)?/i;
 const MONEY=/(?:\$\s*\d+(?:[,.]\d{3})*(?:\.\d{2})?|\b\d+(?:[,.]\d{3})*(?:\.\d{2})?\s*(?:usd|dollars?)\b)/i;
-const ACTION_VERBS=/\b(pay|remit|submit|transfer|call|contact|phone|text|open|visit|click|scan|reply|provide|share|enter|send|disclose|appear|report|attend)\b/i;
+const ACTION_VERBS=/\b(pay|remit|submit|transfer|settle|clear(?:ed)?|call|contact|phone|text|open|visit|click|scan|use|check|reply|respond|provide|share|enter|send|disclose|file|sign|complete|return|appear|report|attend)\b/i;
 const FIELD_CONFIDENCE=80;
 
 function courtLineScore(line:string){
@@ -84,7 +84,7 @@ function directiveVerb(source:string){
   const clauseStart=before.match(/(?:^|[.;!?]\s+|,\s+)(?:please\s+)?$/i);
   const purposeThenDirective=/^to\b[^,.;]{0,100},\s*$/i.test(before);
   const addressedDirective=/\b(?:you|recipient|defendant|juror|driver|respondent|party)\s+(?:must|shall|should|need(?:s)?\s+to|are\s+required\s+to|is\s+required\s+to|are\s+ordered\s+to|is\s+ordered\s+to|are\s+directed\s+to|is\s+directed\s+to)\s*$/i.test(before);
-  const bareDeontic=/\b(?:must|shall|should|required\s+to|ordered\s+to|directed\s+to|need\s+to)\s*$/i.test(before);
+  const bareDeontic=/\b(?:(?:must|shall|should)(?:\s+be)?|required\s+to|ordered\s+to|directed\s+to|need\s+to)\s*$/i.test(before);
   const actionHeader=/\b(?:payment\s+instruction|mandatory\s+compliance|complete\s+action|required\s+action)\b[^.;:]{0,45}[:\-–—]?\s*$/i.test(before);
   const qrDirective=verb==='scan'&&/\bqr\b/i.test(semantic);
   const imperative=at===0||Boolean(clauseStart)||purposeThenDirective;
@@ -141,13 +141,13 @@ export function extractActionGraph(text:string,tokens:Token[]=[]):ActionNode[]{
   const directive=directiveVerb(source);if(!directive)continue;
   const {semantic,verb,match}=directive;
   const moneyObject=/\b(?:payment|balance|fine|fee|amount|money|costs?)\b/i.test(semantic);
-  const kind=(moneyObject&&/(?:pay|remit|submit|send|transfer)/.test(verb))||/(?:pay|remit|transfer)/.test(verb)?'pay':/(?:call|contact|phone|text)/.test(verb)?'contact':/(?:open|visit|click|scan)/.test(verb)?'navigate':/(?:reply|provide|share|enter|send|disclose|submit)/.test(verb)?'disclose':/(?:appear|report|attend)/.test(verb)?'appear':'other';
+  const kind=(moneyObject&&/(?:pay|remit|submit|send|transfer|settle|clear(?:ed)?)/.test(verb))||/(?:pay|remit|transfer|settle)/.test(verb)?'pay':/(?:call|contact|phone|text)/.test(verb)?'contact':/(?:open|visit|click|scan|use|check)/.test(verb)?'navigate':/(?:reply|respond|provide|share|enter|send|disclose|submit)/.test(verb)?'disclose':/(?:appear|report|attend)/.test(verb)?'appear':'other';
   const phone=semantic.match(PHONE)?.[0]||'',url=semantic.match(URL)?.[0]||'',money=semantic.match(MONEY)?.[0]||'';
   let target_type:ActionNode['target_type']='unknown',target_value='';
   if(phone){target_type='phone';target_value=phone}
   else if(url){target_type='url';target_value=url}
   else if(money){target_type='money';target_value=money}
-  else if(verb==='scan'&&/\bqr\b/i.test(semantic)){target_type='qr'}
+  else if((verb==='scan'||verb==='use')&&/\bqr\b/i.test(semantic)){target_type='qr'}
   else if(kind==='disclose'){target_type='information';target_value=semantic.slice((match.index||0)+match[0].length).replace(/^[\s:,-]+/,'').trim()}
   else if(kind==='appear'){
    const date=semantic.match(/\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2}(?:,\s*\d{4})?/i)?.[0]||'';

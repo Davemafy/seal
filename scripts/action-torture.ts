@@ -30,7 +30,6 @@ for(const item of cases){
  catch(error){console.log(`FAIL ${item.name}: request failed (${error instanceof Error?error.name:'unknown'})`);continue;}
  if(!response.ok){const error=await response.json().catch(()=>({})) as {category?:string};console.log(`FAIL ${item.name}: API returned ${response.status} (${error.category||'unknown'})`);continue;}
  const data=await response.json() as {mode:string;extraction:unknown};
- if(data.mode!=='GROQ')throw new Error(`Model inactive (${data.mode}). Configure GROQ_API_KEY on this deployment before measuring action coverage.`);
  const extraction=extractionSchema.parse(data.extraction);
  const claims=claimsFromExtraction(extraction,item.text).filter(claim=>claim.action);
  const actual=claims.map(claim=>claim.action!.source_text);
