@@ -117,14 +117,16 @@ export function analyzePublicIntelligence(text:string,claims:Claim[],results:Res
 }{
  const signals:SourceSignal[]=[];
  const compact=normalize(text);
- const rawPay=/\b(?:remit|pay|payment|settle)\b[^\n]{0,120}\b(?:fine|fee|toll|balance|amount|cost|penalt)/i.test(compact)||/\b(?:full payment|payment instruction)\b/i.test(compact);
- const rawAppear=/\bappear\b[^\n]{0,120}\b(?:court|hearing)\b|\b(?:court|hearing)\b[^\n]{0,120}\bappear\b/i.test(compact);
- const rawCase=/\bcase\s*(?:no\.?|number|#)?\s*[:#-]?\s*[A-Z0-9-]{5,}/i.test(compact);
- const trafficPattern=hasTrafficSubject(compact)
+ const rawTraffic=/\b(?:traffic|toll|citation|parking|vehicle|speeding)\b/i.test(compact);
+ const rawPay=/\b(?:remit|pay|payment|settle)\b.{0,150}\b(?:fine|fee|toll|balance|amount|cost|penalt|full|total)\b|\b(?:full\s+payment|payment\s+instruction)\b/i.test(compact);
+ const rawScan=/\bscan\b.{0,70}\bqr\b|\bqr\b.{0,70}\b(?:code|scan|payment)\b/i.test(compact);
+ const rawAppear=/\bappear\b.{0,130}\b(?:court|hearing)|\b(?:court|hearing)\b.{0,130}\bappear\b/i.test(compact);
+ const rawCase=/\b(?:case|docket)\s*(?:no\.?|number|#)?\s*[:#-]?\s*[A-Z0-9]{1,6}(?:\s*[-–]\s*[A-Z0-9]{1,10}){1,5}\b/i.test(compact);
+ const trafficPattern=(hasTrafficSubject(compact)||rawTraffic)
   &&(hasRequested(claims,'pay')||rawPay)
-  &&(hasRequested(claims,'appear')||rawAppear)
-  &&hasScan(claims,compact)
-  &&(claims.some(c=>c.type==='docket')||rawCase);
+  &&(hasScan(claims,compact)||rawScan)
+  &&(claims.some(c=>c.type==='docket')||rawCase)
+  &&(hasRequested(claims,'appear')||rawAppear);
  if(trafficPattern){
   signals.push({
    id:'traffic-qr-warning',

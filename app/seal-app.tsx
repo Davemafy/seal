@@ -50,24 +50,51 @@ const actionSummaryWord=(claim:Claim)=>{
  return action.verb?action.verb.charAt(0).toUpperCase()+action.verb.slice(1):'Act';
 };
 
+function claimTextUseful(claim:Claim){
+ const value=cleanDisplayText(claim.action?.source_text||claim.exact_source_text||claim.value||'');
+ if(value.length<4)return false;
+ const compact=value.replace(/\s/g,'');
+ const letters=(compact.match(/[a-z]/gi)||[]).length;
+ const garbage=(compact.match(/[^a-z0-9.,:;()/#$%&@'’"!?+\-–—]/gi)||[]).length;
+ return letters>=3&&garbage<=Math.max(2,Math.floor(compact.length*.08));
+}
+function claimReliable(claim:Claim){
+ if(claim.verification_eligible===false)return false;
+ if(!claimTextUseful(claim))return false;
+ const threshold=claim.action?66:80;
+ return typeof claim.field_confidence!=='number'||claim.field_confidence>=threshold;
+}
+
 function chooseDecisionClaim(claims:Claim[],verification:Verification){
  const resultById=new Map(verification.results.map(result=>[result.claim_id,result]));
- const actions=claims.filter(claim=>Boolean(claim.action));
+ const actions=claims.filter(claim=>Boolean(claim.action)&&claimReliable(claim));
+ const reliable=claims.filter(claimReliable);
+ const result=(claim:Claim)=>resultById.get(claim.id);
+ const hasEvidence=(claim:Claim)=>Boolean(result(claim)?.evidence?.length);
+ const mismatch=(claim:Claim)=>result(claim)?.verdict==='MISMATCH';
  const trafficSignal=verification.signals?.find(signal=>signal.id==='traffic-qr-warning');
- if(trafficSignal){
-  return actions.find(claim=>claim.action?.kind==='pay')
-   ||actions.find(claim=>claim.action?.verb==='scan')
-   ||actions.find(claim=>claim.action?.kind==='appear')
-   ||claims[0];
- }
- return actions.find(claim=>resultById.get(claim.id)?.verdict==='MISMATCH'&&Boolean(resultById.get(claim.id)?.evidence?.length))
-  ||claims.find(claim=>resultById.get(claim.id)?.verdict==='MISMATCH'&&Boolean(resultById.get(claim.id)?.evidence?.length))
-  ||claims.find(claim=>resultById.get(claim.id)?.verdict==='MATCH'&&Boolean(resultById.get(claim.id)?.evidence?.length))
-  ||actions.find(claim=>Boolean(resultById.get(claim.id)?.evidence?.length))
-  ||claims.find(claim=>Boolean(resultById.get(claim.id)?.evidence?.length))
-  ||claims.find(claim=>resultById.get(claim.id)?.verdict==='MISMATCH')
+
+ const payWithEvidence=actions.find(claim=>claim.action?.kind==='pay'&&(hasEvidence(claim)||mismatch(claim)));
+ const pay=actions.find(claim=>claim.action?.kind==='pay');
+ const scan=actions.find(claim=>claim.action?.verb==='scan'||claim.action?.target_type==='qr');
+
+ if(trafficSignal)return payWithEvidence||pay||scan
+  ||actions.find(claim=>mismatch(claim))
+  ||actions.find(hasEvidence)
+  ||actions.find(claim=>claim.action?.kind==='appear');
+
+ const mismatchingScan=scan&&mismatch(scan)?scan:undefined;
+ return payWithEvidence
+  ||mismatchingScan
+  ||actions.find(claim=>mismatch(claim))
+  ||actions.find(hasEvidence)
+  ||pay
+  ||scan
   ||actions[0]
-  ||claims[0];
+  ||reliable.find(claim=>mismatch(claim)&&hasEvidence(claim))
+  ||reliable.find(claim=>result(claim)?.verdict==='MATCH'&&hasEvidence(claim))
+  ||reliable.find(hasEvidence)
+  ||reliable[0];
 }
 
 function decisionCopy(verification:Verification|null){
@@ -155,11 +182,13 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
     ?`${storyClaim.label}: ${cleanDisplayText(storyClaim.value)}`
     :'This detail needs checking.';
  const storyClaimDisplay=cleanDisplayText(storyClaim?.action?.source_text||storyClaim?.exact_source_text||storyClaim?.value||'');
- const storyFocusBox=storyClaim?.source_bbox
+ const storyFocusBox=storyClaim
+  &&claimReliable(storyClaim)
+  &&storyClaim.source_bbox
   &&storyClaim.page===1
   &&storyClaim.source_bbox.width>=.015
-  &&storyClaim.source_bbox.width<=.72
-  &&storyClaim.source_bbox.height>=.014
+  &&storyClaim.source_bbox.width<=.78
+  &&storyClaim.source_bbox.height>=.01
   &&storyClaim.source_bbox.height<=.18
    ?storyClaim.source_bbox
    :undefined;
@@ -223,8 +252,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const currentResult=current&&resultById.get(current.id);
  const active=hovered||selected;
  const ready=Boolean(verification)&&revealed>=claims.length;
- const reviewWorthWatching=Boolean(verification&&storyClaim&&(
+ const reviewWorthWatching=Boolean(verification&&storyClaim&&claimReliable(storyClaim)&&(
   verification.signals?.length
+  ||verification.safe_action
   ||storyClaim.action
   ||storyResult?.evidence?.length
   ||storyResult?.verdict==='MATCH'
@@ -502,7 +532,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      setText(analysisText);
      setBusy(false);
      setStatus('');
-     await run('SNAPSHOT',{text:analysisText,file:doc});
+     await run('SNAPSHOT',{text:analysisText,file:doc,curated:true});
      return;
     }
 
@@ -666,9 +696,10 @@ async function upload(uploaded:File){
   }
  }
 
- async function run(sourceMode:Mode=mode,source?:{text:string;file:BrowserDocument|null}){
+ async function run(sourceMode:Mode=mode,source?:{text:string;file:BrowserDocument|null;curated?:boolean}){
   const sourceText=source?.text??text;
   const sourceFile=source?source.file:file;
+  const sourceCurated=Boolean(source?.curated);
   const sourceIsDemo=!sourceFile&&/^DEMO \/ (?:FICTIONAL NOTICE|SYNTHETIC MESSAGE)/.test(sourceText);
   const id=++runId.current;
   setBusy(true);setError('');setVerification(null);setRevealed(0);setSelected('');setTechnicalOpen(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryStartPending(false);setMode(sourceMode);setStatus('Reading requested actions');
@@ -703,7 +734,10 @@ async function upload(uploaded:File){
    if(runId.current!==id)return;
    setExtractionMode(extractor);
 
-   const found=claimsFromExtraction(extraction,sourceText,sourceFile?.tokens||[]);
+   const extractedClaims=claimsFromExtraction(extraction,sourceText,sourceFile?.tokens||[]);
+   const found=sourceCurated
+    ?extractedClaims.map(claim=>({...claim,verification_eligible:true}))
+    :extractedClaims;
    if(!found.length){
     if(sourceFile&&sourceText.trim().length>=40)throw new Error('We could read text in this image, but SEAL couldn’t find a court message or notice to check. Try another image or paste the message text.');
     throw new Error('We couldn’t read enough of this message to check it reliably. Try a clearer screenshot or paste the message text.');
@@ -732,12 +766,19 @@ async function upload(uploaded:File){
      :checkedById.get(claim.id)||{claim_id:claim.id,verdict:'COULD_NOT_VERIFY',explanation:'No supported official-source check applies to this extracted action.',evidence:[],resolver_id:checkedServer.resolver_id})
    };
 
+   const reliableAction=found.some(claim=>Boolean(claim.action)&&claimReliable(claim));
+   const independentlyUseful=Boolean(checked.signals?.length||checked.safe_action||checked.results.some(result=>result.verdict!=='COULD_NOT_VERIFY'||result.evidence.length));
+   if(sourceFile?.kind==='image'&&!sourceCurated&&!reliableAction&&!independentlyUseful){
+    throw new Error('We could read this document, but not enough of the important instructions reliably. Try a clearer image or paste the message text.');
+   }
+
    if(runId.current!==id)return;
    setVerification(checked);
    setRevealed(found.length);
 
    const requested=chooseDecisionClaim(found,checked);
-   setSelected(requested.id);
+   const firstReliable=found.find(claimReliable);
+   setSelected(requested?.id||firstReliable?.id||'');
   }catch(e){
    if(runId.current===id)setError(e instanceof Error?e.message:'The source check could not finish.');
   }finally{

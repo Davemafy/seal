@@ -17,9 +17,20 @@ function courtLineScore(line:string){
 
 function plausibleCourtName(value:string){
  if(!/\bcourt\b/i.test(value))return false;
- const letters=(value.match(/[a-z]/gi)||[]).length;
- const noise=(value.match(/[^a-z\s,.'’&()\-–—]/gi)||[]).length;
- return letters>=8&&noise<=Math.max(2,Math.floor(letters*.08));
+ const compact=value.replace(/\s/g,'');
+ const letters=(compact.match(/[a-z]/gi)||[]).length;
+ const digits=(compact.match(/\d/g)||[]).length;
+ const symbols=(compact.match(/[^a-z0-9,.'’&()\-–—]/gi)||[]).length;
+ const alphaRatio=letters/Math.max(1,compact.length);
+ const startsClean=/^[a-z0-9]/i.test(value.trim());
+ return letters>=8&&digits<=1&&symbols<=1&&alphaRatio>=.7&&startsClean;
+}
+
+function genericCourtName(value:string){
+ return /^(?:in\s+the\s+)?(?:district|superior|circuit|municipal|traffic|county)\s+court\b/i.test(value.trim());
+}
+function jurisdictionLine(value:string){
+ return /^(?:state\s+of\s+[a-z][a-z .'-]{2,50}|commonwealth\s+of\s+[a-z][a-z .'-]{2,50}|united\s+states(?:\s+district)?\s+court\b)/i.test(value.trim());
 }
 
 function extractCourtName(lines:string[]){
@@ -27,9 +38,10 @@ function extractCourtName(lines:string[]){
  lines.forEach((line,i)=>{const score=courtLineScore(line);if(score>best){best=score;index=i}});
  if(index<0)return '';
  let value=lines[index];
- const prev=lines[index-1]||'',next=lines[index+1]||'';
- if(/^(?:in\s+the\s+)?(?:district|superior|circuit|municipal|traffic)\s+court\b/i.test(value)&&/^(?:state|commonwealth|united states)\b/i.test(prev)){
-  value=`${prev} ${value}`.replace(/\s+/g,' ').trim();
+ const next=lines[index+1]||'';
+ if(genericCourtName(value)){
+  const context=lines.slice(Math.max(0,index-3),index).reverse().find(jurisdictionLine);
+  if(context)value=`${context} ${value}`.replace(/\s+/g,' ').trim();
  }
  const continuation=/\b(?:of|for|in|—|-)\s*$/i.test(value)||/^(?:district|division|county|circuit|for\b|of\b)/i.test(next);
  if(continuation&&next.length<=90&&!/[.!?]$/.test(value))value=`${value} ${next}`.replace(/\s+/g,' ').trim();
@@ -73,8 +85,10 @@ function directiveVerb(source:string){
   const purposeThenDirective=/^to\b[^,.;]{0,100},\s*$/i.test(before);
   const addressedDirective=/\b(?:you|recipient|defendant|juror|driver|respondent|party)\s+(?:must|shall|should|need(?:s)?\s+to|are\s+required\s+to|is\s+required\s+to|are\s+ordered\s+to|is\s+ordered\s+to|are\s+directed\s+to|is\s+directed\s+to)\s*$/i.test(before);
   const bareDeontic=/\b(?:must|shall|should|required\s+to|ordered\s+to|directed\s+to|need\s+to)\s*$/i.test(before);
+  const actionHeader=/\b(?:payment\s+instruction|mandatory\s+compliance|complete\s+action|required\s+action)\b[^.;:]{0,45}[:\-–—]?\s*$/i.test(before);
+  const qrDirective=verb==='scan'&&/\bqr\b/i.test(semantic);
   const imperative=at===0||Boolean(clauseStart)||purposeThenDirective;
-  if(imperative||addressedDirective||bareDeontic)return {semantic,verb,match};
+  if(imperative||addressedDirective||bareDeontic||actionHeader||qrDirective)return {semantic,verb,match};
  }
  return null;
 }
@@ -92,10 +106,29 @@ function similarActions(a:ActionNode,b:ActionNode){
  return overlap/Math.min(A.size,B.size)>=.5;
 }
 
+function actionWindows(lines:string[]){
+ const out:string[]=[];
+ for(let i=0;i<lines.length;i++){
+  const line=lines[i].trim();if(!line)continue;
+  out.push(line);
+  if(!ACTION_VERBS.test(line)){ACTION_VERBS.lastIndex=0;continue}
+  ACTION_VERBS.lastIndex=0;
+  let joined=line;
+  for(let j=1;j<=2&&i+j<lines.length;j++){
+   const next=lines[i+j].trim();
+   if(!next||joined.length+next.length>220)break;
+   joined=`${joined} ${next}`.replace(/\s+/g,' ').trim();
+   out.push(joined);
+   if(/[.!?]$/.test(next))break;
+  }
+ }
+ return out;
+}
+
 export function extractActionGraph(text:string,tokens:Token[]=[]):ActionNode[]{
  const textLines=text.split(/\n/).map(s=>s.trim()).filter(Boolean);
  const visual=tokenActionSegments(tokens);
- const sources=[...new Set([...visual,...textLines].map(s=>s.trim()).filter(Boolean))];
+ const sources=[...new Set([...actionWindows(visual),...actionWindows(textLines)].map(s=>s.trim()).filter(Boolean))];
  const actions:ActionNode[]=[];
  for(const source of sources){
   const directive=directiveVerb(source);if(!directive)continue;
@@ -128,10 +161,10 @@ export function extractActionGraph(text:string,tokens:Token[]=[]):ActionNode[]{
 }
 export function sanitizeStructuredExtraction(extraction:Extraction,text:string):Extraction{
  const next:Extraction={...extraction,payment_demand:{...extraction.payment_demand},phone_numbers:[...extraction.phone_numbers],emails:[...extraction.emails],urls:[...extraction.urls],information_requests:[...extraction.information_requests],threats:[...extraction.threats],uncertain_fields:[...extraction.uncertain_fields]};
- if(next.court_name&&!plausibleCourtName(next.court_name)){
-  const recovered=extractCourtName(text.split(/\n/).map(s=>s.trim()).filter(Boolean));
-  next.court_name=recovered;
- }
+ const recoveredCourt=extractCourtName(text.split(/\n/).map(s=>s.trim()).filter(Boolean));
+ if(next.court_name&&!plausibleCourtName(next.court_name))next.court_name=recoveredCourt;
+ else if(next.court_name&&genericCourtName(next.court_name)&&recoveredCourt.length>next.court_name.length)next.court_name=recoveredCourt;
+ else if(!next.court_name&&recoveredCourt)next.court_name=recoveredCourt;
  const value=next.juror_or_reference_number.trim();
  if(value){
   const lower=text.toLowerCase(),needle=value.toLowerCase();
@@ -153,7 +186,8 @@ export function fallbackExtract(text:string):Extraction {
  e.court_name=extractCourtName(lines);
  e.court_location=(lines.find(s=>/\d{2,5}\s+[^\n]{3,90}\b(?:street|st\.?|avenue|ave\.?|road|rd\.?|boulevard|blvd\.?|drive|dr\.?|lane|ln\.?|highway|hwy\.?)\b/i.test(s))||'').replace(/\s+/g,' ');
  e.juror_or_reference_number=lines.find(s=>/\b(?:juror|badge|reference|participant)\s*(?:number|no\.?|#|id)\s*[:#]?\s*[A-Z0-9-]{4,}/i.test(s))?.match(/(?:number|no\.?|#|id)\s*[:#]?\s*([A-Z0-9-]{4,})/i)?.[1]||'';
- e.case_or_docket_number=lines.find(s=>/\b(?:case|docket)\s*(?:number|no\.?|#)\s*[:#]?\s*[\w-]{4,}/i.test(s))?.match(/(?:number|no\.?|#)\s*[:#]?\s*([\w-]{4,})/i)?.[1]||'';
+ const caseLine=lines.find(s=>/\b(?:case|docket)\s*(?:number|no\.?|#)?\s*[:#-]?\s*[A-Z0-9]{1,6}(?:\s*[-–]\s*[A-Z0-9]{1,10}){1,5}\b/i.test(s))||'';
+ e.case_or_docket_number=caseLine.match(/\b(?:case|docket)\s*(?:number|no\.?|#)?\s*[:#-]?\s*([A-Z0-9]{1,6}(?:\s*[-–]\s*[A-Z0-9]{1,10}){1,5})\b/i)?.[1]?.replace(/\s*[-–]\s*/g,'-')||'';
  e.phone_numbers=[...new Set(text.match(new RegExp(PHONE.source,'g'))||[])];
  e.emails=[...new Set(text.match(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi)||[])];
  e.urls=[...new Set(text.match(new RegExp(URL.source,'gi'))||[])].filter(s=>!e.emails.some(email=>email.includes(s)));
@@ -210,7 +244,19 @@ function confidenceFor(value:string,tokens:Token[],strict=false){
  const values=tokens.slice(anchor.source_token_range[0],anchor.source_token_range[1]+1).filter(t=>/[a-z0-9]/i.test(t.text)).map(t=>t.confidence).filter((v):v is number=>typeof v==='number').sort((a,b)=>a-b);
  if(!values.length)return undefined;
  if(strict)return values[0];
- return values[Math.floor((values.length-1)*0.25)];
+ return values[Math.floor((values.length-1)*.25)];
+}
+function actionConfidence(value:string,tokens:Token[],action:ActionNode){
+ const anchor=locatePhrase(value,tokens);if(!anchor)return undefined;
+ const slice=tokens.slice(anchor.source_token_range[0],anchor.source_token_range[1]+1).filter(t=>/[a-z0-9]/i.test(t.text));
+ const values=slice.map(t=>t.confidence).filter((v):v is number=>typeof v==='number').sort((a,b)=>a-b);
+ if(!values.length)return undefined;
+ const lower=values[Math.floor((values.length-1)*.25)],median=values[Math.floor((values.length-1)*.5)];
+ const object=action.object||action.source_text;
+ const readable=(object.match(/[a-z0-9]/gi)||[]).length/Math.max(1,object.replace(/\s/g,'').length);
+ const directive=new RegExp(`\\b${action.verb.replace(/[^a-z]/gi,'')}\\b`,'i').test(action.source_text);
+ const spatial=anchor.source_bbox.height<=.14&&anchor.source_bbox.width<=.92;
+ return Math.max(0,Math.min(100,lower*.55+median*.3+(directive?8:0)+(readable>=.7?5:0)+(spatial?4:0)));
 }
 function claimTypeForAction(action:ActionNode):ClaimType{
  if(action.kind==='pay')return 'payment';
@@ -259,8 +305,15 @@ export function claimsFromExtraction(e:Extraction,text:string,tokens:Token[]=[])
   const line=text.split(/\n/).find(s=>s.includes(value))||context||value,exact=line.trim();
   const anchor=locatePhrase(confidenceBasis||value,tokens)||locatePhrase(value,tokens);
   const strictConfidence=['phone','url','docket','juror'].includes(type);
-  const fieldConfidence=tokens.length?confidenceFor(confidenceBasis||value,tokens,strictConfidence):undefined;
-  result.push({id:`c${result.length+1}`,type,label,value,exact_source_text:exact,page:anchor?.page||1,source_bbox:anchor?.source_bbox,source_token_range:anchor?.source_token_range,context:context||exact,field_confidence:fieldConfidence,verification_eligible:fieldConfidence===undefined||fieldConfidence>=FIELD_CONFIDENCE,action});
+  const fieldConfidence=tokens.length
+   ?action?actionConfidence(confidenceBasis||value,tokens,action):confidenceFor(confidenceBasis||value,tokens,strictConfidence)
+   :undefined;
+  const threshold=action?66:FIELD_CONFIDENCE;
+  const verificationEligible=fieldConfidence===undefined?tokens.length===0:fieldConfidence>=threshold;
+  const reliableBox=Boolean(anchor)&&(fieldConfidence===undefined?tokens.length===0:fieldConfidence>=threshold)
+   &&anchor!.source_bbox.width>=.01&&anchor!.source_bbox.width<=.92
+   &&anchor!.source_bbox.height>=.008&&anchor!.source_bbox.height<=.2;
+  result.push({id:`c${result.length+1}`,type,label,value,exact_source_text:exact,page:anchor?.page||1,source_bbox:reliableBox?anchor?.source_bbox:undefined,source_token_range:reliableBox?anchor?.source_token_range:undefined,context:context||exact,field_confidence:fieldConfidence,verification_eligible:verificationEligible,action});
  };
  add('court','Court identity',e.court_name);
  add('location','Courthouse address',e.court_location);
