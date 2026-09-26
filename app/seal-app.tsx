@@ -269,14 +269,20 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const currentResult=current&&resultById.get(current.id);
  const active=hovered||selected;
  const ready=Boolean(verification)&&revealed>=claims.length;
- const reviewWorthWatching=Boolean(verification&&storyClaim&&claimReliable(storyClaim)&&(
-  verification.signals?.length
-  ||verification.safe_action
-  ||storyClaim.action
-  ||storyResult?.evidence?.length
-  ||storyResult?.verdict==='MATCH'
-  ||storyResult?.verdict==='MISMATCH'
- ));
+ const storyHasIndependentEvidence=Boolean(
+  verification&&(
+   verification.signals?.some(signal=>Boolean(signal.evidence?.length))
+   ||storyResult?.evidence?.length
+   ||((storyResult?.verdict==='MATCH'||storyResult?.verdict==='MISMATCH')&&storyResult?.evidence?.length)
+   ||verification.safe_action?.evidence?.length
+  )
+ );
+ const reviewWorthWatching=Boolean(
+  verification
+  &&storyClaim
+  &&claimReliable(storyClaim)
+  &&storyHasIndependentEvidence
+ );
  const count=(value:Result['verdict'])=>verification?.results.filter(result=>result.verdict===value).length||0;
  const decision=decisionCopy(verification);
  const technicalEvidence=useMemo(()=>{
@@ -443,11 +449,11 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    duration:reduced?.16:.72
   },5.78);
   if(sourceRegion){
-   tl.set(sourceRegion,{pointerEvents:'auto'},5.84);
-   tl.to(sourceRegion,{opacity:1,x:0,duration:reduced?.16:.55},5.86);
+   tl.set(sourceRegion,{pointerEvents:'auto'},6.16);
+   tl.to(sourceRegion,{opacity:1,x:0,duration:reduced?.16:.54},6.18);
   }
   sourceChildren.forEach((child,index)=>{
-   tl.to(child,{opacity:1,y:0,filter:'blur(0px)',duration:reduced?.14:.4},6.02+index*.055);
+   tl.to(child,{opacity:1,y:0,filter:'blur(0px)',duration:reduced?.14:.38},6.38+index*.06);
   });
 
   // 10.4–13.2 — source + message recede together; the relationship becomes the focal point.
@@ -459,20 +465,20 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   if(verdict)tl.to(verdict,{opacity:1,y:0,scale:1,duration:reduced?.16:.46},10.58);
 
   // 13.2–17.2 — resolve into the safe action, then HOLD. The player does not auto-close.
-  if(verdict)tl.to(verdict,{opacity:0,y:reduced?0:-8,duration:reduced?.14:.26},13.10);
-  if(verdictScrim)tl.to(verdictScrim,{opacity:reduced?.36:.44,duration:reduced?.16:.48},13.12);
+  if(verdict)tl.to(verdict,{opacity:0,y:reduced?0:-8,duration:reduced?.14:.28},13.04);
+  if(verdictScrim)tl.to(verdictScrim,{opacity:reduced?.30:.36,duration:reduced?.16:.5},13.08);
   if(documentRegion)tl.to(documentRegion,{
-   xPercent:reduced?0:(mobile?0:-24),
-   yPercent:reduced?0:(mobile?-23:0),
-   scale:reduced?1:(mobile?.56:.64),
-   opacity:reduced?.28:.13,
-   filter:'brightness(.24)',
-   duration:reduced?.16:.52
-  },13.12);
-  if(sourceRegion)tl.to(sourceRegion,{opacity:reduced?.2:.1,duration:reduced?.16:.46},13.12);
-  if(action)tl.to(action,{opacity:1,x:0,duration:reduced?.16:.46},13.32);
+   xPercent:reduced?0:(mobile?0:-22),
+   yPercent:reduced?0:(mobile?-18:0),
+   scale:reduced?1:(mobile?.60:.66),
+   opacity:reduced?.36:(mobile?.34:.28),
+   filter:reduced?'brightness(.5)':(mobile?'brightness(.42)':'brightness(.36)'),
+   duration:reduced?.16:.56
+  },13.10);
+  if(sourceRegion)tl.to(sourceRegion,{opacity:reduced?.22:.14,duration:reduced?.16:.46},13.10);
+  if(action)tl.to(action,{opacity:1,x:0,duration:reduced?.16:.46},13.54);
   actionChildren.forEach((child,index)=>{
-   tl.to(child,{opacity:1,y:0,duration:reduced?.14:.34},13.40+index*.055);
+   tl.to(child,{opacity:1,y:0,duration:reduced?.14:.34},13.62+index*.055);
   });
 
   syncStoryTime(0);
