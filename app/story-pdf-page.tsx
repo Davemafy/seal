@@ -3,6 +3,10 @@
 import {useEffect,useRef,useState} from 'react';
 
 type FocusBox={x:number;y:number;width:number;height:number};
+type Props={url:string;focusBox?:FocusBox;onReady?:()=>void;preloadOnly?:boolean};
+
+const previewCache=new Map<string,string>();
+const previewJobs=new Map<string,Promise<string>>();
 
 async function restoreInvisibleText(page:any,context:CanvasRenderingContext2D,scale:number){
  const content=await page.getTextContent();
@@ -30,42 +34,73 @@ async function restoreInvisibleText(page:any,context:CanvasRenderingContext2D,sc
  context.restore();
 }
 
-export default function StoryPdfPage({url,focusBox}:{url:string;focusBox?:FocusBox}){
- const canvas=useRef<HTMLCanvasElement>(null);
+function renderFirstPage(url:string){
+ const cached=previewCache.get(url);
+ if(cached)return Promise.resolve(cached);
+ const pending=previewJobs.get(url);
+ if(pending)return pending;
+
+ const job=(async()=>{
+  let loadingTask:any;
+  let documentHandle:any;
+  try{
+   const pdfjs=await import('pdfjs-dist');
+   pdfjs.GlobalWorkerOptions.workerSrc='/pdf.worker.min.mjs';
+   loadingTask=pdfjs.getDocument({url,standardFontDataUrl:'/standard_fonts/',disableFontFace:true});
+   documentHandle=await loadingTask.promise;
+   const page=await documentHandle.getPage(1);
+   const viewport=page.getViewport({scale:1.8});
+   const canvas=document.createElement('canvas');
+   canvas.width=viewport.width;canvas.height=viewport.height;
+   const context=canvas.getContext('2d');
+   if(!context)throw new Error('Canvas unavailable');
+   await page.render({canvas,canvasContext:context,viewport}).promise;
+   await restoreInvisibleText(page,context,1.8);
+   const dataUrl=canvas.toDataURL('image/png');
+   previewCache.set(url,dataUrl);
+   return dataUrl;
+  }finally{
+   if(documentHandle){
+    try{await documentHandle.destroy()}catch{}
+   }else if(loadingTask){
+    try{await loadingTask.destroy()}catch{}
+   }
+  }
+ })();
+
+ previewJobs.set(url,job);
+ void job.finally(()=>previewJobs.delete(url)).catch(()=>{});
+ return job;
+}
+
+export default function StoryPdfPage({url,focusBox,onReady,preloadOnly=false}:Props){
+ const [preview,setPreview]=useState(()=>previewCache.get(url)||'');
  const [error,setError]=useState(false);
+ const readyCallback=useRef(onReady);
+ readyCallback.current=onReady;
 
  useEffect(()=>{
-  let cancelled=false;
-  let loadingTask:{destroy:()=>void}|undefined;
-  let documentHandle:{destroy:()=>void}|undefined;
-  void (async()=>{
-   try{
-    const pdfjs=await import('pdfjs-dist');
-    pdfjs.GlobalWorkerOptions.workerSrc='/pdf.worker.min.mjs';
-    const loading=pdfjs.getDocument({url,standardFontDataUrl:'/standard_fonts/',disableFontFace:true});
-    loadingTask=loading;
-    const doc=await loading.promise;
-    documentHandle=doc;
-    if(cancelled){await doc.destroy();return}
-    const page=await doc.getPage(1);
-    const viewport=page.getViewport({scale:1.8});
-    const target=canvas.current;
-    if(!target||cancelled)return;
-    target.width=viewport.width;target.height=viewport.height;
-    const context=target.getContext('2d');
-    if(!context)return;
-    await page.render({canvas:target,canvasContext:context,viewport}).promise;
-    if(!cancelled)await restoreInvisibleText(page,context,1.8);
-   }catch{
-    if(!cancelled)setError(true);
-   }
-  })();
-  return()=>{cancelled=true;loadingTask?.destroy();void documentHandle?.destroy()};
+  let mounted=true;
+  setError(false);
+  const cached=previewCache.get(url);
+  if(cached){
+   setPreview(cached);
+   readyCallback.current?.();
+   return()=>{mounted=false};
+  }
+  void renderFirstPage(url).then(dataUrl=>{
+   if(!mounted)return;
+   setPreview(dataUrl);
+   readyCallback.current?.();
+  }).catch(()=>{if(mounted)setError(true)});
+  return()=>{mounted=false};
  },[url]);
 
- return <div className="story-pdf-wrap">
-  <canvas ref={canvas} aria-label="Your uploaded PDF, first page"/>
-  {focusBox&&<span className="story-highlight" style={{left:`${focusBox.x*100}%`,top:`${focusBox.y*100}%`,width:`${focusBox.width*100}%`,height:`${focusBox.height*100}%`}}/>}
+ if(preloadOnly)return null;
+
+ return <div className="story-pdf-wrap" style={{transformOrigin:focusBox?`${(focusBox.x+focusBox.width/2)*100}% ${(focusBox.y+focusBox.height/2)*100}%`:'50% 50%'}}>
+  {preview&&<img src={preview} alt="Your uploaded PDF, first page"/>}
+  {focusBox&&preview&&<span className="story-highlight" style={{left:`${focusBox.x*100}%`,top:`${focusBox.y*100}%`,width:`${focusBox.width*100}%`,height:`${focusBox.height*100}%`}}/>}
   {error&&<span className="story-pdf-error">PDF preview unavailable. The checked text remains available in Full evidence.</span>}
  </div>;
 }

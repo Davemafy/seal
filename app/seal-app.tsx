@@ -27,6 +27,17 @@ const cleanDisplayText=(value:string)=>value
  .replace(/^(?:[·|:;,.\-–—]\s*)+|(?:\s*[·|:;,.\-–—])+$/g,'')
  .trim();
 
+const cinematicExcerpt=(value:string,max=220)=>{
+ const clean=cleanDisplayText(value);
+ if(clean.length<=max)return clean;
+ const window=clean.slice(0,max+1);
+ const ends=[window.lastIndexOf('. '),window.lastIndexOf('? '),window.lastIndexOf('! ')].filter(index=>index>=90);
+ if(ends.length)return window.slice(0,Math.max(...ends)+1);
+ const next=clean.slice(max,max+80).search(/[.!?](?:\s|$)/);
+ if(next>=0)return clean.slice(0,max+next+1);
+ return clean.slice(0,max).replace(/\s+\S*$/,'')+'…';
+};
+
 const actionSummaryWord=(claim:Claim)=>{
  const action=claim.action;
  if(!action)return '';
@@ -101,6 +112,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const [reviewOffer,setReviewOffer]=useState<'idle'|'counting'|'skipped'|'watching'|'completed'>('idle');
  const [reviewCountdown,setReviewCountdown]=useState(3);
  const [reviewOfferPaused,setReviewOfferPaused]=useState(false);
+ const [storyArtifactReady,setStoryArtifactReady]=useState(true);
+ const [storyStartPending,setStoryStartPending]=useState(false);
  const [storyOpen,setStoryOpen]=useState(false);
  const [storyStep,setStoryStep]=useState(0);
  const [storyPlaying,setStoryPlaying]=useState(true);
@@ -146,6 +159,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    ?storyClaim.source_bbox
    :undefined;
  const storySourceCopy=storySignal?.summary||storyEvidence?.excerpt||storyResult?.explanation||'SEAL could not establish this detail from a supported source.';
+ const storySourceDisplay=cinematicExcerpt(storySourceCopy);
  const storyVerdict=storySignal?.id==='traffic-qr-warning'
   ?'This pattern matches an official scam warning.'
   :storyResult?.verdict==='MATCH'
@@ -158,12 +172,16 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   ?verification?.safe_action?.title||'Verify independently before you pay.'
   :storyClaim?.type==='authority'&&verification?.safe_action
    ?'Verify this notice in Virginia’s official court system.'
-   :verification?.safe_action?.title||'Verify independently before you respond.';
+   :verification?.safe_action?.title
+    ||(storyResult?.verdict==='MATCH'?'Matching details do not authenticate the sender.':'Verify independently before you respond.');
  const storyFinalSummary=storySignal?.id==='traffic-qr-warning'
   ?verification?.safe_action?.summary||'Do not use the payment route in this message until the case is independently verified.'
   :storyClaim?.type==='authority'&&verification?.safe_action
    ?'The cited law does not match the printed toll claim. Search the case independently before relying on the notice.'
-   :verification?.safe_action?.summary||'Use the court’s own website or independently sourced contact information before responding.';
+   :verification?.safe_action?.summary
+    ||(storyResult?.verdict==='MATCH'&&verification?.contact
+      ?'Use the independently sourced court contact if you need to act.'
+      :'Use the court’s own website or independently sourced contact information before responding.');
  const storyDurations=[3000,3500,5000,3500,3200];
  const storySourceLabel=!storyEvidence
   ?'Source check'
@@ -246,6 +264,25 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  },[hydrated,initialRun,initialText]);
 
  useEffect(()=>{
+  setStoryStartPending(false);
+  if(!file){setStoryArtifactReady(true);return}
+  if(file.kind==='pdf'){setStoryArtifactReady(false);return}
+  setStoryArtifactReady(false);
+  let cancelled=false;
+  const image=new Image();
+  image.src=file.preview;
+  const markReady=()=>{if(!cancelled)setStoryArtifactReady(true)};
+  if(image.complete){markReady();return()=>{cancelled=true}}
+  if(typeof image.decode==='function')void image.decode().then(markReady).catch(markReady);
+  else{image.onload=markReady;image.onerror=markReady}
+  return()=>{cancelled=true;image.onload=null;image.onerror=null};
+ },[file?.preview,file?.kind]);
+
+ useEffect(()=>{
+  if(storyStartPending&&storyArtifactReady)startStory();
+ },[storyStartPending,storyArtifactReady]);
+
+ useEffect(()=>{
   if(!verification||!ready)return;
   const key=`${text.slice(0,96)}:${claims.length}:${verification.resolver_id}`;
   if(storyKey.current===key)return;
@@ -303,7 +340,15 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  },[storyOpen]);
 
  function startStory(){
-  if(storyCloseTimer.current)window.clearTimeout(storyCloseTimer.current);
+  if(!storyArtifactReady){
+   setStoryStartPending(true);
+   setReviewOfferPaused(true);
+   setReviewCountdown(1);
+   return;
+  }
+  if(storyCloseTimer.current){window.clearTimeout(storyCloseTimer.current);storyCloseTimer.current=undefined}
+  setStoryStartPending(false);
+  setReviewOfferPaused(false);
   setReviewOffer('watching');
   setReviewCountdown(3);
   setStoryStep(0);
@@ -324,13 +369,15 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  function storyBack(){setStoryStep(step=>Math.max(0,step-1))}
  function closeStory(){
   if(storyClosing)return;
+  if(storyCloseTimer.current)window.clearTimeout(storyCloseTimer.current);
   setStoryClosing(true);
   setStoryPlaying(false);
   setReviewOffer('completed');
   storyCloseTimer.current=window.setTimeout(()=>{
+   storyCloseTimer.current=undefined;
    setStoryOpen(false);
    setStoryClosing(false);
-   replayButton.current?.focus();
+   window.requestAnimationFrame(()=>replayButton.current?.focus());
   },260);
  }
  function replayStory(){startStory()}
@@ -338,7 +385,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  function clear(){
   runId.current++;
   if(file)URL.revokeObjectURL(file.preview);
-  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setActiveResultSection('summary');setTechnicalOpen(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);storyKey.current='';
+  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setActiveResultSection('summary');setTechnicalOpen(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryArtifactReady(true);setStoryStartPending(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);storyKey.current='';
  }
 
  function chooseFixture(key:FixtureKey){clear();setFixture(key);setText(fixtures[key].text);void run('SNAPSHOT',{text:fixtures[key].text,file:null})}
@@ -364,7 +411,7 @@ async function upload(uploaded:File){
   const sourceFile=source?source.file:file;
   const sourceIsDemo=!sourceFile&&/^DEMO \/ (?:FICTIONAL NOTICE|SYNTHETIC MESSAGE)/.test(sourceText);
   const id=++runId.current;
-  setBusy(true);setError('');setVerification(null);setRevealed(0);setSelected('');setTechnicalOpen(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setMode(sourceMode);setStatus('Reading requested actions');
+  setBusy(true);setError('');setVerification(null);setRevealed(0);setSelected('');setTechnicalOpen(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryStartPending(false);setMode(sourceMode);setStatus('Reading requested actions');
   try{
    if(sourceFile?.uncertain){
     const unclear:Claim={id:'c1',type:'official',label:'Unreadable field',value:'Could not read confidently',exact_source_text:'Unreadable field',page:1};
@@ -514,7 +561,7 @@ async function upload(uploaded:File){
         onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
         onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
         <span className="upload-group">
-         <span className="upload-copy"><strong>{busy?status:'Upload a notice or screenshot'}</strong><small>{busy?'This can take a little longer the first time.':'PDF, PNG, or JPG · up to 16 MB'}</small></span>
+         <span className="upload-copy"><strong>{busy?status:'Upload a notice or screenshot'}</strong><small>{busy?'This can take a little longer the first time.':'Drop here or browse files · PDF, PNG, or JPG · up to 16 MB'}</small></span>
          {!busy&&<span className="upload-browse">Browse files</span>}
         </span>
         {busy&&<span className="upload-progress" aria-hidden="true"><span/></span>}
@@ -566,7 +613,7 @@ async function upload(uploaded:File){
          <span>{reviewCountdown}</span>
         </div>}
         <div className="review-offer-meta">
-         <strong>Review ready</strong>
+         <strong>{storyStartPending?'Preparing review':'Review ready'}</strong>
          <div className="review-offer-actions">
           <button type="button" onClick={startStory}>{reviewOffer==='counting'?'Watch now':'Watch review'}</button>
           <button type="button" onClick={skipReviewOffer}>Skip</button>
@@ -584,6 +631,7 @@ async function upload(uploaded:File){
      </nav>}
     </header>
 
+    {file?.kind==='pdf'&&<StoryPdfPage url={file.preview} preloadOnly onReady={()=>setStoryArtifactReady(true)}/>}
     {file?.sample&&<div className="source-failure sample-warning" role="status">This document is marked SAMPLE. It is an example form, not a summons to act on. Claim checks below do not authenticate an individual notice.</div>}
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
 
@@ -605,30 +653,36 @@ async function upload(uploaded:File){
        <div className="story-document-stage">
         <span className="story-stage-label" aria-hidden={storyStep!==0}>Your message</span>
 
-        {file?.kind==='image'?<div
-          className="story-image-wrap"
-          style={{transformOrigin:storyFocusBox?`${(storyFocusBox.x+storyFocusBox.width/2)*100}% ${(storyFocusBox.y+storyFocusBox.height/2)*100}%`:'50% 50%'}}
-         >
-          <img src={file.preview} alt="Your uploaded notice"/>
-          {storyFocusBox&&<span className="story-highlight" style={{left:`${storyFocusBox.x*100}%`,top:`${storyFocusBox.y*100}%`,width:`${storyFocusBox.width*100}%`,height:`${storyFocusBox.height*100}%`}}/>}
+        <div className="story-comparison">
+         <div className="story-document-region">
+          {file?.kind==='image'?<div
+            className="story-image-wrap"
+            style={{transformOrigin:storyFocusBox?`${(storyFocusBox.x+storyFocusBox.width/2)*100}% ${(storyFocusBox.y+storyFocusBox.height/2)*100}%`:'50% 50%'}}
+           >
+            <img src={file.preview} alt="Your uploaded notice"/>
+            {storyFocusBox&&<span className="story-highlight" style={{left:`${storyFocusBox.x*100}%`,top:`${storyFocusBox.y*100}%`,width:`${storyFocusBox.width*100}%`,height:`${storyFocusBox.height*100}%`}}/>}
+           </div>
+           :file?.kind==='pdf'?
+            <StoryPdfPage url={file.preview} focusBox={storyFocusBox}/>
+           :<div className="story-text-document">
+            <span>Pasted message</span>
+            <p>{cleanDisplayText(text.slice(0,900))}</p>
+           </div>}
          </div>
-         :file?.kind==='pdf'?
-          <StoryPdfPage url={file.preview} focusBox={storyFocusBox}/>
-         :<div className="story-text-document">
-          <span>Pasted message</span>
-          <p>{cleanDisplayText(text.slice(0,900))}</p>
-         </div>}
 
-        <div className="story-claim-anchor" aria-hidden={storyStep<1||storyStep>3}>
-         <span>From the message</span>
-         <strong>{storyClaimDisplay||storyClaimHeading}</strong>
+         <div className="story-source-region">
+          <div className="story-source-panel" aria-hidden={storyStep<2||storyStep>3}>
+           <span>{storySourceLabel}</span>
+           <strong>{storyEvidence?.title||'No supported public source available'}</strong>
+           <p>{storySourceDisplay}</p>
+           {storyEvidence&&<a href={storyEvidence.url} target="_blank" rel="noopener noreferrer">Open source</a>}
+          </div>
+         </div>
         </div>
 
-        <div className="story-source-panel" aria-hidden={storyStep<2||storyStep>3}>
-         <span>{storySourceLabel}</span>
-         <strong>{storyEvidence?.title||'No supported public source available'}</strong>
-         <p>{storySourceCopy}</p>
-         {storyEvidence&&<a href={storyEvidence.url} target="_blank" rel="noopener noreferrer">Open source</a>}
+        <div className="story-claim-anchor" aria-hidden={storyStep<1||storyStep>2}>
+         <span>From the message</span>
+         <strong>{storyClaimDisplay||storyClaimHeading}</strong>
         </div>
 
         <div className={`story-verdict-panel ${storyResult?.verdict==='MISMATCH'||storySignal?.kind==='SOURCE_CONFLICT'?'is-conflict':''}`} aria-hidden={storyStep!==3}>
@@ -650,8 +704,7 @@ async function upload(uploaded:File){
 
        <button type="button" className="story-hit story-hit-left" aria-label="Previous frame" onClick={storyBack} disabled={storyStep===0}/>
        <button type="button" className="story-hit story-hit-right" aria-label="Next frame" onClick={storyNext}/>
-      </div>
-     </div>
+      </div>     </div>
     </div>}
 
     <div className="review-hero">
