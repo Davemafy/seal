@@ -28,8 +28,8 @@ function enrichCuratedCase(verification:Verification,caseId:string|undefined):Ve
  const signal={
   id:`curated-${item.id}`,
   kind:'OFFICIAL_WARNING' as const,
-  title:`${item.issuer} published this artifact as a scam example`,
-  summary:`This Browse artifact comes from ${item.issuer}'s own published warning. SEAL treats that provenance as evidence about this example, not as proof about unrelated messages.`,
+  title:`${item.issuer} already identified this artifact`,
+  summary:`This exact Browse artifact is reproduced from ${item.issuer}'s published scam alert. That source is enough to reject the QR/payment route in this example.`,
   evidence:[evidence]
  };
 
@@ -37,14 +37,13 @@ function enrichCuratedCase(verification:Verification,caseId:string|undefined):Ve
   ...verification,
   signals:[signal,...(verification.signals||[]).filter(candidate=>candidate.id!==signal.id)],
   safe_action:{
-   title:'Do not use the route supplied by this message',
-   summary:`${item.issuer} published this example as a scam. Do not scan its QR code, pay through it, or use contact details from the message. Start from the issuing authority's published source instead.`,
+   title:'Do not scan or pay from this message',
+   summary:`${item.issuer} published this exact example as a scam. SEAL has enough evidence to reject the QR/payment route shown here; you do not need to research this example again.`,
    primary_url:item.sourceUrl,
-   primary_label:`Open ${item.issuer}'s published warning`,
+   primary_label:`View the ${item.issuer} source`,
    steps:[
-    'Do not use the QR code, link, payment route, or contact details supplied by this message.',
-    `Open the published ${item.issuer} source below and navigate from the authority's own site.`,
-    'If you still need to act on a case, find the court or agency through that official site and verify the case there.'
+    'Do not scan the QR code or send payment through this message.',
+    'Keep the published authority source below if you need to show why the route was rejected.'
    ],
    evidence:[evidence]
   }
