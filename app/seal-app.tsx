@@ -302,14 +302,14 @@ async function upload(uploaded:File){
       <p>Your uploaded file does not leave the browser. Extracted text can be sent to the SEAL server and, when configured, to Groq for claim structuring. SEAL does not store the uploaded file or extracted claims.</p>
      </details>
     </div>
-    <section className="entry-guide" aria-label="Questions SEAL can help answer">
-     <h2 className="guide-heading">Questions this can help answer</h2>
-     <div className="entry-guide-body">
-      <div><p><strong>What am I being asked to do?</strong><small>See the requests in the message together.</small></p></div>
-      <div><p><strong>What can the court confirm?</strong><small>Check supported details against court sources.</small></p></div>
-      <div><p><strong>How do I check the next step?</strong><small>When available, find court contact outside the message.</small></p></div>
-      <p className="guide-limit">A source match cannot prove who sent a message.</p>
+    <section className="entry-guide" aria-label="What SEAL checks">
+     <p className="guide-heading">After you add a message</p>
+     <div className="guide-flow">
+      <div><span>01</span><p><strong>Requests</strong><small>What it asks you to do.</small></p></div>
+      <div><span>02</span><p><strong>Source</strong><small>What court sources can confirm.</small></p></div>
+      <div><span>03</span><p><strong>Next step</strong><small>Where to check safely.</small></p></div>
      </div>
+     <p className="guide-limit">A source match cannot prove who sent a message.</p>
     </section>
    </section>
    :
