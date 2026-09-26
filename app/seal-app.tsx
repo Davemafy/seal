@@ -414,7 +414,7 @@ async function upload(uploaded:File){
   <aside className="workspace-rail" aria-label="Workspace">
    <a href="/" className="rail-brand">SEAL<span>®</span></a>
    <div className="rail-group-label">WORKSPACE</div>
-   <button className={`rail-item ${!text?'is-current':''}`} type="button" onClick={clear}>Check a message</button>
+   <button className="rail-item is-current" type="button" onClick={clear}>Check a message</button>
    <a className="rail-item" href="/browse">Browse real cases</a>
    <div className="rail-spacer"/>
    <div className="rail-foot"><strong>Public sources only</strong><span>Every item links back to the issuing court or agency.</span></div>
