@@ -12,6 +12,10 @@ type Mode='SNAPSHOT'|'LIVE';
 
 const verdictLabel=(value:Result['verdict'])=>value==='MATCH'?'Matches':value==='MISMATCH'?'Conflicts':'Could not verify';
 const stateWord=verdictLabel;
+const compactEvidenceTitle=(title:string,index:number,allTitles:string[])=>{
+ const allVirginia=allTitles.length>1&&allTitles.every(value=>/^Code of Virginia\s+/i.test(value));
+ return allVirginia&&index>0?title.replace(/^Code of Virginia\s+/i,''):title;
+};
 const cleanDisplayText=(value:string)=>value
  .replace(/\[\s*=\s*\]/g,' ')
  .replace(/(?:^|\s)[*•]+\s*/g,' ')
@@ -145,23 +149,20 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    ?'The cited law does not match the printed toll claim. Search the case independently before relying on the notice.'
    :verification?.safe_action?.summary||'Use the court’s own website or independently sourced contact information before responding.';
  const storyDurations=[2800,3600,5000,3200,0];
- const decisionEvidence=storySignal?.evidence?.[0]||storyEvidence;
  const directCourtUnavailable=verification?.resolver_id==='unsupported';
- const decisionEvidenceLabel=storySignal
-  ?storySignal.kind==='KNOWN_PATTERN'||storySignal.id==='traffic-qr-warning'?'Official pattern evidence':'Official source finding'
-  :'Direct court check';
- const decisionEvidenceTitle=storySignal?.title||decisionEvidence?.title||(directCourtUnavailable?'No supported direct court check':'Independent official source');
- const decisionEvidenceSummary=storySignal?.summary||decisionEvidence?.excerpt||storyResult?.explanation||(directCourtUnavailable?'SEAL does not have a supported direct court-source resolver for this jurisdiction.':'No supported public source independently confirms this detail.');
- const directCheckSummary=storySignal&&directCourtUnavailable?'Direct court check: no supported court resolver is available for this jurisdiction.':'';
+ const directCheckSummary=directCourtUnavailable?'No supported direct court check is available for this jurisdiction.':'';
  const decisionRelationship=storySignal?.kind==='SOURCE_CONFLICT'
-  ?'Conflicts with the printed claim.'
-  :storySignal
-   ?'Published official warnings match this pattern.'
-   :storyResult?.verdict==='MATCH'
-    ?'Matches the independent source.'
-    :storyResult?.verdict==='MISMATCH'
-     ?'Conflicts with the independent source.'
-     :'No direct case confirmation.';
+  ?'This detail conflicts with an official source.'
+  :storySignal?.id==='traffic-qr-warning'
+   ?'Published official warnings match this payment pattern.'
+   :storySignal
+    ?'Published official warnings match this pattern.'
+    :storyResult?.verdict==='MATCH'
+     ?'This detail matches the independent source.'
+     :storyResult?.verdict==='MISMATCH'
+      ?'This detail conflicts with the independent source.'
+      :'No direct case confirmation.';
+ const decisionRelationshipConflict=storySignal?.kind==='SOURCE_CONFLICT'||(!storySignal&&storyResult?.verdict==='MISMATCH');
  const current=claims.find(claim=>claim.id===selected)||claims[0];
  const currentResult=current&&resultById.get(current.id);
  const active=hovered||selected;
@@ -357,7 +358,14 @@ async function upload(uploaded:File){
    setVerification(checked);
    setRevealed(found.length);
 
+   const trafficSignal=checked.signals?.find(signal=>signal.id==='traffic-qr-warning');
+   const decisionDriven=trafficSignal
+    ?found.find(claim=>claim.action?.kind==='pay')
+     ||found.find(claim=>claim.action?.verb==='scan')
+     ||found.find(claim=>claim.action?.kind==='appear')
+    :undefined;
    const requested=
+    decisionDriven||
     found.find(claim=>claim.action&&checked.results.find(result=>result.claim_id===claim.id)?.verdict==='MISMATCH')||
     found.find(claim=>checked.results.find(result=>result.claim_id===claim.id)?.verdict==='MISMATCH')||
     found.find(claim=>claim.action)||
@@ -591,15 +599,11 @@ async function upload(uploaded:File){
          <p>{storyClaimDisplay||cleanDisplayText(storyClaim.value)}</p>
         </div>}
 
-        <div className="decision-evidence">
-         <span>{decisionEvidenceLabel}</span>
-         <strong>{decisionEvidenceTitle}</strong>
-         <p>{decisionEvidenceSummary}</p>
-         {decisionEvidence&&<a href={decisionEvidence.url} target="_blank" rel="noopener noreferrer">Open source</a>}
+        <div className={`decision-evidence decision-relationship-block ${decisionRelationshipConflict?'is-conflict':''}`}>
+         <span>Source relationship</span>
+         <strong>{decisionRelationship}</strong>
          {directCheckSummary&&<small className="decision-direct-check">{directCheckSummary}</small>}
         </div>
-
-        <p className={`decision-relationship ${storyResult?.verdict==='MISMATCH'||storySignal?'is-conflict':''}`}>{decisionRelationship}</p>
        </div>}
      </div>
 
@@ -631,7 +635,7 @@ async function upload(uploaded:File){
           type="button"
           key={claim.id}
           aria-label={`Select ${claim.label}`}
-          className={`bbox ${active===claim.id?'focused':''}`}
+          className={`bbox ${claim.source_bbox!.height<.012?'is-thin':''} ${active===claim.id?'focused':''}`}
           style={{left:`${claim.source_bbox!.x*100}%`,top:`${claim.source_bbox!.y*100}%`,width:`${claim.source_bbox!.width*100}%`,height:`${claim.source_bbox!.height*100}%`}}
           onClick={()=>select(claim.id)}
           onMouseEnter={()=>setHovered(claim.id)}
@@ -653,14 +657,19 @@ async function upload(uploaded:File){
      </div>
 
      {verification?.signals&&verification.signals.length>0&&<div className="source-signals">
-      {verification.signals.map(signal=><article className="source-signal" key={signal.id}>
-       <p className="signal-kind">{signal.kind==='SOURCE_CONFLICT'?'Source conflict':signal.kind==='KNOWN_PATTERN'?'Known pattern':'Official warning'}</p>
-       <h3>{signal.title}</h3>
-       <p>{signal.summary}</p>
-       {signal.evidence.length>0&&<div className="signal-links">
-        {signal.evidence.map((evidence,index)=><a href={evidence.url} target="_blank" rel="noopener noreferrer" key={`${signal.id}-${index}`}>{evidence.title} <span aria-hidden="true">→</span></a>)}
-       </div>}
-      </article>)}
+      {verification.signals.map(signal=>{
+       const primary=signal.id===storySignal?.id;
+       const evidenceTitles=signal.evidence.map(evidence=>evidence.title);
+       return <article className={`source-signal ${primary?'is-primary':'is-secondary'}`} key={signal.id}>
+        <p className="signal-kind">{signal.kind==='SOURCE_CONFLICT'?'Source conflict':signal.kind==='KNOWN_PATTERN'?'Known pattern':'Official warning'}</p>
+        <h3>{signal.title}</h3>
+        <p>{signal.summary}</p>
+        {signal.evidence.length>0&&<div className="signal-links">
+         {signal.evidence.length>1&&<span className="signal-links-label">Sources</span>}
+         {signal.evidence.map((evidence,index)=><a href={evidence.url} target="_blank" rel="noopener noreferrer" key={`${signal.id}-${index}`}>{compactEvidenceTitle(evidence.title,index,evidenceTitles)} <span aria-hidden="true">→</span></a>)}
+        </div>}
+       </article>;
+      })}
      </div>}
 
      {verification?.safe_action&&<div className="safe-route">
@@ -752,7 +761,6 @@ async function upload(uploaded:File){
         </details>}
        </>:<div className="no-source">{currentResult.explanation}</div>}
        <div className="why-line">{currentResult.evidence.length?currentResult.explanation:'This does not mean the detail is wrong.'}</div>
-       {!currentResult.evidence.length&&<div className="source-timestamp">No public confirmation</div>}
       </div>}
      </div>
 
