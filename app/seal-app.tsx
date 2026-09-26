@@ -136,15 +136,15 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
     :'We couldn’t confirm this detail.';
  const storyVerdictCopy=storySignal?.summary||storyResult?.explanation||decisionCopy(verification).summary;
  const storyFinalTitle=storySignal?.id==='traffic-qr-warning'
-  ?verification.safe_action?.title||'Verify independently before you pay.'
-  :storyClaim?.type==='authority'&&verification.safe_action
+  ?verification?.safe_action?.title||'Verify independently before you pay.'
+  :storyClaim?.type==='authority'&&verification?.safe_action
    ?'Verify this notice in Virginia’s official court system.'
-   :verification.safe_action?.title||'Verify independently before you respond.';
+   :verification?.safe_action?.title||'Verify independently before you respond.';
  const storyFinalSummary=storySignal?.id==='traffic-qr-warning'
-  ?verification.safe_action?.summary||'Do not use the payment route in this message until the case is independently verified.'
-  :storyClaim?.type==='authority'&&verification.safe_action
+  ?verification?.safe_action?.summary||'Do not use the payment route in this message until the case is independently verified.'
+  :storyClaim?.type==='authority'&&verification?.safe_action
    ?'The cited law does not match the printed toll claim. Search the case independently before relying on the notice.'
-   :verification.safe_action?.summary||'Use the court’s own website or independently sourced contact information before responding.';
+   :verification?.safe_action?.summary||'Use the court’s own website or independently sourced contact information before responding.';
  const storyDurations=[2800,3600,5000,3200,0];
  const decisionEvidence=storySignal?.evidence?.[0]||storyEvidence;
  const decisionEvidenceTitle=storySignal?.title||decisionEvidence?.title||'Independent source';
