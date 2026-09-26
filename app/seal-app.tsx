@@ -532,7 +532,7 @@ async function upload(uploaded:File){
 
  return <main className="seal-app">
   <aside className="workspace-rail" aria-label="Workspace">
-   <a href="/" className="rail-brand">SEAL<span>®</span></a>
+   <a href="/" className="rail-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></a>
    <div className="rail-group-label">WORKSPACE</div>
    <button className="rail-item is-current" type="button" onClick={clear}>Check a message</button>
    <a className="rail-item" href="/browse">Browse real cases</a>
@@ -540,7 +540,7 @@ async function upload(uploaded:File){
    <div className="rail-foot"><strong>Public sources only</strong><span>Every item links back to the issuing court or agency.</span></div>
   </aside>
   <header className="seal-nav mobile-only-nav">
-   <a href="/" className="mobile-brand">SEAL</a>
+   <a href="/" className="mobile-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></a>
    {!text
     ?<a href="/browse" className="mobile-nav-action">Browse</a>
     :<button className="mobile-nav-action mobile-nav-button" type="button" onClick={clear}>New check</button>}
@@ -638,7 +638,7 @@ async function upload(uploaded:File){
     {verification&&ready&&storyOpen&&<div className={`story-overlay ${storyClosing?'is-closing':''}`} role="dialog" aria-modal="true" aria-label="SEAL review presentation">
      <div className={`story-player story-step-${storyStep} ${storyPlaying?'is-playing':'is-paused'} ${storyFocusBox?'has-story-focus':'no-story-focus'}`}>
       <div className="story-topbar">
-       <span className="story-brand">SEAL</span>
+       <span className="story-brand"><img src="/brand/seal-mark-white.svg" alt=""/><span>SEAL</span></span>
        <div className="story-top-actions">
         <button ref={storyPauseButton} type="button" className="story-pause" onClick={()=>setStoryPlaying(value=>!value)}>{storyPlaying?'Pause':'Play'}</button>
         {storyStep<4&&<button type="button" onClick={closeStory}>Full evidence</button>}

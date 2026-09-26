@@ -13,7 +13,11 @@ const uberMove=localFont({
 
 export const metadata:Metadata={
  title:'SEAL — The seal can be faked. The source can’t.',
- description:'Check claims on a court notice against independent official sources.'
+ description:'Check claims on a court notice against independent official sources.',
+ icons:{
+  icon:'/icon.svg',
+  shortcut:'/icon.svg'
+ }
 };
 
 export default function RootLayout({children}:{children:React.ReactNode}){

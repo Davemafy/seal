@@ -14,7 +14,7 @@ function CaseMedia({item}:{item:BrowseCase}){
 export default function Browse(){
  return <main className="seal-app browse-page">
   <aside className="workspace-rail" aria-label="Workspace">
-   <a href="/" className="rail-brand">SEAL<span>®</span></a>
+   <a href="/" className="rail-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></a>
    <div className="rail-group-label">WORKSPACE</div>
    <a className="rail-item" href="/">Check a message</a>
    <a className="rail-item is-current" href="/browse">Browse real cases</a>
@@ -23,7 +23,7 @@ export default function Browse(){
   </aside>
 
   <header className="seal-nav mobile-only-nav">
-   <a href="/" className="mobile-brand">SEAL</a>
+   <a href="/" className="mobile-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></a>
    <a href="/" className="mobile-nav-action">Check</a>
   </header>
 
