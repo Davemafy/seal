@@ -125,8 +125,8 @@ function decisionCopy(verification:Verification|null,claim?:Claim){
   summary:'See what matched below. A matching detail alone does not confirm who sent the message.'
  };
  if(claim?.action)return {
-  title:'Limited result',
-  summary:'SEAL found the requested action, but this court is outside the current direct-check coverage. Nothing in this result confirms the case or sender.'
+  title:'What this message asks you to do',
+  summary:'These instructions come from the message itself. SEAL has not confirmed the case or sender with the court.'
  };
  return {
   title:'No supported check',
@@ -184,6 +184,10 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const isActionDemo=isDemo&&text.startsWith('DEMO / SYNTHETIC MESSAGE');
  const resultById=useMemo(()=>new Map(verification?.results.map(result=>[result.claim_id,result])||[]),[verification]);
  const requestedActions=useMemo(()=>claims.filter(claim=>Boolean(claim.action)),[claims]);
+ const groundedActions=useMemo(()=>requestedActions.filter(claimReliable),[requestedActions]);
+ const messageDetails=useMemo(()=>claims.filter(claim=>
+  ['court','location','docket','reporting_date'].includes(claim.type)&&claimReliable(claim)
+ ),[claims]);
  const primaryAction=requestedActions[0];
  const actionSummary=useMemo(()=>{
   const words=[...new Set(requestedActions.map(actionSummaryWord).filter(Boolean))];
@@ -1136,7 +1140,10 @@ async function upload(uploaded:File){
         <h1>{decision.title}</h1>
         <p className="decision-summary">{decision.summary}</p>
 
-        {decisionClaim&&<div className="decision-claim">
+        {directCourtUnavailable&&groundedActions.length>0?<div className="decision-claim">
+         <span>In the message</span>
+         <ul className="message-action-list">{groundedActions.map(claim=><li key={claim.id}>{cleanDisplayText(claim.action?.source_text||claim.exact_source_text||claim.value)}</li>)}</ul>
+        </div>:decisionClaim&&<div className="decision-claim">
          <span>From the message</span>
          <p>{decisionClaimDisplay||cleanDisplayText(decisionClaim.value)}</p>
         </div>}
@@ -1244,9 +1251,12 @@ async function upload(uploaded:File){
       </div>}
 
      {verification&&!verification.safe_action&&decisionClaim?.action&&<div className="unsupported-next-step" id="next-step">
-      <span>Coverage limit</span>
-      <h2>SEAL could not add enough independent evidence for this message.</h2>
-      <p>Do not treat this result as approval or rejection of the message. If you need to act, start from the issuing court’s official site that you find independently rather than from a link, QR code, or phone number in the message.</p>
+      <span>What SEAL could establish</span>
+      <h2>The message contains these details</h2>
+      {messageDetails.length>0?<dl className="message-detail-list">{messageDetails.map(claim=><div key={claim.id}><dt>{claim.label}</dt><dd>{cleanDisplayText(claim.value)}</dd></div>)}</dl>:<p>No court or case details could be read reliably.</p>}
+      <p>These are details printed in the message, not facts confirmed by a court. SEAL cannot establish whether the case exists or who sent it.</p>
+      <p>If you need to respond, give the court name and case number above to a clerk reached through an official court site. Do not use payment or contact details supplied in the message until the court confirms them.</p>
+      {/\b(?:united states district court|u\.?s\.? district court|federal court)\b/i.test(text)&&<a href="https://www.uscourts.gov/federal-court-finder/find" target="_blank" rel="noopener noreferrer">Find the court through the U.S. Courts directory →</a>}
      </div>}
      {verification?.safe_action&&<div className="safe-route" id="next-step">
       <div className="safe-route-heading">
