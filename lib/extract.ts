@@ -27,7 +27,7 @@ function plausibleCourtName(value:string){
 }
 
 function genericCourtName(value:string){
- return /^(?:in\s+the\s+)?(?:district|superior|circuit|municipal|traffic|county)\s+court\b/i.test(value.trim());
+ return /^(?:in\s+the\s+)?(?:district|superior|circuit|municipal|traffic|county)\s+court\s*$/i.test(value.trim());
 }
 function jurisdictionLine(value:string){
  return /^(?:state\s+of\s+[a-z][a-z .'-]{2,50}|commonwealth\s+of\s+[a-z][a-z .'-]{2,50}|united\s+states(?:\s+district)?\s+court\b)/i.test(value.trim());
@@ -108,21 +108,28 @@ function similarActions(a:ActionNode,b:ActionNode){
 
 function actionWindows(lines:string[]){
  const out:string[]=[];
+ const startsDirective=(value:string)=>/^(?:[\s•*\-–—]*\d+[.)]?\s*)?(?:please\s+)?(?:pay|remit|submit|transfer|call|contact|phone|text|open|visit|click|scan|reply|provide|share|enter|send|disclose|appear|report|attend)\b/i.test(value)
+  ||/^(?:[\s•*\-–—]*\d+[.)]?\s*)?(?:you|recipient|defendant|juror|driver|respondent|party)\s+(?:must|shall|should|need(?:s)?\s+to|are\s+required\s+to|is\s+required\s+to|are\s+ordered\s+to|is\s+ordered\s+to|are\s+directed\s+to|is\s+directed\s+to)\b/i.test(value);
+ const looksLikeHeader=(value:string)=>/^[A-Z][A-Z\s/&-]{4,48}:?$/.test(value);
  for(let i=0;i<lines.length;i++){
   const line=lines[i].trim();if(!line)continue;
   out.push(line);
   if(!ACTION_VERBS.test(line)){ACTION_VERBS.lastIndex=0;continue}
   ACTION_VERBS.lastIndex=0;
+  // Only stitch genuine OCR/text wraps. Never swallow the next numbered action
+  // or section heading into the current action.
   let joined=line;
   for(let j=1;j<=2&&i+j<lines.length;j++){
    const next=lines[i+j].trim();
-   if(!next||joined.length+next.length>220)break;
+   if(!next||joined.length+next.length>220||startsDirective(next)||looksLikeHeader(next))break;
+   const needsContinuation=/[,;:\-–—]$/.test(joined)||!/[.!?]$/.test(joined);
+   if(!needsContinuation)break;
    joined=`${joined} ${next}`.replace(/\s+/g,' ').trim();
    out.push(joined);
    if(/[.!?]$/.test(next))break;
   }
  }
- return out;
+ return [...new Set(out)];
 }
 
 export function extractActionGraph(text:string,tokens:Token[]=[]):ActionNode[]{
@@ -329,7 +336,11 @@ export function claimsFromExtraction(e:Extraction,text:string,tokens:Token[]=[])
   const anchor=locatePhrase(confidenceBasis||value,tokens)||locatePhrase(value,tokens);
   const strictConfidence=['phone','url','docket','juror'].includes(type);
   const fieldConfidence=tokens.length
-   ?action?actionConfidence(confidenceBasis||value,tokens,action):confidenceFor(confidenceBasis||value,tokens,strictConfidence)
+   ?action
+    ?strictConfidence
+     ?confidenceFor(confidenceBasis||value,tokens,true)
+     :actionConfidence(confidenceBasis||value,tokens,action)
+    :confidenceFor(confidenceBasis||value,tokens,strictConfidence)
    :undefined;
   const threshold=action?66:FIELD_CONFIDENCE;
   const verificationEligible=fieldConfidence===undefined?tokens.length===0:fieldConfidence>=threshold;
