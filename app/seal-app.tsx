@@ -909,10 +909,10 @@ async function upload(uploaded:File){
         onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
         onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
         <span className="upload-group">
-         <span className="upload-copy">{busy&&<span className="upload-process-label">ON THIS DEVICE</span>}<strong>{busy?(status==='Reading text from the image'?'Reading image':status==='Reading text from the PDF'?'Reading PDF':status):'Upload a notice or screenshot'}</strong><small>{busy?(status==='Reading text from the image'?'Reading the words in your image. Nothing has been sent yet.':status==='Reading text from the PDF'?'Reading the text layer in this PDF. Nothing has been sent yet.':'Preparing the file locally.'):'Drop here or browse files · PDF, PNG, or JPG · up to 16 MB'}</small></span>
+         <span className="upload-copy">{busy&&<img className="upload-busy-mark" src="/brand/seal-mark-black.svg" alt=""/>}{busy&&<span className="upload-process-label">ON THIS DEVICE</span>}<strong>{busy?(status==='Reading text from the image'?'Reading image':status==='Reading text from the PDF'?'Reading PDF':status):'Upload a notice or screenshot'}</strong><small>{busy?(status==='Reading text from the image'?'Reading the words in your image. Nothing has been sent yet.':status==='Reading text from the PDF'?'Reading the text layer in this PDF. Nothing has been sent yet.':'Preparing the file locally.'):'Drop here or browse files · PDF, PNG, or JPG · up to 16 MB'}</small></span>
          {!busy&&<span className="upload-browse">Browse files</span>}
         </span>
-        {busy&&<span className="upload-busy-rule" aria-hidden="true"/>}
+        
        </button>
        <button className="paste-mode-switch" type="button" onClick={()=>setPasteMode(true)}>Paste text instead <span aria-hidden="true">→</span></button>
        <p className="privacy-note">Original file stays on this device. Extracted text may be sent for checking.</p>
