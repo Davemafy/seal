@@ -250,7 +250,7 @@ async function upload(uploaded:File){
   </div>;
  })}</div>;
 
- return <main className="seal-app">
+ return <main className={`seal-app ${!text?'entry-mode':''}`}>
   <aside className="workspace-rail" aria-label="Workspace">
    <Link href="/" className="rail-brand">SEAL<span>®</span></Link>
    <div className="rail-group-label">WORKSPACE</div>
@@ -268,6 +268,7 @@ async function upload(uploaded:File){
   {!text?
    <section className="entry-shell">
    <div className="entry-copy">
+     <p className="brand-statement">The seal can be faked. <em>The source can’t.</em></p>
      <h1>Check a court message</h1>
      <p>Received a notice, email, or text? Add it here to see what it asks you to do, what court sources say, and where to confirm the rest.</p>
     </div>
