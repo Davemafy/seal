@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import PDFPreview from './pdf-preview';
 import {fixtures,type FixtureKey} from '@/lib/fixtures';
@@ -412,15 +411,15 @@ async function upload(uploaded:File){
 
  return <main className="seal-app">
   <aside className="workspace-rail" aria-label="Workspace">
-   <Link href="/" className="rail-brand">SEAL<span>®</span></Link>
+   <a href="/" className="rail-brand">SEAL<span>®</span></a>
    <div className="rail-group-label">WORKSPACE</div>
    <button className={`rail-item ${!text?'is-current':''}`} type="button" onClick={clear}>Check a message</button>
-   <Link className="rail-item" href="/browse">Browse real cases</Link>
+   <a className="rail-item" href="/browse">Browse real cases</a>
    <div className="rail-spacer"/>
    <div className="rail-foot"><strong>Check the source</strong><span>Open the court pages behind each finding.</span></div>
   </aside>
   <header className="seal-nav">
-   <Link href="/" className="mobile-brand">SEAL</Link>
+   <a href="/" className="mobile-brand">SEAL</a>
    <div className="seal-nav-note">SEAL <span aria-hidden="true">/</span> {text?'Your review':'Check a message'}</div>
    {text?<button className="nav-action" type="button" onClick={clear}>Check another message</button>:<div className="nav-trust">Court message review</div>}
   </header>
@@ -459,7 +458,7 @@ async function upload(uploaded:File){
 
      <div className="entry-foot">
       <p className="privacy-note">Your file stays in this browser. SEAL may send extracted text for checking, but doesn’t store the file or extracted claims.</p>
-      <Link href="/browse" className="browse-entry-link">Browse real cases</Link>
+      <a href="/browse" className="browse-entry-link">Browse real cases</a>
      </div>
     </div>
    </section>

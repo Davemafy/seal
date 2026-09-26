@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import {browseCases,type BrowseCase} from '@/lib/browse-cases';
 import PdfThumb from './pdf-thumb';
 import '../workspace.css';
@@ -15,18 +14,18 @@ function CaseMedia({item}:{item:BrowseCase}){
 export default function Browse(){
  return <main className="seal-app browse-page">
   <aside className="workspace-rail" aria-label="Workspace">
-   <Link href="/" className="rail-brand">SEAL<span>®</span></Link>
+   <a href="/" className="rail-brand">SEAL<span>®</span></a>
    <div className="rail-group-label">WORKSPACE</div>
-   <Link className="rail-item" href="/">Check a message</Link>
-   <Link className="rail-item is-current" href="/browse">Browse real cases</Link>
+   <a className="rail-item" href="/">Check a message</a>
+   <a className="rail-item is-current" href="/browse">Browse real cases</a>
    <div className="rail-spacer"/>
    <div className="rail-foot"><strong>Public sources only</strong><span>Every item links back to the issuing court or agency.</span></div>
   </aside>
 
   <header className="seal-nav">
-   <Link href="/" className="mobile-brand">SEAL</Link>
+   <a href="/" className="mobile-brand">SEAL</a>
    <div className="seal-nav-note">SEAL <span aria-hidden="true">/</span> Browse</div>
-   <Link href="/" className="nav-action browse-check-link">Check a message</Link>
+   <a href="/" className="nav-action browse-check-link">Check a message</a>
   </header>
 
   <section className="browse-shell">
@@ -45,7 +44,7 @@ export default function Browse(){
       <p className="case-note">{item.visualNote}</p>
       <div className="case-actions">
        <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer">Open source</a>
-       <Link href={`/?case=${item.id}`}>Run in SEAL</Link>
+       <a href={`/?case=${item.id}`}>Run in SEAL</a>
       </div>
      </div>
     </article>)}
