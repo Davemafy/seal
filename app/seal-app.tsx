@@ -189,7 +189,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   const words=[...new Set(requestedActions.map(actionSummaryWord).filter(Boolean))];
   return words.length?`${words.length} action${words.length===1?'':'s'}: ${words.join(' · ')}`:'';
  },[requestedActions]);
- const storySignal=verification?.signals?.find(signal=>signal.id.startsWith('curated-'))
+ const curatedSignal=verification?.signals?.find(signal=>signal.id.startsWith('curated-'));
+ const storySignal=curatedSignal
   ||verification?.signals?.find(signal=>signal.id==='traffic-qr-warning')
   ||verification?.signals?.find(signal=>signal.kind==='SOURCE_CONFLICT')
   ||verification?.signals?.[0];
@@ -1248,23 +1249,21 @@ async function upload(uploaded:File){
       <p>Do not treat this result as approval or rejection of the message. If you need to act, start from the issuing court’s official site that you find independently rather than from a link, QR code, or phone number in the message.</p>
      </div>}
      {verification?.safe_action&&<div className="safe-route" id="next-step">
-      <div>
-       <h2>Safest next step</h2>
+      <div className="safe-route-heading">
+       <span>{curatedSignal?'Resolved action':'Next step'}</span>
+       <h2>{verification.safe_action.title}</h2>
        <p>{verification.safe_action.summary}</p>
       </div>
-      <div>
+      <div className="safe-route-body">
        <ol className="safe-steps">{verification.safe_action.steps.map((step,index)=><li key={index}>{step}</li>)}</ol>
        <div className="safe-route-actions">
         {verification.contact?.website&&<a className="safe-primary" href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open official court website</a>}
-        {verification.safe_action.primary_url&&verification.safe_action.primary_url!==verification.contact?.website&&<div className="safe-supporting">
-         <span>Supporting guidance</span>
-         <a href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label} <span aria-hidden="true">→</span></a>
-        </div>}
+        {verification.safe_action.primary_url&&verification.safe_action.primary_url!==verification.contact?.website&&<a className="safe-source-link" href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label} <span aria-hidden="true">↗</span></a>}
        </div>
       </div>
      </div>}
 
-     <p className="resolution-disclaimer">These sources can inform the check, but they cannot confirm who sent the message.</p>
+     <p className="resolution-disclaimer">{curatedSignal?'This conclusion applies to this published example. It does not classify unrelated messages.':'These sources can inform the check, but they cannot confirm who sent the message.'}</p>
     </section>}
 
     {ready&&verification?.contact&&<section className="contact-section" id={verification.safe_action?undefined:'next-step'} aria-label="Independent court contact">
