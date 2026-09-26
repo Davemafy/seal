@@ -187,6 +187,7 @@ export function groundedModelActions(extraction:Extraction,text:string):ActionNo
    source=source.slice(start,ending<0?undefined:verbAt+ending+1).trim();
    if(source.length>180||source.length<8)continue;
   }
+  if(/^(?:phone to call|telephone|contact information|jury service contact)\s*:?(?:\s+only)?$/i.test(source))continue;
   const compact=source.replace(/\s/g,'');
   if((compact.match(/[a-z]/gi)||[]).length<5)continue;
   if((compact.match(/[^a-z0-9.,:;()/#$%&@'’"!?+\-–—]/gi)||[]).length>Math.max(2,Math.floor(compact.length*.08)))continue;
