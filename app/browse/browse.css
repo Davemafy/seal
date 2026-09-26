@@ -29,12 +29,16 @@
 .case-actions a:last-child{min-height:40px;display:inline-flex;align-items:center;padding:9px 13px;border-radius:8px;background:#000;color:#fff;text-decoration:none}
 .case-actions a:last-child:hover{background:#333}
 
-@media(max-width:1135px){
- .browse-shell{padding-inline:36px}
+@media(max-width:1540px){
  .case-archive{grid-template-columns:1fr;gap:42px}
- .case-card,.case-card:nth-child(3n+1){grid-column:1;grid-template-columns:minmax(0,.9fr) minmax(280px,1.1fr);gap:30px;padding:0}
+ .case-card,.case-card:nth-child(3n+1){grid-column:1;grid-template-columns:minmax(0,.9fr) minmax(280px,1.1fr);gap:36px;padding:0}
  .case-card:nth-child(3n+1) .case-visual{height:400px}
  .case-card:nth-child(3n+1) .case-copy h2{font-size:32px;line-height:40px}
+}
+
+@media(max-width:1135px){
+ .browse-shell{padding-inline:36px}
+ .case-card,.case-card:nth-child(3n+1){gap:30px}
 }
 
 @media(max-width:900px){
