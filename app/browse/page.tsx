@@ -43,7 +43,7 @@ export default function Browse(){
       <p className="case-note">{item.visualNote}</p>
       <div className="case-actions">
        <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer">Open source</a>
-       <a href={`/?case=${item.id}`}>Run in SEAL</a>
+       {(item.classification==='Confirmed scam example'||item.classification==='Legitimate sample/form')&&<a href={`/?case=${item.id}`}>Run in SEAL</a>}
       </div>
      </div>
     </article>)}
