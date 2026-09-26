@@ -172,8 +172,21 @@ export function groundedModelActions(extraction:Extraction,text:string):ActionNo
   const quote=candidate.exact_quote.trim();
   if(quote.length<8||quote.length>350||candidate.confidence<65)continue;
   const pattern=quote.split(/\s+/).map(part=>part.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('\\s+');
-  const source=text.match(new RegExp(pattern,'i'))?.[0];
+  let source=text.match(new RegExp(pattern,'i'))?.[0];
   if(!source)continue;
+  // A model may quote an entire short notice as one action. Keep the grounded
+  // sentence containing its verb; reject it if that sentence is still too broad.
+  if(source.length>180){
+   const verb=candidate.verb.trim().replace(/[^a-z]/gi,'');
+   const verbAt=verb?source.search(new RegExp(`\\b${verb}\\b`,'i')):-1;
+   if(verbAt<0)continue;
+   const before=source.slice(0,verbAt);
+   const start=Math.max(before.lastIndexOf('. ')+2,before.lastIndexOf('? ')+2,before.lastIndexOf('! ')+2,before.lastIndexOf('\n')+1,0);
+   const after=source.slice(verbAt);
+   const ending=after.search(/[.!?](?:\s|$)/);
+   source=source.slice(start,ending<0?undefined:verbAt+ending+1).trim();
+   if(source.length>180||source.length<8)continue;
+  }
   const compact=source.replace(/\s/g,'');
   if((compact.match(/[a-z]/gi)||[]).length<5)continue;
   if((compact.match(/[^a-z0-9.,:;()/#$%&@'’"!?+\-–—]/gi)||[]).length>Math.max(2,Math.floor(compact.length*.08)))continue;
