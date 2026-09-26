@@ -342,7 +342,7 @@ export function claimsFromExtraction(e:Extraction,text:string,tokens:Token[]=[])
      :actionConfidence(confidenceBasis||value,tokens,action)
     :confidenceFor(confidenceBasis||value,tokens,strictConfidence)
    :undefined;
-  const threshold=action?66:FIELD_CONFIDENCE;
+  const threshold=action&&!strictConfidence?66:FIELD_CONFIDENCE;
   const verificationEligible=fieldConfidence===undefined?tokens.length===0:fieldConfidence>=threshold;
   const reliableBox=Boolean(anchor)&&(fieldConfidence===undefined?tokens.length===0:fieldConfidence>=threshold)
    &&anchor!.source_bbox.width>=.01&&anchor!.source_bbox.width<=.92
