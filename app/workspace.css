@@ -47,14 +47,14 @@
 .upload-copy small{display:block;margin-top:6px;color:var(--muted);font-size:12px;line-height:20px}
 .upload-row.is-dragging .upload-copy strong{color:var(--blue)}
 .upload-row.is-busy:disabled{opacity:1;cursor:wait}
-.upload-row.is-busy{align-items:flex-end;border-style:solid;border-color:#d8d8d8;background:#fff}
+.upload-row.is-busy{min-height:184px;align-items:flex-start;border-style:solid;border-color:#d8d8d8;background:#fff;padding:28px 24px}
+.upload-row.is-busy .upload-group{max-width:360px}
 .upload-row.is-busy .upload-copy strong{color:var(--ink);font-size:18px;line-height:24px}
-.upload-process-label{display:block;margin-bottom:10px;color:#777;font-size:10px;line-height:14px;font-weight:700;letter-spacing:.14em}
-.upload-readline{position:absolute;left:24px;right:24px;top:24px;height:1px;background:#111;transform-origin:left center;animation:seal-readline 1.55s cubic-bezier(.65,0,.35,1) infinite}
-.upload-row.is-busy:before{content:"";position:absolute;left:24px;top:24px;width:6px;height:6px;border-radius:50%;background:#111;transform:translateY(-2.5px)}
-@keyframes seal-readline{0%{transform:translateY(0) scaleX(.12);opacity:.35}50%{transform:translateY(96px) scaleX(1);opacity:1}100%{transform:translateY(190px) scaleX(.28);opacity:.2}}
-.check-loader-track{height:1px;background:#d8d8d8;overflow:hidden}
-.check-loader-track span{display:block;height:100%;width:38%;background:#111;animation:seal-progress 1.15s ease-in-out infinite}
+.upload-busy-mark{display:block;width:22px;height:22px;margin-bottom:28px}
+.upload-process-label{display:block;margin-bottom:8px;color:#777;font-size:10px;line-height:14px;font-weight:700;letter-spacing:.14em}
+.check-status{margin-top:24px;padding-top:18px;border-top:1px solid var(--line)}
+.check-status span{display:block;color:#111;font-size:14px;line-height:20px;font-weight:600}
+.check-status small{display:block;max-width:420px;margin-top:6px;color:var(--muted);font-size:12px;line-height:18px}
 .upload-plus{display:none}
 .upload-browse{min-height:42px;display:inline-flex;align-items:center;justify-content:center;margin-top:17px;padding:11px 16px;border-radius:8px;background:var(--tertiary);font-size:14px;font-weight:500;line-height:20px;white-space:nowrap}
 .upload-row:hover .upload-browse{background:#dedede}
@@ -638,4 +638,9 @@
  .safe-route{margin-top:28px}
  .unsupported-next-step{margin-top:28px;padding:20px 0}
  .unsupported-next-step h2{font-size:22px;line-height:30px}
+}
+
+@media(max-width:599px){
+ .upload-row.is-busy{min-height:168px;padding:24px 20px}
+ .upload-busy-mark{margin-bottom:24px}
 }
