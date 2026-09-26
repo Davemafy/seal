@@ -122,6 +122,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const storyKey=useRef('');
  const storyPlayerRef=useRef<HTMLDivElement>(null);
  const storyTimelineRef=useRef<ReturnType<typeof gsap.timeline>|null>(null);
+ const storyProgressTweenRef=useRef<ReturnType<typeof gsap.to>|null>(null);
  const previousStoryStep=useRef(0);
  const storyCloseTimer=useRef<number|undefined>(undefined);
  const replayButton=useRef<HTMLButtonElement>(null);
@@ -186,7 +187,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
     ||(storyResult?.verdict==='MATCH'&&verification?.contact
       ?'Use the independently sourced court contact if you need to act.'
       :'Use the court’s own website or independently sourced contact information before responding.');
- const storyDurations=[3000,3500,5000,3500,3200];
+ const storyDurations=[2400,3200,4400,2800,3000];
  const storySourceLabel=!storyEvidence
   ?'Source check'
   :storySignal?.id==='traffic-qr-warning'&&/ftc\.gov/i.test(storyEvidence.url)
@@ -246,94 +247,136 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const mobile=window.matchMedia('(max-width: 599px)').matches;
   const previous=previousStoryStep.current;
+
+  const stage=root.querySelector<HTMLElement>('.story-document-stage');
   const documentRegion=root.querySelector<HTMLElement>('.story-document-region');
+  const artifact=root.querySelector<HTMLElement>('[data-story-artifact]');
   const sourceRegion=root.querySelector<HTMLElement>('.story-source-region');
   const sourcePanel=root.querySelector<HTMLElement>('.story-source-panel');
   const claim=root.querySelector<HTMLElement>('.story-claim-anchor');
   const verdict=root.querySelector<HTMLElement>('.story-verdict-panel');
+  const verdictScrim=root.querySelector<HTMLElement>('.story-verdict-scrim');
   const action=root.querySelector<HTMLElement>('.story-action-panel');
   const stageLabel=root.querySelector<HTMLElement>('.story-stage-label');
   const highlight=root.querySelector<HTMLElement>('.story-highlight');
   const progressFills=Array.from(root.querySelectorAll<HTMLElement>('.story-progress i'));
   const sourceChildren=Array.from(root.querySelectorAll<HTMLElement>('.story-source-panel > span,.story-source-panel > strong,.story-source-panel > p,.story-source-panel > a'));
   const actionChildren=Array.from(root.querySelectorAll<HTMLElement>('.story-action-panel > span,.story-action-panel > strong,.story-action-panel > p,.story-action-panel > small,.story-action-panel > .story-final-actions'));
-  const targets=[documentRegion,sourceRegion,sourcePanel,claim,verdict,action,stageLabel,highlight,...progressFills,...sourceChildren,...actionChildren].filter(Boolean) as HTMLElement[];
+  const targets=[documentRegion,sourceRegion,sourcePanel,claim,verdict,verdictScrim,action,stageLabel,highlight,...progressFills,...sourceChildren,...actionChildren].filter(Boolean) as HTMLElement[];
 
   storyTimelineRef.current?.kill();
+  storyProgressTweenRef.current?.kill();
   gsap.killTweensOf(targets);
   targets.forEach(target=>{target.style.willChange='transform,opacity'});
 
   const ease='expo.out';
-  const quick=reduced?.15:.28;
-  const major=reduced?.15:.65;
+  const quick=reduced?.15:.26;
+  const major=reduced?.15:.68;
   const camera=reduced?.15:.82;
   const tl=gsap.timeline({defaults:{ease,overwrite:'auto'}});
   storyTimelineRef.current=tl;
 
+  // Progress is time, not decoration: previous segments complete, current segment tracks the beat.
   progressFills.forEach((fill,index)=>{
-   tl.to(fill,{scaleX:index<=nextStep?1:0,duration:reduced?.15:.6,transformOrigin:'left center'},0);
+   gsap.set(fill,{scaleX:index<nextStep?1:0,transformOrigin:'left center'});
   });
+  const activeFill=progressFills[nextStep];
+  if(activeFill){
+   storyProgressTweenRef.current=gsap.to(activeFill,{
+    scaleX:1,
+    duration:reduced?.15:storyDurations[nextStep]/1000,
+    ease:'none',
+    overwrite:true
+   });
+   if(!storyPlaying)storyProgressTweenRef.current.pause();
+  }
 
   if(stageLabel)tl.to(stageLabel,{opacity:nextStep===0?1:0,duration:quick},0);
+
+  // Measure the real rendered document, not its outer wrapper.
+  const placeHighlight=()=>{
+   if(!storyFocusBox||!artifact||!highlight)return;
+   const parent=highlight.offsetParent as HTMLElement|null;
+   if(!parent)return;
+   const artifactRect=artifact.getBoundingClientRect();
+   const parentRect=parent.getBoundingClientRect();
+   const parentScaleX=parent.offsetWidth?parentRect.width/parent.offsetWidth:1;
+   const parentScaleY=parent.offsetHeight?parentRect.height/parent.offsetHeight:1;
+   const left=(artifactRect.left-parentRect.left)/parentScaleX+storyFocusBox.x*(artifactRect.width/parentScaleX);
+   const top=(artifactRect.top-parentRect.top)/parentScaleY+storyFocusBox.y*(artifactRect.height/parentScaleY);
+   const width=storyFocusBox.width*(artifactRect.width/parentScaleX);
+   const height=storyFocusBox.height*(artifactRect.height/parentScaleY);
+   gsap.set(highlight,{left,top,width,height});
+  };
 
   if(documentRegion){
    const focusCenterX=storyFocusBox?storyFocusBox.x+storyFocusBox.width/2:.5;
    const focusCenterY=storyFocusBox?storyFocusBox.y+storyFocusBox.height/2:.5;
-   const focusX=Math.max(-48,Math.min(48,(.5-focusCenterX)*90));
-   const focusY=Math.max(-32,Math.min(32,(.5-focusCenterY)*60));
+   const focusX=Math.max(-28,Math.min(28,(.5-focusCenterX)*54));
+   const focusY=Math.max(-18,Math.min(18,(.5-focusCenterY)*38));
 
    const desktop=[
     {x:0,y:0,xPercent:0,yPercent:0,scale:1,opacity:1,filter:'brightness(1)'},
-    {x:reduced?0:focusX,y:reduced?0:focusY,xPercent:0,yPercent:0,scale:reduced?1:1.035,opacity:1,filter:'brightness(.88)'},
-    {x:0,y:0,xPercent:reduced?0:-24,yPercent:0,scale:reduced?1:.74,opacity:reduced?.62:.72,filter:'brightness(.52)'},
-    {x:0,y:0,xPercent:reduced?0:-24,yPercent:0,scale:reduced?1:.72,opacity:reduced?.34:.24,filter:'brightness(.22)'},
-    {x:0,y:0,xPercent:reduced?0:-18,yPercent:0,scale:reduced?1:.64,opacity:reduced?.28:.24,filter:'brightness(.30)'}
+    {x:reduced?0:focusX,y:reduced?0:focusY,xPercent:0,yPercent:0,scale:reduced?1:1.055,opacity:1,filter:'brightness(.94)'},
+    {x:0,y:0,xPercent:reduced?0:-27,yPercent:reduced?0:-4,scale:reduced?1:.70,opacity:reduced?.8:.9,filter:'brightness(.76)'},
+    {x:0,y:0,xPercent:reduced?0:-27,yPercent:reduced?0:-4,scale:reduced?1:.70,opacity:reduced?.34:.18,filter:'brightness(.20)'},
+    {x:0,y:0,xPercent:reduced?0:-25,yPercent:reduced?0:0,scale:reduced?1:.64,opacity:reduced?.28:.13,filter:'brightness(.24)'}
    ];
    const narrow=[
     {x:0,y:0,xPercent:0,yPercent:0,scale:1,opacity:1,filter:'brightness(1)'},
-    {x:reduced?0:focusX*.45,y:reduced?0:focusY*.45,xPercent:0,yPercent:0,scale:reduced?1:1.02,opacity:1,filter:'brightness(.9)'},
-    {x:0,y:0,xPercent:0,yPercent:reduced?0:-20,scale:reduced?1:.6,opacity:reduced?.58:.68,filter:'brightness(.5)'},
-    {x:0,y:0,xPercent:0,yPercent:reduced?0:-18,scale:reduced?1:.58,opacity:reduced?.32:.22,filter:'brightness(.22)'},
-    {x:0,y:0,xPercent:0,yPercent:reduced?0:-24,scale:reduced?1:.54,opacity:reduced?.26:.22,filter:'brightness(.28)'}
+    {x:reduced?0:focusX*.35,y:reduced?0:focusY*.35,xPercent:0,yPercent:0,scale:reduced?1:1.025,opacity:1,filter:'brightness(.95)'},
+    {x:0,y:0,xPercent:0,yPercent:reduced?0:-20,scale:reduced?1:.61,opacity:reduced?.76:.86,filter:'brightness(.72)'},
+    {x:0,y:0,xPercent:0,yPercent:reduced?0:-20,scale:reduced?1:.61,opacity:reduced?.32:.17,filter:'brightness(.2)'},
+    {x:0,y:0,xPercent:0,yPercent:reduced?0:-23,scale:reduced?1:.56,opacity:reduced?.26:.12,filter:'brightness(.24)'}
    ];
+
    tl.to(documentRegion,{...(mobile?narrow[nextStep]:desktop[nextStep]),duration:camera},0);
   }
 
   if(highlight){
    if(storyFocusBox&&(nextStep===1||nextStep===2)){
-    if(previous===0&&nextStep===1){
-     gsap.set(highlight,{opacity:0,scale:.86,transformOrigin:'center center'});
-    }
-    tl.to(highlight,{
-     left:`${storyFocusBox.x*100}%`,
-     top:`${storyFocusBox.y*100}%`,
-     width:`${storyFocusBox.width*100}%`,
-     height:`${storyFocusBox.height*100}%`,
-     opacity:1,
-     scale:1,
-     duration:reduced?.15:.58
-    },.04);
+    placeHighlight();
+    if(previous===0&&nextStep===1)gsap.set(highlight,{opacity:0,scale:.9,transformOrigin:'center center'});
+    tl.to(highlight,{opacity:1,scale:1,duration:reduced?.15:.46},.04);
    }else{
-    tl.to(highlight,{opacity:0,duration:reduced?.12:.2},0);
+    tl.to(highlight,{opacity:0,duration:reduced?.12:.18},0);
    }
   }
 
+  // Claim appears only after the camera settles, from the exact on-screen bbox position.
   if(claim){
    if(nextStep===1){
-    const focusLeft=storyFocusBox?Math.max(6,Math.min(mobile?18:58,storyFocusBox.x*100)):mobile?18:7;
-    const focusTop=storyFocusBox?Math.max(16,Math.min(mobile?58:64,(storyFocusBox.y+storyFocusBox.height)*100+3)):58;
-    if(previous!==1)gsap.set(claim,{left:mobile?'18px':`${focusLeft}%`,right:mobile?'18px':'auto',top:`${focusTop}%`,bottom:'auto',opacity:0,y:8,scale:.985});
-    tl.to(claim,{left:mobile?'18px':`${focusLeft}%`,right:mobile?'18px':'auto',top:`${focusTop}%`,bottom:'auto',opacity:1,y:0,scale:1,duration:reduced?.15:.42},.08);
+    tl.call(()=>{
+     if(!stage||!highlight)return;
+     const stageRect=stage.getBoundingClientRect();
+     const boxRect=highlight.getBoundingClientRect();
+     const claimWidth=Math.min(mobile?stageRect.width-36:430,stageRect.width*.42);
+     const desiredLeft=boxRect.left-stageRect.left;
+     const left=Math.max(mobile?18:24,Math.min(stageRect.width-claimWidth-(mobile?18:24),desiredLeft));
+     const desiredTop=boxRect.bottom-stageRect.top+12;
+     const top=Math.max(72,Math.min(stageRect.height-150,desiredTop));
+     gsap.set(claim,{
+      left,
+      right:'auto',
+      top,
+      bottom:'auto',
+      width:claimWidth,
+      opacity:0,
+      y:8,
+      scale:.985
+     });
+    },[],reduced?.02:.48);
+    tl.to(claim,{opacity:1,y:0,scale:1,duration:reduced?.15:.4},reduced?.04:.52);
    }else if(nextStep===2){
     tl.to(claim,{
      left:mobile?'18px':'6%',
      right:mobile?'18px':'auto',
      top:'auto',
-     bottom:mobile?'54%':'7%',
-     width:mobile?'auto':'min(360px,31%)',
-     opacity:.7,
+     bottom:mobile?'51%':'5%',
+     width:mobile?'auto':'min(370px,32%)',
+     opacity:.94,
      y:0,
-     scale:.985,
+     scale:1,
      duration:major
     },0);
    }else{
@@ -341,35 +384,38 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    }
   }
 
+  // Comparison is one coordinated move: document first, source then its evidence hierarchy.
   if(sourceRegion&&sourcePanel){
    if(nextStep===2){
-    const entering=previous<2||previous>3;
+    const entering=previous!==2;
     if(entering){
-     gsap.set(sourcePanel,{opacity:0,x:16});
-     gsap.set(sourceChildren,{opacity:0,y:8,filter:'blur(2px)'});
+     gsap.set(sourceRegion,{opacity:0,x:reduced?0:18});
+     gsap.set(sourcePanel,{opacity:1,x:0});
+     gsap.set(sourceChildren,{opacity:0,y:8,filter:reduced?'blur(0px)':'blur(1.5px)'});
     }
     tl.set(sourceRegion,{pointerEvents:'auto'},.08);
-    tl.to(sourceRegion,{opacity:1,duration:major},.08);
-    tl.to(sourcePanel,{opacity:1,x:0,duration:reduced?.15:.48},.08);
+    tl.to(sourceRegion,{opacity:1,x:0,duration:reduced?.15:.5},.08);
     sourceChildren.forEach((child,index)=>{
-     tl.to(child,{opacity:1,y:0,filter:'blur(0px)',duration:reduced?.15:.4},.14+index*.045);
+     tl.to(child,{opacity:1,y:0,filter:'blur(0px)',duration:reduced?.15:.38},.15+index*.05);
     });
    }else if(nextStep===3){
     tl.set(sourceRegion,{pointerEvents:'none'},0);
-    tl.to(sourceRegion,{opacity:.28,duration:major},0);
-    tl.to(sourcePanel,{opacity:.82,x:0,duration:major},0);
-    tl.to(sourceChildren,{opacity:.72,y:0,filter:'blur(0px)',duration:quick},0);
+    tl.to(sourceRegion,{opacity:.22,x:0,duration:major},0);
+    tl.to(sourceChildren,{opacity:.55,y:0,filter:'blur(0px)',duration:quick},0);
    }else{
     tl.set(sourceRegion,{pointerEvents:'none'},0);
-    tl.to(sourceRegion,{opacity:0,duration:quick},0);
-    tl.to(sourcePanel,{opacity:0,x:nextStep<2?16:0,duration:quick},0);
+    tl.to(sourceRegion,{opacity:0,x:nextStep<2?18:0,duration:quick},0);
    }
+  }
+
+  if(verdictScrim){
+   tl.to(verdictScrim,{opacity:nextStep===3?.72:nextStep===4?.42:0,duration:major},0);
   }
 
   if(verdict){
    if(nextStep===3){
     if(previous!==3)gsap.set(verdict,{opacity:0,y:12,scale:.99});
-    tl.to(verdict,{opacity:1,y:0,scale:1,duration:reduced?.15:.48},reduced?0:.16);
+    tl.to(verdict,{opacity:1,y:0,scale:1,duration:reduced?.15:.46},reduced?0:.18);
    }else{
     tl.to(verdict,{opacity:0,y:nextStep>3?-8:12,scale:.99,duration:quick},0);
    }
@@ -381,9 +427,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      gsap.set(action,{opacity:0,x:reduced?0:18});
      gsap.set(actionChildren,{opacity:0,y:6});
     }
-    tl.to(action,{opacity:1,x:0,duration:reduced?.15:.48},.06);
+    tl.to(action,{opacity:1,x:0,duration:reduced?.15:.46},.08);
     actionChildren.forEach((child,index)=>{
-     tl.to(child,{opacity:1,y:0,duration:reduced?.15:.38},.12+index*.045);
+     tl.to(child,{opacity:1,y:0,duration:reduced?.15:.34},.14+index*.05);
     });
    }else{
     tl.to(action,{opacity:0,x:nextStep<4?18:0,duration:quick},0);
@@ -393,7 +439,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
 
   tl.eventCallback('onComplete',()=>targets.forEach(target=>{target.style.willChange='auto'}));
   previousStoryStep.current=nextStep;
- },[storyFocusBox]);
+ },[storyFocusBox,storyPlaying]);
 
  useLayoutEffect(()=>{
   if(!storyOpen)return;
@@ -404,7 +450,12 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   };
  },[storyOpen,storyStep,animateToStep]);
 
- useEffect(()=>()=>{storyTimelineRef.current?.kill()},[]);
+ useEffect(()=>{
+  if(storyPlaying)storyProgressTweenRef.current?.resume();
+  else storyProgressTweenRef.current?.pause();
+ },[storyPlaying]);
+
+ useEffect(()=>()=>{storyTimelineRef.current?.kill();storyProgressTweenRef.current?.kill()},[]);
 
  useEffect(()=>{const timer=window.setTimeout(()=>setHydrated(true),0);return()=>{clearTimeout(timer);if(storyCloseTimer.current)window.clearTimeout(storyCloseTimer.current)}},[]);
 
@@ -854,7 +905,7 @@ async function upload(uploaded:File){
             className="story-image-wrap"
             style={{transformOrigin:storyFocusBox?`${(storyFocusBox.x+storyFocusBox.width/2)*100}% ${(storyFocusBox.y+storyFocusBox.height/2)*100}%`:'50% 50%'}}
            >
-            <img src={file.preview} alt="Your uploaded notice"/>
+            <img data-story-artifact src={file.preview} alt="Your uploaded notice"/>
             {storyFocusBox&&<span className="story-highlight"/>}
            </div>
            :file?.kind==='pdf'?
@@ -880,6 +931,7 @@ async function upload(uploaded:File){
          <strong>{storyClaimDisplay||storyClaimHeading}</strong>
         </div>
 
+        <div className="story-verdict-scrim" aria-hidden="true"/>
         <div className={`story-verdict-panel ${storyResult?.verdict==='MISMATCH'||storySignal?.kind==='SOURCE_CONFLICT'?'is-conflict':''}`} aria-hidden={storyStep!==3}>
          <strong>{storyVerdict}</strong>
         </div>

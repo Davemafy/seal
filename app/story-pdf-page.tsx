@@ -99,7 +99,7 @@ export default function StoryPdfPage({url,focusBox,onReady,preloadOnly=false}:Pr
  if(preloadOnly)return null;
 
  return <div className="story-pdf-wrap" style={{transformOrigin:focusBox?`${(focusBox.x+focusBox.width/2)*100}% ${(focusBox.y+focusBox.height/2)*100}%`:'50% 50%'}}>
-  {preview&&<img src={preview} alt="Your uploaded PDF, first page"/>}
+  {preview&&<img data-story-artifact src={preview} alt="Your uploaded PDF, first page"/>}
   {focusBox&&preview&&<span className="story-highlight"/>}
   {error&&<span className="story-pdf-error">PDF preview unavailable. The checked text remains available in Full evidence.</span>}
  </div>;
