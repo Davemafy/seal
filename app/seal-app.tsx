@@ -748,14 +748,14 @@ async function upload(uploaded:File){
    let extractor='DETERMINISTIC';
 
    if(!sourceIsDemo){
-    try{
-     const response=await fetch('/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:sourceText})});
-     if(response.ok){
-      const data=await response.json();
-      extraction=data.extraction;
-      extractor=data.mode;
-     }
-    }catch{}
+    let response:Response;
+    try{response=await fetch('/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:sourceText})});}
+    catch{throw new Error('We couldn’t reach the instruction reader. Please try again in a moment.');}
+    if(!response.ok)throw new Error('We couldn’t reliably read the important instructions right now. Please try again in a moment.');
+    const data=await response.json();
+    if(data.mode!=='GROQ')throw new Error('The instruction reader is unavailable right now. Please try again in a moment.');
+    extraction=data.extraction;
+    extractor=data.mode;
    }
 
    if(sourceFile?.kind==='pdf'){

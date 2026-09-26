@@ -25,8 +25,10 @@ const base=process.env.SEAL_BASE_URL;
 if(!base)throw new Error('Set SEAL_BASE_URL to a preview deployment with GROQ_API_KEY configured.');
 let passed=0;
 for(const item of cases){
- const response=await fetch(new URL('/api/extract',base),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:item.text}),signal:AbortSignal.timeout(12000)});
- if(!response.ok)throw new Error(`${item.name}: API returned ${response.status}`);
+ let response:Response;
+ try{response=await fetch(new URL('/api/extract',base),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:item.text}),signal:AbortSignal.timeout(30000)});}
+ catch(error){console.log(`FAIL ${item.name}: request failed (${error instanceof Error?error.name:'unknown'})`);continue;}
+ if(!response.ok){const error=await response.json().catch(()=>({})) as {category?:string};console.log(`FAIL ${item.name}: API returned ${response.status} (${error.category||'unknown'})`);continue;}
  const data=await response.json() as {mode:string;extraction:unknown};
  if(data.mode!=='GROQ')throw new Error(`Model inactive (${data.mode}). Configure GROQ_API_KEY on this deployment before measuring action coverage.`);
  const extraction=extractionSchema.parse(data.extraction);
