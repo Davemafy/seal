@@ -1,6 +1,7 @@
 'use client';
 
-import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
+import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
+import {gsap} from 'gsap';
 import PDFPreview from './pdf-preview';
 import StoryPdfPage from './story-pdf-page';
 import {fixtures,type FixtureKey} from '@/lib/fixtures';
@@ -119,6 +120,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const [storyPlaying,setStoryPlaying]=useState(true);
  const [storyClosing,setStoryClosing]=useState(false);
  const storyKey=useRef('');
+ const storyPlayerRef=useRef<HTMLDivElement>(null);
+ const storyTimelineRef=useRef<ReturnType<typeof gsap.timeline>|null>(null);
+ const previousStoryStep=useRef(0);
  const storyCloseTimer=useRef<number|undefined>(undefined);
  const replayButton=useRef<HTMLButtonElement>(null);
  const storyPauseButton=useRef<HTMLButtonElement>(null);
@@ -234,6 +238,173 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   :'';
  const liveFailed=mode==='LIVE'&&['riverside','connecticut'].includes(verification?.resolver_id||'')&&verification?.results.some(result=>result.explanation==='Official source could not be reached during this check.');
  const sourceLabel=verification?.signals?.length?'OFFICIAL SOURCE FINDINGS':verification?.resolver_id==='riverside'?(mode==='LIVE'?'LIVE SOURCE CHECK':'SOURCE SNAPSHOT · 24 SEP 2026'):verification?.resolver_id==='connecticut'?(mode==='LIVE'?'LIVE SOURCE CHECK':'SOURCE SNAPSHOT · 25 SEP 2026'):verification?.resolver_id==='courtlistener'?(claims.some(claim=>claim.type==='docket')?'FEDERAL DOCKET INDEX':'NO JURY-SOURCE COVERAGE'):verification?.resolver_id==='ocr'?'LOW CONFIDENCE OCR':verification?'NO SUPPORTED SOURCE':error?'NOT CHECKED':isActionDemo?'SOURCE SNAPSHOT · 25 SEP 2026':isDemo?'SOURCE SNAPSHOT · 24 SEP 2026':'SOURCE CHECK PENDING';
+
+ const animateToStep=useCallback((nextStep:number)=>{
+  const root=storyPlayerRef.current;
+  if(!root)return;
+
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const mobile=window.matchMedia('(max-width: 599px)').matches;
+  const previous=previousStoryStep.current;
+  const documentRegion=root.querySelector<HTMLElement>('.story-document-region');
+  const sourceRegion=root.querySelector<HTMLElement>('.story-source-region');
+  const sourcePanel=root.querySelector<HTMLElement>('.story-source-panel');
+  const claim=root.querySelector<HTMLElement>('.story-claim-anchor');
+  const verdict=root.querySelector<HTMLElement>('.story-verdict-panel');
+  const action=root.querySelector<HTMLElement>('.story-action-panel');
+  const stageLabel=root.querySelector<HTMLElement>('.story-stage-label');
+  const highlight=root.querySelector<HTMLElement>('.story-highlight');
+  const progressFills=Array.from(root.querySelectorAll<HTMLElement>('.story-progress i'));
+  const sourceChildren=Array.from(root.querySelectorAll<HTMLElement>('.story-source-panel > span,.story-source-panel > strong,.story-source-panel > p,.story-source-panel > a'));
+  const actionChildren=Array.from(root.querySelectorAll<HTMLElement>('.story-action-panel > span,.story-action-panel > strong,.story-action-panel > p,.story-action-panel > small,.story-action-panel > .story-final-actions'));
+  const targets=[documentRegion,sourceRegion,sourcePanel,claim,verdict,action,stageLabel,highlight,...progressFills,...sourceChildren,...actionChildren].filter(Boolean) as HTMLElement[];
+
+  storyTimelineRef.current?.kill();
+  gsap.killTweensOf(targets);
+  targets.forEach(target=>{target.style.willChange='transform,opacity'});
+
+  const ease='expo.out';
+  const quick=reduced?.15:.28;
+  const major=reduced?.15:.65;
+  const camera=reduced?.15:.82;
+  const tl=gsap.timeline({defaults:{ease,overwrite:'auto'}});
+  storyTimelineRef.current=tl;
+
+  progressFills.forEach((fill,index)=>{
+   tl.to(fill,{scaleX:index<=nextStep?1:0,duration:reduced?.15:.6,transformOrigin:'left center'},0);
+  });
+
+  if(stageLabel)tl.to(stageLabel,{opacity:nextStep===0?1:0,duration:quick},0);
+
+  if(documentRegion){
+   const focusCenterX=storyFocusBox?storyFocusBox.x+storyFocusBox.width/2:.5;
+   const focusCenterY=storyFocusBox?storyFocusBox.y+storyFocusBox.height/2:.5;
+   const focusX=Math.max(-48,Math.min(48,(.5-focusCenterX)*90));
+   const focusY=Math.max(-32,Math.min(32,(.5-focusCenterY)*60));
+
+   const desktop=[
+    {x:0,y:0,xPercent:0,yPercent:0,scale:1,opacity:1,filter:'brightness(1)'},
+    {x:reduced?0:focusX,y:reduced?0:focusY,xPercent:0,yPercent:0,scale:reduced?1:1.035,opacity:1,filter:'brightness(.88)'},
+    {x:0,y:0,xPercent:reduced?0:-24,yPercent:0,scale:reduced?1:.74,opacity:reduced?.62:.72,filter:'brightness(.52)'},
+    {x:0,y:0,xPercent:reduced?0:-24,yPercent:0,scale:reduced?1:.72,opacity:reduced?.34:.24,filter:'brightness(.22)'},
+    {x:0,y:0,xPercent:reduced?0:-18,yPercent:0,scale:reduced?1:.64,opacity:reduced?.28:.24,filter:'brightness(.30)'}
+   ];
+   const narrow=[
+    {x:0,y:0,xPercent:0,yPercent:0,scale:1,opacity:1,filter:'brightness(1)'},
+    {x:reduced?0:focusX*.45,y:reduced?0:focusY*.45,xPercent:0,yPercent:0,scale:reduced?1:1.02,opacity:1,filter:'brightness(.9)'},
+    {x:0,y:0,xPercent:0,yPercent:reduced?0:-20,scale:reduced?1:.6,opacity:reduced?.58:.68,filter:'brightness(.5)'},
+    {x:0,y:0,xPercent:0,yPercent:reduced?0:-18,scale:reduced?1:.58,opacity:reduced?.32:.22,filter:'brightness(.22)'},
+    {x:0,y:0,xPercent:0,yPercent:reduced?0:-24,scale:reduced?1:.54,opacity:reduced?.26:.22,filter:'brightness(.28)'}
+   ];
+   tl.to(documentRegion,{...(mobile?narrow[nextStep]:desktop[nextStep]),duration:camera},0);
+  }
+
+  if(highlight){
+   if(storyFocusBox&&(nextStep===1||nextStep===2)){
+    if(previous===0&&nextStep===1){
+     gsap.set(highlight,{opacity:0,scale:.86,transformOrigin:'center center'});
+    }
+    tl.to(highlight,{
+     left:`${storyFocusBox.x*100}%`,
+     top:`${storyFocusBox.y*100}%`,
+     width:`${storyFocusBox.width*100}%`,
+     height:`${storyFocusBox.height*100}%`,
+     opacity:1,
+     scale:1,
+     duration:reduced?.15:.58
+    },.04);
+   }else{
+    tl.to(highlight,{opacity:0,duration:reduced?.12:.2},0);
+   }
+  }
+
+  if(claim){
+   if(nextStep===1){
+    const focusLeft=storyFocusBox?Math.max(6,Math.min(mobile?18:58,storyFocusBox.x*100)):mobile?18:7;
+    const focusTop=storyFocusBox?Math.max(16,Math.min(mobile?58:64,(storyFocusBox.y+storyFocusBox.height)*100+3)):58;
+    if(previous!==1)gsap.set(claim,{left:mobile?'18px':`${focusLeft}%`,right:mobile?'18px':'auto',top:`${focusTop}%`,bottom:'auto',opacity:0,y:8,scale:.985});
+    tl.to(claim,{left:mobile?'18px':`${focusLeft}%`,right:mobile?'18px':'auto',top:`${focusTop}%`,bottom:'auto',opacity:1,y:0,scale:1,duration:reduced?.15:.42},.08);
+   }else if(nextStep===2){
+    tl.to(claim,{
+     left:mobile?'18px':'6%',
+     right:mobile?'18px':'auto',
+     top:'auto',
+     bottom:mobile?'54%':'7%',
+     width:mobile?'auto':'min(360px,31%)',
+     opacity:.7,
+     y:0,
+     scale:.985,
+     duration:major
+    },0);
+   }else{
+    tl.to(claim,{opacity:0,y:nextStep>2?-6:8,duration:quick},0);
+   }
+  }
+
+  if(sourceRegion&&sourcePanel){
+   if(nextStep===2){
+    const entering=previous<2||previous>3;
+    if(entering){
+     gsap.set(sourcePanel,{opacity:0,x:16});
+     gsap.set(sourceChildren,{opacity:0,y:8,filter:'blur(2px)'});
+    }
+    tl.set(sourceRegion,{pointerEvents:'auto'},.08);
+    tl.to(sourceRegion,{opacity:1,duration:major},.08);
+    tl.to(sourcePanel,{opacity:1,x:0,duration:reduced?.15:.48},.08);
+    sourceChildren.forEach((child,index)=>{
+     tl.to(child,{opacity:1,y:0,filter:'blur(0px)',duration:reduced?.15:.4},.14+index*.045);
+    });
+   }else if(nextStep===3){
+    tl.set(sourceRegion,{pointerEvents:'none'},0);
+    tl.to(sourceRegion,{opacity:.28,duration:major},0);
+    tl.to(sourcePanel,{opacity:.82,x:0,duration:major},0);
+    tl.to(sourceChildren,{opacity:.72,y:0,filter:'blur(0px)',duration:quick},0);
+   }else{
+    tl.set(sourceRegion,{pointerEvents:'none'},0);
+    tl.to(sourceRegion,{opacity:0,duration:quick},0);
+    tl.to(sourcePanel,{opacity:0,x:nextStep<2?16:0,duration:quick},0);
+   }
+  }
+
+  if(verdict){
+   if(nextStep===3){
+    if(previous!==3)gsap.set(verdict,{opacity:0,y:12,scale:.99});
+    tl.to(verdict,{opacity:1,y:0,scale:1,duration:reduced?.15:.48},reduced?0:.16);
+   }else{
+    tl.to(verdict,{opacity:0,y:nextStep>3?-8:12,scale:.99,duration:quick},0);
+   }
+  }
+
+  if(action){
+   if(nextStep===4){
+    if(previous!==4){
+     gsap.set(action,{opacity:0,x:reduced?0:18});
+     gsap.set(actionChildren,{opacity:0,y:6});
+    }
+    tl.to(action,{opacity:1,x:0,duration:reduced?.15:.48},.06);
+    actionChildren.forEach((child,index)=>{
+     tl.to(child,{opacity:1,y:0,duration:reduced?.15:.38},.12+index*.045);
+    });
+   }else{
+    tl.to(action,{opacity:0,x:nextStep<4?18:0,duration:quick},0);
+    tl.to(actionChildren,{opacity:0,y:6,duration:quick},0);
+   }
+  }
+
+  tl.eventCallback('onComplete',()=>targets.forEach(target=>{target.style.willChange='auto'}));
+  previousStoryStep.current=nextStep;
+ },[storyFocusBox]);
+
+ useLayoutEffect(()=>{
+  if(!storyOpen)return;
+  const frame=window.requestAnimationFrame(()=>animateToStep(storyStep));
+  return()=>{
+   window.cancelAnimationFrame(frame);
+   storyTimelineRef.current?.kill();
+  };
+ },[storyOpen,storyStep,animateToStep]);
+
+ useEffect(()=>()=>{storyTimelineRef.current?.kill()},[]);
 
  useEffect(()=>{const timer=window.setTimeout(()=>setHydrated(true),0);return()=>{clearTimeout(timer);if(storyCloseTimer.current)window.clearTimeout(storyCloseTimer.current)}},[]);
 
@@ -373,6 +544,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   setReviewOfferPaused(false);
   setReviewOffer('watching');
   setReviewCountdown(3);
+  previousStoryStep.current=0;
+  storyTimelineRef.current?.kill();
   setStoryStep(0);
   setStoryPlaying(true);
   setStoryClosing(false);
@@ -658,7 +831,7 @@ async function upload(uploaded:File){
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
 
     {verification&&ready&&storyOpen&&<div className={`story-overlay ${storyClosing?'is-closing':''}`} role="dialog" aria-modal="true" aria-label="SEAL review presentation">
-     <div className={`story-player story-step-${storyStep} ${storyPlaying?'is-playing':'is-paused'} ${storyFocusBox?'has-story-focus':'no-story-focus'}`}>
+     <div ref={storyPlayerRef} className={`story-player story-step-${storyStep} ${storyPlaying?'is-playing':'is-paused'} ${storyFocusBox?'has-story-focus':'no-story-focus'}`}>
       <div className="story-topbar">
        <span className="story-brand"><img src="/brand/seal-mark-white.svg" alt=""/><span>SEAL</span></span>
        <div className="story-top-actions">
@@ -668,7 +841,7 @@ async function upload(uploaded:File){
       </div>
 
       <div className="story-progress" aria-label={`Frame ${storyStep+1} of 5`}>
-       {[0,1,2,3,4].map(step=><span key={step} className={step<storyStep?'is-done':step===storyStep?'is-active':''}><i style={step===storyStep?{animationDuration:`${storyDurations[storyStep]}ms`}:undefined}/></span>)}
+       {[0,1,2,3,4].map(step=><span key={step} aria-current={step===storyStep?'step':undefined}><i/></span>)}
       </div>
 
       <div className="story-stage">
@@ -682,7 +855,7 @@ async function upload(uploaded:File){
             style={{transformOrigin:storyFocusBox?`${(storyFocusBox.x+storyFocusBox.width/2)*100}% ${(storyFocusBox.y+storyFocusBox.height/2)*100}%`:'50% 50%'}}
            >
             <img src={file.preview} alt="Your uploaded notice"/>
-            {storyFocusBox&&<span className="story-highlight" style={{left:`${storyFocusBox.x*100}%`,top:`${storyFocusBox.y*100}%`,width:`${storyFocusBox.width*100}%`,height:`${storyFocusBox.height*100}%`}}/>}
+            {storyFocusBox&&<span className="story-highlight"/>}
            </div>
            :file?.kind==='pdf'?
             <StoryPdfPage url={file.preview} focusBox={storyFocusBox}/>
@@ -702,15 +875,7 @@ async function upload(uploaded:File){
          </div>
         </div>
 
-        <div
-         className="story-claim-anchor"
-         aria-hidden={storyStep<1||storyStep>2}
-         style={storyStep===1&&storyFocusBox?{
-          left:`${Math.max(6,Math.min(58,storyFocusBox.x*100))}%`,
-          top:`${Math.max(16,Math.min(64,(storyFocusBox.y+storyFocusBox.height)*100+3))}%`,
-          bottom:'auto'
-         }:undefined}
-        >
+        <div className="story-claim-anchor" aria-hidden={storyStep<1||storyStep>2}>
          <span>From the message</span>
          <strong>{storyClaimDisplay||storyClaimHeading}</strong>
         </div>
