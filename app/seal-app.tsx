@@ -641,7 +641,7 @@ async function upload(uploaded:File){
        <span className="story-brand">SEAL</span>
        <div className="story-top-actions">
         <button ref={storyPauseButton} type="button" className="story-pause" onClick={()=>setStoryPlaying(value=>!value)}>{storyPlaying?'Pause':'Play'}</button>
-        <button type="button" onClick={closeStory}>Full evidence</button>
+        {storyStep<4&&<button type="button" onClick={closeStory}>Full evidence</button>}
        </div>
       </div>
 
@@ -680,7 +680,15 @@ async function upload(uploaded:File){
          </div>
         </div>
 
-        <div className="story-claim-anchor" aria-hidden={storyStep<1||storyStep>2}>
+        <div
+         className="story-claim-anchor"
+         aria-hidden={storyStep<1||storyStep>2}
+         style={storyStep===1&&storyFocusBox?{
+          left:`${Math.max(6,Math.min(58,storyFocusBox.x*100))}%`,
+          top:`${Math.max(16,Math.min(64,(storyFocusBox.y+storyFocusBox.height)*100+3))}%`,
+          bottom:'auto'
+         }:undefined}
+        >
          <span>From the message</span>
          <strong>{storyClaimDisplay||storyClaimHeading}</strong>
         </div>
