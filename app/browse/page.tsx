@@ -1,18 +1,52 @@
 import Link from 'next/link';
-import {browseCases} from '@/lib/browse-cases';
+import {browseCases,type BrowseCase,type BrowseSection} from '@/lib/browse-cases';
+import PdfThumb from './pdf-thumb';
 import '../workspace.css';
 import './browse.css';
 
-const categories=[
- ['jury-duty-payment-demand','Jury duty payment demand'],
- ['fake-summons-arrest-threat','Fake summons / arrest threat'],
- ['personal-information','Request for personal information'],
- ['court-payment-fee','Court payment / fee message'],
- ['legitimate-court-notice','Legitimate court notice'],
- ['ambiguous-unsupported','Ambiguous / unsupported']
-] as const;
+const sectionMeta:Record<BrowseSection,{title:string;description:string}>={
+ 'court-message-scams':{
+  title:'Published court-message scams',
+  description:'Messages and notices that courts or public agencies published as scam examples.'
+ },
+ 'jury-duty-threats':{
+  title:'Jury-duty threats and payment pressure',
+  description:'Court-published warnings showing the language scammers use to create urgency, fear, and payment pressure.'
+ },
+ 'legitimate-reference':{
+  title:'Legitimate reference material',
+  description:'Court-published examples that help establish what an authentic document can look like.'
+ }
+};
+
+function CaseMedia({item,featured=false}:{item:BrowseCase;featured?:boolean}){
+ return <div className={`archive-media ${featured?'is-featured':''} ${item.preview.type==='image'?'is-image':'is-document'}`}>
+  {item.preview.type==='pdf'
+   ?<PdfThumb id={item.id} alt={item.preview.alt}/>
+   :<img className="archive-source-image" src={`/api/browse-asset?id=${encodeURIComponent(item.id)}`} alt={item.preview.alt} loading={featured?'eager':'lazy'}/>}
+ </div>;
+}
+
+function CaseCopy({item,featured=false}:{item:BrowseCase;featured?:boolean}){
+ return <div className={`archive-copy ${featured?'is-featured':''}`}>
+  <p className="case-jurisdiction">{item.jurisdiction}</p>
+  {featured?<h2>{item.title}</h2>:<h3>{item.title}</h3>}
+  <p className="case-source">Source: <strong>{item.sourceTitle}</strong> · {item.classification}</p>
+  <p className="case-note">{item.visualNote}</p>
+  <p className="case-excerpt">{item.excerpt}</p>
+  <div className="case-actions">
+   <Link className="run-case" href={`/?case=${item.id}`}>Run in SEAL</Link>
+   <a className="open-case" href={item.sourceUrl} target="_blank" rel="noopener noreferrer">Open original</a>
+  </div>
+ </div>;
+}
 
 export default function Browse(){
+ const featured=browseCases.find(item=>item.featured)||browseCases[0];
+ const sections=(Object.keys(sectionMeta) as BrowseSection[])
+  .map(section=>({section,items:browseCases.filter(item=>item.section===section&&!item.featured)}))
+  .filter(group=>group.items.length);
+
  return <main className="seal-app browse-page">
   <aside className="workspace-rail" aria-label="Workspace">
    <Link href="/" className="rail-brand">SEAL<span>®</span></Link>
@@ -20,49 +54,41 @@ export default function Browse(){
    <Link className="rail-item" href="/">Check a message</Link>
    <Link className="rail-item is-current" href="/browse">Browse real cases</Link>
    <div className="rail-spacer"/>
-   <div className="rail-foot"><strong>Public sources only</strong><span>Every archive item links back to the issuing court or agency.</span></div>
+   <div className="rail-foot"><strong>Public sources</strong><span>Original court and government material only.</span></div>
   </aside>
 
-  <header className="seal-nav">
+  <header className="browse-mobile-nav">
    <Link href="/" className="mobile-brand">SEAL</Link>
-   <div className="seal-nav-note">SEAL <span aria-hidden="true">/</span> Browse</div>
-   <Link href="/" className="nav-action browse-check-link">Check a message</Link>
+   <Link href="/" className="browse-mobile-action">Check a message</Link>
   </header>
 
   <section className="browse-shell">
    <header className="browse-intro">
     <h1>Browse real cases</h1>
-    <p>Actual public court PDFs and published scam-message images, shown from their original sources.</p>
-    <p className="browse-method">No recreated thumbnails. Run in SEAL uses source text only; missing notice text is never invented.</p>
+    <p>Real court documents, published scam notices, and source-backed examples. The artifacts do the explaining.</p>
    </header>
 
-   <nav className="browse-index" aria-label="Case categories">
-    {categories.map(([id,label])=><a href={`#${id}`} key={id}>{label}</a>)}
-   </nav>
+   <article className="featured-case">
+    <CaseMedia item={featured} featured/>
+    <CaseCopy item={featured} featured/>
+   </article>
 
-   <div className="case-archive">
-    {browseCases.map((item,index)=><article className={`archive-entry archive-entry-${index+1}`} id={item.category} key={item.id}>
-     <div className="case-visual">
-      {item.preview.type==='image'
-       ?<img className="case-source-image" src={item.preview.url} alt={item.preview.alt} loading="lazy"/>
-       :<object className="case-source-pdf" data={`${item.preview.url}#page=1&toolbar=0&navpanes=0&scrollbar=0&view=FitH`} type="application/pdf" aria-label={item.preview.alt}>
-         <a href={item.preview.url} target="_blank" rel="noopener noreferrer">Open source PDF</a>
-        </object>}
-      <a className="case-media-link" href={item.preview.url} target="_blank" rel="noopener noreferrer" aria-label={`Open original source document for ${item.title}`}>Open original</a>
+   <div className="archive-sections">
+    {sections.map(({section,items})=><section className="archive-section" key={section}>
+     <header className="archive-section-head">
+      <h2>{sectionMeta[section].title}</h2>
+      <p>{sectionMeta[section].description}</p>
+     </header>
+     <div className="archive-rows">
+      {items.map((item,index)=><article className={`archive-row ${index%2?'is-reverse':''}`} key={item.id}>
+       <CaseMedia item={item}/>
+       <CaseCopy item={item}/>
+      </article>)}
      </div>
-     <div className="case-copy">
-      <p className="case-category">{item.categoryLabel}</p>
-      <h2>{item.title}</h2>
-      <p className="case-place">{item.jurisdiction} · {item.issuer}</p>
-      <p className="case-excerpt">{item.excerpt}</p>
-      <p className="case-classification">{item.classification}</p>
-      <div className="case-actions">
-       <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer">Open source</a>
-       <Link href={`/?case=${item.id}`}>Run in SEAL</Link>
-      </div>
-     </div>
-    </article>)}
+    </section>)}
    </div>
+
+   <p className="archive-method">SEAL keeps the original source link with every item. Where only a public warning exists, it does not reconstruct a missing notice.</p>
   </section>
  </main>;
 }

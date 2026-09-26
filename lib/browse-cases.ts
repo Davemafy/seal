@@ -6,106 +6,116 @@ export type BrowseCategory=
  |'legitimate-court-notice'
  |'ambiguous-unsupported';
 
+export type BrowseSection='court-message-scams'|'jury-duty-threats'|'legitimate-reference';
+
 export type BrowseCase={
  id:string;
  category:BrowseCategory;
- categoryLabel:string;
+ section:BrowseSection;
+ featured?:boolean;
  title:string;
  jurisdiction:string;
  issuer:string;
  sourceTitle:string;
  sourceUrl:string;
  classification:string;
+ visualNote:string;
  excerpt:string;
  runText:string;
  preview:{type:'pdf'|'image';url:string;alt:string};
-
 };
 
 export const browseCases:BrowseCase[]=[
  {
-  id:'ftc-jury-payment-demand',
-  category:'jury-duty-payment-demand',
-  categoryLabel:'Jury duty payment demand',
-  title:'Payment demand by phone',
-  jurisdiction:'United States',
-  issuer:'Federal Trade Commission',
-  sourceTitle:'FTC — Jury duty scam warning',
-  sourceUrl:'https://consumer.ftc.gov/consumer-alerts/2026/06/ignore-calls-texts-and-emails-threatening-arrest-you-missing-jury-duty',
-  classification:'Official scam warning',
-  excerpt:'Courts never demand payment over the phone. Only scammers say you can only pay with a payment app, cryptocurrency, gift cards, or a wire transfer service.',
-  runText:'Courts never demand payment over the phone. Only scammers say you can only pay with a payment app, cryptocurrency, gift cards, or a wire transfer service.',
-  preview:{type:'pdf',url:'https://www.msnd.uscourts.gov/sites/msnd/files/forms/Jury%20Scam%20Alert_0.pdf',alt:'Official U.S. District Court jury scam alert PDF about payment demands'}
- },
- {
-  id:'riverside-arrest-threat',
-  category:'fake-summons-arrest-threat',
-  categoryLabel:'Fake summons / arrest threat',
-  title:'Jury-duty arrest threat warning',
-  jurisdiction:'Riverside County, California',
-  issuer:'Superior Court of California, County of Riverside',
-  sourceTitle:'Riverside Superior Court Warns Residents of Jury Duty Scam',
-  sourceUrl:'https://www.riverside.courts.ca.gov/news/riverside-superior-court-warns-residents-jury-duty-scam',
-  classification:'Court scam warning',
-  excerpt:'Riverside Superior Court will not call or send text messages threatening residents with arrest or pressuring them to immediately report to a courthouse, provide personal or financial information, or make a payment.',
-  runText:'Riverside Superior Court will not call or send text messages threatening residents with arrest or pressuring them to immediately report to a courthouse, provide personal or financial information, or make a payment. Contact Riverside Superior Court directly using official Court contact information to verify any questions regarding jury service.',
-  preview:{type:'pdf',url:'https://www.ned.uscourts.gov/internetDocs/jury/Warning-Jury_Phone_Scam.pdf',alt:'Official U.S. District Court jury phone scam warning PDF'}
- },
- {
-  id:'uscourts-personal-information',
-  category:'personal-information',
-  categoryLabel:'Request for personal information',
-  title:'Juror personal-information request',
-  jurisdiction:'United States federal courts',
-  issuer:'Administrative Office of the U.S. Courts',
-  sourceTitle:'U.S. Courts — Juror Scams',
-  sourceUrl:'https://www.uscourts.gov/court-programs/jury-service/juror-scams',
-  classification:'Official court guidance',
-  excerpt:'Persons receiving such a telephone call or email should not provide the requested information and should immediately notify the Clerk of Court\'s office.',
-  runText:'Persons receiving such a telephone call or email should not provide the requested information and should immediately notify the Clerk of Court\'s office.',
-  preview:{type:'pdf',url:'https://www.nced.uscourts.gov/pdfs/JuryScamNotice-04-11-2024.pdf',alt:'Official U.S. District Court warning PDF about jury scams and requests for sensitive information'}
- },
- {
-  id:'virginia-official-payment',
+  id:'dallas-traffic-qr-scam',
   category:'court-payment-fee',
-  categoryLabel:'Court payment / fee message',
-  title:'Official Virginia traffic-ticket payment route',
-  jurisdiction:'Virginia',
-  issuer:'Virginia Court System',
-  sourceTitle:'Virginia Court System — Pay Traffic Tickets and Other Offenses',
-  sourceUrl:'https://www.vacourts.gov/caseinfo/tickets_dc',
-  classification:'Official payment guidance',
-  excerpt:'Eligible cases display “Mark for Payment” in the official General District Court case system.',
-  runText:'Eligible cases display “Mark for Payment” in the official General District Court case system.',
-  preview:{type:'pdf',url:'https://dallascityhall.com/departments/courtdetentionservices/DCH%20Documents/4-2-26%20-%20SCAM%20Notice.pdf',alt:'City of Dallas published scam court notice PDF with payment QR code'}
+  section:'court-message-scams',
+  featured:true,
+  title:'Traffic hearing notice with QR payment',
+  jurisdiction:'Dallas, Texas',
+  issuer:'City of Dallas',
+  sourceTitle:'City of Dallas — SCAM Notice',
+  sourceUrl:'https://dallascityhall.com/departments/courtdetentionservices/DCH%20Documents/4-1-26%20-%20SCAM%20Notice.pdf',
+  classification:'Confirmed scam example',
+  visualNote:'Fake court letterhead, a case number, hearing instructions, and a QR-code payment route.',
+  excerpt:'A published scam notice presents a traffic hearing and directs the recipient to settle an unpaid balance through a QR code.',
+  runText:'STATE OF TEXAS — MUNICIPAL COURT OF DALLAS. Case No: TX-26-TR-273196. NOTICE OF HEARING — TRAFFIC VIOLATION. Appear for a hearing or resolve the matter by payment before the hearing date. Scan the QR code to settle your unpaid balance.',
+  preview:{type:'pdf',url:'https://dallascityhall.com/departments/courtdetentionservices/DCH%20Documents/4-1-26%20-%20SCAM%20Notice.pdf',alt:'City of Dallas published scam traffic-hearing notice with a QR payment code'}
  },
  {
-  id:'riverside-jury-services',
+  id:'maryland-court-text-scam',
+  category:'fake-summons-arrest-threat',
+  section:'court-message-scams',
+  title:'Court text with a fake hearing and payment route',
+  jurisdiction:'Maryland',
+  issuer:'Maryland Judiciary',
+  sourceTitle:'Maryland Judiciary — District Court text scam alert',
+  sourceUrl:'https://www.mdcourts.gov/media/news/2026/pr20260306',
+  classification:'Confirmed scam example',
+  visualNote:'A court-looking text message combines a hearing instruction with payment language and a fictitious QR code.',
+  excerpt:'Maryland Judiciary published the message as an example of a scam and warned recipients not to scan its QR code or provide payment.',
+  runText:'NOTICE OF HEARING — PARKING VIOLATION. Appear for a hearing at the District Court in Baltimore City or resolve the matter by payment before the hearing date. Scan the QR code to pay.',
+  preview:{type:'image',url:'https://www.mdcourts.gov/sites/default/files/import/media/news/images/textmessage030626.jpg',alt:'Maryland Judiciary published example of a scam court text message'}
+ },
+ {
+  id:'mississippi-jury-payment-warning',
+  category:'jury-duty-payment-demand',
+  section:'jury-duty-threats',
+  title:'Jury scam payment demand',
+  jurisdiction:'Northern District of Mississippi',
+  issuer:'U.S. District Court',
+  sourceTitle:'Jury Scam Alert: Do Not Pay Callers Who Threaten to Arrest You Unless You Pay',
+  sourceUrl:'https://www.msnd.uscourts.gov/sites/msnd/files/forms/Jury%20Scam%20Alert_0.pdf',
+  classification:'Official court scam warning',
+  visualNote:'Arrest pressure paired with an immediate request for money or gift-card details.',
+  excerpt:'The court warns that jury scammers threaten arrest and demand payment by phone, sometimes asking for prepaid gift-card numbers.',
+  runText:'You missed federal jury service. Avoid arrest by making an immediate payment over the phone or by providing a prepaid gift-card number.',
+  preview:{type:'pdf',url:'https://www.msnd.uscourts.gov/sites/msnd/files/forms/Jury%20Scam%20Alert_0.pdf',alt:'Federal court jury scam alert about arrest threats and payment demands'}
+ },
+ {
+  id:'nebraska-jury-phone-scam',
+  category:'fake-summons-arrest-threat',
+  section:'jury-duty-threats',
+  title:'Jury phone scam warning',
+  jurisdiction:'District of Nebraska',
+  issuer:'U.S. District Court',
+  sourceTitle:'WARNING – Jury Phone Scam',
+  sourceUrl:'https://www.ned.uscourts.gov/internetDocs/jury/Warning-Jury_Phone_Scam.pdf',
+  classification:'Official court scam warning',
+  visualNote:'Impersonation of marshals or court officers, using real court details to make an arrest threat sound credible.',
+  excerpt:'The District of Nebraska warns about callers claiming to be court or law-enforcement officials who seek money or financial information.',
+  runText:'A caller claims to be a U.S. Marshal or court officer and says you must pay a fine to avoid arrest for failing to report for jury duty.',
+  preview:{type:'pdf',url:'https://www.ned.uscourts.gov/internetDocs/jury/Warning-Jury_Phone_Scam.pdf',alt:'District of Nebraska jury phone scam warning PDF'}
+ },
+ {
+  id:'north-carolina-fake-warrant-warning',
+  category:'personal-information',
+  section:'jury-duty-threats',
+  title:'Fake warrant and settlement demand',
+  jurisdiction:'Eastern District of North Carolina',
+  issuer:'U.S. District Court',
+  sourceTitle:'WARNING OF JURY SCAM',
+  sourceUrl:'https://www.nced.uscourts.gov/pdfs/JuryScamNotice-04-11-2024.pdf',
+  classification:'Official court scam warning',
+  visualNote:'Fake warrants, settlement language, wire transfers, prepaid cards, and requests for sensitive account information.',
+  excerpt:'The court warns about fake arrest warrants and demands to wire money, provide prepaid cards, or share bank and card information.',
+  runText:'An email or caller claims an arrest warrant was issued for missed jury duty. To avoid arrest, call a settlement number, wire money, or provide a prepaid card.',
+  preview:{type:'pdf',url:'https://www.nced.uscourts.gov/pdfs/JuryScamNotice-04-11-2024.pdf',alt:'Eastern District of North Carolina jury scam warning PDF'}
+ },
+ {
+  id:'connecticut-sample-jury-summons',
   category:'legitimate-court-notice',
-  categoryLabel:'Legitimate court notice',
-  title:'Riverside Jury Services contact and portal',
-  jurisdiction:'Riverside County, California',
-  issuer:'Superior Court of California, County of Riverside',
-  sourceTitle:'Riverside Jury Services',
-  sourceUrl:'https://www.riverside.courts.ca.gov/divisions/jury-services',
-  classification:'Official court service',
-  excerpt:'If you have received a jury summons, access the juror web portal for confirmation of reporting time, date, and location instructions.',
-  runText:'Superior Court of California County of Riverside. If you have received a jury summons, access the juror web portal for confirmation of reporting time, date, and location instructions. 951-275-5076 (phone) or 760-342-6264 (phone). Access the Juror Web Portal: jurywest.riverside.courts.ca.gov.',
-  preview:{type:'pdf',url:'https://coop.ctd.uscourts.gov/sites/default/files/Sample%20Jury%20Summons%20Form.pdf',alt:'Official District of Connecticut sample jury summons PDF'}
- },
- {
-  id:'ftc-fake-jury-website',
-  category:'ambiguous-unsupported',
-  categoryLabel:'Ambiguous / unsupported message',
-  title:'Fake jury-duty website warning',
-  jurisdiction:'United States',
-  issuer:'Federal Trade Commission',
-  sourceTitle:'FTC — Fake jury-duty websites',
-  sourceUrl:'https://consumer.ftc.gov/consumer-alerts/2025/08/scammers-are-using-fake-websites-twist-jury-duty-scams',
-  classification:'Official scam guidance',
-  excerpt:'If you think the call could be real, don’t go to the URL they give you. Instead, look up the court’s real website for jury duty information.',
-  runText:'If you think the call could be real, don’t go to the URL they give you. Instead, look up the court’s real website for jury duty information.',
-  preview:{type:'image',url:'https://www.mdcourts.gov/sites/default/files/import/media/news/images/textmessage030626.jpg',alt:'Maryland Judiciary published image of a scam court text message'}
+  section:'legitimate-reference',
+  title:'Sample federal jury summons',
+  jurisdiction:'District of Connecticut',
+  issuer:'U.S. District Court',
+  sourceTitle:'Sample Jury Summons Form',
+  sourceUrl:'https://coop.ctd.uscourts.gov/sites/default/files/Sample%20Jury%20Summons%20Form.pdf',
+  classification:'Legitimate sample/form',
+  visualNote:'A court-published reference artifact for the structure and density of an official jury summons.',
+  excerpt:'Official sample jury-summons form published on the District of Connecticut court domain.',
+  runText:'UNITED STATES DISTRICT COURT — DISTRICT OF CONNECTICUT. JURY SUMMONS. Official sample form.',
+  preview:{type:'pdf',url:'https://coop.ctd.uscourts.gov/sites/default/files/Sample%20Jury%20Summons%20Form.pdf',alt:'District of Connecticut official sample jury summons PDF'}
  }
 ];
 
