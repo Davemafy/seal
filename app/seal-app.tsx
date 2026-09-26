@@ -269,7 +269,7 @@ async function upload(uploaded:File){
    <section className="entry-shell">
    <div className="entry-copy">
      <h1>Check a court message</h1>
-     <p>Received a notice, email, or text? Add it here to see what it asks you to do, what court sources say, and where to confirm the rest.</p>
+     <p>See what it asks you to do, what the court can confirm, and where to check next.</p>
     </div>
 
     <div className="intake">
