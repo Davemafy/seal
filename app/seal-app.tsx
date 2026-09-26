@@ -420,8 +420,16 @@ async function upload(uploaded:File){
   </aside>
   <header className="seal-nav">
    <a href="/" className="mobile-brand">SEAL</a>
-   <div className="seal-nav-note">SEAL <span aria-hidden="true">/</span> {text?'Your review':'Check a message'}</div>
-   {text?<button className="nav-action" type="button" onClick={clear}>Check another message</button>:<div className="nav-trust">Court message review</div>}
+   <div className="seal-nav-main">
+    <span className="seal-nav-title">{text?'Review':'Check a message'}</span>
+    <span className="seal-nav-proof">{text?(busy?(status||'Checking sources'):verification?'Independent source check':'Message ready'):'Your file stays in this browser'}</span>
+   </div>
+   <div className="seal-nav-actions">
+    {!text?<a href="/browse" className="nav-link">Browse real cases</a>:<>
+     {verification&&<button className="nav-link nav-link-button" type="button" onClick={replayStory}>Play review</button>}
+     <button className="nav-action" type="button" onClick={clear}>Check another message</button>
+    </>}
+   </div>
   </header>
 
   {!text?
@@ -456,10 +464,7 @@ async function upload(uploaded:File){
 
      {error&&<div role="alert" className="inspection-error">{error}</div>}
 
-     <div className="entry-foot">
-      <p className="privacy-note">Your file stays in this browser. SEAL may send extracted text for checking, but doesn’t store the file or extracted claims.</p>
-      <a href="/browse" className="browse-entry-link">Browse real cases</a>
-     </div>
+     <p className="privacy-note">SEAL may send extracted text for checking, but doesn’t store the file or extracted claims.</p>
     </div>
    </section>
    :

@@ -24,8 +24,13 @@ export default function Browse(){
 
   <header className="seal-nav">
    <a href="/" className="mobile-brand">SEAL</a>
-   <div className="seal-nav-note">SEAL <span aria-hidden="true">/</span> Browse</div>
-   <a href="/" className="nav-action browse-check-link">Check a message</a>
+   <div className="seal-nav-main">
+    <span className="seal-nav-title">Browse real cases</span>
+    <span className="seal-nav-proof">Original public sources</span>
+   </div>
+   <div className="seal-nav-actions">
+    <a href="/" className="nav-action browse-check-link">Check a message</a>
+   </div>
   </header>
 
   <section className="browse-shell">

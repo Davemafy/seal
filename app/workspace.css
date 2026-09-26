@@ -25,15 +25,20 @@
 .rail-foot{display:grid;gap:4px;margin:0 12px;padding-top:16px;border-top:1px solid var(--line);color:#5e5e5e;font-size:12px;line-height:18px}
 .rail-foot strong{color:#000;font-weight:500}
 .seal-nav,.entry-shell,.review-shell,.seal-footer{grid-column:2;min-width:0}
-.seal-nav{min-height:68px;padding:0 64px;display:flex;justify-content:space-between;align-items:center;gap:24px;border-bottom:1px solid var(--line);background:#fff}
+.seal-nav{min-height:60px;padding:0 64px;display:flex;justify-content:space-between;align-items:center;gap:32px;border-bottom:1px solid var(--line);background:#fff}
 .mobile-brand{display:none}
 .seal-mark{justify-self:start;text-decoration:none;font-size:24px;font-weight:800;letter-spacing:-.035em}
 .seal-mark span{font-size:9px;vertical-align:top;margin-left:3px}
-.seal-nav-note,.nav-trust{font-size:14px;color:var(--muted)}
-.seal-nav-note span{padding:0 10px;color:#a6a6a6}
-.nav-trust,.nav-action{justify-self:end}
-.nav-action{border:0;border-radius:8px;padding:10px 16px;background:var(--secondary);font-size:14px;font-weight:600}
-.nav-action:hover,.demo-link:hover,.replay-button:hover{background:var(--tertiary)}
+.seal-nav-main{min-width:0;display:flex;align-items:center;gap:16px}
+.seal-nav-title{color:#000;font-size:14px;line-height:20px;font-weight:500;white-space:nowrap}
+.seal-nav-proof{position:relative;min-width:0;padding-left:17px;color:#777;font-size:12px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seal-nav-proof::before{content:"";position:absolute;left:0;top:4px;width:1px;height:12px;background:var(--line-strong)}
+.seal-nav-actions{display:flex;align-items:center;justify-content:flex-end;gap:18px;flex:none}
+.nav-link{border:0;padding:0;background:transparent;color:#000;font:inherit;font-size:14px;line-height:20px;font-weight:500;text-decoration:none}
+.nav-link:hover{text-decoration:underline;text-underline-offset:4px}
+.nav-link-button{cursor:pointer}
+.nav-action{min-height:40px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:8px;padding:10px 16px;background:var(--tertiary);color:#000;font-size:14px;line-height:20px;font-weight:500;text-decoration:none}
+.nav-action:hover,.demo-link:hover,.replay-button:hover{background:#dedede}
 .entry-shell{width:100%;max-width:1180px;min-height:calc(100svh - 148px);margin:0 auto;padding:56px 64px 72px;display:grid;grid-template-columns:minmax(260px,.72fr) minmax(420px,1.28fr);grid-template-areas:"intro form";column-gap:56px;align-content:center;align-items:center}
 .entry-copy{grid-area:intro}
 .entry-copy h1{margin:0;max-width:440px;font-size:52px;font-weight:700;line-height:60px;letter-spacing:-.02em}
@@ -309,8 +314,9 @@
 @media(max-width:599px){
  .seal-nav,.seal-footer{padding-inline:16px}
  .seal-nav{min-height:60px}
- .seal-nav-note{display:none}
- .nav-trust{display:none}
+ .seal-nav-main{display:none}
+ .seal-nav-actions{gap:12px}
+ .nav-link{font-size:13px}
  .entry-shell,.review-shell{padding:28px 16px 40px}
  .entry-shell{row-gap:28px;align-content:start}
  .entry-copy h1{max-width:360px;font-size:40px;line-height:48px;letter-spacing:-.015em}
@@ -391,9 +397,6 @@
 /* Review composition pass */
 .rail-item{text-decoration:none}
 .rail-example{margin-top:2px;color:#777}
-.entry-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-top:12px}
-.entry-foot .privacy-note{margin:0}
-.browse-entry-link{flex:none;color:#000;font-size:13px;font-weight:500;text-decoration:underline;text-underline-offset:3px}
 .review-shell{padding-top:28px}
 .review-hero{grid-template-columns:minmax(340px,.72fr) minmax(0,1fr);gap:56px;align-items:start;padding:12px 0 72px}
 .decision-pane{top:28px}
