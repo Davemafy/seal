@@ -19,8 +19,8 @@ export default function PdfThumb({id,alt}:{id:string;alt:string}){
     const pdfjs=await import('pdfjs-dist');
     pdfjs.GlobalWorkerOptions.workerSrc='/pdf.worker.min.mjs';
     const loading=pdfjs.getDocument({data:bytes});
+    task=loading;
     const pdf=await loading.promise;
-    task={destroy:()=>pdf.destroy()};
     const page=await pdf.getPage(1);
     if(cancelled)return;
     const base=page.getViewport({scale:1});

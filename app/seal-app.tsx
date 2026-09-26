@@ -734,7 +734,9 @@ async function upload(uploaded:File){
    if(runId.current!==id)return;
    setExtractionMode(extractor);
 
-   const extractedClaims=claimsFromExtraction(extraction,sourceText,sourceFile?.tokens||[]);
+   // Curated cases use a source-checked transcript for analysis. OCR tokens from
+   // the pictured artifact may help display it, but must not invent new claims.
+   const extractedClaims=claimsFromExtraction(extraction,sourceText,sourceCurated?[]:sourceFile?.tokens||[]);
    const found=sourceCurated
     ?extractedClaims.map(claim=>({...claim,verification_eligible:true}))
     :extractedClaims;
