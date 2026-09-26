@@ -223,6 +223,13 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const currentResult=current&&resultById.get(current.id);
  const active=hovered||selected;
  const ready=Boolean(verification)&&revealed>=claims.length;
+ const reviewWorthWatching=Boolean(verification&&storyClaim&&(
+  verification.signals?.length
+  ||storyClaim.action
+  ||storyResult?.evidence?.length
+  ||storyResult?.verdict==='MATCH'
+  ||storyResult?.verdict==='MISMATCH'
+ ));
  const count=(value:Result['verdict'])=>verification?.results.filter(result=>result.verdict===value).length||0;
  const decision=decisionCopy(verification);
  const technicalEvidence=useMemo(()=>{
@@ -487,9 +494,15 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      const type=isPdf?'application/pdf':blob.type.startsWith('image/')?blob.type:'image/jpeg';
      const extension=isPdf?'pdf':type.includes('png')?'png':'jpg';
      const sourceFile=new File([blob],`${caseId}.${extension}`,{type});
+     setStatus('Opening the source document');
+     const doc=await readInBrowser(sourceFile,next=>setStatus(next));
+     const analysisText=seededText||doc.text;
+     if(!analysisText.trim())throw new Error('Case text unavailable');
+     setFile(doc);
+     setText(analysisText);
      setBusy(false);
      setStatus('');
-     await upload(sourceFile);
+     await run('SNAPSHOT',{text:analysisText,file:doc});
      return;
     }
 
@@ -537,9 +550,10 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   setStoryClosing(false);
   setReviewCountdown(3);
   setReviewOfferPaused(false);
+  if(!reviewWorthWatching){setReviewOffer('skipped');return}
   const reduce=typeof window!=='undefined'&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   setReviewOffer(reduce?'idle':'counting');
- },[verification,ready,text,claims.length]);
+ },[verification,ready,text,claims.length,reviewWorthWatching]);
 
  useEffect(()=>{
   if(reviewOffer!=='counting'||reviewOfferPaused)return;
@@ -840,7 +854,7 @@ async function upload(uploaded:File){
      <div className="result-masthead-row">
       <h1>Your message</h1>
 
-      {verification&&ready&&!storyOpen&&(reviewOffer==='counting'||reviewOffer==='idle')?
+      {verification&&ready&&reviewWorthWatching&&!storyOpen&&(reviewOffer==='counting'||reviewOffer==='idle')?
        <div
         className={`review-offer ${reviewOffer==='counting'?'is-counting':'is-explicit'} ${reviewOfferPaused?'is-paused':''}`}
         data-review-offer
@@ -866,7 +880,7 @@ async function upload(uploaded:File){
          </div>
         </div>
        </div>
-       :verification&&<button ref={replayButton} type="button" className="masthead-play-review" onClick={replayStory}>Play review</button>}
+       :verification&&reviewWorthWatching&&<button ref={replayButton} type="button" className="masthead-play-review" onClick={replayStory}>Play review</button>}
      </div>
 
      {verification&&<nav className="result-chapters" aria-label="Result sections">

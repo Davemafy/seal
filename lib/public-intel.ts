@@ -117,7 +117,14 @@ export function analyzePublicIntelligence(text:string,claims:Claim[],results:Res
 }{
  const signals:SourceSignal[]=[];
  const compact=normalize(text);
- const trafficPattern=hasTrafficSubject(compact)&&hasRequested(claims,'pay')&&hasRequested(claims,'appear')&&hasScan(claims,compact)&&claims.some(c=>c.type==='docket');
+ const rawPay=/\b(?:remit|pay|payment|settle)\b[^\n]{0,120}\b(?:fine|fee|toll|balance|amount|cost|penalt)/i.test(compact)||/\b(?:full payment|payment instruction)\b/i.test(compact);
+ const rawAppear=/\bappear\b[^\n]{0,120}\b(?:court|hearing)\b|\b(?:court|hearing)\b[^\n]{0,120}\bappear\b/i.test(compact);
+ const rawCase=/\bcase\s*(?:no\.?|number|#)?\s*[:#-]?\s*[A-Z0-9-]{5,}/i.test(compact);
+ const trafficPattern=hasTrafficSubject(compact)
+  &&(hasRequested(claims,'pay')||rawPay)
+  &&(hasRequested(claims,'appear')||rawAppear)
+  &&hasScan(claims,compact)
+  &&(claims.some(c=>c.type==='docket')||rawCase);
  if(trafficPattern){
   signals.push({
    id:'traffic-qr-warning',

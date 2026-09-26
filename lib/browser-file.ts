@@ -56,32 +56,79 @@ export async function readInBrowser(file:File,onStatus:(status:string)=>void=()=
 
 function normalizeForOcr(image:HTMLImageElement){
  const width=image.naturalWidth||image.width,height=image.naturalHeight||image.height,scale=ocrScaleForSize(width,height);
- if(scale===1)return image;
- const canvas=document.createElement('canvas');canvas.width=Math.round(width*scale);canvas.height=Math.round(height*scale);
+ const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(width*scale));canvas.height=Math.max(1,Math.round(height*scale));
  const ctx=canvas.getContext('2d')!;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
- ctx.filter='grayscale(1) contrast(1.12)';ctx.drawImage(image,0,0,canvas.width,canvas.height);ctx.filter='none';
+ ctx.filter='grayscale(1) contrast(1.28) brightness(1.03)';ctx.drawImage(image,0,0,canvas.width,canvas.height);ctx.filter='none';
  return canvas;
 }
 
-async function ocr(image:HTMLImageElement|HTMLCanvasElement):Promise<Omit<BrowserDocument,'preview'|'kind'|'sample'>>{
+function binaryVariant(image:HTMLImageElement|HTMLCanvasElement){
+ const width=('naturalWidth' in image?image.naturalWidth:image.width)||1,height=('naturalHeight' in image?image.naturalHeight:image.height)||1;
+ const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+ const ctx=canvas.getContext('2d')!;ctx.drawImage(image,0,0,width,height);
+ const frame=ctx.getImageData(0,0,width,height),hist=new Uint32Array(256);
+ for(let i=0;i<frame.data.length;i+=4){
+  const y=Math.round(frame.data[i]*.299+frame.data[i+1]*.587+frame.data[i+2]*.114);
+  hist[y]++;
+ }
+ const total=width*height;let sum=0;for(let i=0;i<256;i++)sum+=i*hist[i];
+ let bgWeight=0,bgSum=0,best=0,threshold=180;
+ for(let i=0;i<256;i++){
+  bgWeight+=hist[i];if(!bgWeight)continue;
+  const fgWeight=total-bgWeight;if(!fgWeight)break;
+  bgSum+=i*hist[i];
+  const bgMean=bgSum/bgWeight,fgMean=(sum-bgSum)/fgWeight;
+  const variance=bgWeight*fgWeight*(bgMean-fgMean)*(bgMean-fgMean);
+  if(variance>best){best=variance;threshold=i}
+ }
+ threshold=Math.max(125,Math.min(220,threshold+8));
+ for(let i=0;i<frame.data.length;i+=4){
+  const y=frame.data[i]*.299+frame.data[i+1]*.587+frame.data[i+2]*.114;
+  const value=y>threshold?255:0;
+  frame.data[i]=frame.data[i+1]=frame.data[i+2]=value;frame.data[i+3]=255;
+ }
+ ctx.putImageData(frame,0,0);
+ return canvas;
+}
+
+type OcrResult=Omit<BrowserDocument,'preview'|'kind'|'sample'>;
+function ocrQuality(result:OcrResult){
+ const text=result.text;
+ const cues=(text.match(/\b(?:court|case|notice|traffic|jury|summons|payment|pay|remit|appear|hearing|qr)\b/gi)||[]).length;
+ const weird=(text.match(/[^\w\s.,:;()/#$%&@'’"\-–—]/g)||[]).length/Math.max(1,text.length);
+ return (result.ocrConfidence||0)+Math.min(22,text.length/55)+Math.min(24,cues*2)-Math.min(18,weird*120);
+}
+function shouldRetryOcr(result:OcrResult){
+ const cues=(result.text.match(/\b(?:court|case|notice|traffic|jury|summons|payment|pay|remit|appear|hearing|qr)\b/gi)||[]).length;
+ return (result.ocrConfidence||0)<78||result.text.length<220||cues<3;
+}
+
+async function recognize(worker:Awaited<ReturnType<typeof import('tesseract.js')['createWorker']>>,image:HTMLImageElement|HTMLCanvasElement):Promise<OcrResult>{
+ const r=await worker.recognize(image,{}, {text:true,blocks:true});
+ const width=('naturalWidth' in image?image.naturalWidth:image.width)||1,height=('naturalHeight' in image?image.naturalHeight:image.height)||1;
+ const tokens:Token[]=[];const lines:string[]=[];let offset=0;
+ for(const block of r.data.blocks||[])for(const paragraph of block.paragraphs||[])for(const line of paragraph.lines||[]){
+  const words=line.words||[];const lineText=words.map(word=>word.text).join(' ').trim();
+  if(!lineText)continue;
+  let localOffset=0;
+  for(const word of words){
+   const box=word.bbox,text=word.text||'';const start=offset+localOffset;
+   tokens.push({page:1,text,x:box.x0/width,y:box.y0/height,width:(box.x1-box.x0)/width,height:(box.y1-box.y0)/height,start,end:start+text.length,confidence:Number(word.confidence||0)});
+   localOffset+=text.length+1;
+  }
+  lines.push(lineText);offset+=lineText.length+1;
+ }
+ const text=lines.join('\n').trim();
+ return {text,tokens,uncertain:text.length<20,ocrConfidence:r.data.confidence,unreadableFields:[]};
+}
+
+async function ocr(image:HTMLImageElement|HTMLCanvasElement):Promise<OcrResult>{
  const worker=await warmOcr();
  try{
-  const r=await worker.recognize(image,{}, {text:true,blocks:true});
-  const width=('naturalWidth' in image?image.naturalWidth:image.width)||1,height=('naturalHeight' in image?image.naturalHeight:image.height)||1;
-  const tokens:Token[]=[];const lines:string[]=[];let offset=0;
-  for(const block of r.data.blocks||[])for(const paragraph of block.paragraphs||[])for(const line of paragraph.lines||[]){
-   const words=line.words||[];const lineText=words.map(word=>word.text).join(' ').trim();
-   if(!lineText)continue;
-   let localOffset=0;
-   for(const word of words){
-    const box=word.bbox,text=word.text||'';const start=offset+localOffset;
-    tokens.push({page:1,text,x:box.x0/width,y:box.y0/height,width:(box.x1-box.x0)/width,height:(box.y1-box.y0)/height,start,end:start+text.length,confidence:Number(word.confidence||0)});
-    localOffset+=text.length+1;
-   }
-   lines.push(lineText);offset+=lineText.length+1;
-  }
-  const text=lines.join('\n').trim();
-  return {text,tokens,uncertain:text.length<20,ocrConfidence:r.data.confidence,unreadableFields:[]};
+  const first=await recognize(worker,image);
+  if(!shouldRetryOcr(first))return first;
+  const second=await recognize(worker,binaryVariant(image));
+  return ocrQuality(second)>ocrQuality(first)?second:first;
  }catch(error){
   ocrWorkerPromise=null;
   try{await worker.terminate()}catch{}

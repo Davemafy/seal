@@ -15,15 +15,25 @@ function courtLineScore(line:string){
  return score;
 }
 
+function plausibleCourtName(value:string){
+ if(!/\bcourt\b/i.test(value))return false;
+ const letters=(value.match(/[a-z]/gi)||[]).length;
+ const noise=(value.match(/[^a-z\s,.'’&()\-–—]/gi)||[]).length;
+ return letters>=8&&noise<=Math.max(2,Math.floor(letters*.08));
+}
+
 function extractCourtName(lines:string[]){
  let index=-1,best=-Infinity;
  lines.forEach((line,i)=>{const score=courtLineScore(line);if(score>best){best=score;index=i}});
  if(index<0)return '';
  let value=lines[index];
- const next=lines[index+1]||'';
+ const prev=lines[index-1]||'',next=lines[index+1]||'';
+ if(/^(?:in\s+the\s+)?(?:district|superior|circuit|municipal|traffic)\s+court\b/i.test(value)&&/^(?:state|commonwealth|united states)\b/i.test(prev)){
+  value=`${prev} ${value}`.replace(/\s+/g,' ').trim();
+ }
  const continuation=/\b(?:of|for|in|—|-)\s*$/i.test(value)||/^(?:district|division|county|circuit|for\b|of\b)/i.test(next);
  if(continuation&&next.length<=90&&!/[.!?]$/.test(value))value=`${value} ${next}`.replace(/\s+/g,' ').trim();
- return value;
+ return plausibleCourtName(value)?value:'';
 }
 
 function tokenActionSegments(tokens:Token[]):string[]{
@@ -85,7 +95,7 @@ function similarActions(a:ActionNode,b:ActionNode){
 export function extractActionGraph(text:string,tokens:Token[]=[]):ActionNode[]{
  const textLines=text.split(/\n/).map(s=>s.trim()).filter(Boolean);
  const visual=tokenActionSegments(tokens);
- const sources=[...new Set((visual.length?visual:textLines).map(s=>s.trim()).filter(Boolean))];
+ const sources=[...new Set([...visual,...textLines].map(s=>s.trim()).filter(Boolean))];
  const actions:ActionNode[]=[];
  for(const source of sources){
   const directive=directiveVerb(source);if(!directive)continue;
@@ -118,6 +128,10 @@ export function extractActionGraph(text:string,tokens:Token[]=[]):ActionNode[]{
 }
 export function sanitizeStructuredExtraction(extraction:Extraction,text:string):Extraction{
  const next:Extraction={...extraction,payment_demand:{...extraction.payment_demand},phone_numbers:[...extraction.phone_numbers],emails:[...extraction.emails],urls:[...extraction.urls],information_requests:[...extraction.information_requests],threats:[...extraction.threats],uncertain_fields:[...extraction.uncertain_fields]};
+ if(next.court_name&&!plausibleCourtName(next.court_name)){
+  const recovered=extractCourtName(text.split(/\n/).map(s=>s.trim()).filter(Boolean));
+  next.court_name=recovered;
+ }
  const value=next.juror_or_reference_number.trim();
  if(value){
   const lower=text.toLowerCase(),needle=value.toLowerCase();
