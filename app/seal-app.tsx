@@ -418,18 +418,11 @@ async function upload(uploaded:File){
    <div className="rail-spacer"/>
    <div className="rail-foot"><strong>Check the source</strong><span>Open the court pages behind each finding.</span></div>
   </aside>
-  <header className="seal-nav">
+  <header className="seal-nav mobile-only-nav">
    <a href="/" className="mobile-brand">SEAL</a>
-   <div className="seal-nav-main">
-    <span className="seal-nav-title">{text?'Review':'Check a message'}</span>
-    <span className="seal-nav-proof">{text?(busy?(status||'Checking sources'):verification?'Independent source check':'Message ready'):'Your file stays in this browser'}</span>
-   </div>
-   <div className="seal-nav-actions">
-    {!text?<a href="/browse" className="nav-link">Browse real cases</a>:<>
-     {verification&&<button className="nav-link nav-link-button" type="button" onClick={replayStory}>Play review</button>}
-     <button className="nav-action" type="button" onClick={clear}>Check another message</button>
-    </>}
-   </div>
+   {!text
+    ?<a href="/browse" className="mobile-nav-action">Browse</a>
+    :<button className="mobile-nav-action mobile-nav-button" type="button" onClick={clear}>New check</button>}
   </header>
 
   {!text?
@@ -557,6 +550,7 @@ async function upload(uploaded:File){
        </select>}
        {verification&&<button type="button" className="story-replay" onClick={replayStory}>Play review</button>}
        {verification&&<a href="#full-evidence" className="full-evidence-link">Full evidence</a>}
+       <button type="button" className="review-new-check" onClick={clear}>Check another message</button>
       </div>
 
       {!verification?

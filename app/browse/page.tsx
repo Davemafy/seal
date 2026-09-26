@@ -22,15 +22,9 @@ export default function Browse(){
    <div className="rail-foot"><strong>Public sources only</strong><span>Every item links back to the issuing court or agency.</span></div>
   </aside>
 
-  <header className="seal-nav">
+  <header className="seal-nav mobile-only-nav">
    <a href="/" className="mobile-brand">SEAL</a>
-   <div className="seal-nav-main">
-    <span className="seal-nav-title">Browse real cases</span>
-    <span className="seal-nav-proof">Original public sources</span>
-   </div>
-   <div className="seal-nav-actions">
-    <a href="/" className="nav-action browse-check-link">Check a message</a>
-   </div>
+   <a href="/" className="mobile-nav-action">Check</a>
   </header>
 
   <section className="browse-shell">
