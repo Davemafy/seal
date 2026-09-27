@@ -523,7 +523,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    window.cancelAnimationFrame(frame);
    storyTimelineRef.current?.kill();
   };
- },[storyOpen,buildStoryTimeline]);
+ },[storyOpen,storyArtifactReady,buildStoryTimeline]);
 
  useEffect(()=>()=>{storyTimelineRef.current?.kill()},[]);
 
@@ -777,6 +777,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    storyCloseTimer.current=undefined;
    setStoryOpen(false);
    setStoryClosing(false);
+   if(file?.kind==='pdf')setStoryArtifactReady(false);
    window.requestAnimationFrame(()=>replayButton.current?.focus());
   },260);
  }
