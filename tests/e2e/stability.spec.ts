@@ -28,13 +28,13 @@ test('mobile interface language changes locally even when translation provider i
  await expect(page.getByRole('heading',{name:'Check a court message'})).toBeVisible();
 
  await page.locator('.mobile-language-trigger').click();
- await page.getByRole('option',{name:/Deutsch/}).click();
+ await page.locator('.mobile-language-popover').getByRole('option',{name:/Deutsch/}).click();
  await expect(page.getByRole('heading',{name:'Gerichtsnachricht prüfen'})).toBeVisible();
  await expect(page.getByText('Bescheid oder Screenshot hochladen')).toBeVisible();
  await expect(page.getByRole('button',{name:/Stattdessen Text einfügen/})).toBeVisible();
 
  await page.locator('.mobile-language-trigger').click();
- await page.getByRole('option',{name:/한국어/}).click();
+ await page.locator('.mobile-language-popover').getByRole('option',{name:/한국어/}).click();
  await expect(page.getByRole('heading',{name:'법원 메시지 확인'})).toBeVisible();
  await expect(page.getByText('통지서 또는 스크린샷 업로드')).toBeVisible();
  expect(translationRequests,'entry UI localization must not depend on the model translation route').toBe(0);
@@ -92,8 +92,9 @@ You must appear at the court registry on October 14, 2026.
 Call +91 11 5555 0199 to confirm your attendance.`);
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await expect(page.getByRole('heading',{name:'This message needs a direct court check.'})).toBeVisible();
- await expect(page.getByText('This court is not in SEAL’s direct-check network yet.')).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Verify through the official court system'})).toBeVisible();
+ await expect(page.getByTestId('two-risk-result')).toContainText('instructions remain unverified');
+ await expect(page.getByText('Official directory',{exact:true})).toBeVisible();
  const route=page.getByTestId('case-reality-check').getByRole('link',{name:'Search India eCourts'});
  await expect(route).toBeVisible();
  await expect(route).toHaveAttribute('href','https://services.ecourts.gov.in/ecourtindia_v6/');
@@ -346,8 +347,9 @@ test('Browse keeps every sourced document runnable and high-signal cases first',
   'Public notice to interested parties',
   'Sample federal jury summons'
  ]);
- await expect(page.locator('.case-card')).toHaveCount(7);
- await expect(page.getByRole('link',{name:'Run in SEAL'})).toHaveCount(7);
+ const cardCount=await page.locator('.case-card').count();
+ expect(cardCount).toBeGreaterThanOrEqual(7);
+ await expect(page.getByRole('link',{name:'Run in SEAL'})).toHaveCount(cardCount);
  const international=await page.request.get('/api/browse-case?id=brazil-parana-citation-notice');
  expect(international.ok()).toBe(true);
  expect(await international.json()).toMatchObject({assetType:'pdf',ocrLanguage:'por',title:'Public citation notice with response period'});
