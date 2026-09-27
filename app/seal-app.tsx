@@ -1821,91 +1821,107 @@ async function upload(uploaded:File){
      <div className="entry-motion" aria-hidden="true">
       <svg viewBox="0 0 320 320" role="presentation">
        <defs>
-        <linearGradient id="entryPetalFill" x1="0" y1="0" x2="0" y2="1">
-         <stop offset="0%" stopColor="#2b2b2a"/>
-         <stop offset="58%" stopColor="#111"/>
-         <stop offset="100%" stopColor="#050505"/>
+        <linearGradient id="entryGlassBlade" x1="0" y1="0" x2="0.22" y2="1">
+         <stop offset="0%" stopColor="#111" stopOpacity=".16"/>
+         <stop offset="42%" stopColor="#111" stopOpacity=".52"/>
+         <stop offset="100%" stopColor="#050505" stopOpacity=".92"/>
         </linearGradient>
-        <filter id="entryPetalShadow" x="-30%" y="-30%" width="160%" height="160%">
-         <feDropShadow dx="0" dy="7" stdDeviation="7" floodColor="#000" floodOpacity=".10"/>
+        <radialGradient id="entryMotionGlow" cx="50%" cy="48%" r="58%">
+         <stop offset="0%" stopColor="#fff" stopOpacity="0"/>
+         <stop offset="72%" stopColor="#111" stopOpacity=".018"/>
+         <stop offset="100%" stopColor="#111" stopOpacity=".07"/>
+        </radialGradient>
+        <filter id="entryMotionDepth" x="-35%" y="-35%" width="170%" height="170%">
+         <feDropShadow dx="0" dy="10" stdDeviation="12" floodColor="#000" floodOpacity=".08"/>
         </filter>
        </defs>
-       <g className="entry-motion-petals" filter="url(#entryPetalShadow)">
-        <g className="entry-motion-spoke" transform="rotate(0 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+       <circle className="entry-motion-field" cx="160" cy="160" r="126" fill="url(#entryMotionGlow)"/>
+       <circle className="entry-motion-orbit-ring" cx="160" cy="160" r="112"/>
+       <g className="entry-motion-rotor" filter="url(#entryMotionDepth)">
+        <g className="entry-motion-blade-wrap is-deep" transform="rotate(0 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(15 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap " transform="rotate(18 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(30 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap " transform="rotate(36 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(45 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap is-soft" transform="rotate(54 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(60 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap " transform="rotate(72 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(75 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap is-deep" transform="rotate(90 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(90 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap is-soft" transform="rotate(108 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(105 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap " transform="rotate(126 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(120 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap " transform="rotate(144 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(135 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap is-soft" transform="rotate(162 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(150 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap is-deep" transform="rotate(180 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(165 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap " transform="rotate(198 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(180 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap is-soft" transform="rotate(216 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(195 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap " transform="rotate(234 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(210 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap " transform="rotate(252 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(225 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap is-deep" transform="rotate(270 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(240 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap " transform="rotate(288 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(255 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap " transform="rotate(306 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(270 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap is-soft" transform="rotate(324 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
-        <g className="entry-motion-spoke" transform="rotate(285 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
-        </g>
-        <g className="entry-motion-spoke" transform="rotate(300 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
-        </g>
-        <g className="entry-motion-spoke" transform="rotate(315 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
-        </g>
-        <g className="entry-motion-spoke" transform="rotate(330 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
-        </g>
-        <g className="entry-motion-spoke" transform="rotate(345 160 160)">
-         <path className="entry-motion-petal" d="M160 28C173 28 181 40 179 55L169 139C168 149 165 155 160 159C155 155 152 149 151 139L141 55C139 40 147 28 160 28Z"/>
+        <g className="entry-motion-blade-wrap " transform="rotate(342 160 160)">
+         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
+         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
         </g>
        </g>
-       <circle className="entry-motion-ring" cx="160" cy="160" r="35"/>
-       <circle className="entry-motion-core" cx="160" cy="160" r="27"/>
+       <circle className="entry-motion-aperture-ring" cx="160" cy="160" r="40"/>
+       <circle className="entry-motion-aperture" cx="160" cy="160" r="34"/>
+       <circle className="entry-motion-aperture-glint" cx="153" cy="151" r="7"/>
       </svg>
      </div>
     </div>
