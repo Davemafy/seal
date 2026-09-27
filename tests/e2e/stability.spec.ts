@@ -56,6 +56,21 @@ Call 1-866-388-2430 after 5:30 PM for the status of your jury service.`);
  assertNoRuntimeErrors();
 });
 
+test('India coverage-limit demo abstains and hands off to official eCourts',async({page})=>{
+ const assertNoRuntimeErrors=guardRuntime(page);
+ await page.goto('/demo');
+ await page.getByLabel('Choose demo fixture').selectOption('unsupported-court-demo');
+ await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
+ await expect(page.getByRole('heading',{name:'SEAL couldn’t independently verify this court yet.'})).toBeVisible();
+ await expect(page.getByText('This court is not in SEAL’s direct-check network yet.')).toBeVisible();
+ const route=page.getByRole('link',{name:'Search India eCourts'});
+ await expect(route).toBeVisible();
+ await expect(route).toHaveAttribute('href','https://services.ecourts.gov.in/ecourtindia_v6/');
+ await expect(page.getByText('Matches',{exact:true})).toHaveCount(0);
+ await expect(page.getByText('Conflicts',{exact:true})).toHaveCount(0);
+ assertNoRuntimeErrors();
+});
+
 test('mobile SEAL brand returns a result to the clean entry state',async({page})=>{
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
