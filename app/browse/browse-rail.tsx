@@ -8,6 +8,7 @@ import BrowseLanguage from './browse-language';
 type WorkspaceRunStatus='idle'|'reading'|'verifying'|'done'|'error';
 type WorkspaceMeta={id:string;title:string;status:WorkspaceRunStatus;language?:string;jurisdiction?:string;preview?:string};
 const WORKSPACE_LIST_KEY='seal:workspace-list:v1';
+const checkRoute=(id:string)=>`/check/${encodeURIComponent(id.replace(/^check-/,''))}`;
 
 const clean=(value:string)=>String(value||'').replace(/[\u0000-\u001F\u007F]/g,' ').replace(/\s+/g,' ').trim();
 
@@ -55,14 +56,14 @@ export default function BrowseRail(){
 
  const openCheck=(id:string)=>{
   save(workspaces,id);
-  router.push(`/check/${encodeURIComponent(id)}`);
+  router.push(checkRoute(id));
  };
 
  const newCheck=()=>{
   const id=`check-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
   const next=[...workspaces,{id,title:'New check',status:'idle' as WorkspaceRunStatus}].slice(-8);
   save(next,id);
-  router.push(`/check/${encodeURIComponent(id)}`);
+  router.push(checkRoute(id));
  };
 
  const deleteCheck=(id:string)=>{
