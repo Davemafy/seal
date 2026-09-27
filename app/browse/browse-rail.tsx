@@ -55,14 +55,14 @@ export default function BrowseRail(){
 
  const openCheck=(id:string)=>{
   save(workspaces,id);
-  router.push('/');
+  router.push(`/check/${encodeURIComponent(id)}`);
  };
 
  const newCheck=()=>{
   const id=`check-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
   const next=[...workspaces,{id,title:'New check',status:'idle' as WorkspaceRunStatus}].slice(-8);
   save(next,id);
-  router.push('/');
+  router.push(`/check/${encodeURIComponent(id)}`);
  };
 
  const deleteCheck=(id:string)=>{
