@@ -1072,6 +1072,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    activeReadRef.current?.abort();
    activeReadRef.current=controller;
    const handoffId=runId.current;
+   const busyStartedAt=performance.now();
    try{
     setBusy(true);
     setStatus('Opening the source document');
@@ -1101,8 +1102,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
      setFile(doc);
      setStoryArtifactReady(false);
      setText(analysisText);
-     setBusy(false);
-     setStatus('');
+     const openingWait=Math.max(0,300-(performance.now()-busyStartedAt));
+     if(openingWait)await new Promise(resolve=>window.setTimeout(resolve,openingWait));
      await run('SNAPSHOT',{text:analysisText,file:doc,curated:!!seededText,curatedCaseId:caseId,browse:true});
      return;
     }
@@ -1110,6 +1111,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
     throw new Error('Case asset unavailable');
    }catch{
     if(controller.signal.aborted||runId.current!==handoffId)return;
+    const openingWait=Math.max(0,300-(performance.now()-busyStartedAt));
+    if(openingWait)await new Promise(resolve=>window.setTimeout(resolve,openingWait));
     setBusy(false);
     setStatus('');
     initialRunStarted.current=false;
@@ -1327,7 +1330,9 @@ async function upload(uploaded:File){
   sourceBlobRef.current=uploaded;
   const controller=new AbortController();
   activeReadRef.current=controller;
-  const uploadId=runId.current;setBusy(true);setStatus('Preparing your file');
+  const uploadId=runId.current;
+  const busyStartedAt=performance.now();
+  setBusy(true);setStatus('Preparing your file');
   try{
    const doc=await readInBrowser(uploaded,next=>{if(!controller.signal.aborted&&runId.current===uploadId)setStatus(next)},ocrLanguage,controller.signal);
    if(runId.current!==uploadId){URL.revokeObjectURL(doc.preview);return}
@@ -1339,6 +1344,8 @@ async function upload(uploaded:File){
   }finally{
    if(activeReadRef.current===controller)activeReadRef.current=null;
    if(uploadPreviewRef.current===selectedPreview){URL.revokeObjectURL(selectedPreview);uploadPreviewRef.current=null;setUploadPreview(null)}
+   const remaining=Math.max(0,300-(performance.now()-busyStartedAt));
+   if(remaining)await new Promise(resolve=>window.setTimeout(resolve,remaining));
    if(runId.current===uploadId){setBusy(false);setStatus('')}
   }
  }
@@ -1370,6 +1377,7 @@ async function upload(uploaded:File){
    :Promise.resolve(null);
   const requestTimeout=window.setTimeout(()=>controller.abort(),30000);
   const id=++runId.current;
+  const busyStartedAt=performance.now();
   storyTimelineRef.current?.kill();
   storyTimelineTime.current=0;
   storyPhaseRef.current=0;
@@ -1512,6 +1520,8 @@ async function upload(uploaded:File){
   }finally{
    window.clearTimeout(requestTimeout);
    if(activeRequestRef.current===controller)activeRequestRef.current=null;
+   const remaining=Math.max(0,300-(performance.now()-busyStartedAt));
+   if(remaining)await new Promise(resolve=>window.setTimeout(resolve,remaining));
    if(runId.current===id){setBusy(false);setStatus('')}
   }
  }
@@ -1699,7 +1709,7 @@ async function upload(uploaded:File){
    <section className="workspace-restore-shell" aria-live="polite">
     <span>Opening check…</span>
    </section>
-   :!verification?
+   :busy||!verification?
    <section className={`entry-shell ${busy?'is-processing':''}`} data-testid="entry-shell">
    <div className="entry-copy">
      <h1>{ui('checkCourtMessage')}</h1>
