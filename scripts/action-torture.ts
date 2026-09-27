@@ -50,4 +50,4 @@ for(const item of cases){
  console.log(`${ok?'PASS':'FAIL'} ${item.name}: ${JSON.stringify(actual)}`);
 }
 console.log(`${passed}/${cases.length} correctly extracted or refused`);
-if(passed<12)process.exitCode=1;
+if(passed!==cases.length)process.exitCode=1;
