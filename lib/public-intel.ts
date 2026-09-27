@@ -155,7 +155,7 @@ export function analyzePublicIntelligence(text:string,claims:Claim[],results:Res
   signals.push({
    id:'nh-toll-process',
    kind:'OFFICIAL_PROCESS',
-   title:'New Hampshire publishes a different process for toll and court collections',
+   title:'New Hampshire publishes a specific process for toll and court collections',
    summary:'New Hampshire law describes toll notices with transaction-specific details and a defined enforcement path. Judicial Branch materials separately describe judgment collection through filed motions, service, hearings, and court orders.',
    evidence:[official.nhTollRules,official.nhCourtCollection]
   });
