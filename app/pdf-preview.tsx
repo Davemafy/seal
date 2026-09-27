@@ -73,12 +73,11 @@ export default function PDFPreview({url,claims,active,anchors,onSelect}:Props){
     localDocument=await localTask.promise;
 
     if(cancelled){
-     await localDocument.destroy().catch(()=>{});
+     await localTask.destroy().catch(()=>{});
      return;
     }
 
     documentRef.current=localDocument;
-    loadingTaskRef.current=null;
     setTotal(localDocument.numPages);
     setDocumentVersion(version=>version+1);
    }catch(error){
@@ -96,15 +95,10 @@ export default function PDFPreview({url,claims,active,anchors,onSelect}:Props){
    try{renderTaskRef.current?.cancel()}catch{}
    renderTaskRef.current=null;
 
-   const doc=documentRef.current;
    documentRef.current=null;
-   if(doc){
-    void doc.destroy().catch(()=>{});
-   }else{
-    const task=loadingTaskRef.current;
-    loadingTaskRef.current=null;
-    if(task)void task.destroy().catch(()=>{});
-   }
+   const task=loadingTaskRef.current;
+   loadingTaskRef.current=null;
+   if(task)void task.destroy().catch(()=>{});
   };
  },[url]);
 
