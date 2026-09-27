@@ -5,6 +5,14 @@ type CuratorPayload={
  text:string;
 };
 
+const transientStatuses=new Set([429,502,503,504]);
+
+function retryDelay(response:Response,attempt:number){
+ const retryAfter=Number(response.headers.get('retry-after')||'');
+ if(Number.isFinite(retryAfter)&&retryAfter>0)return Math.min(retryAfter*1000,2000);
+ return attempt===0?250:750;
+}
+
 export async function curateViaSeal(payload:CuratorPayload){
  const requestUrl=process.env.ACTIONS_ID_TOKEN_REQUEST_URL;
  const requestToken=process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN;
@@ -26,15 +34,20 @@ export async function curateViaSeal(payload:CuratorPayload){
  const oidc=await oidcResponse.json() as {value?:string};
  if(!oidc.value)throw new Error('GitHub OIDC token missing');
 
- const response=await fetch(endpoint,{
-  method:'POST',
-  signal:AbortSignal.timeout(25000),
-  headers:{
-   Authorization:`Bearer ${oidc.value}`,
-   'Content-Type':'application/json'
-  },
-  body:JSON.stringify(payload)
- });
- if(!response.ok)throw new Error(`SEAL curator ${response.status}`);
- return response.json() as Promise<unknown>;
+ for(let attempt=0;attempt<3;attempt++){
+  const response=await fetch(endpoint,{
+   method:'POST',
+   signal:AbortSignal.timeout(25000),
+   headers:{
+    Authorization:`Bearer ${oidc.value}`,
+    'Content-Type':'application/json'
+   },
+   body:JSON.stringify(payload)
+  });
+  if(response.ok)return response.json() as Promise<unknown>;
+  if(!transientStatuses.has(response.status)||attempt===2)throw new Error(`SEAL curator ${response.status}`);
+  await new Promise(resolve=>setTimeout(resolve,retryDelay(response,attempt)));
+ }
+
+ throw new Error('SEAL curator unavailable');
 }
