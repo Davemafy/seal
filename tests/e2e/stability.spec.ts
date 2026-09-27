@@ -105,7 +105,7 @@ Call +91 11 5555 0199 to confirm your attendance.`);
  assertNoRuntimeErrors();
 });
 
-test('mobile result puts status and official next action above supporting detail',async({page})=>{
+test('mobile result keeps the decision first and uses the horizontal result carousel',async({page})=>{
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:390,height:844});
@@ -127,21 +127,35 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  await expect(page.locator('.decision-details')).not.toHaveAttribute('open','');
 
  const chapters=page.locator('.result-chapters');
+ const carousel=page.getByTestId('result-carousel');
  await expect(chapters).toBeVisible();
  await expect(chapters.getByRole('link')).toHaveCount(4);
  const horizontalBefore=await page.evaluate(()=>window.scrollX);
- await chapters.getByRole('link',{name:'Original'}).click();
- await expect.poll(()=>page.locator('#original-message').evaluate(node=>Math.abs(node.getBoundingClientRect().top-92)),{timeout:5000}).toBeLessThan(36);
- const originalY=await page.evaluate(()=>window.scrollY);
- expect(originalY).toBeGreaterThan(0);
 
- await chapters.getByRole('link',{name:'Evidence'}).click();
- await expect.poll(()=>page.locator('#source-checks').evaluate(node=>Math.abs(node.getBoundingClientRect().top-92)),{timeout:5000}).toBeLessThan(36);
- const evidenceY=await page.evaluate(()=>window.scrollY);
- expect(evidenceY).toBeGreaterThan(originalY);
+ const expectSlide=async(name:'Summary'|'Original'|'Evidence'|'Resolve',index:number)=>{
+  await chapters.getByRole('link',{name}).click();
+  await expect.poll(async()=>carousel.evaluate(node=>{
+   const element=node as HTMLElement;
+   return element.clientWidth?element.scrollLeft/element.clientWidth:0;
+  }),{timeout:5000}).toBeCloseTo(index,1);
+  await expect(chapters.getByRole('link',{name})).toHaveAttribute('aria-current','location');
+ };
 
- await chapters.getByRole('link',{name:'Resolve'}).click();
- await expect.poll(()=>page.locator('#user-actions').evaluate(node=>Math.abs(node.getBoundingClientRect().top-92)),{timeout:5000}).toBeLessThan(36);
+ await expectSlide('Original',1);
+ await expect(page.locator('#original-message')).toBeInViewport();
+ await expect(page.locator('#original-message')).toHaveCSS('overflow-y','auto');
+
+ await expectSlide('Evidence',2);
+ await expect(page.locator('#source-checks')).toBeInViewport();
+
+ // This mirrors a swipe without depending on synthetic touch events.
+ await carousel.evaluate(node=>{
+  const element=node as HTMLElement;
+  element.scrollTo({left:element.clientWidth*3,behavior:'auto'});
+ });
+ await expect(chapters.getByRole('link',{name:'Resolve'})).toHaveAttribute('aria-current','location');
+ await expect(page.locator('#user-actions')).toBeInViewport();
+
  expect(await page.evaluate(()=>window.scrollX)).toBe(horizontalBefore);
  await expect(chapters).toBeVisible();
 
