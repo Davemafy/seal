@@ -1562,6 +1562,9 @@ async function upload(uploaded:File){
        <div className="check-object-meta">
         {checkObjectReference&&<span>Case/reference {checkObjectReference}</span>}
         <span>{resultStatusLabel}</span>
+        {documentLanguage?.label&&<span data-testid="document-language">{documentLanguage.label}</span>}
+        {jurisdiction&&<span data-testid="document-jurisdiction">{jurisdiction}</span>}
+        {displayLocale!=='en'&&<span data-testid="display-language">Viewing in {DISPLAY_LANGUAGES[displayLocale]}</span>}
         {checkDateLabel&&<span>Checked {checkDateLabel}</span>}
         <span>{checkSourceCount?checkSourceCount+' public source'+(checkSourceCount===1?'':'s'):'No independent source attached'}</span>
        </div>
