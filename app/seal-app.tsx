@@ -248,6 +248,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const filePickerArmed=useRef(false);
  const sourceBlobRef=useRef<Blob|null>(null);
  const uploadPreviewRef=useRef<string|null>(null);
+ const processingIntakeRef=useRef<HTMLDivElement>(null);
  const activeReadRef=useRef<AbortController|null>(null);
  const activeRequestRef=useRef<AbortController|null>(null);
  const input=useRef<HTMLInputElement>(null);
@@ -260,6 +261,30 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   setReviewOfferPaused(false);
   setReviewCountdown(3);
  },[]);
+
+ useLayoutEffect(()=>{
+  if(!busy||!uploadPreview?.url||!processingIntakeRef.current)return;
+  const root=processingIntakeRef.current;
+  const media=window.matchMedia('(prefers-reduced-motion: reduce)');
+  if(media.matches)return;
+
+  const context=gsap.context(()=>{
+   gsap.fromTo(root,
+    {opacity:.72,y:10,scale:.988},
+    {opacity:1,y:0,scale:1,duration:.34,ease:'power3.out',clearProps:'opacity,transform'}
+   );
+   gsap.fromTo('.upload-process-media',
+    {opacity:.35,y:14,scale:.93},
+    {opacity:1,y:0,scale:1,duration:.4,ease:'power3.out',clearProps:'opacity,transform'}
+   );
+   gsap.fromTo('.upload-process-body',
+    {opacity:0,x:14},
+    {opacity:1,x:0,duration:.32,delay:.08,ease:'power3.out',clearProps:'opacity,transform'}
+   );
+  },root);
+
+  return()=>context.revert();
+ },[busy,uploadPreview?.url]);
 
  const isDemo=!file&&/^DEMO \/ (?:FICTIONAL NOTICE|SYNTHETIC MESSAGE)/.test(text);
  const isActionDemo=isDemo&&text.startsWith('DEMO / SYNTHETIC MESSAGE');
@@ -1112,7 +1137,7 @@ async function upload(uploaded:File){
      <p>See what it asks you to do, what independent public sources can confirm, and where to check next.</p>
     </div>
 
-    <div className={`intake ${pasteMode?'is-paste-mode':'is-upload-mode'} ${busy?'is-processing-intake':''}`}>
+    <div ref={processingIntakeRef} className={`intake ${pasteMode?'is-paste-mode':'is-upload-mode'} ${busy?'is-processing-intake':''}`}>
      {!pasteMode?
       <>
        <button className={`upload-row ${dragging?'is-dragging':''} ${busy?'is-busy':''}`} data-testid="upload-file" type="button" disabled={busy||!hydrated} aria-busy={busy} onClick={()=>{filePickerArmed.current=true;input.current?.click()}}
@@ -1126,6 +1151,7 @@ async function upload(uploaded:File){
             ?<img src={uploadPreview.url} alt="Selected court message"/>
             :<span className="upload-pdf-preview" aria-hidden="true"><b>PDF</b><i/></span>}
            <span className="process-registration" aria-hidden="true"><i/><i/><i/><i/></span>
+           <span className="process-scan-beam" data-testid="processing-scan" aria-hidden="true"><i/></span>
            {processingStage>=1&&processingTextRegionsVisible.map((region,index)=><span
             className="process-text-region"
             key={`text-${index}`}
