@@ -2291,7 +2291,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  return <>
   <div className="seal-workspace-stack">
    {workspaces.map((workspace,index)=><div
-    className="seal-workspace-instance"
+    className={`seal-workspace-instance ${workspaceMotion?.id===workspace.id?`is-entering-${workspaceMotion.direction}`:''}`}
     key={workspace.id}
     hidden={workspace.id!==activeWorkspace}
     aria-hidden={workspace.id!==activeWorkspace}
