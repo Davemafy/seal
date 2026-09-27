@@ -13,11 +13,11 @@ const uberMove=localFont({
 
 export const metadata:Metadata={
  title:{
-  default:'SEAL',
-  template:'%s · SEAL'
+  default:'Seal',
+  template:'%s · Seal'
  },
  description:'Check court messages against independent public sources before you act.',
- applicationName:'SEAL',
+ applicationName:'Seal',
  icons:{
   icon:{url:'/icon.svg',type:'image/svg+xml'},
   shortcut:'/icon.svg'
