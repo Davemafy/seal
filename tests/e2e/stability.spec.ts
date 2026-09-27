@@ -18,6 +18,32 @@ async function chooseFile(page:Page,path:string){
  await chooser.setFiles(path);
 }
 
+test('mobile interface language changes locally even when translation provider is unavailable',async({page})=>{
+ const assertNoRuntimeErrors=guardRuntime(page);
+ await page.setViewportSize({width:390,height:844});
+ let translationRequests=0;
+ page.on('request',request=>{if(request.url().includes('/api/translate'))translationRequests++});
+ await page.route('**/api/translate',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'unavailable',mode:'UNAVAILABLE'})}));
+ await page.goto('/');
+ await expect(page.getByRole('heading',{name:'Check a court message'})).toBeVisible();
+
+ await page.locator('.mobile-language-trigger').click();
+ await page.getByRole('option',{name:/Deutsch/}).click();
+ await expect(page.getByRole('heading',{name:'Gerichtsnachricht prüfen'})).toBeVisible();
+ await expect(page.getByText('Bescheid oder Screenshot hochladen')).toBeVisible();
+ await expect(page.getByRole('button',{name:/Stattdessen Text einfügen/})).toBeVisible();
+
+ await page.locator('.mobile-language-trigger').click();
+ await page.getByRole('option',{name:/한국어/}).click();
+ await expect(page.getByRole('heading',{name:'법원 메시지 확인'})).toBeVisible();
+ await expect(page.getByText('통지서 또는 스크린샷 업로드')).toBeVisible();
+ expect(translationRequests,'entry UI localization must not depend on the model translation route').toBe(0);
+
+ const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
+ expect(overflow).toBeLessThanOrEqual(1);
+ assertNoRuntimeErrors();
+});
+
 test('entry stays idle across refresh until the user chooses an input',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.goto('/');
