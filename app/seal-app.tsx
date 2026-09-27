@@ -2312,8 +2312,6 @@ const DISPLAY_LOCALE_KEY='seal:display-locale:v1';
 export default function SealApp({initialDemo=false,initialText='',initialRun=false}:{initialDemo?:boolean;initialText?:string;initialRun?:boolean}){
  const [workspaces,setWorkspaces]=useState<WorkspaceMeta[]>([{id:'primary',title:'New check',status:'idle'}]);
  const [activeWorkspace,setActiveWorkspace]=useState('primary');
- const [workspaceMotion,setWorkspaceMotion]=useState<{id:string;fromId?:string;direction:'forward'|'backward'}|null>(null);
- const workspaceMotionTimer=useRef<number|undefined>(undefined);
  const [registryReady,setRegistryReady]=useState(false);
  const [onboardingOpen,setOnboardingOpen]=useState(false);
 
@@ -2368,14 +2366,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   });
  },[]);
 
- useEffect(()=>()=>{if(workspaceMotionTimer.current)window.clearTimeout(workspaceMotionTimer.current)},[]);
-
- const animateWorkspaceTo=useCallback((id:string,direction:'forward'|'backward')=>{
+ const animateWorkspaceTo=useCallback((id:string)=>{
   if(id===activeWorkspace)return;
-  if(workspaceMotionTimer.current)window.clearTimeout(workspaceMotionTimer.current);
-  setWorkspaceMotion({id,fromId:activeWorkspace,direction});
   setActiveWorkspace(id);
-  workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),720);
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
  },[activeWorkspace]);
 
@@ -2400,18 +2393,13 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    const title=number===1?'New check':`New check ${number}`;
    return [...items,{id,title,status:'idle' as WorkspaceRunStatus}].slice(-8);
   });
-  if(workspaceMotionTimer.current)window.clearTimeout(workspaceMotionTimer.current);
-  setWorkspaceMotion({id,fromId:activeWorkspace,direction:'forward'});
   setActiveWorkspace(id);
-  workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),720);
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
- },[activeWorkspace]);
+ },[]);
 
  const selectWorkspace=useCallback((id:string)=>{
-  const from=workspaces.findIndex(item=>item.id===activeWorkspace);
-  const to=workspaces.findIndex(item=>item.id===id);
-  animateWorkspaceTo(id,to>=from?'forward':'backward');
- },[workspaces,activeWorkspace,animateWorkspaceTo]);
+  animateWorkspaceTo(id);
+ },[animateWorkspaceTo]);
 
  const deleteWorkspace=useCallback((id:string)=>{
   const index=workspaces.findIndex(item=>item.id===id);
@@ -2426,10 +2414,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    setWorkspaces(remaining);
    if(activeWorkspace===id){
     const next=remaining[Math.min(index,remaining.length-1)];
-    if(workspaceMotionTimer.current)window.clearTimeout(workspaceMotionTimer.current);
-    setWorkspaceMotion({id:next.id,direction:index>=remaining.length?'backward':'forward'});
     setActiveWorkspace(next.id);
-    workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),720);
    }
   }
   toast.success('Check removed');
@@ -2458,32 +2443,29 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    </section>
   </div>}
   <div className={`seal-workspace-stack ${workspaces.length>1?'has-multiple':''}`} data-workspace-count={workspaces.length}>
-   {workspaces.length>1&&<div className="workspace-page-edges" aria-hidden="true"><span/><span/></div>}
-   {workspaces.map((workspace,index)=>{
-    const entering=workspaceMotion?.id===workspace.id;
-    const leaving=workspaceMotion?.fromId===workspace.id&&workspace.id!==activeWorkspace;
-    const visible=workspace.id===activeWorkspace||leaving;
+   {registryReady&&(()=>{
+    const workspace=workspaces.find(item=>item.id===activeWorkspace)||workspaces[0];
+    const index=Math.max(0,workspaces.findIndex(item=>item.id===workspace.id));
     return <div
-     className={`seal-workspace-instance ${workspace.id===activeWorkspace?'is-active':''} ${entering?`is-entering-${workspaceMotion.direction}`:''} ${leaving?'is-leaving':''}`}
+     className="seal-workspace-instance is-active"
      data-workspace-id={workspace.id}
      key={workspace.id}
-     hidden={!visible}
-     aria-hidden={workspace.id!==activeWorkspace}
+     aria-hidden="false"
     >
-    <SealWorkspace
-     initialDemo={index===0?initialDemo:false}
-     initialText={index===0?initialText:''}
-     initialRun={index===0?initialRun:false}
-     workspaceId={workspace.id}
-     active={workspace.id===activeWorkspace}
-     workspaces={workspaces}
-     onNewWorkspace={createWorkspace}
-     onSelectWorkspace={selectWorkspace}
-     onDeleteWorkspace={deleteWorkspace}
-     onWorkspaceMeta={updateWorkspace}
-    />
-   </div>;
-   })}
+     <SealWorkspace
+      initialDemo={index===0?initialDemo:false}
+      initialText={index===0?initialText:''}
+      initialRun={index===0?initialRun:false}
+      workspaceId={workspace.id}
+      active
+      workspaces={workspaces}
+      onNewWorkspace={createWorkspace}
+      onSelectWorkspace={selectWorkspace}
+      onDeleteWorkspace={deleteWorkspace}
+      onWorkspaceMeta={updateWorkspace}
+     />
+    </div>;
+   })()}
   </div>
   <Toaster
    position="bottom-center"
