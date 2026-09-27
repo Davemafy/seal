@@ -258,8 +258,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [showIndex,setShowIndex]=useState(false);
  const [activeResultSection,setActiveResultSection]=useState<'summary'|'message'|'evidence'|'next'>('summary');
  const [technicalOpen,setTechnicalOpen]=useState(false);
- const [handoffCopied,setHandoffCopied]=useState(false);
- const [questionCopied,setQuestionCopied]=useState(false);
+ const [,setHandoffCopied]=useState(false);
+ const [,setQuestionCopied]=useState(false);
  const workspaceRootRef=useRef<HTMLElement>(null);
  const resultCarouselRef=useRef<HTMLDivElement>(null);
  const sectionId=(base:string)=>workspaceId==='primary'?base:`${base}-${workspaceId}`;
