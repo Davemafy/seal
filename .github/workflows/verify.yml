@@ -1,4 +1,5 @@
 name: Verify SEAL
+
 on:
   push:
   pull_request:
@@ -17,43 +18,49 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
-      - run: npm install --no-audit --no-fund
-      - run: npm run typecheck
-      - run: npm run lint
-        continue-on-error: true
-      - run: npm test
-      - run: sudo apt-get update && sudo apt-get install -y tesseract-ocr poppler-utils
-      - run: npm run benchmark
-      - name: Live action torture gate
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Verification benchmark
+        run: npm run benchmark
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser reliability suite
+        run: npm run e2e
+
+      - name: Live deployed action sanity gate
         env:
           SEAL_BASE_URL: https://seal.imafidondavid1.workers.dev
         run: node --import tsx scripts/action-torture.ts
-      - name: Generate public sample image fixture
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        run: |
-          mkdir -p tests/generated
-          pdftoppm -f 1 -singlefile -png -r 376 tests/fixtures/connecticut-sample-jury-summons.pdf tests/generated/connecticut-dense
-          identify tests/generated/connecticut-dense.png || file tests/generated/connecticut-dense.png
-      - name: Install browser test runtime
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        run: npx playwright install --with-deps chromium
-      - name: Legacy browser regression suite
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        run: npm run e2e
-        continue-on-error: true
-      - name: Upload browser screenshots
+
+      - name: Upload browser artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: seal-browser-shots
-          path: test-results/*.png
+          name: seal-browser-artifacts
+          path: |
+            test-results/*.png
+            test-results/*.pdf
           if-no-files-found: ignore
-      - run: npm run build
 
       # Git-triggered Vercel deployments are disabled in vercel.json.
       # Run this only after one intentional manual production deployment.
@@ -72,17 +79,18 @@ jobs:
           done
           echo "Production alias did not reach the manually deployed commit within 3 minutes."
           exit 1
-      - name: Production image gate
+
+      - name: Production browser gate
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.production_smoke }}
         env:
           SEAL_PRODUCTION: '1'
           PLAYWRIGHT_BASE_URL: https://seal-verify.vercel.app
         run: npx playwright test tests/e2e/production.spec.ts
-      - name: Upload production browser gate artifacts
+
+      - name: Upload production browser artifacts
         if: always() && github.event_name == 'workflow_dispatch' && inputs.production_smoke
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: seal-production-image-gate
-          path: |
-            test-results/production-*.png
+          name: seal-production-browser-gate
+          path: test-results/production-*.png
           if-no-files-found: ignore
