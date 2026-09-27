@@ -52,6 +52,7 @@ const UI_COPY={
  messageAsks:'The message asks',fromMessage:'From the message',publicSourcesSay:'What public sources say',
  openPublicSource:'Open public source',seeHowChecked:'See how SEAL checked it',
  evidenceReviewHint:'17 sec · notice → public source → next step',
+ independentEvidence:'Independent evidence',sources:'Sources',officialProcess:'Official process',officialDirectory:'Official directory',sourceConflict:'Source conflict',knownPattern:'Known pattern',officialWarning:'Official warning',officialSourceMatch:'Official source match',officialSourceConflict:'Official source conflict',sourceEvidence:'Source evidence',independentCheck:'Independent check',
  translatedNote:'Translated for your display language. Source quotations remain in their original wording.'
 } as const;
 type UiCopyKey=keyof typeof UI_COPY;
@@ -527,6 +528,15 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    supportLegalTitle:'I need legal help',
    supportLegalCopy:'Use an official legal-aid service to understand your options for a real legal matter.'
   };
+  (verification.signals||[]).forEach((signal,index)=>{
+   strings['signalTitle'+index]=signal.title;
+   strings['signalSummary'+index]=signal.summary;
+  });
+  verification.results.forEach((result,index)=>{
+   strings['resultExplain'+index]=result.explanation;
+   const claim=claims.find(candidate=>candidate.id===result.claim_id);
+   if(claim)strings['resultLabel'+index]=claim.label;
+  });
   if(verification.safe_action){
    strings.safeTitle=verification.safe_action.title;
    strings.safeSummary=verification.safe_action.summary;
@@ -534,7 +544,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    strings.safePrimary=verification.safe_action.primary_label;
   }
   return strings;
- },[verification,file?.sample,decision.title,decision.summary,decisionRelationship,plainExplanation,riskSummary,caseReality]);
+ },[verification,claims,file?.sample,decision.title,decision.summary,decisionRelationship,plainExplanation,riskSummary,caseReality]);
 
  useEffect(()=>{
   if(!verification||displayLocale==='en')return;
@@ -1715,20 +1725,20 @@ async function upload(uploaded:File){
 
     {ready&&verification&&<section className="source-resolution" id={sectionId('source-checks')} aria-label="Evidence and safe next step">
      <div className="section-heading evidence-heading">
-      <h2>Independent evidence</h2>
+      <h2>{ui('independentEvidence')}</h2>
      </div>
 
      {verification.signals&&verification.signals.length>0?
       <div className="source-signals">
-       {verification.signals.map(signal=>{
+       {verification.signals.map((signal,signalIndex)=>{
         const primary=signal.id===storySignal?.id;
         const evidenceTitles=signal.evidence.map(evidence=>evidence.title);
         return <article className={`source-signal ${primary?'is-primary':'is-secondary'}`} key={signal.id}>
-         <p className="signal-kind">{signal.kind==='OFFICIAL_PROCESS'?'Official process':signal.kind==='OFFICIAL_DIRECTORY'?'Official directory':signal.kind==='SOURCE_CONFLICT'?'Source conflict':signal.kind==='KNOWN_PATTERN'?'Known pattern':'Official warning'}</p>
-         <h3>{signal.title}</h3>
-         <p>{signal.summary}</p>
+         <p className="signal-kind">{signal.kind==='OFFICIAL_PROCESS'?ui('officialProcess'):signal.kind==='OFFICIAL_DIRECTORY'?ui('officialDirectory'):signal.kind==='SOURCE_CONFLICT'?ui('sourceConflict'):signal.kind==='KNOWN_PATTERN'?ui('knownPattern'):ui('officialWarning')}</p>
+         <h3>{translatedResult['signalTitle'+signalIndex]||signal.title}</h3>
+         <p>{translatedResult['signalSummary'+signalIndex]||signal.summary}</p>
          {signal.evidence.length>0&&<div className="signal-links">
-          {signal.evidence.length>1&&<span className="signal-links-label">Sources</span>}
+          {signal.evidence.length>1&&<span className="signal-links-label">{ui('sources')}</span>}
           {signal.evidence.map((evidence,index)=><a href={evidence.url} target="_blank" rel="noopener noreferrer" key={`${signal.id}-${index}`}>{compactEvidenceTitle(evidence.title,index,evidenceTitles)}</a>)}
          </div>}
         </article>;
@@ -1737,12 +1747,13 @@ async function upload(uploaded:File){
       :directEvidenceFindings.length>0?
       <div className="source-signals direct-evidence-findings">
        {directEvidenceFindings.map(({claim,result})=>{
+        const resultIndex=verification.results.findIndex(candidate=>candidate.claim_id===result.claim_id);
         const primary=claim.id===decisionClaim?.id;
         const evidenceTitles=result.evidence.map(evidence=>evidence.title);
         return <article className={`source-signal direct-evidence-finding ${primary?'is-primary':'is-secondary'}`} key={claim.id}>
-         <p className="signal-kind">{result.verdict==='MATCH'?'Official source match':result.verdict==='MISMATCH'?'Official source conflict':'Source evidence'}</p>
-         <h3>{claim.label}{claim.value?`: ${cleanDisplayText(claim.value)}`:''}</h3>
-         <p>{result.explanation}</p>
+         <p className="signal-kind">{result.verdict==='MATCH'?ui('officialSourceMatch'):result.verdict==='MISMATCH'?ui('officialSourceConflict'):ui('sourceEvidence')}</p>
+         <h3>{translatedResult['resultLabel'+resultIndex]||claim.label}{claim.value?`: ${cleanDisplayText(claim.value)}`:''}</h3>
+         <p>{translatedResult['resultExplain'+resultIndex]||result.explanation}</p>
          <div className="signal-links">
           {result.evidence.length>1&&<span className="signal-links-label">Sources</span>}
           {result.evidence.map((evidence,index)=><a href={evidence.url} target="_blank" rel="noopener noreferrer" key={`${claim.id}-${index}`}>{compactEvidenceTitle(evidence.title,index,evidenceTitles)}</a>)}
@@ -1752,7 +1763,7 @@ async function upload(uploaded:File){
       </div>
       :<div className="source-signals source-evidence-empty">
        <article className="source-signal is-primary">
-        <p className="signal-kind">Independent check</p>
+        <p className="signal-kind">{ui('independentCheck')}</p>
         <h3>{directCourtUnavailable?'This court is not in SEAL’s direct-check network yet.':'No independent source evidence was available for this result.'}</h3>
         <p>{directCourtUnavailable?'SEAL can still show exactly what the message asks you to do, but it will not guess whether the case or sender is genuine.':'The inspection below shows what SEAL could and could not establish from its supported sources.'}</p>
        </article>
