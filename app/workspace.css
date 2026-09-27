@@ -3823,7 +3823,6 @@
 .entry-shell,.review-shell,.seal-footer{
  box-sizing:border-box;
  width:100%;
- max-width:100%;
 }
 .entry-copy,.intake,.upload-row,.paste-mode-panel,
 .review-hero,.decision-pane,.document-zone,.source-resolution,
