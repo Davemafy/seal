@@ -236,7 +236,7 @@ test('sample result stays quiet and action-free',async({page})=>{
  assertNoRuntimeErrors();
 });
 
-test('desktop result stays contained to one carousel stage instead of a long report',async({page})=>{
+test('desktop result keeps the vertical result flow contained without horizontal overflow',async({page})=>{
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:1440,height:900});
@@ -245,10 +245,20 @@ test('desktop result stays contained to one carousel stage instead of a long rep
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await dismissAutoReview(page);
  const carousel=page.getByTestId('result-carousel');
- const metrics=await carousel.evaluate(node=>({width:node.clientWidth,height:node.clientHeight,scrollWidth:node.scrollWidth}));
- expect(Math.abs(metrics.scrollWidth-metrics.width*4)).toBeLessThanOrEqual(8);
+ const metrics=await carousel.evaluate(node=>({
+  width:node.clientWidth,
+  height:node.clientHeight,
+  scrollWidth:node.scrollWidth,
+  scrollHeight:node.scrollHeight,
+  overflowX:getComputedStyle(node).overflowX,
+  overflowY:getComputedStyle(node).overflowY
+ }));
+ expect(Math.abs(metrics.scrollWidth-metrics.width)).toBeLessThanOrEqual(2);
+ expect(metrics.scrollHeight).toBeGreaterThan(metrics.height);
+ expect(metrics.overflowX).toMatch(/hidden|clip/);
+ expect(metrics.overflowY).toBe('auto');
  expect(metrics.height).toBeLessThanOrEqual(820);
- expect(metrics.height).toBeGreaterThanOrEqual(580);
+ expect(metrics.height).toBeGreaterThanOrEqual(500);
  await expect(page.locator('.record-disclosure')).not.toHaveAttribute('open','');
  const pageMetrics=await page.evaluate(()=>({widthOverflow:document.documentElement.scrollWidth-window.innerWidth,height:document.documentElement.scrollHeight,viewport:window.innerHeight}));
  expect(pageMetrics.widthOverflow).toBeLessThanOrEqual(1);
@@ -689,13 +699,13 @@ test('desktop entry keeps sidebar and canvas in proportion',async({page})=>{
    overflow:document.documentElement.scrollWidth-window.innerWidth
   };
  });
- expect(metrics.railWidth).toBeGreaterThanOrEqual(228);
- expect(metrics.railWidth).toBeLessThanOrEqual(244);
- expect(metrics.shellWidth).toBeLessThanOrEqual(1082);
- expect(metrics.intakeWidth).toBeLessThanOrEqual(532);
- expect(metrics.headingSize).toBeLessThanOrEqual(47);
- expect(metrics.headingSize).toBeGreaterThanOrEqual(44);
- expect(metrics.railTitleSize).toBeGreaterThanOrEqual(16);
+ expect(metrics.railWidth).toBeGreaterThanOrEqual(265);
+ expect(metrics.railWidth).toBeLessThanOrEqual(280);
+ expect(metrics.shellWidth).toBeLessThanOrEqual(902);
+ expect(metrics.intakeWidth).toBeLessThanOrEqual(472);
+ expect(metrics.headingSize).toBeLessThanOrEqual(41);
+ expect(metrics.headingSize).toBeGreaterThanOrEqual(39);
+ expect(metrics.railTitleSize).toBeGreaterThanOrEqual(17);
  expect(metrics.overflow).toBeLessThanOrEqual(1);
  assertNoRuntimeErrors();
 });
