@@ -122,21 +122,26 @@ export async function POST(req:Request){
    },
    required:['publish','visualNote','excerpt','category','confidence','reason']
   };
-  const response=await fetch(base+'/chat/completions',{
+  const messages=[
+   {role:'system',content:instruction},
+   {role:'user',content:`ISSUER: ${source.issuer}\nSOURCE URL: ${input.sourceUrl}\nSOURCE TITLE: ${input.title}\nSOURCE TEXT:\n${input.text}`}
+  ];
+  const send=async(strict:boolean)=>fetch(base+'/chat/completions',{
    method:'POST',
    signal:AbortSignal.timeout(16000),
    headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},
    body:JSON.stringify({
     model:process.env.GROQ_MODEL||'openai/gpt-oss-20b',
     temperature:0,
-    messages:[
-     {role:'system',content:instruction},
-     {role:'user',content:`ISSUER: ${source.issuer}\nSOURCE URL: ${input.sourceUrl}\nSOURCE TITLE: ${input.title}\nSOURCE TEXT:\n${input.text}`}
-    ],
-    response_format:{type:'json_schema',json_schema:{name:'browse_curator',strict:true,schema}}
+    messages,
+    response_format:strict
+     ?{type:'json_schema',json_schema:{name:'browse_curator',strict:true,schema}}
+     :{type:'json_object'}
    })
   });
-  if(!response.ok)return Response.json({error:'Curator provider unavailable'},{status:502});
+  let response=await send(true);
+  if(!response.ok&&response.status!==429)response=await send(false);
+  if(!response.ok)return Response.json({error:'Curator provider unavailable',category:`provider_${response.status}`},{status:502});
   const body=await response.json() as {choices?:{message?:{content?:string}}[]};
   const result=curatorSchema.parse(JSON.parse(body.choices?.[0]?.message?.content||'{}'));
   return Response.json(result,{headers:{'Cache-Control':'no-store'}});

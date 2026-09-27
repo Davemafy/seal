@@ -6,6 +6,9 @@ on:
     paths:
       - 'lib/browse-source-registry.ts'
       - 'scripts/discover-browse-feed.ts'
+      - 'scripts/curator-client.ts'
+      - 'scripts/check-browse-curator.ts'
+      - 'app/api/browse-curate/route.ts'
       - '.github/workflows/discover-browse-feed.yml'
   schedule:
     - cron: '7,22,37,52 * * * *'
