@@ -16,5 +16,9 @@ describe('result surface design contract',()=>{
   expect(app).toContain("resultStatusLabel=file?.sample");
   expect(app).toContain("workspaces.filter(item=>item.status!=='idle'||item.id===workspaceId)");
   expect(app).not.toContain('<select value={displayLocale}');
+  expect(app).toContain("setWorkspaceMotion({id,direction:'forward'})");
+  expect(app).toContain("workspaceMotion?.id===workspace.id");
+  expect(css).toContain('@keyframes workspace-page-forward');
+  expect(css).toContain('.workspace-drawer-layer.is-open');
  });
 });
