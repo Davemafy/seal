@@ -630,3 +630,31 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  await expect(page.locator('.mobile-check-strip')).toHaveCount(0);
  assertNoRuntimeErrors();
 });
+
+
+test('entry layout stays inside the viewport across desktop compression',async({page})=>{
+ const assertNoRuntimeErrors=guardRuntime(page);
+ for(const width of [1208,1100,1024]){
+  await page.setViewportSize({width,height:646});
+  await page.goto('/');
+  await expect(page.getByTestId('entry-shell')).toBeVisible();
+  const metrics=await page.evaluate(()=>{
+   const shell=document.querySelector<HTMLElement>('[data-testid="entry-shell"]')!;
+   const intro=shell.querySelector<HTMLElement>('.entry-copy')!;
+   const intake=shell.querySelector<HTMLElement>('.intake')!;
+   const html=document.documentElement;
+   return {
+    viewport:window.innerWidth,
+    scrollWidth:html.scrollWidth,
+    shell:shell.getBoundingClientRect().toJSON(),
+    intro:intro.getBoundingClientRect().toJSON(),
+    intake:intake.getBoundingClientRect().toJSON()
+   };
+  });
+  expect(metrics.scrollWidth,`horizontal overflow at ${width}px`).toBeLessThanOrEqual(metrics.viewport);
+  expect(metrics.shell.left,`shell clipped left at ${width}px`).toBeGreaterThanOrEqual(0);
+  expect(metrics.intro.left,`intro clipped left at ${width}px`).toBeGreaterThanOrEqual(0);
+  expect(metrics.intake.right,`intake clipped right at ${width}px`).toBeLessThanOrEqual(metrics.viewport+1);
+ }
+ assertNoRuntimeErrors();
+});
