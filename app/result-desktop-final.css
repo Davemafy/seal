@@ -1731,3 +1731,73 @@
   margin-top:14px!important
  }
 }
+
+
+/* Full-height result workspace — masthead auto, carousel owns the rest. */
+@media(min-width:901px){
+ .review-shell{
+  height:100dvh!important;
+  min-height:100dvh!important;
+  display:grid!important;
+  grid-template-rows:auto minmax(0,1fr)!important;
+  align-content:stretch!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important
+ }
+ .result-masthead{
+  grid-row:1!important;
+  min-height:0!important
+ }
+ .result-carousel{
+  grid-row:2!important;
+  width:min(100%,1120px)!important;
+  max-width:1120px!important;
+  height:100%!important;
+  min-height:0!important;
+  margin:0 auto!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior-y:contain!important;
+  scroll-behavior:smooth!important;
+  scrollbar-gutter:stable!important
+ }
+
+ /* Each chapter reads as a real screen, even when its content is short. */
+ .review-hero,
+ .result-slide{
+  min-height:100%!important;
+  box-sizing:border-box!important
+ }
+ .review-hero{
+  display:block!important
+ }
+ .result-slide-summary,
+ .result-slide-original,
+ .result-slide-evidence,
+ .result-slide-resolve{
+  min-height:100%!important
+ }
+
+ /* Keep short evidence/resolution content grounded instead of collapsing. */
+ .result-slide-evidence,
+ .result-slide-resolve{
+  display:flex!important;
+  flex-direction:column!important
+ }
+ .result-slide-evidence .source-resolution,
+ .result-slide-resolve .user-actions{
+  flex:0 0 auto!important
+ }
+
+ /* Old short-viewport fixed height rule must not override the workspace grid. */
+ .result-carousel{
+  max-height:none!important
+ }
+}
+
+@media(min-width:901px) and (max-height:620px){
+ .result-carousel{
+  height:100%!important;
+  min-height:0!important
+ }
+}
