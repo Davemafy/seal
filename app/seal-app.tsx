@@ -1619,7 +1619,7 @@ async function upload(uploaded:File){
        </div>
       </div>
       <div className="check-object-actions" aria-label="Check actions">
-       <button type="button" onClick={()=>run('LIVE')} disabled={busy}>Check again</button>
+       <button type="button" className="icon-control result-icon-action" aria-label="Check again" title="Check again" data-tooltip="Check again" onClick={()=>run('LIVE')} disabled={busy}><SealUiIcon name="refresh"/></button>
       </div>
      </div>
 
