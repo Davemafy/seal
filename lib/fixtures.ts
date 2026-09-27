@@ -27,11 +27,11 @@ Juror number: 10472893
 Reporting date: April 22, 2027
 Jury Services contact: 951-275-5076
 Official jury portal: jurywest.riverside.courts.ca.gov`},
- 'unsupported-court-demo':{title:'Unsupported / limits',text:`DEMO / FICTIONAL NOTICE
-High Court of Northbridge, Republic of Alder
-12 Cedar Street, Northbridge
-Reference number: ABC98233
-Reporting date: April 22, 2027
-Jury Services contact: (866) 555-0199`}
+ 'unsupported-court-demo':{title:'India / coverage limit',text:`DEMO / FICTIONAL NOTICE
+DISTRICT COURT — NEW DELHI, INDIA
+Case reference: DL-2026-4821
+You must appear at the court registry on October 14, 2026.
+Call +91 11 5555 0199 to confirm your attendance.
+This is a fictional message used to demonstrate safe abstention outside SEAL’s direct-check network.`}
 } as const;
 export type FixtureKey=keyof typeof fixtures;
