@@ -21,7 +21,7 @@ import './workspace.css';
 
 type Mode='SNAPSHOT'|'LIVE';
 type WorkspaceRunStatus='idle'|'reading'|'verifying'|'done'|'error';
-type WorkspaceMeta={id:string;title:string;status:WorkspaceRunStatus;language?:string;jurisdiction?:string};
+type WorkspaceMeta={id:string;title:string;status:WorkspaceRunStatus;language?:string;jurisdiction?:string;preview?:string};
 type SealWorkspaceProps={
  initialDemo?:boolean;
  initialText?:string;
@@ -1462,9 +1462,12 @@ async function upload(uploaded:File){
  useEffect(()=>{
   const courtTitle=claims.find(claim=>claim.type==='court'&&claimReliable(claim))?.value;
   const title=cleanDisplayText(courtTitle||workspaceTitle||'New check');
+  const firstAction=claims.find(claim=>Boolean(claim.action)&&claimReliable(claim));
+  const firstUsefulLine=text.split(/\n+/).map(cleanDisplayText).find(line=>line.length>=12&&!/^new check$/i.test(line));
+  const preview=cleanDisplayText(firstAction?.action?.source_text||firstAction?.value||firstUsefulLine||'').slice(0,84);
   const state:WorkspaceRunStatus=error?'error':verification?'done':busy?(status==='Checking independent sources'?'verifying':'reading'):'idle';
-  onWorkspaceMeta(workspaceId,{title,status:state,language:documentLanguage?.label,jurisdiction});
- },[workspaceId,workspaceTitle,claims,error,verification,busy,status,documentLanguage?.label,jurisdiction,onWorkspaceMeta]);
+  onWorkspaceMeta(workspaceId,{title,status:state,language:documentLanguage?.label,jurisdiction,preview});
+ },[workspaceId,workspaceTitle,claims,text,error,verification,busy,status,documentLanguage?.label,jurisdiction,onWorkspaceMeta]);
 
  const processingStage=status==='Checking independent sources'?2:status==='Reading requested actions'?1:0;
  const processingTitle=processingStage===2?'Checking public sources':processingStage===1?'Reading what the message asks':'Reading your document';
@@ -1515,7 +1518,7 @@ async function upload(uploaded:File){
        aria-current={item.id===workspaceId?'page':undefined}
       >
        <span className={`rail-check-state is-${item.status}`} aria-hidden="true"/>
-       <span className="rail-check-copy"><strong>{title}</strong><small>{[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · ')}</small></span>
+       <span className="rail-check-copy"><strong>{title}</strong><small>{item.preview||[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · ')}</small></span>
       </button>
       <button className="rail-check-delete icon-control" type="button" aria-label={`Delete check ${index+1}: ${title}`} title={`Delete ${title}`} onClick={()=>onDeleteWorkspace(item.id)}><SealUiIcon name="delete"/></button>
      </div>;
@@ -1554,7 +1557,7 @@ async function upload(uploaded:File){
    <button className="workspace-drawer-backdrop" type="button" aria-label="Close checks" onClick={()=>setWorkspaceDrawerOpen(false)}/>
    <aside className="workspace-drawer" role="dialog" aria-modal="true" aria-label="Checks">
     <div className="workspace-drawer-head">
-     <strong>Checks</strong>
+     <div className="workspace-drawer-title"><strong>Checks</strong><span>{workspaces.length}</span></div>
      <div className="workspace-drawer-head-actions">
       <button className="icon-control drawer-icon-button" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} onClick={()=>{setWorkspaceDrawerOpen(false);onNewWorkspace()}}><SealUiIcon name="add"/></button>
       <button className="icon-control drawer-icon-button" type="button" aria-label="Close checks" title="Close checks" onClick={()=>setWorkspaceDrawerOpen(false)}><SealUiIcon name="close"/></button>
@@ -1567,9 +1570,12 @@ async function upload(uploaded:File){
       return <div className={`workspace-drawer-row ${item.id===workspaceId?'is-current':''}`} key={item.id}>
        <button className="workspace-drawer-select" type="button" aria-current={item.id===workspaceId?'page':undefined} onClick={()=>{onSelectWorkspace(item.id);setWorkspaceDrawerOpen(false)}}>
         <span className={`rail-check-state is-${item.status}`} aria-hidden="true"/>
-        <span className="workspace-drawer-copy"><strong>{title}</strong><small>{[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · ')}</small></span>
+        <span className="workspace-drawer-copy"><strong>{title}</strong><small>{item.preview||[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · ')}</small></span>
        </button>
-       <button className="icon-control workspace-drawer-delete" type="button" aria-label={`Delete check ${index+1}: ${title}`} title={`Delete ${title}`} onClick={()=>{if(item.id===workspaceId)setWorkspaceDrawerOpen(false);onDeleteWorkspace(item.id)}}><SealUiIcon name="delete"/></button>
+       <div className="workspace-drawer-row-actions">
+        {item.status!=='idle'&&<span className={`workspace-drawer-status is-${item.status}`} aria-label={statusLabel}/>}
+        <button className="icon-control workspace-drawer-delete" type="button" aria-label={`Delete check ${index+1}: ${title}`} title={`Delete ${title}`} onClick={()=>{if(item.id===workspaceId)setWorkspaceDrawerOpen(false);onDeleteWorkspace(item.id)}}><SealUiIcon name="delete"/></button>
+       </div>
       </div>;
      })}
     </div>
@@ -2215,7 +2221,13 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   setWorkspaces(items=>items.map(item=>{
    if(item.id!==id)return item;
    const next={...item,...patch};
-   return next.title===item.title&&next.status===item.status?item:next;
+   const unchanged=
+    next.title===item.title
+    &&next.status===item.status
+    &&next.language===item.language
+    &&next.jurisdiction===item.jurisdiction
+    &&next.preview===item.preview;
+   return unchanged?item:next;
   }));
  },[]);
 
