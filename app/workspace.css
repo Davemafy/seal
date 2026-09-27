@@ -858,3 +858,113 @@
  .resolution-disclaimer{margin-top:16px}
  .unsupported-next-step{padding:18px;border-radius:12px}
 }
+
+
+/* Final visual cleanup: keep the existing result composition, remove generic AI defaults. */
+.source-resolution{padding-top:36px}
+.source-resolution .section-heading{margin-bottom:14px}
+.source-signals{gap:14px}
+.source-signal{gap:20px;padding-bottom:0}
+.source-signal+.source-signal{padding-top:0;border-top:0}
+.signal-links{padding-top:22px}
+.signal-links a{
+ min-height:0;
+ max-width:240px;
+ padding:0;
+ border:0;
+ border-radius:0;
+ background:transparent;
+ color:#18181b;
+ font-size:13px;
+ line-height:20px;
+ font-weight:500;
+ text-decoration:underline;
+ text-underline-offset:3px
+}
+.signal-links a:hover{background:transparent;color:#000}
+
+.safe-route{margin-top:22px}
+.safe-route-actions{margin-top:18px}
+.safe-source-link{
+ min-height:0;
+ padding:0;
+ border-radius:0;
+ background:transparent;
+ color:#fff;
+ text-decoration:underline;
+ text-underline-offset:3px
+}
+.safe-source-link:hover{background:transparent;color:#fff}
+
+.focused-evidence{padding:22px 20px}
+.focus-number{padding:0;border-bottom:0}
+.from-label,.source-label{margin-top:18px}
+.claim-value{margin-top:6px}
+.exact-source{
+ margin:12px 0 18px;
+ padding:0;
+ border-left:0;
+ background:transparent;
+ color:#52525b;
+ font-size:15px;
+ line-height:23px
+}
+.source-name{margin-top:6px}
+.source-quote{margin:10px 0 12px;font-size:15px;line-height:23px}
+.why-line{
+ margin-top:16px;
+ padding:0;
+ border-radius:0;
+ background:transparent;
+ font-size:14px;
+ line-height:21px
+}
+.additional-sources{margin-top:12px}
+.additional-sources summary{
+ list-style:none;
+ color:#52525b;
+ font-size:13px;
+ line-height:20px;
+ text-decoration:underline;
+ text-underline-offset:3px
+}
+.additional-sources summary::-webkit-details-marker{display:none}
+.additional-sources summary::marker{content:""}
+.additional-sources>div{
+ margin-top:12px;
+ padding:0;
+ border-bottom:0;
+ background:transparent
+}
+
+.technical-record{margin-top:20px;padding:0 16px;border-radius:8px;background:#f3f3f3}
+.technical-record summary{
+ min-height:48px;
+ display:flex;
+ align-items:center;
+ list-style:none;
+ color:#52525b;
+ font-size:13px;
+ line-height:20px;
+ font-weight:500
+}
+.technical-record summary::-webkit-details-marker{display:none}
+.technical-record summary::marker{content:""}
+.technical-record[open]{padding-bottom:14px}
+.technical-record p{margin:8px 0 0}
+
+@media(max-width:599px){
+ .source-resolution{padding-top:28px}
+ .source-resolution .section-heading{margin-bottom:12px}
+ .source-signals{gap:14px}
+ .source-signal{gap:10px}
+ .source-signal h3{font-size:22px;line-height:30px}
+ .source-signal p{margin-top:8px}
+ .signal-links{padding-top:0}
+ .safe-route{margin-top:20px;padding:22px;gap:20px}
+ .focused-evidence{padding:20px 16px}
+ .from-label,.source-label{margin-top:16px}
+ .exact-source{margin:10px 0 16px}
+ .why-line{margin-top:14px}
+ .technical-record{margin-top:16px}
+}
