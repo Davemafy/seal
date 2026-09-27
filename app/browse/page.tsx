@@ -3,11 +3,17 @@ import PdfThumb from './pdf-thumb';
 import '../workspace.css';
 import './browse.css';
 
-function CaseMedia({item}:{item:BrowseCase}){
+function CaseMedia({item,priority=false}:{item:BrowseCase;priority?:boolean}){
  return <div className={`case-visual ${item.preview.type==='image'?'is-image':'is-pdf'}`}>
   {item.preview.type==='pdf'
-   ?<PdfThumb id={item.id} alt={item.preview.alt}/>
-   :<img className="case-source-image" src={`/api/browse-asset?id=${encodeURIComponent(item.id)}`} alt={item.preview.alt} loading="lazy"/>}
+   ?<PdfThumb id={item.id} alt={item.preview.alt} priority={priority}/>
+   :<img
+     className="case-source-image"
+     src={`/api/browse-asset?id=${encodeURIComponent(item.id)}`}
+     alt={item.preview.alt}
+     loading={priority?'eager':'lazy'}
+     fetchPriority={priority?'high':'auto'}
+    />}
  </div>;
 }
 
@@ -30,14 +36,14 @@ export default function Browse(){
   <section className="browse-shell">
    <header className="browse-intro">
     <h1>Browse real cases</h1>
-    <p>Actual court documents, published scam notices, and source-backed examples.</p>
+    <p>Court-published scam examples and legitimate reference forms. Open the source, or run supported artifacts through SEAL.</p>
    </header>
 
    <div className="case-archive">
-    {browseCases.map(item=><article className="case-card" key={item.id}>
-     <CaseMedia item={item}/>
+    {browseCases.map((item,index)=><article className={`case-card ${item.featured?'is-featured':''}`} key={item.id}>
+     <CaseMedia item={item} priority={index===0}/>
      <div className="case-copy">
-      <p className="case-kicker">{item.jurisdiction}</p>
+      <p className="case-kicker">{item.jurisdiction}<span aria-hidden="true"> · </span>{item.classification}</p>
       <h2>{item.title}</h2>
       <p className="case-source">Source: {item.sourceTitle}</p>
       <p className="case-note">{item.visualNote}</p>
