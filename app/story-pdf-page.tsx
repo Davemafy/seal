@@ -78,11 +78,7 @@ async function renderFirstPage(url:string){
  }finally{
   page?.cleanup();
   if(canvas){canvas.width=1;canvas.height=1}
-  if(documentHandle){
-   await documentHandle.destroy().catch(()=>{});
-  }else if(loadingTask){
-   await loadingTask.destroy().catch(()=>{});
-  }
+  if(loadingTask)await loadingTask.destroy().catch(()=>{});
  }
 }
 
