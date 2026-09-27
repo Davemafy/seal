@@ -7670,3 +7670,27 @@
   line-height:18px!important
  }
 }
+
+
+/* No shouting UI — natural case for product labels. */
+.result-masthead-title,
+.rail-section-head>span,
+.mobile-language-title,
+.unsupported-next-step>span,
+.official-directory-route>span,
+.handoff-pack>span,
+.decision-primary-route>span{
+ text-transform:none!important;
+ letter-spacing:0!important
+}
+
+@media(min-width:901px){
+ .rail-section-head>span{
+  font-size:12px!important;
+  line-height:18px!important;
+  font-weight:600!important
+ }
+ .result-masthead-title{
+  font-weight:600!important
+ }
+}
