@@ -238,20 +238,21 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [selected,setSelected]=useState('');
  const [hovered,setHovered]=useState('');
  const [showIndex,setShowIndex]=useState(false);
- const [activeResultSection,setActiveResultSection]=useState<'summary'|'message'|'next'|'checked'>('summary');
+ const [activeResultSection,setActiveResultSection]=useState<'summary'|'message'|'evidence'|'next'>('summary');
  const [technicalOpen,setTechnicalOpen]=useState(false);
  const [handoffCopied,setHandoffCopied]=useState(false);
  const [questionCopied,setQuestionCopied]=useState(false);
  const workspaceRootRef=useRef<HTMLElement>(null);
  const sectionId=(base:string)=>workspaceId==='primary'?base:`${base}-${workspaceId}`;
- const jumpToResultSection=useCallback((event:React.MouseEvent<HTMLAnchorElement>,section:'summary'|'message'|'next'|'checked',targetBase:string)=>{
+ const jumpToResultSection=useCallback((event:React.MouseEvent<HTMLAnchorElement>,section:'summary'|'message'|'evidence'|'next',targetBase:string)=>{
   event.preventDefault();
   setActiveResultSection(section);
   const id=workspaceId==='primary'?targetBase:`${targetBase}-${workspaceId}`;
   const node=workspaceRootRef.current?.querySelector<HTMLElement>(`#${CSS.escape(id)}`);
   if(!node)return;
   const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const top=Math.max(0,node.getBoundingClientRect().top+window.scrollY-16);
+  const offset=window.innerWidth<=900?92:24;
+  const top=Math.max(0,node.getBoundingClientRect().top+window.scrollY-offset);
   window.scrollTo({top,behavior:reduce?'auto':'smooth'});
   window.history.replaceState(null,'',`#${id}`);
  },[workspaceId]);
@@ -485,22 +486,44 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   }
   :decisionCopy(verification,decisionClaim);
  const hasPaymentAction=groundedActions.some(claim=>claim.action?.kind==='pay')||decisionClaim?.action?.kind==='pay';
+ const primaryActionKind=decisionClaim?.action?.kind||groundedActions[0]?.action?.kind;
  const conciseDecisionTitle=curatedAuthorityMatch
   ?decision.title
-  :verification?.safe_action&&hasPaymentAction
-   ?'Verify before you pay.'
-   :verification?.safe_action
-    ?'Verify before you act.'
-    :decision.title;
+  :verification?.safe_action&&primaryActionKind==='pay'
+   ?'Check it independently before you pay.'
+   :verification?.safe_action&&primaryActionKind==='contact'
+    ?'Check the number before you call.'
+    :verification?.safe_action&&primaryActionKind==='navigate'
+     ?'Check the link before you open it.'
+     :verification?.safe_action&&primaryActionKind==='disclose'
+      ?'Verify the request before you share anything.'
+      :verification?.safe_action&&primaryActionKind==='appear'
+       ?'Confirm the case before you go.'
+       :verification?.safe_action
+        ?'Check this before you act.'
+        :decision.title;
+ const humanDecisionSummary=file?.sample
+  ?'This is an example form, not a notice you need to act on.'
+  :curatedAuthorityMatch
+   ?decision.summary
+   :decisionRelationshipConflict
+    ?'Something in this message does not line up with the public source we checked. Use an official route before you act.'
+    :verification?.safe_action&&hasPaymentAction
+     ?'We found an official process that fits parts of this notice, but not enough to confirm this notice or the case. Use the official route below before paying.'
+     :verification?.safe_action
+      ?'We found official guidance, but not enough to confirm this message. Use the official route below before you act.'
+      :directCourtUnavailable
+       ?'We could read the message, but we could not confirm the court or case from an independent source yet.'
+       :decision.summary;
  const resultStatusLabel=curatedAuthorityMatch
-  ?'Published scam example'
+  ?'Official warning found'
   :decisionRelationshipConflict
-   ?'Conflict found'
+   ?'Something does not line up'
    :directCourtUnavailable
-    ?'Not independently verified'
+    ?'We could not confirm this notice'
     :verification?.results.some(result=>result.verdict==='MATCH')
-     ?'Some details verified'
-     :'Check complete';
+     ?'Some details check out'
+     :'Check finished';
  const instructionStatus=curatedAuthorityMatch
   ?'Do not use the flagged route'
   :verification?.results.some(result=>result.verdict==='MISMATCH'&&claims.find(claim=>claim.id===result.claim_id)?.action)
@@ -526,7 +549,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   if(!verification)return {};
   const strings:Record<string,string>={
    decisionTitle:file?.sample?'This is a sample form.':conciseDecisionTitle,
-   decisionSummary:file?.sample?'Some printed details match official court pages, but this example form is not a summons to act on. The matches do not authenticate any notice you received.':decision.summary,
+   decisionSummary:humanDecisionSummary,
    relationship:decisionRelationship,
    plainTitle:plainExplanation?.title||'',
    plainSummary:plainExplanation?.summary||'',
@@ -1549,11 +1572,11 @@ async function upload(uploaded:File){
       </div>
      </div>
 
-     {verification&&<nav className="result-chapters" aria-label="Result sections">
-      <a href={`#${sectionId('review-summary')}`} className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={event=>jumpToResultSection(event,'summary','review-summary')}>{ui('result')}</a>
+     {verification&&<nav className="result-chapters" aria-label="Jump to result section">
+      <a href={`#${sectionId('review-summary')}`} className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={event=>jumpToResultSection(event,'summary','review-summary')}>Summary</a>
       <a href={`#${sectionId('original-message')}`} className={activeResultSection==='message'?'is-current':''} aria-current={activeResultSection==='message'?'location':undefined} onClick={event=>jumpToResultSection(event,'message','original-message')}>{ui('original')}</a>
-      <a href={`#${sectionId('user-actions')}`} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={event=>jumpToResultSection(event,'next','user-actions')}>{ui('nextStep')}</a>
-      {!directCourtUnavailable&&<a href={`#${sectionId('checked-details')}`} className={activeResultSection==='checked'?'is-current':''} aria-current={activeResultSection==='checked'?'location':undefined} onClick={event=>jumpToResultSection(event,'checked','checked-details')}>{ui('checkedDetails')}</a>}
+      <a href={`#${sectionId('source-checks')}`} className={activeResultSection==='evidence'?'is-current':''} aria-current={activeResultSection==='evidence'?'location':undefined} onClick={event=>jumpToResultSection(event,'evidence','source-checks')}>Evidence</a>
+      <a href={`#${sectionId('user-actions')}`} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={event=>jumpToResultSection(event,'next','user-actions')}>Resolve</a>
      </nav>}
     </header>
 
@@ -1679,7 +1702,7 @@ async function upload(uploaded:File){
     </div>}
 
     <div className="review-hero">
-     <div className="decision-pane" id={sectionId('review-summary')}>
+     <div className="decision-pane result-screen result-screen-summary" id={sectionId('review-summary')}>
       <div className="review-tools">
        {isDemo&&<select aria-label="Choose demo fixture" value={fixture} onChange={event=>chooseFixture(event.target.value as FixtureKey)}>
         {Object.entries(fixtures).map(([key,value])=><option value={key} key={key}>{value.title}</option>)}
@@ -1710,7 +1733,7 @@ async function upload(uploaded:File){
        <div className="decision">
         <p className="decision-status" data-testid="result-status">{resultStatusLabel}</p>
         <h1>{translatedResult.decisionTitle||(file?.sample?'This is a sample form.':conciseDecisionTitle)}</h1>
-        <p className="decision-summary">{translatedResult.decisionSummary||(file?.sample?'Some printed details match official court pages, but this example form is not a summons to act on. The matches do not authenticate any notice you received.':decision.summary)}</p>
+        <p className="decision-summary">{translatedResult.decisionSummary||humanDecisionSummary}</p>
         {displayLocale!=='en'&&resultTranslationState==='translated'&&<p className="translation-note">{ui('translatedNote')}</p>}
         {displayLocale!=='en'&&resultTranslationState==='unavailable'&&<p className="translation-note is-unavailable" role="status">{ui('translationUnavailable')}</p>}
 
@@ -1721,13 +1744,13 @@ async function upload(uploaded:File){
         </div>}
 
         {riskSummary&&<div className="decision-at-a-glance" data-testid="two-risk-result">
-         <div><span>Message</span><strong>{instructionStatus}</strong></div>
-         <div><span>Case or matter</span><strong>{matterStatus}</strong></div>
+         <div><span>This message</span><strong>{instructionStatus}</strong></div>
+         <div><span>The case</span><strong>{matterStatus}</strong></div>
         </div>}
 
         <nav className="decision-shortcuts" aria-label="Result shortcuts">
          <a href={`#${sectionId('original-message')}`} onClick={event=>jumpToResultSection(event,'message','original-message')}>View original</a>
-         <a href={`#${sectionId('source-checks')}`} onClick={event=>jumpToResultSection(event,'checked','source-checks')}>See evidence</a>
+         <a href={`#${sectionId('source-checks')}`} onClick={event=>jumpToResultSection(event,'evidence','source-checks')}>See evidence</a>
         </nav>
 
         <details className="decision-details">
@@ -1762,7 +1785,7 @@ async function upload(uploaded:File){
        </div>}
      </div>
 
-     <div className="document-zone" id={sectionId('original-message')}>
+     <div className="document-zone result-screen result-screen-original" id={sectionId('original-message')}>
       <div className="document-heading"><span>Original message</span><span>{file?.kind==='pdf'?'PDF':file?'Image':'Text'}</span></div>
       <div className={`document-paper ${!file?'is-text-document':''}`}>
        {isActionDemo?
@@ -1806,7 +1829,7 @@ async function upload(uploaded:File){
 
     {ready&&<div id={sectionId('full-evidence')} className="full-evidence-anchor" aria-hidden="true"/>}
 
-    {ready&&verification&&<section className="source-resolution" id={sectionId('source-checks')} aria-label="Evidence and safe next step">
+    {ready&&verification&&<section className="source-resolution result-screen result-screen-evidence" id={sectionId('source-checks')} aria-label="Independent evidence">
      <div className="section-heading evidence-heading">
       <h2>{ui('independentEvidence')}</h2>
      </div>
@@ -1881,7 +1904,7 @@ async function upload(uploaded:File){
      <p className="resolution-disclaimer">{curatedSignal?'This conclusion applies to this published example. It does not classify unrelated messages.':'These sources can inform the check, but they cannot confirm who sent the message.'}</p>
     </section>}
 
-    {ready&&verification&&caseReality&&<section className="user-actions" id={sectionId('user-actions')} aria-label="Resolve this safely">
+    {ready&&verification&&caseReality&&<section className="user-actions result-screen result-screen-resolve" id={sectionId('user-actions')} aria-label="Resolve this safely">
      <div className="user-actions-heading"><span>YOUR NEXT MOVE</span><h2>Resolve this safely</h2><p>Keep the message as evidence, but use independently opened court and support channels for anything you do next.</p></div>
      <div className="journey-block case-reality-block" data-testid="case-reality-check">
       <div className="journey-label">Case reality check</div>
