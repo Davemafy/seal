@@ -4622,3 +4622,111 @@
  .browse-rail-note strong{color:#333;font-size:10.5px;line-height:15px;font-weight:620}
  .browse-rail-note span{font-size:9px;line-height:14px}
 }
+
+
+/* Verification autoplay countdown — launch demo. */
+.review-autoplay-overlay{
+ position:fixed;
+ inset:0;
+ z-index:1190;
+ display:grid;
+ place-items:center;
+ background:rgba(0,0,0,.76);
+ backdrop-filter:blur(4px);
+ color:#fff;
+}
+.review-autoplay-skip{
+ position:absolute;
+ top:22px;
+ right:24px;
+ min-height:36px;
+ padding:7px 10px;
+ border:0;
+ background:transparent;
+ color:#fff;
+ font:inherit;
+ font-size:13px;
+ line-height:20px;
+ font-weight:600;
+ cursor:pointer;
+}
+.review-autoplay-skip:hover{
+ text-decoration:underline;
+ text-underline-offset:4px;
+}
+.review-autoplay-center{
+ display:grid;
+ justify-items:center;
+ gap:10px;
+ text-align:center;
+}
+.review-autoplay-timer{
+ position:relative;
+ width:84px;
+ height:84px;
+ display:grid;
+ place-items:center;
+}
+.review-autoplay-timer svg{
+ position:absolute;
+ inset:0;
+ width:100%;
+ height:100%;
+ transform:rotate(-90deg);
+}
+.review-autoplay-timer circle{
+ fill:none;
+ stroke-width:1.5;
+}
+.review-autoplay-track{
+ stroke:rgba(255,255,255,.22);
+}
+.review-autoplay-progress{
+ stroke:#fff;
+ stroke-linecap:round;
+ stroke-dasharray:132;
+ stroke-dashoffset:132;
+ animation:review-autoplay-ring 2.28s linear forwards;
+}
+.review-autoplay-timer>span{
+ position:relative;
+ z-index:1;
+ font-size:32px;
+ line-height:38px;
+ font-weight:650;
+ letter-spacing:-.03em;
+}
+.review-autoplay-center>strong{
+ font-size:14px;
+ line-height:20px;
+ font-weight:600;
+}
+.review-autoplay-center>small{
+ color:rgba(255,255,255,.64);
+ font-size:11px;
+ line-height:17px;
+}
+@keyframes review-autoplay-ring{
+ from{stroke-dashoffset:132}
+ to{stroke-dashoffset:0}
+}
+@media(max-width:599px){
+ .review-autoplay-overlay{
+  backdrop-filter:blur(3px);
+ }
+ .review-autoplay-skip{
+  top:16px;
+  right:16px;
+ }
+ .review-autoplay-timer{
+  width:76px;
+  height:76px;
+ }
+ .review-autoplay-timer>span{
+  font-size:29px;
+  line-height:34px;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .review-autoplay-progress{animation:none}
+}
