@@ -946,3 +946,78 @@
  .why-line{margin-top:26px}
  .technical-record{margin-top:38px}
 }
+
+
+/* Final interaction cleanup: preserve composition, remove generic glyphs/rails. */
+.design-chevron{
+ width:14px;
+ height:14px;
+ flex:0 0 14px;
+ display:block;
+ color:currentColor;
+ transition:transform .14s ease
+}
+.design-chevron.is-down{transform:rotate(0deg)}
+.design-chevron.is-right{transform:rotate(-90deg)}
+.design-chevron.is-left{transform:rotate(90deg)}
+.design-chevron.is-up{transform:rotate(180deg)}
+.design-play-icon{width:14px;height:14px;display:block}
+
+.paste-mode-switch{align-items:center;gap:7px}
+.decision-review-play .design-play-icon{width:12px;height:12px}
+
+.result-chapters{
+ overflow:visible;
+ flex-wrap:wrap;
+ scrollbar-width:auto;
+ -ms-overflow-style:auto
+}
+.result-chapters::-webkit-scrollbar{display:none}
+#review-summary,
+#original-message,
+#next-step,
+#source-checks,
+#checked-details{scroll-margin-top:16px}
+
+.source-signals{
+ display:grid;
+ gap:30px
+}
+.source-signal,
+.source-signal+.source-signal{
+ padding-top:0;
+ padding-bottom:0;
+ border-top:0;
+ border-bottom:0
+}
+.safe-steps li,
+.safe-steps li+li{border:0}
+
+.additional-sources summary,
+.technical-record summary{
+ display:inline-flex;
+ align-items:center;
+ gap:8px;
+ text-decoration:none;
+ text-underline-offset:0
+}
+.additional-sources summary:hover,
+.technical-record summary:hover{color:#000}
+.additional-sources[open] summary .design-chevron,
+.technical-record[open] summary .design-chevron{transform:rotate(180deg)}
+
+@media(max-width:599px){
+ .result-chapters{
+  gap:16px;
+  padding-right:0;
+  overflow:visible
+ }
+ .result-chapters a{
+  flex:0 0 auto;
+  white-space:nowrap
+ }
+ .source-signals{gap:24px}
+ .source-signal+.source-signal{padding-top:0}
+ .additional-sources summary,
+ .technical-record summary{min-height:34px}
+}
