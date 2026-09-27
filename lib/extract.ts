@@ -238,6 +238,19 @@ export function fallbackExtract(text:string):Extraction {
  e.urls=[...new Set(text.match(new RegExp(URL.source,'g'))||[])].filter(s=>!e.emails.some(email=>email.includes(s)));
  e.reporting_date=lines.find(s=>/report(?:ing)?\s+date\s*:/i.test(s))?.replace(/^.*?report(?:ing)?\s+date\s*:\s*/i,'')||'';
  const actions=extractActionGraph(text),pay=actions.find(a=>a.kind==='pay');
+ // Deterministic action extraction is strong enough to drive pasted-text checks
+ // without making the browser wait on an optional model/provider round-trip.
+ // These entries are still grounded to exact source text and never assign a verdict.
+ e.requested_actions=actions.map(action=>({
+  exact_quote:action.source_text,
+  kind:action.kind,
+  verb:action.verb,
+  object:action.object,
+  target_type:action.target_type,
+  target_value:action.target_value,
+  deadline:'',
+  confidence:100
+ }));
  if(pay){
   e.payment_demand.amount=pay.source_text.match(MONEY)?.[0]||'';
   e.payment_demand.method=/payment app|cash app|zelle|venmo/i.test(pay.source_text)?'payment app':/gift card|prepaid/i.test(pay.source_text)?'gift card':/bitcoin|crypto/i.test(pay.source_text)?'cryptocurrency':/wire transfer|western union|moneygram/i.test(pay.source_text)?'wire transfer':'';
