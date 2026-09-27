@@ -9,7 +9,7 @@ const transientStatuses=new Set([429,502,503,504]);
 
 function retryDelay(response:Response,attempt:number){
  const retryAfter=Number(response.headers.get('retry-after')||'');
- if(Number.isFinite(retryAfter)&&retryAfter>0)return Math.min(retryAfter*1000,2000);
+ if(Number.isFinite(retryAfter)&&retryAfter>0)return Math.min(retryAfter*1000,10000);
  return attempt===0?250:750;
 }
 
@@ -45,7 +45,10 @@ export async function curateViaSeal(payload:CuratorPayload){
    body:JSON.stringify(payload)
   });
   if(response.ok)return response.json() as Promise<unknown>;
-  if(!transientStatuses.has(response.status)||attempt===2)throw new Error(`SEAL curator ${response.status}`);
+  if(!transientStatuses.has(response.status)||attempt===2){
+   const detail=await response.json().catch(()=>null) as {category?:string}|null;
+   throw new Error(`SEAL curator ${response.status}${detail?.category?` ${detail.category}`:''}`);
+  }
   await new Promise(resolve=>setTimeout(resolve,retryDelay(response,attempt)));
  }
 
