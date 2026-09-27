@@ -482,10 +482,48 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
     :'SEAL could read parts of the message, but it does not have a reviewed source for this court yet.'
   }
   :decisionCopy(verification,decisionClaim);
+ const hasPaymentAction=groundedActions.some(claim=>claim.action?.kind==='pay')||decisionClaim?.action?.kind==='pay';
+ const conciseDecisionTitle=curatedAuthorityMatch
+  ?decision.title
+  :verification?.safe_action&&hasPaymentAction
+   ?'Verify before you pay.'
+   :verification?.safe_action
+    ?'Verify before you act.'
+    :decision.title;
+ const resultStatusLabel=curatedAuthorityMatch
+  ?'Published scam example'
+  :decisionRelationshipConflict
+   ?'Conflict found'
+   :directCourtUnavailable
+    ?'Not independently verified'
+    :verification?.results.some(result=>result.verdict==='MATCH')
+     ?'Some details verified'
+     :'Check complete';
+ const instructionStatus=curatedAuthorityMatch
+  ?'Do not use the flagged route'
+  :verification?.results.some(result=>result.verdict==='MISMATCH'&&claims.find(claim=>claim.id===result.claim_id)?.action)
+   ?'Conflict found'
+   :verification?.results.some(result=>result.verdict==='MATCH'&&claims.find(claim=>claim.id===result.claim_id)?.action)
+    ?'Some details match'
+    :'Not independently verified';
+ const matterStatus=caseReality?.status==='FOUND'
+  ?'Case reference found'
+  :caseReality?.status==='CONFLICT'
+   ?'Case reference conflicts'
+   :'Case not independently confirmed';
+ const primaryRoute=verification?.safe_action?.primary_url
+  ?{url:verification.safe_action.primary_url,label:translatedResult.safePrimary||verification.safe_action.primary_label}
+  :verification?.contact?.website
+   ?{url:verification.contact.website,label:'Open official court website'}
+   :officialLookup
+    ?{url:officialLookup.url,label:officialLookup.label}
+    :officialDirectory
+     ?{url:officialDirectory.url,label:officialDirectory.label}
+     :null;
  const resultTranslationSource=useMemo(()=>{
   if(!verification)return {};
   const strings:Record<string,string>={
-   decisionTitle:file?.sample?'This is a sample form.':decision.title,
+   decisionTitle:file?.sample?'This is a sample form.':conciseDecisionTitle,
    decisionSummary:file?.sample?'Some printed details match official court pages, but this example form is not a summons to act on. The matches do not authenticate any notice you received.':decision.summary,
    relationship:decisionRelationship,
    plainTitle:plainExplanation?.title||'',
@@ -521,7 +559,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    strings.safePrimary=verification.safe_action.primary_label;
   }
   return strings;
- },[verification,claims,file?.sample,decision.title,decision.summary,decisionRelationship,plainExplanation,riskSummary,caseReality]);
+ },[verification,claims,file?.sample,conciseDecisionTitle,decision.summary,decisionRelationship,plainExplanation,riskSummary,caseReality]);
 
  useEffect(()=>{
   if(!verification||displayLocale==='en')return;
@@ -1474,11 +1512,10 @@ async function upload(uploaded:File){
     <header className="result-masthead" id={sectionId('result-top')}>
      <div className="result-masthead-row">
       <div>
-       <h1>{ui('resultTitle')}</h1>
+       <p className="result-masthead-title">{ui('resultTitle')}</p>
        <p className="result-origin">{[
         file?(file.kind==='pdf'?'PDF':'Image'):'Text',
         documentLanguage?.label,
-        jurisdiction,
         displayLocale!=='en'?'→ '+DISPLAY_LANGUAGES[displayLocale]:''
        ].filter(Boolean).join(' · ')}</p>
       </div>
@@ -1643,35 +1680,57 @@ async function upload(uploaded:File){
        </div>
        :
        <div className="decision">
-        <h1>{translatedResult.decisionTitle||(file?.sample?'This is a sample form.':decision.title)}</h1>
+        <p className="decision-status" data-testid="result-status">{resultStatusLabel}</p>
+        <h1>{translatedResult.decisionTitle||(file?.sample?'This is a sample form.':conciseDecisionTitle)}</h1>
         <p className="decision-summary">{translatedResult.decisionSummary||(file?.sample?'Some printed details match official court pages, but this example form is not a summons to act on. The matches do not authenticate any notice you received.':decision.summary)}</p>
         {displayLocale!=='en'&&resultTranslationState==='translated'&&<p className="translation-note">{ui('translatedNote')}</p>}
         {displayLocale!=='en'&&resultTranslationState==='unavailable'&&<p className="translation-note is-unavailable" role="status">{ui('translationUnavailable')}</p>}
 
-        {riskSummary&&<div className="decision-risks" data-testid="two-risk-result">
-         <div className="decision-risk-row"><span>Message instructions</span><div><strong>{translatedResult.riskInstructionsTitle||riskSummary.instructions.title}</strong><small>{translatedResult.riskInstructionsDetail||riskSummary.instructions.detail}</small></div></div>
-         <div className="decision-risk-row"><span>Underlying matter</span><div><strong>{translatedResult.riskMatterTitle||riskSummary.matter.title}</strong><small>{translatedResult.riskMatterDetail||riskSummary.matter.detail}</small></div></div>
+        {primaryRoute&&<div className="decision-primary-route" data-testid="primary-next-step">
+         <span>{ui('nextStep')}</span>
+         <a href={primaryRoute.url} target="_blank" rel="noopener noreferrer">{primaryRoute.label}</a>
+         <small>Opens an independently sourced official service.</small>
         </div>}
 
-        {directCourtUnavailable&&groundedActions.length>0?<div className="decision-claim">
-         <span>{ui('messageAsks')}</span>
-         <ul className="message-action-list">{groundedActions.map(claim=><li key={claim.id}>{cleanDisplayText(claim.action?.source_text||claim.exact_source_text||claim.value)}</li>)}</ul>
-        </div>:decisionClaim&&<div className="decision-claim">
-         <span>{ui('fromMessage')}</span>
-         <p>{decisionClaimDisplay||cleanDisplayText(decisionClaim.value)}</p>
+        {riskSummary&&<div className="decision-at-a-glance" data-testid="two-risk-result">
+         <div><span>Message</span><strong>{instructionStatus}</strong></div>
+         <div><span>Case or matter</span><strong>{matterStatus}</strong></div>
         </div>}
 
-        <div className={`decision-evidence decision-relationship-block ${decisionRelationshipConflict?'is-conflict':''}`}>
-         <span>{ui('publicSourcesSay')}</span>
-         <strong>{translatedResult.relationship||decisionRelationship}</strong>
-         {storyEvidence&&<a className="decision-source-link" href={storyEvidence.url} target="_blank" rel="noopener noreferrer">{ui('openPublicSource')}</a>}
-         {directCheckSummary&&!storySignal&&<small className="decision-direct-check">{directCheckSummary}</small>}
-        </div>
+        <nav className="decision-shortcuts" aria-label="Result shortcuts">
+         <a href={`#${sectionId('original-message')}`} onClick={event=>jumpToResultSection(event,'message','original-message')}>View original</a>
+         <a href={`#${sectionId('source-checks')}`} onClick={event=>jumpToResultSection(event,'checked','source-checks')}>See evidence</a>
+        </nav>
 
-        {reviewWorthWatching&&!storyOpen&&<button ref={replayButton} type="button" className="decision-review-player" data-testid="play-evidence-review" onClick={replayStory}>
-         <span className="decision-review-play" aria-hidden="true"><DesignPlayIcon/></span>
-         <span><strong>{ui('seeHowChecked')}</strong><small>{ui('evidenceReviewHint')}</small></span>
-        </button>}
+        <details className="decision-details">
+         <summary><span>Why this result</span><DesignChevron/></summary>
+         <div className="decision-details-body">
+          {riskSummary&&<div className="decision-risks">
+           <div className="decision-risk-row"><span>Message instructions</span><div><strong>{translatedResult.riskInstructionsTitle||riskSummary.instructions.title}</strong><small>{translatedResult.riskInstructionsDetail||riskSummary.instructions.detail}</small></div></div>
+           <div className="decision-risk-row"><span>Underlying matter</span><div><strong>{translatedResult.riskMatterTitle||riskSummary.matter.title}</strong><small>{translatedResult.riskMatterDetail||riskSummary.matter.detail}</small></div></div>
+          </div>}
+
+          {directCourtUnavailable&&groundedActions.length>0?<div className="decision-claim">
+           <span>{ui('messageAsks')}</span>
+           <ul className="message-action-list">{groundedActions.map(claim=><li key={claim.id}>{cleanDisplayText(claim.action?.source_text||claim.exact_source_text||claim.value)}</li>)}</ul>
+          </div>:decisionClaim&&<div className="decision-claim">
+           <span>{ui('fromMessage')}</span>
+           <p>{decisionClaimDisplay||cleanDisplayText(decisionClaim.value)}</p>
+          </div>}
+
+          <div className={`decision-evidence decision-relationship-block ${decisionRelationshipConflict?'is-conflict':''}`}>
+           <span>{ui('publicSourcesSay')}</span>
+           <strong>{translatedResult.relationship||decisionRelationship}</strong>
+           {storyEvidence&&<a className="decision-source-link" href={storyEvidence.url} target="_blank" rel="noopener noreferrer">{ui('openPublicSource')}</a>}
+           {directCheckSummary&&!storySignal&&<small className="decision-direct-check">{directCheckSummary}</small>}
+          </div>
+
+          {reviewWorthWatching&&!storyOpen&&<button ref={replayButton} type="button" className="decision-review-player" data-testid="play-evidence-review" onClick={replayStory}>
+           <span className="decision-review-play" aria-hidden="true"><DesignPlayIcon/></span>
+           <span><strong>{ui('seeHowChecked')}</strong><small>{ui('evidenceReviewHint')}</small></span>
+          </button>}
+         </div>
+        </details>
        </div>}
      </div>
 
