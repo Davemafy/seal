@@ -30,6 +30,14 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
   expect(verification.safe_action?.primary_url).toBe('https://www.ezpassnh.com/');
   expect(verification.contact?.phone).toBe('1-855-212-1234');
  });
+ it('does not apply toll-process evidence to an unrelated New Hampshire court fee',async()=>{
+  const text=`STATE OF NEW HAMPSHIRE
+COURT FILING NOTICE
+Pay the filing fee at the clerk's office before submitting your petition.`;
+  const extraction=fallbackExtract(text);
+  const verification=await verifyClaims(claimsFromExtraction(extraction,text),extraction.court_name,'SNAPSHOT','',text);
+  expect(verification.signals?.some(signal=>signal.id==='nh-toll-process')).toBe(false);
+ });
 });
 
 describe('extraction and source links',()=>{
