@@ -18,6 +18,7 @@ import {buildCaseReality,buildCourtQuestionScript,buildHandoffSummary,buildOblig
 import {DISPLAY_LANGUAGES,displayLocaleFor,uiCopy,type DisplayLocale,type UiCopyKey} from '@/lib/ui-locales';
 import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
 import './workspace.css';
+import './result-mobile-repair.css';
 
 type Mode='SNAPSHOT'|'LIVE';
 type WorkspaceRunStatus='idle'|'reading'|'verifying'|'done'|'error';
