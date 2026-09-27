@@ -44,7 +44,7 @@ export default function Browse(){
   <section className="browse-shell">
    <header className="browse-intro">
     <h1>Browse real cases</h1>
-    <p>Published court documents and images from several countries. Open the original or run the same artifact in SEAL. Blank forms and historical notices are labeled.</p>
+    <p>Published court documents and images from several countries. Open every original; verified runnable examples can also be opened in SEAL. Blank forms and historical notices are labeled.</p>
    </header>
 
    <div className="case-archive">
@@ -58,7 +58,7 @@ export default function Browse(){
       <p className="case-note">{item.visualNote}</p>
       <div className="case-actions">
        <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer">Open source</a>
-       <a href={`/?case=${item.id}`}>Run in SEAL</a>
+       {item.runText&&<a href={`/?case=${item.id}`}>Run in SEAL</a>}
       </div>
      </div>
     </article>)}
