@@ -2263,3 +2263,174 @@
 .verification-lane div{display:grid;gap:1px}
 .verification-lane strong{font-size:11px;line-height:16px;font-weight:560}
 .verification-lane small{color:#777;font-size:10px;line-height:15px}
+
+
+/* Critical mobile result UX — action first, evidence progressively disclosed. */
+.result-masthead-title{
+ margin:0;
+ color:#5f5f5f;
+ font-size:12px;
+ line-height:18px;
+ font-weight:600;
+ letter-spacing:.02em;
+ text-transform:uppercase
+}
+.decision-status{
+ margin:0 0 9px;
+ color:#5f5f5f;
+ font-size:12px;
+ line-height:18px;
+ font-weight:600
+}
+.decision-primary-route{
+ display:grid;
+ grid-template-columns:minmax(0,1fr);
+ gap:5px;
+ margin-top:22px
+}
+.decision-primary-route>span{
+ color:#6f6f6f;
+ font-size:11px;
+ line-height:16px;
+ font-weight:600
+}
+.decision-primary-route>a{
+ width:max-content;
+ max-width:100%;
+ min-height:46px;
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ padding:11px 15px;
+ border-radius:6px;
+ background:#111;
+ color:#fff;
+ font-size:14px;
+ line-height:20px;
+ font-weight:650;
+ text-decoration:none
+}
+.decision-primary-route>a:hover{background:#2a2a2a}
+.decision-primary-route>small{
+ color:#777;
+ font-size:10.5px;
+ line-height:16px
+}
+.decision-at-a-glance{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ margin-top:24px;
+ border-top:1px solid var(--line);
+ border-bottom:1px solid var(--line)
+}
+.decision-at-a-glance>div{
+ min-width:0;
+ padding:13px 14px 13px 0
+}
+.decision-at-a-glance>div+div{
+ padding-left:14px;
+ border-left:1px solid var(--line)
+}
+.decision-at-a-glance span{
+ display:block;
+ margin-bottom:4px;
+ color:#777;
+ font-size:10.5px;
+ line-height:16px
+}
+.decision-at-a-glance strong{
+ display:block;
+ color:#202020;
+ font-size:13px;
+ line-height:19px;
+ font-weight:600
+}
+.decision-shortcuts{
+ display:flex;
+ align-items:center;
+ gap:18px;
+ margin-top:14px
+}
+.decision-shortcuts a{
+ color:#333;
+ font-size:12px;
+ line-height:18px;
+ font-weight:560;
+ text-decoration:underline;
+ text-underline-offset:3px
+}
+.decision-details{
+ margin-top:20px;
+ border-top:1px solid var(--line);
+ border-bottom:1px solid var(--line)
+}
+.decision-details>summary{
+ min-height:46px;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:12px;
+ list-style:none;
+ color:#333;
+ font-size:13px;
+ line-height:19px;
+ font-weight:600;
+ cursor:pointer
+}
+.decision-details>summary::-webkit-details-marker{display:none}
+.decision-details[open]>summary .design-chevron{transform:rotate(180deg)}
+.decision-details-body{padding:0 0 18px}
+.decision-details .decision-risks{margin-top:0}
+.decision-details .decision-review-player{margin-bottom:0}
+.translation-note.is-unavailable{color:#666!important}
+
+@media(max-width:599px){
+ .review-shell{padding-top:18px}
+ .result-masthead-row{min-height:0}
+ .result-masthead-title{font-size:10px;line-height:15px}
+ .result-origin{margin-top:2px;font-size:10px;line-height:15px}
+ .result-chapters{display:none}
+ .review-hero{gap:30px;padding:16px 0 38px}
+ .review-tools{display:none}
+ .decision-status{margin-bottom:7px;font-size:11px;line-height:16px}
+ .decision h1{
+  max-width:340px;
+  font-size:28px;
+  line-height:34px;
+  letter-spacing:-.018em
+ }
+ .decision-summary{
+  max-width:340px;
+  margin-top:10px;
+  font-size:14px;
+  line-height:21px
+ }
+ .decision-primary-route{margin-top:18px}
+ .decision-primary-route>a{
+  width:100%;
+  min-height:48px;
+  box-sizing:border-box
+ }
+ .decision-at-a-glance{
+  margin-top:20px;
+  grid-template-columns:1fr 1fr
+ }
+ .decision-at-a-glance>div{padding:11px 10px 11px 0}
+ .decision-at-a-glance>div+div{padding-left:10px}
+ .decision-at-a-glance strong{font-size:12.5px;line-height:18px}
+ .decision-shortcuts{margin-top:12px}
+ .decision-details{margin-top:16px}
+ .decision-details>summary{min-height:44px}
+ .decision-details-body{padding-bottom:15px}
+ .decision-details .decision-risk-row{
+  grid-template-columns:1fr;
+  gap:3px;
+  padding:10px 0
+ }
+ .decision-details .decision-risk-row strong{font-size:13px;line-height:19px}
+ .decision-details .decision-risk-row small{font-size:11px;line-height:17px}
+ .decision-details .decision-claim{margin-top:18px;padding-top:14px}
+ .decision-details .decision-evidence{margin-top:18px;padding-top:14px}
+ .document-heading{font-size:12px}
+ .document-paper{min-height:0}
+}
