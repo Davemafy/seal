@@ -18,6 +18,15 @@ async function chooseFile(page:Page,path:string){
  await chooser.setFiles(path);
 }
 
+async function dismissAutoReview(page:Page){
+ const overlay=page.getByTestId('evidence-review');
+ await overlay.waitFor({state:'visible',timeout:2500}).catch(()=>{});
+ if(await overlay.isVisible().catch(()=>false)){
+  await page.getByRole('button',{name:'Back to result'}).click();
+  await expect(overlay).toHaveCount(0,{timeout:5000});
+ }
+}
+
 test('mobile interface language changes locally even when translation provider is unavailable',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:390,height:844});
