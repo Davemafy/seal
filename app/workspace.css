@@ -6758,3 +6758,149 @@
  }
  .entry-motion{display:none!important}
 }
+
+
+/* Demo rail simplification — navigation, not workspace chrome. */
+@media(min-width:901px){
+ .seal-app{
+  grid-template-columns:224px minmax(0,1fr)!important
+ }
+ .workspace-rail{
+  width:224px!important;
+  max-width:224px!important;
+  padding:16px 14px 12px!important;
+  background:#f8f8f6!important
+ }
+ .rail-topbar{
+  min-height:38px!important;
+  padding:0 4px 16px!important
+ }
+ .rail-brand img{
+  width:20px!important;
+  height:20px!important
+ }
+ .rail-brand-word{
+  font-size:16px!important;
+  line-height:20px!important
+ }
+ .rail-new-check{
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  border-radius:7px!important
+ }
+
+ .rail-primary-nav{
+  margin:0 0 12px!important
+ }
+ .rail-nav-item{
+  min-height:38px!important;
+  padding:9px 10px!important;
+  gap:9px!important;
+  border-radius:8px!important;
+  font-size:12.5px!important;
+  line-height:18px!important;
+  font-weight:560!important
+ }
+ .rail-nav-item .seal-ui-icon{
+  width:15px!important;
+  height:15px!important
+ }
+
+ .rail-section-head{
+  height:0!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  visibility:hidden!important
+ }
+
+ .rail-check-list{
+  gap:3px!important;
+  margin:0!important;
+  padding:0!important
+ }
+ .rail-check-row{
+  position:relative!important;
+  min-height:38px!important;
+  border-radius:8px!important;
+  background:transparent!important
+ }
+ .rail-check{
+  min-height:38px!important;
+  padding:9px 34px 9px 10px!important;
+  border-radius:8px!important;
+  background:transparent!important
+ }
+ .rail-check.is-current,
+ .rail-check-row.is-current .rail-check{
+  background:#ecece9!important
+ }
+ .rail-check::before,
+ .rail-check-state{
+  display:none!important
+ }
+ .rail-check-copy{
+  display:block!important;
+  min-width:0!important
+ }
+ .rail-check-copy strong{
+  display:block!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  color:#111!important;
+  font-size:12.5px!important;
+  line-height:18px!important;
+  font-weight:580!important
+ }
+ .rail-check-copy small{
+  display:none!important
+ }
+ .rail-check-delete{
+  position:absolute!important;
+  top:5px!important;
+  right:5px!important;
+  width:28px!important;
+  height:28px!important;
+  opacity:0!important;
+  border-radius:6px!important;
+  transition:opacity .12s ease,background .12s ease!important
+ }
+ .rail-check-row:hover .rail-check-delete,
+ .rail-check-row:focus-within .rail-check-delete{
+  opacity:.58!important
+ }
+ .rail-check-delete:hover{
+  opacity:1!important;
+  background:#dfdfdb!important
+ }
+
+ .rail-spacer{
+  min-height:24px!important
+ }
+ .rail-bottom{
+  padding:10px 2px 0!important;
+  border-top:1px solid #e4e4e0!important
+ }
+ .rail-language-trigger{
+  min-height:36px!important;
+  padding:7px 6px!important;
+  border-radius:7px!important;
+  background:transparent!important
+ }
+ .rail-language-trigger:hover{
+  background:#ecece9!important
+ }
+}
+
+/* Browse uses the same quiet rail language as the checker. */
+@media(min-width:901px){
+ .browse-workspace-rail .rail-nav-item.is-current{
+  background:#ecece9!important
+ }
+ .browse-workspace-rail .rail-check{
+  background:transparent!important
+ }
+}
