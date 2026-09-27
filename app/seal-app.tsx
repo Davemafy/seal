@@ -10,6 +10,7 @@ import {fixtures,type FixtureKey} from '@/lib/fixtures';
 import {fallbackExtract,claimsFromExtraction,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '@/lib/extract';
 import {readInBrowser,ocrLanguages,type OcrLanguage,type BrowserDocument} from '@/lib/browser-file';
 import {clearOrphanedResultArtifacts,clearResultSession,persistResultSession,restoreResultSession} from '@/lib/result-session';
+import {officialCourtDirectoryFor} from '@/lib/official-directories';
 import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
 import './workspace.css';
 
@@ -373,7 +374,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    })
   :[];
  const directCourtUnavailable=verification?.resolver_id==='unsupported';
- const directCheckSummary=directCourtUnavailable?'This jurisdiction is outside SEAL’s current direct-check coverage.':'';
+ const officialDirectory=useMemo(()=>officialCourtDirectoryFor(text),[text]);
+ const directCheckSummary=directCourtUnavailable?'SEAL does not yet have a reviewed direct check for this court.':'';
  const decisionRelationship=storySignal?.id.startsWith('curated-')
   ?'The issuing authority published this artifact as a scam example.'
   :storySignal?.kind==='SOURCE_CONFLICT'
@@ -386,7 +388,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      ?'This detail matches the independent source.'
      :decisionResult?.verdict==='MISMATCH'
       ?'This detail conflicts with the independent source.'
-      :'No supported court source.';
+      :directCourtUnavailable
+       ?'No direct court source is available for this message.'
+       :'No supported court source.';
  const decisionRelationshipConflict=storySignal?.kind==='SOURCE_CONFLICT'||(!storySignal&&decisionResult?.verdict==='MISMATCH');
  const current=claims.find(claim=>claim.id===selected)||claims[0];
  const currentResult=current&&resultById.get(current.id);
@@ -405,7 +409,14 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   &&storyHasIndependentEvidence
   &&(storyClaim||storySignal||storyEvidence)
  );
- const decision=decisionCopy(verification,decisionClaim);
+ const decision=directCourtUnavailable
+  ?{
+   title:'SEAL couldn’t independently verify this court yet.',
+   summary:groundedActions.length
+    ?'We could still read what the message asks you to do. Nothing below confirms the sender or case.'
+    :'SEAL could read parts of the message, but it cannot confirm the sender or case with this court.'
+  }
+  :decisionCopy(verification,decisionClaim);
  const technicalEvidence=useMemo(()=>{
   if(!verification)return [];
   const all=[
@@ -1400,7 +1411,7 @@ async function upload(uploaded:File){
         </div>}
 
         <div className={`decision-evidence decision-relationship-block ${decisionRelationshipConflict?'is-conflict':''}`}>
-         <span>Source relationship</span>
+         <span>Independent check</span>
          <strong>{decisionRelationship}</strong>
          {directCheckSummary&&<small className="decision-direct-check">{directCheckSummary}</small>}
         </div>
@@ -1495,20 +1506,23 @@ async function upload(uploaded:File){
       </div>
       :<div className="source-signals source-evidence-empty">
        <article className="source-signal is-primary">
-        <p className="signal-kind">Source coverage</p>
-        <h3>{directCourtUnavailable?'Direct court check unavailable':'No independent source evidence was available for this result.'}</h3>
-        <p>{directCourtUnavailable?'SEAL can describe the action in this message, but cannot confirm this case with the issuing court.':'The inspection below shows what SEAL could and could not establish from its supported sources.'}</p>
+        <p className="signal-kind">Independent check</p>
+        <h3>{directCourtUnavailable?'This court is not in SEAL’s direct-check network yet.':'No independent source evidence was available for this result.'}</h3>
+        <p>{directCourtUnavailable?'SEAL can still show exactly what the message asks you to do, but it will not guess whether the case or sender is genuine.':'The inspection below shows what SEAL could and could not establish from its supported sources.'}</p>
        </article>
       </div>}
 
      {verification&&!verification.safe_action&&decisionClaim?.action&&!verification.contact&&<div className="unsupported-next-step" id="next-step">
-      <span>What SEAL could establish</span>
-      <h2>The message contains these details</h2>
+      <span>Safest next step</span>
+      <h2>Verify through a court source you opened yourself.</h2>
       {messageDetails.length>0||scheduleQuote||noPaymentQuote?<dl className="message-detail-list">{messageDetails.map(claim=><div key={claim.id}><dt>{claim.type==='location'?'Location named':claim.label}</dt><dd>{cleanDisplayText(claim.value)}</dd></div>)}{scheduleQuote&&<div><dt>Schedule stated</dt><dd>{cleanDisplayText(scheduleQuote)}</dd></div>}{noPaymentQuote&&<div><dt>Payment statement</dt><dd>{cleanDisplayText(noPaymentQuote)}</dd></div>}</dl>:<p>No court or case details could be read reliably.</p>}
-      <p>These are details printed in the message, not facts confirmed by a court. SEAL cannot establish whether the case exists or who sent it.</p>
-      <p>If you need to respond, give the court name and case number above to a clerk reached through an official court site. Do not use payment or contact details supplied in the message until the court confirms them.</p>
-      {/\b(?:high court of lagos state|lagos state judiciary)\b/i.test(text)&&<a href="https://lagosjudiciary.gov.ng/search" target="_blank" rel="noopener noreferrer">Check a High Court reference on the Lagos Judiciary site</a>}
-      {/\b(?:united states district court|u\.?s\.? district court)\b/i.test(text)&&<a href="https://www.uscourts.gov/federal-court-finder/find" target="_blank" rel="noopener noreferrer">Find the court through the U.S. Courts directory</a>}
+      <p>Those details come from the message itself. They do not confirm that the case exists or that the sender is connected to the court.</p>
+      <p>Do not use a payment link, QR code, phone number, or reply address from the message until you reach the court independently.</p>
+      {officialDirectory&&<div className="official-directory-route">
+       <span>Official starting point</span>
+       <a href={officialDirectory.url} target="_blank" rel="noopener noreferrer">{officialDirectory.label}</a>
+       <p>{officialDirectory.note}</p>
+      </div>}
      </div>}
      {verification?.safe_action&&<div className="safe-route" id="next-step">
       <div>
