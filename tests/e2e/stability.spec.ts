@@ -53,6 +53,21 @@ Call 1-866-388-2430 after 5:30 PM for the status of your jury service.`);
  assertNoRuntimeErrors();
 });
 
+test('mobile SEAL brand returns a result to the clean entry state',async({page})=>{
+ test.setTimeout(90000);
+ const assertNoRuntimeErrors=guardRuntime(page);
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
+ await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
+
+ await page.locator('.mobile-brand').click();
+ await expect(page.getByTestId('entry-shell')).toBeVisible();
+ await expect(page.getByTestId('result-shell')).toHaveCount(0);
+ await expect(page).toHaveURL(/\/$/);
+ assertNoRuntimeErrors();
+});
+
 test('official sample survives result review, refresh, and replay',async({page})=>{
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);

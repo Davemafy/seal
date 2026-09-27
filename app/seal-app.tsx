@@ -1091,7 +1091,7 @@ async function upload(uploaded:File){
 
  return <main className="seal-app" data-testid="seal-app">
   <aside className="workspace-rail" aria-label="Workspace">
-   <Link href="/" className="rail-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
+   <Link href="/" className="rail-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
    <div className="rail-group-label">WORKSPACE</div>
    <button className="rail-item is-current" type="button" onClick={clear}>Check a message</button>
    <Link className="rail-item" href="/browse">Browse real cases</Link>
@@ -1099,7 +1099,7 @@ async function upload(uploaded:File){
    <div className="rail-foot"><strong>Public sources only</strong><span>Every item links back to the issuing court or agency.</span></div>
   </aside>
   <header className="seal-nav mobile-only-nav">
-   <Link href="/" className="mobile-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></Link>
+   <Link href="/" className="mobile-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></Link>
    {!verification
     ?<Link href="/browse" className="mobile-nav-action">Browse</Link>
     :<button className="mobile-nav-action mobile-nav-button" type="button" onClick={clear}>New check</button>}
