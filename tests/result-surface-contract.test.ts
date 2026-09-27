@@ -5,6 +5,7 @@ describe('result surface design contract',()=>{
  it('keeps Summary visually anchored while deeper reasoning stays progressive',()=>{
   const app=readFileSync('app/seal-app.tsx','utf8');
   const css=readFileSync('app/workspace.css','utf8');
+  const mobileCss=readFileSync('app/result-mobile-repair.css','utf8');
   expect(app).toContain('className="decision-overview"');
   expect(app).toContain('className="decision-visual"');
   expect(app).toContain('className="decision-artifact"');
@@ -30,10 +31,13 @@ describe('result surface design contract',()=>{
   expect(app).not.toContain('onTouchStart={beginWorkspaceSwipe}');
   expect(app).toContain('name="workspaces"');
   expect(app).toContain('workspace-page-edges');
-  expect(app).toContain('mobile-workspace-count');
+  expect(app).not.toContain('mobile-workspace-count');
   expect(app).toContain("workspaces.length>1?'has-multiple':''");
   expect(css).toContain('Persistent multi-workspace resting cue.');
   expect(css).toContain('translate3d(0,100dvh,0)');
   expect(css).toContain('font-size:37px!important');
+  expect(mobileCss).toContain('.result-slide-summary .decision-visual{display:none!important}');
+  expect(mobileCss).toContain('.result-slide-evidence .evidence-review-entry');
+  expect(mobileCss).toContain('Tabs behave as real sibling pages');
  });
 });
