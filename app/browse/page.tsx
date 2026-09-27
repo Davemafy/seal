@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import {browseCases,type BrowseCase} from '@/lib/browse-cases';
 import PdfThumb from './pdf-thumb';
 import ImageThumb from './image-thumb';
@@ -26,17 +27,17 @@ export default function Browse(){
 
  return <main className="seal-app browse-page">
   <aside className="workspace-rail" aria-label="Workspace">
-   <a href="/" className="rail-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></a>
+   <Link href="/" className="rail-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
    <div className="rail-group-label">WORKSPACE</div>
-   <a className="rail-item" href="/">Check a message</a>
+   <Link className="rail-item" href="/">Check a message</Link>
    <a className="rail-item is-current" href="/browse">Browse real cases</a>
    <div className="rail-spacer"/>
    <div className="rail-foot"><strong>Public sources only</strong><span>Every item links back to the issuing court or agency.</span></div>
   </aside>
 
   <header className="seal-nav mobile-only-nav">
-   <a href="/" className="mobile-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></a>
-   <a href="/" className="mobile-nav-action">Check</a>
+   <Link href="/" className="mobile-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></Link>
+   <Link href="/" className="mobile-nav-action">Check</Link>
   </header>
 
   <section className="browse-shell">
