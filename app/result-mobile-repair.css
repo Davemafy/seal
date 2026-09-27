@@ -929,3 +929,42 @@
   margin-top:12px!important
  }
 }
+
+
+/* Full-height mobile result workspace. */
+@media(max-width:900px){
+ .review-shell{
+  height:calc(100dvh - 52px)!important;
+  min-height:calc(100dvh - 52px)!important;
+  display:grid!important;
+  grid-template-rows:auto minmax(0,1fr)!important;
+  align-content:stretch!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important
+ }
+ .result-masthead{
+  grid-row:1!important;
+  min-height:0!important
+ }
+ .result-carousel{
+  grid-row:2!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior-y:contain!important;
+  scroll-behavior:smooth!important
+ }
+ .review-hero,
+ .result-slide{
+  min-height:100%!important;
+  box-sizing:border-box!important
+ }
+ .result-slide-summary,
+ .result-slide-original,
+ .result-slide-evidence,
+ .result-slide-resolve{
+  min-height:100%!important
+ }
+}
