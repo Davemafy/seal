@@ -2322,13 +2322,13 @@ async function upload(uploaded:File){
 const WORKSPACE_LIST_KEY='seal:workspace-list:v1';
 const ONBOARDING_KEY='seal:onboarding:v1';
 const DISPLAY_LOCALE_KEY='seal:display-locale:v1';
-const checkRoute=(id:string)=>`/check/${encodeURIComponent(id.replace(/^check-/,''))}`;
+const checkRoute=(id:string)=>`/check/${encodeURIComponent(id==='primary'?'primary':id.replace(/^check-/,''))}`;
 const workspaceIdFromPath=(pathname:string)=>{
  const match=pathname.match(/^\/check\/([^/?#]+)/);
  if(!match)return '';
  try{
   const slug=decodeURIComponent(match[1]);
-  return slug.startsWith('check-')?slug:`check-${slug}`;
+  return slug==='primary'?'primary':slug.startsWith('check-')?slug:`check-${slug}`;
  }catch{return ''}
 };
 
@@ -2373,8 +2373,11 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   const onPopState=()=>{
    const routedId=workspaceIdFromPath(window.location.pathname);
    if(!routedId)return;
-   setWorkspaces(items=>items.some(item=>item.id===routedId)?items:[...items,{id:routedId,title:'New check',status:'idle' as WorkspaceRunStatus}].slice(-8));
-   setActiveWorkspace(routedId);
+   setWorkspaces(items=>{
+    if(!items.some(item=>item.id===routedId))return items;
+    setActiveWorkspace(routedId);
+    return items;
+   });
    window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
   };
   window.addEventListener('popstate',onPopState);
@@ -2383,8 +2386,11 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
 
  useEffect(()=>{
   if(!registryReady||!initialWorkspaceId)return;
-  setWorkspaces(items=>items.some(item=>item.id===initialWorkspaceId)?items:[...items,{id:initialWorkspaceId,title:'New check',status:'idle' as WorkspaceRunStatus}].slice(-8));
-  setActiveWorkspace(initialWorkspaceId);
+  setWorkspaces(items=>{
+   if(!items.some(item=>item.id===initialWorkspaceId))return items;
+   setActiveWorkspace(initialWorkspaceId);
+   return items;
+  });
  },[registryReady,initialWorkspaceId]);
 
  useEffect(()=>{
