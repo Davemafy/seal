@@ -7774,3 +7774,104 @@
   transform:translateY(0)!important
  }
 }
+
+
+/* Vertical efficiency pass — preserve type, compress chrome and whitespace. */
+@media(min-width:901px){
+ .workspace-rail{
+  padding-top:14px!important;
+  padding-bottom:10px!important
+ }
+ .rail-topbar{
+  min-height:34px!important;
+  padding-bottom:14px!important
+ }
+ .rail-primary-nav{
+  margin-bottom:12px!important
+ }
+ .rail-section-head{
+  min-height:16px!important;
+  padding-bottom:5px!important
+ }
+ .rail-check-row,
+ .rail-check{
+  min-height:38px!important
+ }
+ .rail-check{
+  padding-top:8px!important;
+  padding-bottom:8px!important
+ }
+ .rail-spacer{
+  min-height:12px!important
+ }
+ .rail-bottom{
+  padding-bottom:0!important
+ }
+
+ .entry-shell:not(.is-processing){
+  padding-top:26px!important;
+  padding-bottom:24px!important;
+  row-gap:20px!important
+ }
+ .entry-shell:not(.is-processing) .entry-copy>p{
+  margin-top:9px!important
+ }
+ .entry-intake-heading{
+  margin-top:16px!important;
+  padding-bottom:10px!important
+ }
+ .entry-shell:not(.is-processing) .intake{
+  padding-top:68px!important;
+  padding-bottom:16px!important
+ }
+ .entry-shell:not(.is-processing) .upload-row{
+  min-height:166px!important;
+  padding-top:22px!important;
+  padding-bottom:22px!important
+ }
+ .entry-shell:not(.is-processing) .upload-browse{
+  margin-top:10px!important
+ }
+ .entry-shell:not(.is-processing) .intake-secondary-actions{
+  margin-top:9px!important
+ }
+ .entry-shell:not(.is-processing) .privacy-note{
+  margin-top:5px!important
+ }
+
+ .seal-footer{
+  min-height:42px!important;
+  padding-top:8px!important;
+  padding-bottom:8px!important
+ }
+
+ .onboarding-shell,
+ .onboarding-stage{
+  padding-top:18px!important;
+  padding-bottom:18px!important
+ }
+ .onboarding-copy{
+  gap:8px!important
+ }
+ .onboarding-controls{
+  min-height:50px!important
+ }
+}
+
+@media(max-width:900px){
+ .seal-nav{
+  min-height:52px!important
+ }
+ .entry-shell{
+  padding-top:20px!important;
+  padding-bottom:20px!important
+ }
+ .upload-row{
+  min-height:150px!important
+ }
+ .seal-footer{
+  min-height:40px!important;
+  padding-top:8px!important;
+  padding-bottom:8px!important
+ }
+}
