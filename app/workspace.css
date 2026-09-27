@@ -650,11 +650,11 @@
 
 /* Scan → result continuity */
 .review-shell{
- animation:seal-result-enter .28s cubic-bezier(.16,1,.3,1) both
+ animation:seal-result-enter .22s ease-out both
 }
 @keyframes seal-result-enter{
- from{opacity:.01;transform:translateY(8px)}
- to{opacity:1;transform:translateY(0)}
+ from{opacity:.01}
+ to{opacity:1}
 }
 .entry-shell.is-processing .entry-copy{
  opacity:.7;
@@ -1021,3 +1021,7 @@
  .additional-sources summary,
  .technical-record summary{min-height:34px}
 }
+
+/* QA: fixed descendants (the evidence player) must stay viewport-fixed. */
+.result-masthead-row{min-height:52px}
+@media(max-width:599px){.result-masthead-row{min-height:42px}}
