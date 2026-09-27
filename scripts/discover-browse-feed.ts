@@ -8,6 +8,7 @@ import {load} from 'cheerio';
 import {z} from 'zod';
 import {browseDiscoverySources,hostAllowed,type BrowseDiscoverySource} from '../lib/browse-source-registry';
 import {curatedBrowseCases,type BrowseCase} from '../lib/browse-cases';
+import {curateViaSeal} from './curator-client';
 
 const run=promisify(execFile);
 const outputPath=join(process.cwd(),'lib','browse-discovered.generated.json');
@@ -205,7 +206,15 @@ async function discoverFromSource(source:BrowseDiscoverySource){
 
 async function modelCurate(candidate:Candidate){
  const key=process.env.GROQ_API_KEY;
- if(!key)return null;
+ if(!key){
+  const remote=await curateViaSeal({
+   sourceId:candidate.source.id,
+   sourceUrl:candidate.sourceUrl,
+   title:candidate.title,
+   text:candidate.text.slice(0,12000)
+  });
+  return remote?curatorSchema.parse(remote):null;
+ }
  const base=process.env.GROQ_BASE_URL||'https://api.groq.com/openai/v1';
  if(new URL(base).hostname!=='api.groq.com')throw new Error('Groq host not allowed');
  const instruction=`You curate SEAL's public court-source library. The source has already passed an official-domain allowlist and deterministic evidence gate. Do not infer authenticity beyond what the authority explicitly says. Publish only if this source is directly useful for understanding a court-related scam, warning, notice, or verification pattern. For category, choose the closest supplied enum. visualNote and excerpt must only state facts visibly supported by SOURCE TEXT. Do not invent dates, people, case numbers, contacts, or message content. Do not call something a confirmed scam unless the authority itself explicitly does so. Keep copy concise and neutral.`;
