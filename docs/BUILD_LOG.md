@@ -76,10 +76,10 @@ These are controlled engineering examples. They do not establish accuracy on gen
 
 A low-resolution, readable court-looking image exposed that the extraction layer had become too coupled to the jurisdictions and scam examples used during development. The correction is architectural rather than jurisdiction-specific.
 
-SEAL now follows: **message/image → generic action graph → field confidence → supported-source verification → abstention when unsupported**.
+SEAL now follows: **message/image to generic action graph to field confidence to supported-source verification to abstention when unsupported**.
 
 - Browser OCR preserves every recognized token and its confidence instead of deleting all words below a page-independent threshold. Small images are normalized/upscaled from their dimensions alone before OCR; no court or document identity affects that preprocessing.
-- Extraction builds generic action nodes as `verb → object → target → qualifiers`, with action classes for payment, contact, navigation, information disclosure, and appearance/reporting. It does not require a dollar amount to preserve a payment action.
+- Extraction builds generic action nodes as `verb to object to target to qualifiers`, with action classes for payment, contact, navigation, information disclosure, and appearance/reporting. It does not require a dollar amount to preserve a payment action.
 - Court identity extraction is generic and independent of resolver coverage. An unsupported fictional court can be extracted cleanly while verification still returns only `COULD_NOT_VERIFY`.
 - Confidence belongs to the extracted value. Exact identifiers such as phones, URLs, juror IDs, and dockets use strict token confidence. Multi-word phrases use a robust field score so one noisy OCR word does not discard an otherwise readable phrase.
 - Claims below the confidence threshold are withheld from the resolver and become `COULD_NOT_VERIFY — We couldn’t read this field confidently.` A low-confidence court identity is also prohibited from silently selecting a resolver for other claims.
@@ -119,7 +119,7 @@ A real traffic-enforcement notice found on Facebook exposed the remaining produc
 
 The new pipeline is:
 
-`message → generic action graph + explicit authorities → court resolver + public-source intelligence → source-backed conflicts/patterns → safe independent next step`
+`message to generic action graph + explicit authorities to court resolver + public-source intelligence to source-backed conflicts/patterns to safe independent next step`
 
 New behavior:
 - explicit legal citations become first-class `authority` claims;
