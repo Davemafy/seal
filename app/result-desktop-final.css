@@ -1307,3 +1307,29 @@
   line-height:25px!important
  }
 }
+
+
+/* Keep top-right result action tooltip inside the viewport. */
+@media(min-width:901px) and (hover:hover) and (pointer:fine){
+ .check-object-actions{
+  position:relative!important;
+  overflow:visible!important
+ }
+ .check-object-actions .result-icon-action{
+  position:relative!important;
+  overflow:visible!important
+ }
+ .check-object-actions .result-icon-action[data-tooltip]::after{
+  top:calc(100% + 8px)!important;
+  right:0!important;
+  bottom:auto!important;
+  left:auto!important;
+  transform:translateY(-3px)!important;
+  transform-origin:top right!important;
+  white-space:nowrap!important
+ }
+ .check-object-actions .result-icon-action[data-tooltip]:hover::after,
+ .check-object-actions .result-icon-action[data-tooltip]:focus-visible::after{
+  transform:translateY(0)!important
+ }
+}
