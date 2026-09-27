@@ -1565,7 +1565,10 @@ async function upload(uploaded:File){
      </div>}
     </div>
     <span className="mobile-nav-divider" aria-hidden="true"/>
-    <button className="icon-control mobile-nav-icon mobile-workspace-trigger" type="button" aria-label="Open checks" title="Open checks" aria-haspopup="dialog" aria-expanded={workspaceDrawerOpen} onClick={()=>{setLanguageMenuOpen(false);setWorkspaceDrawerOpen(true)}}><SealUiIcon name="workspaces"/></button>
+    <button className="icon-control mobile-nav-icon mobile-workspace-trigger" type="button" aria-label={`Open checks, ${workspaces.length} open`} title="Open checks" aria-haspopup="dialog" aria-expanded={workspaceDrawerOpen} onClick={()=>{setLanguageMenuOpen(false);setWorkspaceDrawerOpen(true)}}>
+     <SealUiIcon name="workspaces"/>
+     {workspaces.length>1&&<span className="mobile-workspace-count" aria-hidden="true">{workspaces.length}</span>}
+    </button>
     <button className="icon-control mobile-nav-icon mobile-new-check" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} onClick={()=>{setWorkspaceDrawerOpen(false);onNewWorkspace()}}><SealUiIcon name="add"/></button>
    </div>
   </header>
@@ -2305,13 +2308,14 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  },[workspaces,activeWorkspace]);
 
  return <>
-  <div className="seal-workspace-stack">
+  <div className={`seal-workspace-stack ${workspaces.length>1?'has-multiple':''}`} data-workspace-count={workspaces.length}>
+   {workspaces.length>1&&<div className="workspace-page-edges" aria-hidden="true"><span/><span/></div>}
    {workspaces.map((workspace,index)=>{
     const entering=workspaceMotion?.id===workspace.id;
     const leaving=workspaceMotion?.fromId===workspace.id&&workspace.id!==activeWorkspace;
     const visible=workspace.id===activeWorkspace||leaving;
     return <div
-     className={`seal-workspace-instance ${entering?`is-entering-${workspaceMotion.direction}`:''} ${leaving?'is-leaving':''}`}
+     className={`seal-workspace-instance ${workspace.id===activeWorkspace?'is-active':''} ${entering?`is-entering-${workspaceMotion.direction}`:''} ${leaving?'is-leaving':''}`}
      data-workspace-id={workspace.id}
      key={workspace.id}
      hidden={!visible}
