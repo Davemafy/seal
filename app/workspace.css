@@ -648,7 +648,7 @@
 }
 
 
-/* Scan → result continuity */
+/* Scan-to-result continuity */
 .review-shell{
  animation:seal-result-enter .22s ease-out both
 }
@@ -1755,7 +1755,7 @@
  letter-spacing:-.02em
 }
 
-/* Read → Ground → Verify. No counters; the active stage carries the actual SEAL mark. */
+/* Read, Ground, Verify. No counters; the active stage carries the actual SEAL mark. */
 .process-flow{
  display:grid;
  grid-template-columns:auto minmax(28px,1fr) auto minmax(28px,1fr) auto;
@@ -2008,7 +2008,7 @@
 }
 
 
-/* Upload → analysis continuity is driven by a measured FLIP transition in SealApp. */
+/* Upload-to-analysis continuity is driven by a measured FLIP transition in SealApp. */
 .entry-shell.is-processing .entry-copy{
  opacity:.82;
  transition:opacity .2s ease
