@@ -1334,7 +1334,7 @@ async function upload(uploaded:File){
      </div>}
      {verification?.safe_action&&<div className="safe-route" id="next-step">
       <div>
-       <h2>{verification.safe_action.title}</h2>
+       <h2>Safest next step</h2>
        <p>{verification.safe_action.summary}</p>
       </div>
       <div>
