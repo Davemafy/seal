@@ -28,6 +28,7 @@ type SealWorkspaceProps={
  initialText?:string;
  initialRun?:boolean;
  workspaceId:string;
+ active:boolean;
  workspaces:WorkspaceMeta[];
  onNewWorkspace:()=>void;
  onSelectWorkspace:(id:string)=>void;
@@ -234,7 +235,7 @@ function decisionCopy(verification:Verification|null,claim?:Claim){
  };
 }
 
-function SealWorkspace({initialDemo=false,initialText='',initialRun=false,workspaceId,workspaces,onNewWorkspace,onSelectWorkspace,onDeleteWorkspace,onWorkspaceMeta}:SealWorkspaceProps){
+function SealWorkspace({initialDemo=false,initialText='',initialRun=false,workspaceId,active,workspaces,onNewWorkspace,onSelectWorkspace,onDeleteWorkspace,onWorkspaceMeta}:SealWorkspaceProps){
  const [hydrated,setHydrated]=useState(false);
  const [text,setText]=useState(initialText||(initialDemo?fixtures['action-message-demo'].text:''));
  const [draft,setDraft]=useState('');
@@ -1567,7 +1568,7 @@ async function upload(uploaded:File){
     <span className="mobile-nav-divider" aria-hidden="true"/>
     <button className="icon-control mobile-nav-icon mobile-workspace-trigger" type="button" aria-label={`Open checks, ${workspaces.length} open`} title="Open checks" aria-haspopup="dialog" aria-expanded={workspaceDrawerOpen} onClick={()=>{setLanguageMenuOpen(false);setWorkspaceDrawerOpen(true)}}>
      <SealUiIcon name="workspaces"/>
-     {workspaces.length>1&&<span className="mobile-workspace-count" aria-hidden="true">{workspaces.length}</span>}
+     {active&&workspaces.length>1&&<span className="mobile-workspace-count" aria-hidden="true">{workspaces.length}</span>}
     </button>
     <button className="icon-control mobile-nav-icon mobile-new-check" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} onClick={()=>{setWorkspaceDrawerOpen(false);onNewWorkspace()}}><SealUiIcon name="add"/></button>
    </div>
@@ -2330,6 +2331,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      initialText={index===0?initialText:''}
      initialRun={index===0?initialRun:false}
      workspaceId={workspace.id}
+     active={workspace.id===activeWorkspace}
      workspaces={workspaces}
      onNewWorkspace={createWorkspace}
      onSelectWorkspace={selectWorkspace}
