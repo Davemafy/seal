@@ -2347,7 +2347,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const [registryReady,setRegistryReady]=useState(false);
  const [onboardingOpen,setOnboardingOpen]=useState(false);
  const [onboardingStep,setOnboardingStep]=useState(0);
- const [workspaceTransition,setWorkspaceTransition]=useState<{from:string;to:string;direction:'forward'|'backward'}|null>(null);
+ const [workspaceTransition,setWorkspaceTransition]=useState<{from:string;to:string;direction:'forward'|'backward';snapshot:WorkspaceMeta[]}|null>(null);
  const workspaceTransitionTimer=useRef<number|null>(null);
  const onboardingTouchStart=useRef<number|null>(null);
 
@@ -2452,7 +2452,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    const toIndex=workspaces.findIndex(item=>item.id===id);
    const direction: 'forward'|'backward'=toIndex>=fromIndex?'forward':'backward';
    if(workspaceTransitionTimer.current!==null)window.clearTimeout(workspaceTransitionTimer.current);
-   setWorkspaceTransition({from:activeWorkspace,to:id,direction});
+   setWorkspaceTransition({from:activeWorkspace,to:id,direction,snapshot:workspaces.map(item=>({...item}))});
    setActiveWorkspace(id);
    workspaceTransitionTimer.current=window.setTimeout(()=>{
     setWorkspaceTransition(null);
@@ -2489,7 +2489,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   });
   if(mobile){
    if(workspaceTransitionTimer.current!==null)window.clearTimeout(workspaceTransitionTimer.current);
-   setWorkspaceTransition({from:activeWorkspace,to:id,direction:'forward'});
+   setWorkspaceTransition({from:activeWorkspace,to:id,direction:'forward',snapshot:workspaces.map(item=>({...item}))});
    workspaceTransitionTimer.current=window.setTimeout(()=>{
     setWorkspaceTransition(null);
     workspaceTransitionTimer.current=null;
@@ -2500,7 +2500,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   setActiveWorkspace(id);
   window.history.pushState({workspaceId:id},'',checkRoute(id));
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
- },[activeWorkspace]);
+ },[activeWorkspace,workspaces]);
 
  const selectWorkspace=useCallback((id:string)=>{
   if(id===activeWorkspace)return;
@@ -2657,7 +2657,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
       initialRun={index===0?initialRun:false}
       workspaceId={workspace.id}
       workspaceActive={active}
-      workspaces={workspaces}
+      workspaces={leaving&&workspaceTransition?.snapshot?workspaceTransition.snapshot:workspaces}
       onNewWorkspace={createWorkspace}
       onSelectWorkspace={selectWorkspace}
       onDeleteWorkspace={deleteWorkspace}
