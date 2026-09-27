@@ -3,6 +3,7 @@
 
 import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import {gsap} from 'gsap';
+import {Toaster,toast} from 'sonner';
 import Link from 'next/link';
 import PDFPreview from './pdf-preview';
 import StoryPdfPage from './story-pdf-page';
@@ -1147,14 +1148,28 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
 
  async function copyCourtQuestion(){
   if(!courtQuestionScript)return;
-  try{await navigator.clipboard.writeText(translatedResult.courtQuestionScript||courtQuestionScript);setQuestionCopied(true);window.setTimeout(()=>setQuestionCopied(false),1800)}
-  catch{setQuestionCopied(false)}
+  try{
+   await navigator.clipboard.writeText(translatedResult.courtQuestionScript||courtQuestionScript);
+   setQuestionCopied(true);
+   toast.success('Court question copied');
+   window.setTimeout(()=>setQuestionCopied(false),1800);
+  }catch{
+   setQuestionCopied(false);
+   toast.error('Could not copy. Try again.');
+  }
  }
 
  async function copyHandoff(){
   if(!verification)return;
-  try{await navigator.clipboard.writeText(buildHandoffSummary(claims,verification,justiceSupport));setHandoffCopied(true);window.setTimeout(()=>setHandoffCopied(false),1800)}
-  catch{setHandoffCopied(false)}
+  try{
+   await navigator.clipboard.writeText(buildHandoffSummary(claims,verification,justiceSupport));
+   setHandoffCopied(true);
+   toast.success('Verification record copied');
+   window.setTimeout(()=>setHandoffCopied(false),1800);
+  }catch{
+   setHandoffCopied(false);
+   toast.error('Could not copy. Try again.');
+  }
  }
 
  function saveHandoff(){
@@ -1166,6 +1181,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   const anchor=document.createElement('a');
   anchor.href=url;anchor.download='seal-verification-'+slug+'.txt';anchor.style.display='none';
   document.body.appendChild(anchor);anchor.click();anchor.remove();
+  toast.success('Verification record saved');
   window.setTimeout(()=>URL.revokeObjectURL(url),1000);
  }
 
@@ -2164,23 +2180,40 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
  },[]);
 
- return <div className="seal-workspace-stack">
-  {workspaces.map((workspace,index)=><div
-   className="seal-workspace-instance"
-   key={workspace.id}
-   hidden={workspace.id!==activeWorkspace}
-   aria-hidden={workspace.id!==activeWorkspace}
-  >
-   <SealWorkspace
-    initialDemo={index===0?initialDemo:false}
-    initialText={index===0?initialText:''}
-    initialRun={index===0?initialRun:false}
-    workspaceId={workspace.id}
-    workspaces={workspaces}
-    onNewWorkspace={createWorkspace}
-    onSelectWorkspace={setActiveWorkspace}
-    onWorkspaceMeta={updateWorkspace}
-   />
-  </div>)}
- </div>;
+ return <>
+  <div className="seal-workspace-stack">
+   {workspaces.map((workspace,index)=><div
+    className="seal-workspace-instance"
+    key={workspace.id}
+    hidden={workspace.id!==activeWorkspace}
+    aria-hidden={workspace.id!==activeWorkspace}
+   >
+    <SealWorkspace
+     initialDemo={index===0?initialDemo:false}
+     initialText={index===0?initialText:''}
+     initialRun={index===0?initialRun:false}
+     workspaceId={workspace.id}
+     workspaces={workspaces}
+     onNewWorkspace={createWorkspace}
+     onSelectWorkspace={setActiveWorkspace}
+     onWorkspaceMeta={updateWorkspace}
+    />
+   </div>)}
+  </div>
+  <Toaster
+   position="bottom-center"
+   duration={2800}
+   visibleToasts={3}
+   toastOptions={{
+    style:{
+     fontFamily:'var(--font-uber-move),Arial,Helvetica,sans-serif',
+     background:'#fff',
+     color:'#000',
+     border:'1px solid #d9d9d9',
+     borderRadius:'12px',
+     boxShadow:'0 12px 32px rgba(0,0,0,.12)'
+    }
+   }}
+  />
+ </>;
 }
