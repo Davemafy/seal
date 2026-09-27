@@ -19,6 +19,21 @@ describe('independent court directory routing',()=>{
  });
 });
 
+describe('parallel global verification lanes',()=>{
+ it('keeps an India check useful without pretending a dedicated case resolver exists',async()=>{
+  const text=`DISTRICT COURT — NEW DELHI, INDIA
+Case No. ABC-441
+You must pay the filing amount before the stated deadline.`;
+  const extraction=fallbackExtract(text);
+  const verification=await verifyClaims(claimsFromExtraction(extraction,text),extraction.court_name,'SNAPSHOT','India',text);
+  expect(verification.resolver_id).toBe('unsupported');
+  expect(verification.signals?.some(signal=>signal.kind==='OFFICIAL_DIRECTORY')).toBe(true);
+  expect(verification.safe_action?.primary_url).toBe('https://services.ecourts.gov.in/ecourtindia_v6/');
+  expect(verification.results.every(result=>result.verdict==='COULD_NOT_VERIFY')).toBe(true);
+  expect(verification.lanes?.map(lane=>lane.id)).toEqual(['court-source','public-process','official-directory']);
+  expect(verification.lanes?.find(lane=>lane.id==='official-directory')?.status).toBe('evidence_found');
+ });
+});
 describe('New Hampshire public intelligence',()=>{
  it('finds official process evidence for a New Hampshire toll payment demand',async()=>{
   const text=`STATE OF NEW HAMPSHIRE

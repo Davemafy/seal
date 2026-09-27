@@ -3,6 +3,7 @@ import {getSources,cite,snapshot,type SourceKey,type Source} from './sources';
 import {getCtSources,ctCite,ctSnapshot,type ConnecticutSourceKey,type ConnecticutSource} from './connecticut-sources';
 import {getScamSources,scamCite,type ScamSourceKey,type ScamSource} from './scam-sources';
 import {analyzePublicIntelligence,resolvePublicClaims} from './public-intel';
+import {discoverOfficialDirectory} from './source-discovery';
 export const phoneDigits=(s:string)=>s.replace(/\D/g,'').replace(/^1(?=\d{10}$)/,'');
 export const domain=(s:string)=>{try{return new URL(/^https?:\/\//i.test(s)?s:'https://'+s).hostname.toLowerCase().replace(/^www\./,'');}catch{return '';}};
 export const address=(s:string)=>s.toLowerCase().replace(/\bstreet\b/g,'st').replace(/[^a-z0-9]/g,'');
@@ -59,15 +60,28 @@ function resolveConnecticut(c:Claim,s:CtSources,scams:ScamSources):Result{
  return unverified('The available official court pages do not independently establish this detail.');
 }
 export const ConnecticutDistrictCourtResolver:CourtResolver={id:'connecticut',supportedCourt:n=>/united states district court/i.test(n)&&/district of connecticut/i.test(n),async resolve(claims,mode){const [s,scams]=await Promise.all([getCtSources(mode),getScamSources(mode)]);const contact=ctProof(s,'contact','(800) 827-8224')||ctCite(ctSnapshot('contact'),'(800) 827-8224');return {results:claims.map(c=>resolveConnecticut(c,s,scams)),resolver_id:this.id,contact:contact?{phone:'800-827-8224',website:'https://www.ctd.uscourts.gov/contact-parking-information',source:contact}:undefined};}};
-export const UnsupportedCourtResolver:CourtResolver={id:'unsupported',supportedCourt:()=>true,async resolve(claims){return {results:claims.map(c=>unknown(c,'This jurisdiction is not supported by an official-source resolver.','unsupported')),resolver_id:this.id};}};
+export const UnsupportedCourtResolver:CourtResolver={id:'unsupported',supportedCourt:()=>true,async resolve(claims){return {results:claims.map(c=>unknown(c,'No dedicated direct-check resolver matched this jurisdiction. SEAL will still look for independent public routes.','unsupported')),resolver_id:this.id};}};
 export const FederalCourtListenerResolver:CourtResolver={id:'courtlistener',supportedCourt:n=>/united states (district|court of appeals|bankruptcy) court/i.test(n),async resolve(claims,_mode,courtName=''){const results:Result[]=await Promise.all(claims.map(async c=>{if(c.type!=='docket')return unknown(c,'SEAL’s federal source checks exact dockets only; it cannot independently confirm jury notice details.','courtlistener');const token=process.env.COURTLISTENER_TOKEN;if(!token)return unknown(c,'CourtListener integration is unavailable without a server token.','courtlistener');const query=new URL('https://www.courtlistener.com/api/rest/v4/search/');query.searchParams.set('type','d');query.searchParams.set('q',`docketNumber:"${c.value.replace(/[^a-zA-Z0-9:.-]/g,'')}"`);try{const response=await fetch(query,{headers:{Authorization:`Token ${token}`,'User-Agent':'SEAL/1.0'},signal:AbortSignal.timeout(8000)});if(!response.ok)return unknown(c,'CourtListener search was unavailable.','courtlistener');const body=await response.json() as {results?:{docketNumber?:string;absolute_url?:string;court?:string}[]};const expectedCourt=courtName.toLowerCase().replace(/united states|district court|court of appeals|bankruptcy court|for the|for|the/g,'').replace(/\s+/g,' ').trim();const exact=body.results?.find(r=>r.docketNumber?.trim().toLowerCase()===c.value.trim().toLowerCase()&&!!expectedCourt&&r.court?.toLowerCase().includes(expectedCourt));if(!exact)return unknown(c,'No exact docket record was found. Absence is not contradiction.','courtlistener');const url=exact.absolute_url?.startsWith('/')?'https://www.courtlistener.com'+exact.absolute_url:'';return verdict(c,'MATCH','An exact docket number appears in the CourtListener index.',[{title:'CourtListener docket search',url:url||query.toString(),excerpt:`Docket number: ${exact.docketNumber}`,checked_at:new Date().toISOString(),source_mode:'LIVE'}],'courtlistener');}catch{return unknown(c,'CourtListener search was unavailable.','courtlistener');}}));return {results,resolver_id:this.id};}};
 export async function verifyClaims(claims:Claim[],courtName:string,mode:'LIVE'|'SNAPSHOT',jurisdictionHint='',rawText=''):Promise<Verification>{
- const identifiedCourt=`${courtName}\n${jurisdictionHint}`.replace(/\s+/g,' ').trim();
+ const started=Date.now();
+ const identifiedCourt=(courtName+'\n'+jurisdictionHint).replace(/\s+/g,' ').trim();
  const r=RiversideSuperiorCourtResolver.supportedCourt(courtName)?RiversideSuperiorCourtResolver:ConnecticutDistrictCourtResolver.supportedCourt(identifiedCourt)?ConnecticutDistrictCourtResolver:FederalCourtListenerResolver.supportedCourt(courtName)?FederalCourtListenerResolver:UnsupportedCourtResolver;
- const base=await r.resolve(claims,mode,courtName);
  const text=rawText||claims.map(c=>c.context||c.exact_source_text||c.value).join('\n');
+ const courtStarted=Date.now();
+ const courtPromise=r.resolve(claims,mode,courtName).then(value=>({value,duration:Date.now()-courtStarted}));
+ const directoryPromise=discoverOfficialDirectory(text,courtName,jurisdictionHint,mode);
  const publicResults=resolvePublicClaims(claims,text);
+ const intelligence=analyzePublicIntelligence(text,claims,[...publicResults.values()]);
+ const [{value:base,duration:courtDuration},directory]=await Promise.all([courtPromise,directoryPromise]);
  const merged=base.results.map(result=>publicResults.get(result.claim_id)||result);
- const intelligence=analyzePublicIntelligence(text,claims,merged);
- return {...base,results:merged,signals:intelligence.signals,safe_action:intelligence.safe_action,contact:base.contact||intelligence.contact};
+ const courtEvidence=[...new Map(base.results.flatMap(result=>result.evidence).map(evidence=>[evidence.url,evidence])).values()];
+ const publicEvidence=[...new Map([...[...publicResults.values()].flatMap(result=>result.evidence),...intelligence.signals.flatMap(signal=>signal.evidence)].map(evidence=>[evidence.url,evidence])).values()];
+ const lanes:NonNullable<Verification['lanes']>=[
+  {id:'court-source',label:'Direct court source',status:courtEvidence.length?'evidence_found':r.id==='unsupported'?'unavailable':'complete',summary:courtEvidence.length?(String(courtEvidence.length)+' direct source'+(courtEvidence.length===1?'':'s')+' contributed evidence.'):r.id==='unsupported'?'No dedicated court resolver matched this jurisdiction.':'The resolver completed without a decisive source match.',evidence:courtEvidence,resolver_id:r.id,duration_ms:courtDuration},
+  {id:'public-process',label:'Public process and warning sources',status:publicEvidence.length?'evidence_found':'not_applicable',summary:publicEvidence.length?(String(publicEvidence.length)+' public source'+(publicEvidence.length===1?'':'s')+' matched the document process, authority, or action pattern.'):'No relevant public-process signal matched this document.',evidence:publicEvidence,resolver_id:'public-intel',duration_ms:Date.now()-started},
+  directory.lane
+ ];
+ const signals=[...intelligence.signals,...(directory.signal&&!intelligence.signals.some(signal=>signal.id===directory.signal!.id)?[directory.signal]:[])];
+ const safeAction=intelligence.safe_action||(r.id==='unsupported'?directory.safeAction:undefined);
+ return {...base,results:merged,signals,safe_action:safeAction,contact:base.contact||intelligence.contact,lanes};
 }

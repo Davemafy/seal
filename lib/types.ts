@@ -44,9 +44,11 @@ export type Claim={
 };
 export type Evidence={title:string;url:string;excerpt:string;checked_at:string;source_mode:'LIVE'|'SNAPSHOT'};
 export type Result={claim_id:string;verdict:Verdict;explanation:string;evidence:Evidence[];resolver_id:string;normalized_comparison?:Record<string,string>};
-export type SourceSignal={id:string;kind:'OFFICIAL_WARNING'|'OFFICIAL_PROCESS'|'KNOWN_PATTERN'|'SOURCE_CONFLICT';title:string;summary:string;evidence:Evidence[]};
+export type SourceSignal={id:string;kind:'OFFICIAL_WARNING'|'OFFICIAL_PROCESS'|'OFFICIAL_DIRECTORY'|'KNOWN_PATTERN'|'SOURCE_CONFLICT';title:string;summary:string;evidence:Evidence[]};
+export type VerificationLaneStatus='evidence_found'|'complete'|'unavailable'|'not_applicable';
+export type VerificationLane={id:'court-source'|'public-process'|'official-directory';label:string;status:VerificationLaneStatus;summary:string;evidence:Evidence[];resolver_id:string;duration_ms?:number};
 export type SafeAction={title:string;summary:string;primary_url:string;primary_label:string;steps:string[];evidence:Evidence[]};
-export type Verification={results:Result[];contact?:{name?:string;phone:string;website:string;source:Evidence};resolver_id:string;signals?:SourceSignal[];safe_action?:SafeAction};
+export type Verification={results:Result[];contact?:{name?:string;phone:string;website:string;source:Evidence};resolver_id:string;signals?:SourceSignal[];safe_action?:SafeAction;lanes?:VerificationLane[]};
 
 export const claimSchema=z.object({
  id:z.string(),
