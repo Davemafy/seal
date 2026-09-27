@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- Small local SVG brand marks do not need Next Image optimization. */
 import Link from 'next/link';
 import {browseCases,type BrowseCase} from '@/lib/browse-cases';
 import PdfThumb from './pdf-thumb';
@@ -30,7 +31,7 @@ export default function Browse(){
    <Link href="/" className="rail-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
    <div className="rail-group-label">WORKSPACE</div>
    <Link className="rail-item" href="/">Check a message</Link>
-   <a className="rail-item is-current" href="/browse">Browse real cases</a>
+   <Link className="rail-item is-current" href="/browse">Browse real cases</Link>
    <div className="rail-spacer"/>
    <div className="rail-foot"><strong>Public sources only</strong><span>Every item links back to the issuing court or agency.</span></div>
   </aside>
