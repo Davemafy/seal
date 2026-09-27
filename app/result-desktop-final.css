@@ -1801,3 +1801,23 @@
   min-height:0!important
  }
 }
+
+
+/* Desktop result language lives in the sidebar, not the masthead. */
+@media(min-width:901px){
+ .result-masthead .result-language-control{
+  display:none!important
+ }
+ .check-object-meta:empty{
+  display:none!important
+ }
+ .check-object-meta{
+  margin-top:4px!important
+ }
+ .check-object-identity h1 + .check-object-meta:empty{
+  margin:0!important
+ }
+ .result-chapters{
+  margin-top:12px!important
+ }
+}
