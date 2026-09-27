@@ -1,23 +1,28 @@
 import {browseCases,type BrowseCase} from '@/lib/browse-cases';
 import PdfThumb from './pdf-thumb';
+import ImageThumb from './image-thumb';
 import '../workspace.css';
 import './browse.css';
 
-function CaseMedia({item,priority=false}:{item:BrowseCase;priority?:boolean}){
+function reliabilityScore(item:BrowseCase){
+ if(item.featured&&item.classification==='Confirmed scam example')return 100;
+ if(item.classification==='Confirmed scam example')return 90;
+ if(item.classification==='Legitimate sample/form')return 80;
+ if(item.classification==='Official court scam warning')return 40;
+ return 10;
+}
+
+function CaseMedia({item}:{item:BrowseCase}){
  return <div className={`case-visual ${item.preview.type==='image'?'is-image':'is-pdf'}`}>
   {item.preview.type==='pdf'
-   ?<PdfThumb id={item.id} alt={item.preview.alt} priority={priority}/>
-   :<img
-     className="case-source-image"
-     src={`/api/browse-asset?id=${encodeURIComponent(item.id)}`}
-     alt={item.preview.alt}
-     loading={priority?'eager':'lazy'}
-     fetchPriority={priority?'high':'auto'}
-    />}
+   ?<PdfThumb id={item.id} alt={item.preview.alt}/>
+   :<ImageThumb id={item.id} alt={item.preview.alt}/>}
  </div>;
 }
 
 export default function Browse(){
+ const rankedCases=[...browseCases].sort((a,b)=>reliabilityScore(b)-reliabilityScore(a));
+
  return <main className="seal-app browse-page">
   <aside className="workspace-rail" aria-label="Workspace">
    <a href="/" className="rail-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></a>
@@ -36,14 +41,14 @@ export default function Browse(){
   <section className="browse-shell">
    <header className="browse-intro">
     <h1>Browse real cases</h1>
-    <p>Court-published scam examples and legitimate reference forms. Open the source, or run supported artifacts through SEAL.</p>
+    <p>Actual court documents, published scam notices, and source-backed examples.</p>
    </header>
 
    <div className="case-archive">
-    {browseCases.map((item,index)=><article className={`case-card ${item.featured?'is-featured':''}`} key={item.id}>
-     <CaseMedia item={item} priority={index===0}/>
+    {rankedCases.map(item=><article className="case-card" key={item.id}>
+     <CaseMedia item={item}/>
      <div className="case-copy">
-      <p className="case-kicker">{item.jurisdiction}<span aria-hidden="true"> · </span>{item.classification}</p>
+      <p className="case-kicker">{item.jurisdiction}</p>
       <h2>{item.title}</h2>
       <p className="case-source">Source: {item.sourceTitle}</p>
       <p className="case-note">{item.visualNote}</p>
