@@ -5,10 +5,11 @@ export type BrowserDocument={text:string;tokens:Token[];preview:string;kind:'ima
 
 export function ocrScaleForSize(width:number,height:number){
  if(!width||!height)return 1;
- const desired=Math.max(1600/width,2000/height);
- const maxPixels=4_000_000;
+ const desired=Math.max(1500/width,1900/height);
+ const memory=(typeof navigator!=='undefined'?(navigator as Navigator&{deviceMemory?:number}).deviceMemory:undefined);
+ const maxPixels=memory&&memory<=4?2_000_000:3_000_000;
  const pixelCap=Math.sqrt(maxPixels/(width*height));
- return Math.min(3.5,desired,pixelCap);
+ return Math.min(3,desired,pixelCap);
 }
 
 export const ocrLanguages={eng:'English',spa:'Español',por:'Português',fra:'Français',deu:'Deutsch',hin:'हिन्दी',ara:'العربية'} as const;
@@ -37,24 +38,46 @@ export async function readInBrowser(file:File,onStatus:(status:string)=>void=()=
  if(file.type==='application/pdf'){
   onStatus('Opening the PDF');
   const pdfjs=await import('pdfjs-dist');pdfjs.GlobalWorkerOptions.workerSrc='/pdf.worker.min.mjs';
-  const doc=await pdfjs.getDocument({data:await file.arrayBuffer(),standardFontDataUrl:'/standard_fonts/',useSystemFonts:true}).promise;const pages:string[]=[];const tokens:Token[]=[];let sample=false;
-  onStatus('Reading text from the PDF');
-  for(let i=1;i<=Math.min(doc.numPages,8);i++){
-   const page=await doc.getPage(i);const viewport=page.getViewport({scale:1});const content=await page.getTextContent();let pageText='';
-   for(const item of content.items){
-    if(!('str' in item))continue;
-    const str=item.str as string;const offset=pages.join('\n').length+pageText.length;const transform=item.transform as number[];
-    if(/^sample$/i.test(str.trim())&&Math.hypot(transform[0],transform[1])>30)sample=true;
-    const x=transform[4]/viewport.width,y=1-(transform[5]+(item.height as number))/viewport.height;
-    tokens.push({page:i,text:str,x,y,width:(item.width as number)/viewport.width,height:(item.height as number)/viewport.height,start:offset,end:offset+str.length,confidence:100});
-    pageText+=str+(item.hasEOL?'\n':' ');
+  const loading=pdfjs.getDocument({data:await file.arrayBuffer(),standardFontDataUrl:'/standard_fonts/',useSystemFonts:true});
+  const doc=await loading.promise;
+  const pages:string[]=[];const tokens:Token[]=[];let sample=false;
+  try{
+   onStatus('Reading text from the PDF');
+   for(let i=1;i<=Math.min(doc.numPages,8);i++){
+    const page=await doc.getPage(i);const viewport=page.getViewport({scale:1});const content=await page.getTextContent();let pageText='';
+    for(const item of content.items){
+     if(!('str' in item))continue;
+     const str=item.str as string;const offset=pages.join('\n').length+pageText.length;const transform=item.transform as number[];
+     if(/^sample$/i.test(str.trim())&&Math.hypot(transform[0],transform[1])>30)sample=true;
+     const x=transform[4]/viewport.width,y=1-(transform[5]+(item.height as number))/viewport.height;
+     tokens.push({page:i,text:str,x,y,width:(item.width as number)/viewport.width,height:(item.height as number)/viewport.height,start:offset,end:offset+str.length,confidence:100});
+     pageText+=str+(item.hasEOL?'\n':' ');
+    }
+    pages.push(pageText.trim());
+    page.cleanup();
    }
-   pages.push(pageText.trim());
+   const text=pages.join('\n');
+   if(text.trim().length>20)return {text,tokens,preview,kind:'pdf',uncertain:false,sample,unreadableFields:[]};
+
+   onStatus('Scanning the first page');
+   const page=await doc.getPage(1);
+   const base=page.getViewport({scale:1});
+   const maxPixels=1_800_000;
+   const scanScale=Math.min(1.7,Math.sqrt(maxPixels/(base.width*base.height)));
+   const viewport=page.getViewport({scale:scanScale});
+   const canvas=document.createElement('canvas');
+   canvas.width=Math.max(1,Math.round(viewport.width));canvas.height=Math.max(1,Math.round(viewport.height));
+   const context=canvas.getContext('2d');
+   if(!context)throw new Error('Could not prepare this PDF page.');
+   const renderTask=page.render({canvas,canvasContext:context,viewport});
+   await renderTask.promise;
+   const recognized=await ocr(canvas,language);
+   page.cleanup();
+   canvas.width=1;canvas.height=1;
+   return {...recognized,preview,kind:'pdf',sample};
+  }finally{
+   try{await doc.destroy()}catch{}
   }
-  const text=pages.join('\n');if(text.trim().length>20)return {text,tokens,preview,kind:'pdf',uncertain:false,sample,unreadableFields:[]};
-  onStatus('Scanning the first page');
-  const page=await doc.getPage(1);const viewport=page.getViewport({scale:2});const canvas=document.createElement('canvas');canvas.width=viewport.width;canvas.height=viewport.height;await page.render({canvas,canvasContext:canvas.getContext('2d')!,viewport}).promise;
-  const recognized=await ocr(canvas,language);return {...recognized,preview,kind:'pdf',sample};
  }
  onStatus('Preparing the image');
  const image=new Image();image.src=preview;await image.decode();
@@ -266,13 +289,22 @@ async function ocr(image:HTMLImageElement|HTMLCanvasElement,language:OcrLanguage
  try{
   const first=await recognize(worker,image);
   if(!shouldRetryOcr(first))return first.result;
-  const second=await recognize(worker,binaryVariant(image));
-  const primary=second.quality>first.quality?second:first;
-  const alternate=primary===first?second:first;
-  return mergeCandidates(primary,alternate);
- }catch(error){
-  ocrWorkerPromise=null;
-  try{await worker.terminate()}catch{}
-  throw error;
+  const variant=binaryVariant(image);
+  try{
+   const second=await recognize(worker,variant);
+   const primary=second.quality>first.quality?second:first;
+   const alternate=primary===first?second:first;
+   return mergeCandidates(primary,alternate);
+  }finally{
+   variant.width=1;variant.height=1;
+  }
+ }finally{
+  // Tesseract's WASM heap is large on mobile. Do not keep it resident after
+  // the scan has completed; the result screen also needs memory for PDF/image rendering.
+  if(ocrWorkerPromise){
+   ocrWorkerPromise=null;
+   try{await worker.terminate()}catch{}
+  }
+  if(image instanceof HTMLCanvasElement){image.width=1;image.height=1}
  }
 }
