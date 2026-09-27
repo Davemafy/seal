@@ -1179,3 +1179,131 @@
   padding:15px!important
  }
 }
+
+
+/* Result supporting type scale — keep titles, raise everything around them. */
+@media(min-width:901px){
+ /* Keep .check-object-identity h1 and .decision h1 untouched. */
+
+ .result-masthead-title{
+  font-size:14px!important;
+  line-height:20px!important;
+  font-weight:600!important
+ }
+ .check-object-meta{
+  gap:6px 16px!important;
+  font-size:14px!important;
+  line-height:20px!important
+ }
+
+ .result-chapters a{
+  min-height:40px!important;
+  padding:9px 14px!important;
+  font-size:14.5px!important;
+  line-height:21px!important
+ }
+
+ .result-slide-summary .decision-status{
+  margin-bottom:10px!important;
+  font-size:14px!important;
+  line-height:20px!important;
+  font-weight:600!important
+ }
+ .result-slide-summary .decision-summary{
+  max-width:620px!important;
+  margin-top:16px!important;
+  font-size:18px!important;
+  line-height:27px!important
+ }
+
+ .result-slide-summary .decision-primary-route>span{
+  margin-bottom:9px!important;
+  font-size:14px!important;
+  line-height:20px!important
+ }
+ .result-slide-summary .decision-primary-route>a{
+  min-height:46px!important;
+  padding:12px 15px!important;
+  font-size:15px!important;
+  line-height:21px!important
+ }
+ .result-slide-summary .decision-primary-route>small{
+  margin-top:9px!important;
+  font-size:14px!important;
+  line-height:20px!important
+ }
+
+ .result-slide-summary .decision-at-a-glance span{
+  margin-bottom:5px!important;
+  font-size:13.5px!important;
+  line-height:19px!important
+ }
+ .result-slide-summary .decision-at-a-glance strong{
+  font-size:15.5px!important;
+  line-height:22px!important
+ }
+
+ .result-slide-summary .decision-details>summary{
+  min-height:52px!important;
+  padding-inline:16px!important;
+  font-size:14.5px!important;
+  line-height:21px!important
+ }
+
+ .result-slide-summary .decision-details-body,
+ .result-slide-summary .decision-details-body p,
+ .result-slide-summary .decision-details-body li,
+ .result-slide-summary .decision-risk-row strong,
+ .result-slide-summary .decision-risk-row small,
+ .result-slide-summary .decision-claim,
+ .result-slide-summary .decision-evidence{
+  font-size:14px!important;
+  line-height:21px!important
+ }
+
+ .result-slide-original,
+ .result-slide-evidence,
+ .result-slide-resolve{
+  font-size:16px!important;
+  line-height:24px!important
+ }
+ .result-slide-original small,
+ .result-slide-evidence small,
+ .result-slide-resolve small,
+ .evidence-source-meta,
+ .evidence-source-note,
+ .record-subheading>small,
+ .check-record-details dt,
+ .check-record-details dd{
+  font-size:14px!important;
+  line-height:20px!important
+ }
+ .section-heading p,
+ .record-subheading>span{
+  font-size:15px!important;
+  line-height:22px!important
+ }
+ .safe-route a,
+ .official-directory-route a,
+ .unsupported-next-step a{
+  font-size:15px!important;
+  line-height:21px!important
+ }
+}
+
+@media(min-width:901px) and (max-width:1180px){
+ .result-masthead-title,
+ .check-object-meta,
+ .result-slide-summary .decision-status,
+ .result-slide-summary .decision-primary-route>span,
+ .result-slide-summary .decision-primary-route>small,
+ .result-slide-summary .decision-at-a-glance span,
+ .result-slide-summary .decision-details>summary{
+  font-size:13.5px!important;
+  line-height:20px!important
+ }
+ .result-slide-summary .decision-summary{
+  font-size:16.5px!important;
+  line-height:25px!important
+ }
+}
