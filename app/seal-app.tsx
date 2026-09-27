@@ -1109,7 +1109,7 @@ async function upload(uploaded:File){
    <section className={`entry-shell ${busy?'is-processing':''}`} data-testid="entry-shell">
    <div className="entry-copy">
      <h1>Check a court message</h1>
-     <p>See what it asks you to do, what the court can confirm, and where to check next.</p>
+     <p>See what it asks you to do, what independent public sources can confirm, and where to check next.</p>
     </div>
 
     <div className={`intake ${pasteMode?'is-paste-mode':'is-upload-mode'} ${busy?'is-processing-intake':''}`}>
