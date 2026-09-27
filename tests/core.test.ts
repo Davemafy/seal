@@ -1,6 +1,24 @@
 import {describe,it,expect,vi} from 'vitest';import {fallbackExtract,claimsFromExtraction,extractActionGraph,extractAuthorityCitations,locatePhrase,recoverLabeledJurorNumber,recoverLabeledReportingDate,sanitizeStructuredExtraction} from '../lib/extract';import {ocrScaleForSize} from '../lib/browser-file';import {extractionSchema,type Token} from '../lib/types';import {verdict,verifyClaims,phoneDigits,domain,address,FederalCourtListenerResolver} from '../lib/resolver';import {fixtures} from '../lib/fixtures';
 import {readFileSync} from 'node:fs';
+import {officialCourtDirectoryFor} from '../lib/official-directories';
 const claims=(key:keyof typeof fixtures)=>{const t=fixtures[key].text,e=fallbackExtract(t);return {t,e,c:claimsFromExtraction(e,t)}};
+describe('independent court directory routing',()=>{
+ it('routes clearly identified India court text to official eCourts',()=>{
+  const route=officialCourtDirectoryFor('DISTRICT COURT — NEW DELHI, INDIA\nYou must appear on October 14.');
+  expect(route?.id).toBe('india-ecourts');
+  expect(route?.url).toBe('https://services.ecourts.gov.in/ecourtindia_v6/');
+ });
+ it('routes other clearly identified jurisdictions to official directories',()=>{
+  expect(officialCourtDirectoryFor('Tribunal judiciaire de Paris, France')?.id).toBe('france-justice-directory');
+  expect(officialCourtDirectoryFor('Juzgado de Primera Instancia de Madrid, España')?.id).toBe('spain-cgpj-directory');
+  expect(officialCourtDirectoryFor('Tribunal de Justiça do Paraná, Brasil')?.id).toBe('brazil-cnj-directory');
+  expect(officialCourtDirectoryFor('Federal High Court of Nigeria, Lagos Division')?.id).toBe('nigeria-fhc-divisions');
+ });
+ it('does not invent a country route from an ambiguous fictional court',()=>{
+  expect(officialCourtDirectoryFor('Northbridge District Court. Call the clerk tomorrow.')).toBeUndefined();
+ });
+});
+
 describe('extraction and source links',()=>{
  it('validates schema and does not convert juror IDs to dockets',()=>{const {e}=claims('riverside-mismatch-demo');expect(extractionSchema.parse(e)).toEqual(e);expect(e.juror_or_reference_number).toBe('10472893');expect(e.case_or_docket_number).toBe('');expect(e.delivery_method).toBe('text message')});
  it('normalizes only comparable values',()=>{expect(phoneDigits('(951) 275-5076')).toBe('9512755076');expect(domain('https://www.riverside.courts.ca.gov/path')).toBe('riverside.courts.ca.gov');expect(address('4050 Main Street, Riverside, CA 92501')).toBe(address('4050 Main St Riverside CA 92501'))});
