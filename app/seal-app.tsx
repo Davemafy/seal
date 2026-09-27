@@ -211,6 +211,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const initialRunStarted=useRef(false);
  const filePickerArmed=useRef(false);
  const sourceBlobRef=useRef<Blob|null>(null);
+ const activeReadRef=useRef<AbortController|null>(null);
+ const activeRequestRef=useRef<AbortController|null>(null);
  const input=useRef<HTMLInputElement>(null);
  const anchors=useRef<Record<string,HTMLElement|null>>({});
  const runId=useRef(0);
@@ -651,13 +653,18 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   window.history.replaceState(null,'',window.location.pathname);
   initialRunStarted.current=true;
   void (async()=>{
+   const controller=new AbortController();
+   activeReadRef.current?.abort();
+   activeReadRef.current=controller;
+   const handoffId=runId.current;
    try{
     setBusy(true);
     setStatus('Opening the source document');
     const [caseResponse,assetResponse]=await Promise.all([
-     fetch(`/api/browse-case?id=${encodeURIComponent(caseId)}`),
-     fetch(`/api/browse-asset?id=${encodeURIComponent(caseId)}`)
+     fetch(`/api/browse-case?id=${encodeURIComponent(caseId)}`,{signal:controller.signal}),
+     fetch(`/api/browse-asset?id=${encodeURIComponent(caseId)}`,{signal:controller.signal})
     ]);
+    if(controller.signal.aborted||runId.current!==handoffId)return;
     if(!caseResponse.ok)throw new Error('Case unavailable');
     const payload=await caseResponse.json() as {runText?:string;assetType?:'pdf'|'image';ocrLanguage?:OcrLanguage;title?:string};
     const seededText=payload.runText?.trim()||'';
@@ -670,7 +677,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      const sourceFile=new File([blob],`${caseId}.${extension}`,{type});
      sourceBlobRef.current=sourceFile;
      setStatus('Opening the source document');
-     const doc=await readInBrowser(sourceFile,next=>setStatus(next),payload.ocrLanguage||ocrLanguage);
+     const doc=await readInBrowser(sourceFile,next=>{if(!controller.signal.aborted&&runId.current===handoffId)setStatus(next)},payload.ocrLanguage||ocrLanguage,controller.signal);
+     if(controller.signal.aborted||runId.current!==handoffId){URL.revokeObjectURL(doc.preview);return}
      const analysisText=seededText||doc.text;
      if(!analysisText.trim())throw new Error('Case text unavailable');
      setFile(doc);
@@ -682,11 +690,14 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
     }
 
     throw new Error('Case asset unavailable');
-   }catch{
+   }catch(error){
+    if(controller.signal.aborted||runId.current!==handoffId)return;
     setBusy(false);
     setStatus('');
     initialRunStarted.current=false;
     setError('This browse case could not be opened. You can still upload or paste a message.');
+   }finally{
+    if(activeReadRef.current===controller)activeReadRef.current=null;
    }
   })();
  },[hydrated,initialRun,initialText]);
@@ -816,6 +827,10 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
 
  function clear(){
   clearResultSession();
+  activeReadRef.current?.abort();
+  activeReadRef.current=null;
+  activeRequestRef.current?.abort();
+  activeRequestRef.current=null;
   sourceBlobRef.current=null;
   if(typeof window!=='undefined'&&(window.location.search||window.location.hash)){
    window.history.replaceState(null,'',window.location.pathname);
@@ -834,16 +849,19 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
 async function upload(uploaded:File){
   clear();
   sourceBlobRef.current=uploaded;
+  const controller=new AbortController();
+  activeReadRef.current=controller;
   const uploadId=runId.current;setBusy(true);setStatus('Preparing your file');
   try{
-   const doc=await readInBrowser(uploaded,next=>{if(runId.current===uploadId)setStatus(next)},ocrLanguage);
+   const doc=await readInBrowser(uploaded,next=>{if(!controller.signal.aborted&&runId.current===uploadId)setStatus(next)},ocrLanguage,controller.signal);
    if(runId.current!==uploadId){URL.revokeObjectURL(doc.preview);return}
    setFile(doc);setText(doc.text);
    if(!doc.text.trim()&&!doc.uncertain)setError('We couldn’t read enough from this file. Try a clearer image or paste the message.');
    else await run('SNAPSHOT',{text:doc.text,file:doc});
   }catch(e){
-   if(runId.current===uploadId)setError(e instanceof Error?e.message:'Could not read this file.');
+   if(!controller.signal.aborted&&runId.current===uploadId)setError(e instanceof Error?e.message:'Could not read this file.');
   }finally{
+   if(activeReadRef.current===controller)activeReadRef.current=null;
    if(runId.current===uploadId){setBusy(false);setStatus('')}
   }
  }
@@ -854,6 +872,10 @@ async function upload(uploaded:File){
   const sourceCurated=Boolean(source?.curated);
   const curatedCaseId=source?.curatedCaseId;
   const sourceIsDemo=!sourceFile&&/^DEMO \/ (?:FICTIONAL NOTICE|SYNTHETIC MESSAGE)/.test(sourceText);
+  activeRequestRef.current?.abort();
+  const controller=new AbortController();
+  activeRequestRef.current=controller;
+  const requestTimeout=window.setTimeout(()=>controller.abort(),30000);
   const id=++runId.current;
   setBusy(true);setError('');setVerification(null);setRevealed(0);setSelected('');setTechnicalOpen(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryStartPending(false);setMode(sourceMode);setStatus('Reading requested actions');
   try{
@@ -865,8 +887,11 @@ async function upload(uploaded:File){
 
    if(!sourceIsDemo){
     let response:Response;
-    try{response=await fetch('/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:sourceText})});}
-    catch{throw new Error('We couldn’t reach the instruction reader. Please try again in a moment.');}
+    try{response=await fetch('/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:sourceText}),signal:controller.signal});}
+    catch(error){
+     if(controller.signal.aborted)throw new DOMException('Check cancelled.','AbortError');
+     throw new Error('We couldn’t reach the instruction reader. Please try again in a moment.');
+    }
     if(!response.ok)throw new Error('We couldn’t reliably read the important instructions right now. Please try again in a moment.');
     const data=await response.json();
     extraction=data.extraction;
@@ -914,7 +939,8 @@ async function upload(uploaded:File){
    const response=await fetch('/api/verify',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({claims:verifiable,court_name:routingCourt,jurisdiction_hint:'',mode:sourceMode,text:sourceText,curated_case_id:curatedCaseId})
+    body:JSON.stringify({claims:verifiable,court_name:routingCourt,jurisdiction_hint:'',mode:sourceMode,text:sourceText,curated_case_id:curatedCaseId}),
+    signal:controller.signal
    });
    if(!response.ok)throw new Error('The source check could not finish. Try again.');
 
@@ -952,8 +978,11 @@ async function upload(uploaded:File){
     }:undefined
    },sourceFile?sourceBlobRef.current:null);
   }catch(e){
-   if(runId.current===id)setError(e instanceof Error?e.message:'The source check could not finish.');
+   const aborted=e instanceof DOMException&&e.name==='AbortError';
+   if(!aborted&&runId.current===id)setError(e instanceof Error?e.message:'The source check could not finish.');
   }finally{
+   window.clearTimeout(requestTimeout);
+   if(activeRequestRef.current===controller)activeRequestRef.current=null;
    if(runId.current===id){setBusy(false);setStatus('')}
   }
  }
@@ -1003,7 +1032,7 @@ async function upload(uploaded:File){
   </div>;
  })}</div>;
 
- return <main className="seal-app">
+ return <main className="seal-app" data-testid="seal-app">
   <aside className="workspace-rail" aria-label="Workspace">
    <a href="/" className="rail-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></a>
    <div className="rail-group-label">WORKSPACE</div>
@@ -1020,7 +1049,7 @@ async function upload(uploaded:File){
   </header>
 
   {!verification?
-   <section className={`entry-shell ${busy?'is-processing':''}`}>
+   <section className={`entry-shell ${busy?'is-processing':''}`} data-testid="entry-shell">
    <div className="entry-copy">
      <h1>Check a court message</h1>
      <p>See what it asks you to do, what the court can confirm, and where to check next.</p>
@@ -1078,7 +1107,7 @@ async function upload(uploaded:File){
 
    </section>
    :
-   <section className="review-shell"
+   <section className="review-shell" data-testid="result-shell"
     onPointerDownCapture={event=>{if(reviewOffer==='counting'&&!(event.target as Element).closest('[data-review-offer]'))skipReviewOffer()}}
     onDragOver={event=>{if(event.dataTransfer.types.includes('Files'))event.preventDefault()}}
     onDrop={event=>{if(event.dataTransfer.files.length){event.preventDefault();skipReviewOffer();upload(event.dataTransfer.files[0])}}}>
@@ -1126,7 +1155,7 @@ async function upload(uploaded:File){
     {file?.sample&&<div className="source-failure sample-warning" role="status"><strong>SAMPLE DOCUMENT</strong><span>Example form only — not a summons to act on.</span></div>}
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
 
-    {verification&&ready&&storyOpen&&<div className={`story-overlay ${storyClosing?'is-closing':''}`} role="dialog" aria-modal="true" aria-label="SEAL verification review">
+    {verification&&ready&&storyOpen&&<div className={`story-overlay ${storyClosing?'is-closing':''}`} data-testid="evidence-review" role="dialog" aria-modal="true" aria-label="SEAL verification review">
      <div ref={storyPlayerRef} className={`story-player ${storyPlaying?'is-playing':'is-paused'} ${storyFocusBox?'has-story-focus':'no-story-focus'}`}>
       <div className="story-topbar">
        <span className="story-brand"><img src="/brand/seal-mark-white.svg" alt=""/><span>SEAL</span></span>
@@ -1291,7 +1320,7 @@ async function upload(uploaded:File){
          {directCheckSummary&&<small className="decision-direct-check">{directCheckSummary}</small>}
         </div>
 
-        {reviewWorthWatching&&!storyOpen&&<button type="button" className="decision-review-player" onClick={replayStory}>
+        {reviewWorthWatching&&!storyOpen&&<button type="button" className="decision-review-player" data-testid="play-evidence-review" onClick={replayStory}>
          <span className="decision-review-play" aria-hidden="true"><DesignPlayIcon/></span>
          <span><strong>Play evidence review</strong><small>17 sec · message → source → next step</small></span>
         </button>}
