@@ -2373,7 +2373,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   const onPopState=()=>{
    const routedId=workspaceIdFromPath(window.location.pathname);
    if(!routedId)return;
-   setWorkspaces(items=>items.some(item=>item.id===routedId)?items:[...items,{id:routedId,title:'New check',status:'idle'}].slice(-8));
+   setWorkspaces(items=>items.some(item=>item.id===routedId)?items:[...items,{id:routedId,title:'New check',status:'idle' as WorkspaceRunStatus}].slice(-8));
    setActiveWorkspace(routedId);
    window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
   };
@@ -2460,7 +2460,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   const remaining=workspaces.filter(item=>item.id!==id);
   if(!remaining.length){
    const replacementId=`check-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
-   setWorkspaces([{id:replacementId,title:'New check',status:'idle'}]);
+   setWorkspaces([{id:replacementId,title:'New check',status:'idle' as WorkspaceRunStatus}]);
    setActiveWorkspace(replacementId);
    window.history.replaceState({workspaceId:replacementId},'',checkRoute(replacementId));
   }else{
