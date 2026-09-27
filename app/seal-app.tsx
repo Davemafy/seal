@@ -1090,18 +1090,12 @@ async function upload(uploaded:File){
            {uploadPreview?.kind==='image'
             ?<img src={uploadPreview.url} alt="Selected court message"/>
             :<span className="upload-pdf-preview" aria-hidden="true"><b>PDF</b><i/></span>}
-           <span className="upload-scan-line" aria-hidden="true"/>
           </span>
           <span className="upload-process-body">
            <span className="upload-process-label">{processingStage===2?'PUBLIC SOURCE CHECK':processingStage===1?'MESSAGE STRUCTURE':'ON THIS DEVICE'}</span>
            <strong>{processingTitle}</strong>
            <small>{processingDetail}</small>
            {uploadPreview?.name&&<span className="upload-file-name" title={uploadPreview.name}>{uploadPreview.name}</span>}
-           <span className="upload-stage-rail" aria-label={`Step ${processingStage+1} of 3`}>
-            <span className={`upload-stage ${processingStage>0?'is-complete':processingStage===0?'is-current':''}`}>Read</span>
-            <span className={`upload-stage ${processingStage>1?'is-complete':processingStage===1?'is-current':''}`}>Find action</span>
-            <span className={`upload-stage ${processingStage===2?'is-current':''}`}>Check sources</span>
-           </span>
           </span>
          </span>
          :<span className="upload-group">
