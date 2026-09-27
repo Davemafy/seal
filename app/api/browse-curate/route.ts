@@ -141,7 +141,17 @@ export async function POST(req:Request){
   });
   let response=await send(true);
   if(!response.ok&&response.status!==429)response=await send(false);
-  if(!response.ok)return Response.json({error:'Curator provider unavailable',category:`provider_${response.status}`},{status:502});
+  if(!response.ok){
+   const providerStatus=response.status;
+   const status=providerStatus===429?429:providerStatus>=500?503:424;
+   const retryAfter=response.headers.get('retry-after');
+   const headers:{[key:string]:string}={'Cache-Control':'no-store'};
+   if(retryAfter)headers['Retry-After']=retryAfter;
+   return Response.json(
+    {error:'Curator provider unavailable',category:`provider_${providerStatus}`},
+    {status,headers}
+   );
+  }
   const body=await response.json() as {choices?:{message?:{content?:string}}[]};
   const result=curatorSchema.parse(JSON.parse(body.choices?.[0]?.message?.content||'{}'));
   return Response.json(result,{headers:{'Cache-Control':'no-store'}});
