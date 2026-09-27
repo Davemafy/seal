@@ -1777,7 +1777,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
 
  const createWorkspace=useCallback(()=>{
   const id=`check-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
-  setWorkspaces(items=>[...items,{id,title:'New check',status:'idle'}].slice(-8));
+  setWorkspaces(items=>[...items,{id,title:'New check',status:'idle' as WorkspaceRunStatus}].slice(-8));
   setActiveWorkspace(id);
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
  },[]);
