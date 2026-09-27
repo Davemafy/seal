@@ -1567,13 +1567,13 @@ async function upload(uploaded:File){
        <p className="result-masthead-title">{ui('resultTitle')}</p>
        <h1>{checkObjectTitle}</h1>
        <div className="check-object-meta">
-        {checkObjectReference&&<span>Case/reference {checkObjectReference}</span>}
-        <span>{resultStatusLabel}</span>
-        {documentLanguage?.label&&<span data-testid="document-language">{documentLanguage.label}</span>}
-        {jurisdiction&&<span data-testid="document-jurisdiction">{jurisdiction}</span>}
-        {displayLocale!=='en'&&<span data-testid="display-language">Viewing in {DISPLAY_LANGUAGES[displayLocale]}</span>}
-        {checkDateLabel&&<span>Checked {checkDateLabel}</span>}
-        <span>{checkSourceCount?checkSourceCount+' public source'+(checkSourceCount===1?'':'s'):'No independent source attached'}</span>
+        {checkObjectReference&&<span className="meta-reference">Case/reference {checkObjectReference}</span>}
+        <span className="meta-status">{resultStatusLabel}</span>
+        {documentLanguage?.label&&<span className="meta-language" data-testid="document-language">{documentLanguage.label}</span>}
+        {jurisdiction&&<span className="meta-jurisdiction" data-testid="document-jurisdiction">{jurisdiction}</span>}
+        {displayLocale!=='en'&&<span className="meta-display-language" data-testid="display-language">Viewing in {DISPLAY_LANGUAGES[displayLocale]}</span>}
+        {checkDateLabel&&<span className="meta-date">Checked {checkDateLabel}</span>}
+        <span className="meta-sources">{checkSourceCount?checkSourceCount+' public source'+(checkSourceCount===1?'':'s'):'No independent source attached'}</span>
        </div>
       </div>
       <div className="check-object-actions" aria-label="Check actions">
