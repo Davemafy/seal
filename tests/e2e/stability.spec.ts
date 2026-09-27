@@ -151,18 +151,22 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  await chapters.getByRole('link',{name:'Original'}).click();
  await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeGreaterThan(metrics.width-12);
  await expect(chapters.getByRole('link',{name:'Original'})).toHaveAttribute('aria-current','location');
- const originalSlide=page.locator('[data-result-section="message"]');
- await originalSlide.evaluate(node=>node.scrollTo({top:220,behavior:'auto'}));
- expect(await originalSlide.evaluate(node=>node.scrollTop)).toBeGreaterThan(100);
 
  await chapters.getByRole('link',{name:'Evidence'}).click();
  await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeGreaterThan(metrics.width*2-12);
- await chapters.getByRole('link',{name:'Original'}).click();
- await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeLessThan(metrics.width+12);
- expect(await originalSlide.evaluate(node=>node.scrollTop),'tab entry should restart at the top rather than restore a stale internal scroll position').toBeLessThanOrEqual(2);
 
  await chapters.getByRole('link',{name:'Resolve'}).click();
  await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeGreaterThan(metrics.width*3-12);
+ const resolveSlide=page.locator('[data-result-section="next"]');
+ await resolveSlide.evaluate(node=>node.scrollTo({top:240,behavior:'auto'}));
+ expect(await resolveSlide.evaluate(node=>node.scrollTop)).toBeGreaterThan(100);
+
+ await chapters.getByRole('link',{name:'Evidence'}).click();
+ await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeGreaterThan(metrics.width*2-12);
+ await chapters.getByRole('link',{name:'Resolve'}).click();
+ await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeGreaterThan(metrics.width*3-12);
+ expect(await resolveSlide.evaluate(node=>node.scrollTop),'tab entry should restart at the top rather than restore a stale internal scroll position').toBeLessThanOrEqual(2);
+
  await chapters.getByRole('link',{name:'Summary'}).click();
  await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:3000}).toBeLessThan(4);
  const scrollCalls=await carousel.evaluate(node=>(node as HTMLElement & {__sealScrollCalls?:Array<ScrollToOptions>}).__sealScrollCalls||[]);
