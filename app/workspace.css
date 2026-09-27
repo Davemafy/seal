@@ -4125,3 +4125,45 @@
   overflow:visible!important;
  }
 }
+
+
+/* Evidence playback belongs with evidence, not the summary. */
+.result-slide-summary .decision-review-player{
+ display:none!important;
+}
+.result-slide-evidence .evidence-review-entry{
+ width:min(100%,980px)!important;
+ display:flex!important;
+ align-items:center!important;
+ gap:12px!important;
+ margin:0 auto 28px!important;
+ padding:0!important;
+ border:0!important;
+ background:transparent!important;
+ color:#171717!important;
+ text-align:left!important
+}
+.result-slide-evidence .evidence-review-icon{
+ width:36px!important;
+ height:36px!important;
+ flex:0 0 36px!important;
+ display:grid!important;
+ place-items:center!important;
+ border-radius:6px!important;
+ background:#111!important;
+ color:#fff!important
+}
+.result-slide-evidence .evidence-review-entry>span:last-child{
+ display:grid!important;
+ gap:1px!important
+}
+.result-slide-evidence .evidence-review-entry strong{
+ font-size:13px!important;
+ line-height:19px!important;
+ font-weight:600!important
+}
+.result-slide-evidence .evidence-review-entry small{
+ color:#777!important;
+ font-size:11px!important;
+ line-height:17px!important
+}
