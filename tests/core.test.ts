@@ -65,6 +65,18 @@ describe('Connecticut court-source coverage',()=>{
 });
 
 
+describe('Pasted instruction reliability',()=>{
+ it('keeps a clear pasted court instruction on the deterministic action path',()=>{
+  const text='UNITED STATES DISTRICT COURT — DISTRICT OF CONNECTICUT\\nJURY STATUS CHECK\\nCall 1-866-388-2430 after 5:30 PM for the status of your jury service.';
+  const extraction=fallbackExtract(text);
+  expect(extraction.requested_actions).toHaveLength(1);
+  expect(extraction.requested_actions?.[0]).toMatchObject({kind:'contact',verb:'call',target_type:'phone',target_value:'1-866-388-2430'});
+  const action=claimsFromExtraction(extraction,text).find(claim=>claim.action?.kind==='contact');
+  expect(action?.verification_eligible).toBe(true);
+  expect(action?.exact_source_text).toContain('Call 1-866-388-2430 after 5:30 PM');
+ });
+});
+
 describe('Action-first jury scam flow',()=>{
  it('extracts the requested callback, payment, and information request as separate atomic actions',()=>{
   const {t,e,c}=claims('action-message-demo');
