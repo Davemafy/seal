@@ -1905,7 +1905,7 @@ async function upload(uploaded:File){
 
     <div ref={resultCarouselRef} className="result-carousel" data-testid="result-carousel" onScroll={syncResultCarousel}>
      <div className="review-hero">
-     <div className="decision-pane result-screen result-screen-summary result-slide" data-result-section="summary" id={sectionId('review-summary')}>
+     <div className="decision-pane result-screen result-screen-summary result-slide result-slide-summary" data-result-section="summary" id={sectionId('review-summary')}>
       {!verification?
        <div className={`precheck ${error?'has-error':''}`}>
         <h1>{busy?'Checking this message':error?(file?'We couldn’t check this image.':'We couldn’t check this message.'):'Ready to check this message.'}</h1>
@@ -1998,7 +1998,7 @@ async function upload(uploaded:File){
        </div>}
      </div>
 
-     <div className="document-zone result-screen result-screen-original result-slide" data-result-section="message" id={sectionId('original-message')}>
+     <div className="document-zone result-screen result-screen-original result-slide result-slide-original" data-result-section="message" id={sectionId('original-message')}>
       <div className="document-heading"><span>Original message</span><span>{file?.kind==='pdf'?'PDF':file?'Image':'Text'}</span></div>
       <div className={`document-paper ${!file?'is-text-document':''}`}>
        {isActionDemo?
