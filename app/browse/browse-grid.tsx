@@ -34,6 +34,9 @@ export default function BrowseGrid({items}:{items:BrowseCase[]}){
  const [filter,setFilter]=useState<BrowseFilter>('all');
  const visible=items.filter(item=>matchesFilter(item,filter));
 
+ const featured=visible[0];
+ const library=visible.slice(1);
+
  return <>
   <div className="case-filter-row" role="group" aria-label="Filter source documents">
    {filters.map(option=><button
@@ -45,23 +48,43 @@ export default function BrowseGrid({items}:{items:BrowseCase[]}){
    >{option.label}</button>)}
   </div>
 
-  <p className="case-filter-count" aria-live="polite">{visible.length} {visible.length===1?'document':'documents'}</p>
+  <div className="case-library-head">
+   <p className="case-filter-count" aria-live="polite">{visible.length} {visible.length===1?'source':'sources'}</p>
+   <span>Original court and agency material</span>
+  </div>
 
-  <div className="case-archive">
-   {visible.map((item,index)=><article className="case-card" key={item.id}>
-    <CaseMedia item={item} priority={index<2}/>
+  {featured&&<article className="case-feature" key={featured.id}>
+   <div className="case-feature-media">
+    <CaseMedia item={featured} priority/>
+   </div>
+   <div className="case-feature-copy">
+    <span className="case-feature-label">Featured source</span>
+    <p className="case-kicker"><span>{featured.jurisdiction}</span><span>{featured.language||'English'}</span></p>
+    <h2>{featured.title}</h2>
+    <p className="case-context"><span>{featured.classification}</span><span aria-hidden="true">·</span><strong>Original source attached</strong></p>
+    <p className="case-note">{featured.visualNote}</p>
+    <p className="case-source">Source: {featured.sourceTitle}</p>
+    <div className="case-actions">
+     <Link className="case-run-action" href={`/?case=${featured.id}`}>Check in SEAL</Link>
+     <a className="case-source-action" href={featured.sourceUrl} target="_blank" rel="noopener noreferrer">Open source</a>
+    </div>
+   </div>
+  </article>}
+
+  {!!library.length&&<div className="case-library-grid">
+   {library.map((item,index)=><article className="case-library-card" key={item.id}>
+    <CaseMedia item={item} priority={index<1}/>
     <div className="case-copy">
      <p className="case-kicker"><span>{item.jurisdiction}</span><span>{item.language||'English'}</span></p>
      <h2>{item.title}</h2>
      <p className="case-context"><span>{item.classification}</span><span aria-hidden="true">·</span><strong>Original source attached</strong></p>
      <p className="case-note">{item.visualNote}</p>
-     <p className="case-source">Source: {item.sourceTitle}</p>
      <div className="case-actions">
       <Link className="case-run-action" href={`/?case=${item.id}`}>Check in SEAL</Link>
       <a className="case-source-action" href={item.sourceUrl} target="_blank" rel="noopener noreferrer">Open source</a>
      </div>
     </div>
    </article>)}
-  </div>
+  </div>}
  </>;
 }
