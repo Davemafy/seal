@@ -121,7 +121,7 @@ Repository: https://github.com/Davemafy/seal
 
 - public repository opens without authentication
 - deployed Cloudflare URL opens in a fresh/private browser
-- Dallas Browse → Run in SEAL path works
+- Dallas Browse / Run in SEAL path works
 - Connecticut legitimate contrast works
 - India coverage-limit demo ends in abstention and links to official eCourts
 - demo video is under 3 minutes
