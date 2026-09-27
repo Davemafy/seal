@@ -113,12 +113,21 @@ export default function PDFPreview({url,claims,active,anchors,onSelect}:{url:str
     const pdfPage=await doc.getPage(requestedPage);
     if(cancelled||documentRef.current!==doc)return;
 
-    const viewport=pdfPage.getViewport({scale:1.8});
     const c=canvas.current;
     if(!c||cancelled)return;
 
-    c.width=viewport.width;
-    c.height=viewport.height;
+    const base=pdfPage.getViewport({scale:1});
+    const cssWidth=Math.max(280,c.parentElement?.clientWidth||base.width);
+    const dpr=Math.min(1.5,window.devicePixelRatio||1);
+    const desiredScale=Math.max(.85,(cssWidth/base.width)*dpr);
+    const mobile=window.matchMedia('(max-width: 599px)').matches;
+    const maxPixels=mobile?1_250_000:2_000_000;
+    const pixelCap=Math.sqrt(maxPixels/(base.width*base.height));
+    const renderScale=Math.min(1.55,desiredScale,pixelCap);
+    const viewport=pdfPage.getViewport({scale:renderScale});
+
+    c.width=Math.max(1,Math.round(viewport.width));
+    c.height=Math.max(1,Math.round(viewport.height));
     const context=c.getContext('2d');
     if(!context)throw new Error('Canvas unavailable');
 
@@ -127,7 +136,8 @@ export default function PDFPreview({url,claims,active,anchors,onSelect}:{url:str
     await renderTask.promise;
 
     if(cancelled||documentRef.current!==doc)return;
-    await restoreInvisibleText(pdfPage,context,1.8);
+    await restoreInvisibleText(pdfPage,context,renderScale);
+    pdfPage.cleanup();
 
     if(!cancelled&&documentRef.current===doc)setRendering(false);
    }catch(error){
@@ -147,6 +157,11 @@ export default function PDFPreview({url,claims,active,anchors,onSelect}:{url:str
    renderTaskRef.current=null;
   };
  },[page,documentVersion]);
+
+ useEffect(()=>()=> {
+  const c=canvas.current;
+  if(c){c.width=1;c.height=1}
+ },[]);
 
  return <>
   {total>1&&<div className="pdf-toolbar"><button type="button" disabled={page<=1||rendering} onClick={()=>setPage(current=>Math.max(1,current-1))}>Previous</button><span>Page {page} of {total}</span><button type="button" disabled={page>=total||rendering} onClick={()=>setPage(current=>Math.min(total,current+1))}>Next</button></div>}
