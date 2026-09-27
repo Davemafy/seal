@@ -14,7 +14,7 @@ test('international message gets a safe resolution path without an authenticity 
  await page.locator('.decision-details').locator('summary').click();
  await expect(page.locator('.decision-details')).toContainText('instructions remain unverified');
  await expect(page.locator('.decision-details')).toContainText('underlying case is not independently confirmed');
- await expect(page.getByTestId('case-reality-check')).toContainText('Not confirmed');
+ await expect(page.getByTestId('case-reality-check')).toContainText('Case not independently confirmed');
  await expect(page.getByTestId('case-reality-check').getByRole('link',{name:'Search India eCourts'})).toBeVisible();
  await expect(page.getByTestId('obligation-map')).toContainText('Call +91 11 5555 0199');
  await page.getByTestId('plain-language-explanation').locator('summary').click();
