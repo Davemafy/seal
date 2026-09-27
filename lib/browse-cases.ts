@@ -3,6 +3,7 @@ export type BrowseCategory=
  |'fake-summons-arrest-threat'
  |'personal-information'
  |'court-payment-fee'
+ |'official-scam-guidance'
  |'legitimate-court-notice'
  |'ambiguous-unsupported';
 
@@ -29,6 +30,14 @@ export type BrowseCase={
 };
 
 export const browseCases:BrowseCase[]=[
+ {
+  id:'india-supreme-court-fake-website-advisory',category:'official-scam-guidance',section:'court-message-scams',
+  title:'Supreme Court warning about fake court websites',language:'English',ocrLanguage:'eng',jurisdiction:'India',country:'India',issuer:'Supreme Court of India',
+  sourceTitle:'Supreme Court of India — Advisory concerning fake websites impersonating the official website',sourceUrl:'https://cdnbbsr.s3waas.gov.in/s3ec0490f1f4972d133619a60c30f3559e/uploads/2026/08/2026081030.pdf',
+  classification:'Official scam advisory',visualNote:'A 2026 Supreme Court of India advisory about fake websites impersonating the Court’s official site. This is official guidance, not an individual case notice.',
+  excerpt:'Official advisory concerning fake websites impersonating the official website of the Supreme Court of India.',
+  preview:{type:'pdf',url:'https://cdnbbsr.s3waas.gov.in/s3ec0490f1f4972d133619a60c30f3559e/uploads/2026/08/2026081030.pdf',alt:'Supreme Court of India official advisory about fake websites'}
+ },
  {
   id:'brazil-parana-citation-notice',category:'legitimate-court-notice',section:'legitimate-reference',
   title:'Public citation notice with response period',language:'Português',ocrLanguage:'por',jurisdiction:'Paraná, Brasil',country:'Brazil',issuer:'Tribunal de Justiça do Paraná',
