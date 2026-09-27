@@ -679,7 +679,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      const sourceFile=new File([blob],`${caseId}.${extension}`,{type});
      sourceBlobRef.current=sourceFile;
      setStatus('Opening the source document');
-     const doc=await readInBrowser(sourceFile,next=>{if(!controller.signal.aborted&&runId.current===handoffId)setStatus(next)},payload.ocrLanguage||ocrLanguage,controller.signal);
+     const doc:BrowserDocument=seededText&&!isPdf
+      ?{text:seededText,tokens:[],preview:URL.createObjectURL(sourceFile),kind:'image',uncertain:false,sample:false,unreadableFields:[]}
+      :await readInBrowser(sourceFile,next=>{if(!controller.signal.aborted&&runId.current===handoffId)setStatus(next)},payload.ocrLanguage||ocrLanguage,controller.signal);
      if(controller.signal.aborted||runId.current!==handoffId){URL.revokeObjectURL(doc.preview);return}
      const analysisText=seededText||doc.text;
      if(!analysisText.trim())throw new Error('Case text unavailable');
