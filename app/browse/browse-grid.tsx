@@ -10,8 +10,8 @@ type BrowseFilter='all'|'scam'|'official'|'international';
 
 const filters:{id:BrowseFilter;label:string}[]=[
  {id:'all',label:'All'},
- {id:'scam',label:'Scam examples'},
- {id:'official',label:'Official documents'},
+ {id:'scam',label:'Scam warnings'},
+ {id:'official',label:'Official notices'},
  {id:'international',label:'Outside U.S.'},
 ];
 
@@ -57,8 +57,8 @@ export default function BrowseGrid({items}:{items:BrowseCase[]}){
      <p className="case-note">{item.visualNote}</p>
      <p className="case-source">Source: {item.sourceTitle}</p>
      <div className="case-actions">
-      <Link className="case-run-action" href={`/?case=${item.id}`}>Run in SEAL</Link>
-      <a className="case-source-action" href={item.sourceUrl} target="_blank" rel="noopener noreferrer">Open original</a>
+      <Link className="case-run-action" href={`/?case=${item.id}`}>Check with SEAL</Link>
+      <a className="case-source-action" href={item.sourceUrl} target="_blank" rel="noopener noreferrer">Open source</a>
      </div>
     </div>
    </article>)}
