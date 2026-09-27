@@ -619,6 +619,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      setSelected(restored.selected||restored.claims[0]?.id||'');
      setRevealed(restored.claims.length);
      setFile(restored.browserFile);
+     sourceBlobRef.current=restored.sourceBlob;
      setStoryArtifactReady(!restored.browserFile);
      setReviewOffer('completed');
     }else{
