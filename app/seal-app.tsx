@@ -1944,7 +1944,6 @@ async function upload(uploaded:File){
     <header className="result-masthead" id={sectionId('result-top')} data-testid="check-object-header">
      <div className="result-masthead-row">
       <div className="check-object-identity">
-       <p className="result-masthead-title">{ui('resultTitle')}</p>
        <h1>{checkObjectDisplayTitle}</h1>
        <div className="check-object-meta">
         <div className="result-language-control">
