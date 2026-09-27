@@ -1876,13 +1876,13 @@ async function upload(uploaded:File){
       </div>}
 
      {verification&&!verification.safe_action&&decisionClaim?.action&&!verification.contact&&<div className="unsupported-next-step" id={sectionId('next-step')}>
-      <span>Safest next step</span>
-      <h2>Verify through a court source you opened yourself.</h2>
+      <span>What to do next</span>
+      <h2>Check this with the court directly.</h2>
       {messageDetails.length>0||scheduleQuote||noPaymentQuote?<dl className="message-detail-list">{messageDetails.map(claim=><div key={claim.id}><dt>{claim.type==='location'?'Location named':claim.label}</dt><dd>{cleanDisplayText(claim.value)}</dd></div>)}{scheduleQuote&&<div><dt>Schedule stated</dt><dd>{cleanDisplayText(scheduleQuote)}</dd></div>}{noPaymentQuote&&<div><dt>Payment statement</dt><dd>{cleanDisplayText(noPaymentQuote)}</dd></div>}</dl>:<p>No court or case details could be read reliably.</p>}
       <p>Those details come from the message itself. They do not confirm that the case exists or that the sender is connected to the court.</p>
       <p>Do not use a payment link, QR code, phone number, or reply address from the message until you reach the court independently.</p>
       {officialDirectory&&<div className="official-directory-route">
-       <span>Official starting point</span>
+       <span>Start here</span>
        <a href={officialDirectory.url} target="_blank" rel="noopener noreferrer">{officialDirectory.label}</a>
        <p>{officialDirectory.note}</p>
       </div>}
@@ -1901,13 +1901,13 @@ async function upload(uploaded:File){
       </div>
      </div>}
 
-     <p className="resolution-disclaimer">{curatedSignal?'This conclusion applies to this published example. It does not classify unrelated messages.':'These sources can inform the check, but they cannot confirm who sent the message.'}</p>
+     <p className="resolution-disclaimer">{curatedSignal?'This finding is about this published example only. It does not label other messages.':'These sources help with the check, but they still cannot tell us who sent the message.'}</p>
     </section>}
 
     {ready&&verification&&caseReality&&<section className="user-actions result-screen result-screen-resolve" id={sectionId('user-actions')} aria-label="Resolve this safely">
-     <div className="user-actions-heading"><span>YOUR NEXT MOVE</span><h2>Resolve this safely</h2><p>Keep the message as evidence, but use independently opened court and support channels for anything you do next.</p></div>
+     <div className="user-actions-heading"><span>NEXT</span><h2>What to do next</h2><p>Keep the message, but use a court site or support service you opened yourself for anything you do next.</p></div>
      <div className="journey-block case-reality-block" data-testid="case-reality-check">
-      <div className="journey-label">Case reality check</div>
+      <div className="journey-label">The case</div>
       <div className="journey-content">
        <h3>{translatedResult.caseRealityTitle||caseReality.title}</h3><p>{translatedResult.caseRealityDetail||caseReality.detail}</p>
        <dl className="case-reality-facts"><div><dt>Court claimed</dt><dd>{caseReality.court}</dd></div><div><dt>Case/reference</dt><dd>{caseReality.reference||'Not verified'}</dd></div></dl>
@@ -1950,10 +1950,10 @@ async function upload(uploaded:File){
      </details>
     </section>}
 
-    {ready&&verification?.contact&&<section className="contact-section" id={verification.safe_action?undefined:sectionId('next-step')} aria-label="Independent court contact">
+    {ready&&verification?.contact&&<section className="contact-section" id={verification.safe_action?undefined:sectionId('next-step')} aria-label="Court contact from an official source">
      <div className="court-contact">
       <div>
-       <h3>Independent court contact</h3>
+       <h3>Court contact from an official source</h3>
        <p>{verification.contact.name||(verification.resolver_id==='connecticut'?'District of Connecticut Jury Office':'Court contact')}</p>
       </div>
       <div>
@@ -1962,7 +1962,7 @@ async function upload(uploaded:File){
         <a href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open court website</a>
         <button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button>
        </div>
-       <p className="contact-source">These details come from the court source, not the uploaded message. {verification.contact.source.source_mode==='SNAPSHOT'?'Source snapshot checked '+new Date(verification.contact.source.checked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.':'Live source checked '+new Date(verification.contact.source.checked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.'}</p>
+       <p className="contact-source">This contact came from the court source, not from the message. {verification.contact.source.source_mode==='SNAPSHOT'?'Source snapshot checked '+new Date(verification.contact.source.checked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.':'Live source checked '+new Date(verification.contact.source.checked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.'}</p>
       </div>
      </div>
     </section>}
