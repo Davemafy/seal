@@ -3370,3 +3370,24 @@
 @media(min-width:901px){
  .rail-check-delete{transition:opacity .12s ease,background-color .12s ease,color .12s ease}
 }
+
+
+/* Mobile chrome: no floating circles. */
+@media(max-width:900px){
+ .mobile-language-trigger{
+  min-width:54px!important;height:36px!important;padding:0 6px!important;border:0!important;border-radius:8px!important;
+  background:transparent!important
+ }
+ .mobile-nav-icon{
+  width:36px!important;min-width:36px!important;height:36px!important;padding:0!important;border:0!important;
+  border-radius:8px!important;background:transparent!important
+ }
+ .mobile-nav-icon:hover,.mobile-nav-icon:focus-visible,.mobile-language-trigger:hover,.mobile-language-trigger:focus-visible{
+  background:#f1f1f1!important
+ }
+ .mobile-workspace-trigger[aria-expanded="true"]{background:#ededed!important;color:#111!important;border-color:transparent!important}
+ .drawer-icon-button{
+  width:36px!important;height:36px!important;border:0!important;border-radius:8px!important;background:transparent!important
+ }
+ .drawer-icon-button:hover,.drawer-icon-button:focus-visible{background:#f1f1f1!important}
+}
