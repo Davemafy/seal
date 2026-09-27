@@ -90,7 +90,7 @@ function DesignPlayIcon(){
  </svg>;
 }
 
-type SealUiIconName='add'|'browse'|'globe'|'refresh'|'copy'|'message'|'download'|'list'|'sidebar'|'delete'|'close';
+type SealUiIconName='add'|'browse'|'globe'|'refresh'|'copy'|'message'|'download'|'list'|'workspaces'|'delete'|'close';
 
 function SealUiIcon({name}:{name:SealUiIconName}){
  const common={fill:'none',stroke:'currentColor',strokeWidth:1.7,strokeLinecap:'round' as const,strokeLinejoin:'round' as const};
@@ -103,7 +103,7 @@ function SealUiIcon({name}:{name:SealUiIconName}){
   {name==='message'&&<><path {...common} d="M5.1 5.25h13.8a1.85 1.85 0 0 1 1.85 1.85v8.15a1.85 1.85 0 0 1-1.85 1.85H10l-4.75 3v-3H5.1a1.85 1.85 0 0 1-1.85-1.85V7.1A1.85 1.85 0 0 1 5.1 5.25Z"/><path {...common} d="M8 9.25h8M8 13h5.25"/></>}
   {name==='download'&&<><path {...common} d="M12 4.5v10.25"/><path {...common} d="m8.3 11.4 3.7 3.7 3.7-3.7"/><path {...common} d="M5 18.75h14"/></>}
   {name==='list'&&<><path {...common} d="M9 6.5h10M9 12h10M9 17.5h10"/><circle cx="5" cy="6.5" r="1" fill="currentColor"/><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="5" cy="17.5" r="1" fill="currentColor"/></>}
-  {name==='sidebar'&&<><rect {...common} x="4" y="4.5" width="16" height="15" rx="2"/><path {...common} d="M9 4.5v15M12.5 9h4M12.5 13h4"/></>}
+  {name==='workspaces'&&<><rect {...common} x="7.25" y="5.25" width="11.5" height="13.5" rx="1.8"/><path {...common} d="M5.25 8.25H4.8A1.8 1.8 0 0 0 3 10.05v7.15A1.8 1.8 0 0 0 4.8 19h.45M9.75 9h6.5M9.75 12.25h6.5M9.75 15.5h4.25"/></>}
   {name==='delete'&&<><path {...common} d="M5.5 7.25h13M9 7.25V5.5h6v1.75M7.5 7.25l.65 11h7.7l.65-11M10 10.5v4.75M14 10.5v4.75"/></>}
   {name==='close'&&<><path {...common} d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></>}
  </svg>;
@@ -1474,6 +1474,10 @@ async function upload(uploaded:File){
  const processingTextRegionsVisible=useMemo(()=>file?.tokens?processingTextRegions(file.tokens):[],[file]);
  const processingRegionCount=processingTextRegionsVisible.length;
 
+ const currentWorkspaceMeta=workspaces.find(item=>item.id===workspaceId);
+ const currentWorkspaceTitle=cleanDisplayText(currentWorkspaceMeta?.title||workspaceTitle||'New check');
+ const showWorkspaceIdentity=workspaces.length>1||currentWorkspaceTitle!=='New check';
+
  const renderTextLines=(lines:string[])=><div className="message-lines">{lines.map((line,index)=>{
   const claim=claims.find(candidate=>candidate.exact_source_text===line||line.includes(candidate.value));
   const result=claim&&resultById.get(claim.id);
@@ -1537,7 +1541,13 @@ async function upload(uploaded:File){
    </div>
   </aside>
   <header className="seal-nav mobile-only-nav">
-   <Link href="/" className="mobile-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/></Link>
+   <div className="mobile-nav-identity">
+    <Link href="/" className="mobile-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/></Link>
+    {showWorkspaceIdentity&&<button className="mobile-current-check" type="button" aria-label={`Open checks. Current: ${currentWorkspaceTitle}`} title={currentWorkspaceTitle} onClick={()=>{setLanguageMenuOpen(false);setWorkspaceDrawerOpen(true)}}>
+     <span className={`mobile-current-check-state is-${currentWorkspaceMeta?.status||'idle'}`} aria-hidden="true"/>
+     <span>{currentWorkspaceTitle}</span>
+    </button>}
+   </div>
    <div className="mobile-nav-tools">
     <div className="mobile-language-menu">
      <button type="button" className="icon-control mobile-language-trigger" aria-label={ui('displayLanguage')} title={ui('displayLanguage')} aria-haspopup="listbox" aria-expanded={languageMenuOpen} onClick={()=>{setWorkspaceDrawerOpen(false);setLanguageMenuOpen(open=>!open)}}>
@@ -1549,7 +1559,7 @@ async function upload(uploaded:File){
      </div>}
     </div>
     <span className="mobile-nav-divider" aria-hidden="true"/>
-    <button className="icon-control mobile-nav-icon mobile-workspace-trigger" type="button" aria-label="Open checks" title="Open checks" aria-haspopup="dialog" aria-expanded={workspaceDrawerOpen} onClick={()=>{setLanguageMenuOpen(false);setWorkspaceDrawerOpen(true)}}><SealUiIcon name="sidebar"/></button>
+    <button className="icon-control mobile-nav-icon mobile-workspace-trigger" type="button" aria-label="Open checks" title="Open checks" aria-haspopup="dialog" aria-expanded={workspaceDrawerOpen} onClick={()=>{setLanguageMenuOpen(false);setWorkspaceDrawerOpen(true)}}><SealUiIcon name="workspaces"/></button>
     <button className="icon-control mobile-nav-icon mobile-new-check" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} onClick={()=>{setWorkspaceDrawerOpen(false);onNewWorkspace()}}><SealUiIcon name="add"/></button>
    </div>
   </header>
@@ -2195,6 +2205,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const [activeWorkspace,setActiveWorkspace]=useState('primary');
  const [workspaceMotion,setWorkspaceMotion]=useState<{id:string;direction:'forward'|'backward'}|null>(null);
  const workspaceMotionTimer=useRef<number|undefined>(undefined);
+ const workspaceSwipeRef=useRef<{x:number;y:number;startedAt:number;blocked:boolean}|null>(null);
  const [registryReady,setRegistryReady]=useState(false);
 
  useEffect(()=>{
@@ -2265,6 +2276,30 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   animateWorkspaceTo(id,to>=from?'forward':'backward');
  },[workspaces,activeWorkspace,animateWorkspaceTo]);
 
+ const beginWorkspaceSwipe=useCallback((event:React.TouchEvent<HTMLDivElement>)=>{
+  if(event.touches.length!==1||workspaces.length<2){workspaceSwipeRef.current=null;return}
+  const target=event.target as HTMLElement;
+  const blocked=Boolean(target.closest('input,textarea,select,button,a,[role="dialog"],.result-carousel,.story-player,.story-shell,.workspace-drawer-layer,[data-no-workspace-swipe]'));
+  const touch=event.touches[0];
+  workspaceSwipeRef.current={x:touch.clientX,y:touch.clientY,startedAt:Date.now(),blocked};
+ },[workspaces.length]);
+
+ const finishWorkspaceSwipe=useCallback((event:React.TouchEvent<HTMLDivElement>)=>{
+  const start=workspaceSwipeRef.current;
+  workspaceSwipeRef.current=null;
+  if(!start||start.blocked||event.changedTouches.length!==1)return;
+  const touch=event.changedTouches[0];
+  const dx=touch.clientX-start.x;
+  const dy=touch.clientY-start.y;
+  const elapsed=Date.now()-start.startedAt;
+  if(elapsed>700||Math.abs(dx)<64||Math.abs(dx)<Math.abs(dy)*1.25)return;
+  const index=workspaces.findIndex(item=>item.id===activeWorkspace);
+  if(index<0)return;
+  const nextIndex=dx<0?index+1:index-1;
+  const next=workspaces[nextIndex];
+  if(next)animateWorkspaceTo(next.id,dx<0?'forward':'backward');
+ },[workspaces,activeWorkspace,animateWorkspaceTo]);
+
  const deleteWorkspace=useCallback((id:string)=>{
   const index=workspaces.findIndex(item=>item.id===id);
   if(index<0)return;
@@ -2289,7 +2324,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  },[workspaces,activeWorkspace]);
 
  return <>
-  <div className="seal-workspace-stack">
+  <div className="seal-workspace-stack" onTouchStart={beginWorkspaceSwipe} onTouchEnd={finishWorkspaceSwipe}>
    {workspaces.map((workspace,index)=><div
     className={`seal-workspace-instance ${workspaceMotion?.id===workspace.id?`is-entering-${workspaceMotion.direction}`:''}`}
     key={workspace.id}
