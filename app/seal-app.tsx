@@ -2331,7 +2331,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      initialText={index===0?initialText:''}
      initialRun={index===0?initialRun:false}
      workspaceId={workspace.id}
-     active={workspace.id===activeWorkspace}
+     workspaceActive={workspace.id===activeWorkspace}
      workspaces={workspaces}
      onNewWorkspace={createWorkspace}
      onSelectWorkspace={selectWorkspace}
