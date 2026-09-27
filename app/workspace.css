@@ -5358,3 +5358,32 @@
 @media(prefers-reduced-motion:reduce){
  .onboarding-stage{animation:none!important}
 }
+
+
+/* Mobile workspace count badge. */
+@media(max-width:900px){
+ .mobile-workspace-trigger{
+  position:relative!important;
+  overflow:visible!important
+ }
+ .mobile-workspace-count{
+  position:absolute;
+  top:-2px;
+  right:-3px;
+  min-width:16px;
+  height:16px;
+  display:grid;
+  place-items:center;
+  padding:0 4px;
+  box-sizing:border-box;
+  border:2px solid #fff;
+  border-radius:999px;
+  background:#111;
+  color:#fff;
+  font-size:8px;
+  line-height:1;
+  font-weight:700;
+  letter-spacing:-.02em;
+  pointer-events:none
+ }
+}
