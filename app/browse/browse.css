@@ -1,6 +1,6 @@
 /* Public-source archive: compact, source-first, and intentionally non-marketing. */
 .browse-page{background:#fff;overflow-x:hidden}
-.browse-page .workspace-rail{position:fixed;inset:0 auto 0 0;z-index:30;width:224px;height:100dvh;overflow-y:auto;overscroll-behavior:contain}
+.browse-page .workspace-rail{position:fixed;inset:0 auto 0 0;z-index:30;height:100dvh;overflow:hidden;overscroll-behavior:contain}
 .browse-shell{grid-column:2;width:100%;max-width:1120px;margin:0 auto;padding:44px 56px 88px}
 .browse-intro{max-width:760px}
 .browse-eyebrow{margin:0 0 7px;color:#777;font-size:10px;line-height:15px;font-weight:650;letter-spacing:.07em}
@@ -65,4 +65,18 @@
  .case-copy h2{font-size:19px;line-height:26px}
  .case-note{margin-top:9px}
  .case-actions{margin-top:12px}
+}
+
+
+/* Browse uses the same workspace rail as the checker. */
+@media(min-width:901px){
+ .browse-page{grid-template-columns:236px minmax(0,1fr)!important}
+ .browse-page .workspace-rail{
+  width:236px!important;
+  max-width:236px!important
+ }
+ .browse-shell{
+  max-width:1040px!important;
+  padding:42px 48px 80px!important
+ }
 }
