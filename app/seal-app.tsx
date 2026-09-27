@@ -198,7 +198,6 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const [storyStep,setStoryStep]=useState(0);
  const [storyPlaying,setStoryPlaying]=useState(true);
  const [storyClosing,setStoryClosing]=useState(false);
- const storyKey=useRef('');
  const storyPlayerRef=useRef<HTMLDivElement>(null);
  const storyTimelineRef=useRef<ReturnType<typeof gsap.timeline>|null>(null);
  const storyScrubberRef=useRef<HTMLInputElement>(null);
@@ -217,6 +216,13 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const input=useRef<HTMLInputElement>(null);
  const anchors=useRef<Record<string,HTMLElement|null>>({});
  const runId=useRef(0);
+
+ const handleStoryArtifactReady=useCallback(()=>{
+  setStoryArtifactReady(true);
+  setStoryStartPending(false);
+  setReviewOfferPaused(false);
+  setReviewCountdown(3);
+ },[]);
 
  const isDemo=!file&&/^DEMO \/ (?:FICTIONAL NOTICE|SYNTHETIC MESSAGE)/.test(text);
  const isActionDemo=isDemo&&text.startsWith('DEMO / SYNTHETIC MESSAGE');
@@ -612,6 +618,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      setSelected(restored.selected||restored.claims[0]?.id||'');
      setRevealed(restored.claims.length);
      setFile(restored.browserFile);
+     setStoryArtifactReady(!restored.browserFile);
      setReviewOffer('completed');
     }else{
      void clearOrphanedResultArtifacts().catch(()=>{});
@@ -675,6 +682,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      const analysisText=seededText||doc.text;
      if(!analysisText.trim())throw new Error('Case text unavailable');
      setFile(doc);
+     setStoryArtifactReady(false);
      setText(analysisText);
      setBusy(false);
      setStatus('');
@@ -696,60 +704,21 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  },[hydrated,initialRun,initialText]);
 
  useEffect(()=>{
-  setStoryStartPending(false);
-  if(!file){setStoryArtifactReady(true);return}
-  if(file.kind==='pdf'){setStoryArtifactReady(false);return}
-  setStoryArtifactReady(false);
+  if(!file||file.kind!=='image')return;
   let cancelled=false;
   const image=new Image();
   image.src=file.preview;
-  const markReady=()=>{if(!cancelled)setStoryArtifactReady(true)};
-  if(image.complete){markReady();return()=>{cancelled=true}}
-  if(typeof image.decode==='function')void image.decode().then(markReady).catch(markReady);
-  else{image.onload=markReady;image.onerror=markReady}
+  const markReady=()=>{if(!cancelled)handleStoryArtifactReady()};
+  if(image.complete){
+   window.queueMicrotask(markReady);
+  }else if(typeof image.decode==='function'){
+   void image.decode().then(markReady).catch(markReady);
+  }else{
+   image.onload=markReady;
+   image.onerror=markReady;
+  }
   return()=>{cancelled=true;image.onload=null;image.onerror=null};
- },[file?.preview,file?.kind]);
-
- useEffect(()=>{
-  if(!storyStartPending||!storyArtifactReady)return;
-  setStoryStartPending(false);
-  setReviewOfferPaused(false);
-  setReviewCountdown(3);
- },[storyStartPending,storyArtifactReady]);
-
- useEffect(()=>{
-  if(!verification||!ready)return;
-  const key=`${text.slice(0,96)}:${claims.length}:${verification.resolver_id}`;
-  if(storyKey.current===key)return;
-  storyKey.current=key;
-  setStoryOpen(false);
-  setStoryStep(0);
-  setStoryPlaying(false);
-  setStoryClosing(false);
-  setReviewCountdown(3);
-  setReviewOfferPaused(false);
-  if(!reviewWorthWatching){setReviewOffer('skipped');return}
-  setReviewOffer('idle');
- },[verification,ready,text,claims.length,reviewWorthWatching]);
-
- useEffect(()=>{
-  if(reviewOffer!=='counting'||reviewOfferPaused)return;
-  const timer=window.setTimeout(()=>{
-   if(reviewCountdown<=1){startStory();return}
-   setReviewCountdown(value=>Math.max(1,value-1));
-  },1000);
-  return()=>window.clearTimeout(timer);
- },[reviewOffer,reviewOfferPaused,reviewCountdown]);
-
- useEffect(()=>{
-  if(reviewOffer!=='counting')return;
-  const startY=window.scrollY;
-  const onScroll=()=>{if(Math.abs(window.scrollY-startY)>18)skipReviewOffer()};
-  const onKey=(event:KeyboardEvent)=>{if(event.key==='Escape')skipReviewOffer()};
-  window.addEventListener('scroll',onScroll,{passive:true});
-  window.addEventListener('keydown',onKey);
-  return()=>{window.removeEventListener('scroll',onScroll);window.removeEventListener('keydown',onKey)};
- },[reviewOffer]);
+ },[file,handleStoryArtifactReady]);
 
  useEffect(()=>{
   if(!storyOpen)return;
@@ -833,7 +802,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   storyPhaseRef.current=0;
   runId.current++;
   if(file)URL.revokeObjectURL(file.preview);
-  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setActiveResultSection('summary');setTechnicalOpen(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryArtifactReady(true);setStoryStartPending(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);storyKey.current='';
+  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setActiveResultSection('summary');setTechnicalOpen(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryArtifactReady(true);setStoryStartPending(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);
  }
 
  function chooseFixture(key:FixtureKey){clear();setFixture(key);setText(fixtures[key].text);void run('SNAPSHOT',{text:fixtures[key].text,file:null})}
@@ -848,7 +817,7 @@ async function upload(uploaded:File){
   try{
    const doc=await readInBrowser(uploaded,next=>{if(!controller.signal.aborted&&runId.current===uploadId)setStatus(next)},ocrLanguage,controller.signal);
    if(runId.current!==uploadId){URL.revokeObjectURL(doc.preview);return}
-   setFile(doc);setText(doc.text);
+   setFile(doc);setStoryArtifactReady(false);setText(doc.text);
    if(!doc.text.trim()&&!doc.uncertain)setError('We couldn’t read enough from this file. Try a clearer image or paste the message.');
    else await run('SNAPSHOT',{text:doc.text,file:doc});
   }catch(e){
@@ -870,7 +839,14 @@ async function upload(uploaded:File){
   activeRequestRef.current=controller;
   const requestTimeout=window.setTimeout(()=>controller.abort(),30000);
   const id=++runId.current;
-  setBusy(true);setError('');setVerification(null);setRevealed(0);setSelected('');setTechnicalOpen(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryStartPending(false);setMode(sourceMode);setStatus('Reading requested actions');
+  storyTimelineRef.current?.kill();
+  storyTimelineTime.current=0;
+  storyPhaseRef.current=0;
+  setBusy(true);setError('');setVerification(null);setRevealed(0);setSelected('');setTechnicalOpen(false);
+  setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);
+  setStoryStartPending(false);setStoryOpen(false);setStoryStep(0);setStoryPlaying(false);setStoryClosing(false);
+  setStoryArtifactReady(!sourceFile);
+  setMode(sourceMode);setStatus('Reading requested actions');
   try{
    // Do not use the document-level OCR flag as a kill switch. A globally noisy
    // transcript can still contain a clearly grounded action line that the
@@ -1172,7 +1148,7 @@ async function upload(uploaded:File){
             {storyFocusBox&&<span className="story-highlight"/>}
            </div>
            :file?.kind==='pdf'?
-            <StoryPdfPage url={file.preview} focusBox={storyFocusBox} onReady={()=>setStoryArtifactReady(true)}/>
+            <StoryPdfPage url={file.preview} focusBox={storyFocusBox} onReady={handleStoryArtifactReady}/>
            :<div className="story-text-document">
             <span>Pasted message</span>
             <p>{cleanDisplayText(text.slice(0,900))}</p>
