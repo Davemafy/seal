@@ -3633,13 +3633,6 @@
  .seal-workspace-stack.has-multiple>.seal-workspace-instance.is-active:not(.is-entering-forward):not(.is-entering-backward){
   position:relative;z-index:2
  }
- .mobile-workspace-trigger{overflow:visible!important}
- .mobile-workspace-count{
-  position:absolute;right:0;top:-1px;min-width:10px;height:11px;display:block;
-  padding:0 1px;background:#fff;color:#111;
-  font-size:8px;line-height:11px;font-weight:700;text-align:center;letter-spacing:-.02em
- }
- .mobile-workspace-trigger[aria-expanded="true"] .mobile-workspace-count{background:#f0f0ee}
 }
 @media(max-width:599px){
  .workspace-page-edges{top:58px}
