@@ -313,8 +313,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   return()=>window.cancelAnimationFrame(frame);
  },[verification,workspaceId]);
  const [reviewOffer,setReviewOffer]=useState<'idle'|'counting'|'skipped'|'watching'|'completed'>('idle');
- const [,setReviewCountdown]=useState(3);
- const [,setReviewOfferPaused]=useState(false);
+ const [reviewCountdown,setReviewCountdown]=useState(3);
+ const [reviewOfferPaused,setReviewOfferPaused]=useState(false);
  const [storyArtifactReady,setStoryArtifactReady]=useState(true);
  const [,setStoryStartPending]=useState(false);
  const [storyOpen,setStoryOpen]=useState(false);
@@ -1197,6 +1197,26 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  }
  function replayStory(){startStory()}
 
+ useEffect(()=>{
+  if(!ready||!reviewWorthWatching||file?.sample||storyOpen||reviewOffer!=='idle')return;
+  if(file?.kind==='image'&&!storyArtifactReady)return;
+  setReviewCountdown(3);
+  setReviewOfferPaused(false);
+  setReviewOffer('counting');
+ },[ready,reviewWorthWatching,file?.sample,file?.kind,storyArtifactReady,storyOpen,reviewOffer]);
+
+ useEffect(()=>{
+  if(reviewOffer!=='counting'||reviewOfferPaused)return;
+  if(reviewCountdown<=0){
+   const timer=window.setTimeout(()=>startStory(),240);
+   return()=>window.clearTimeout(timer);
+  }
+  const timer=window.setTimeout(()=>setReviewCountdown(value=>Math.max(0,value-1)),680);
+  return()=>window.clearTimeout(timer);
+ // startStory is a local command over the current result state.
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[reviewOffer,reviewOfferPaused,reviewCountdown]);
+
  function changeDisplayLanguage(locale:DisplayLocale){
   setTranslatedResult({});
   setResultTranslationState('idle');
@@ -1744,6 +1764,21 @@ async function upload(uploaded:File){
     </header>
 
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
+
+    {verification&&ready&&reviewOffer==='counting'&&createPortal(<div className="review-autoplay-overlay" data-review-offer role="dialog" aria-modal="true" aria-label="Verification review starting">
+     <button type="button" className="review-autoplay-skip" onClick={skipReviewOffer}>Skip</button>
+     <div className="review-autoplay-center">
+      <div className="review-autoplay-timer" aria-live="polite" aria-label={`Verification review starts in ${reviewCountdown}`}>
+       <svg viewBox="0 0 48 48" aria-hidden="true">
+        <circle className="review-autoplay-track" cx="24" cy="24" r="21"/>
+        <circle className="review-autoplay-progress" cx="24" cy="24" r="21"/>
+       </svg>
+       <span>{reviewCountdown}</span>
+      </div>
+      <strong>Verification review</strong>
+      <small>Starts automatically</small>
+     </div>
+    </div>,document.body)}
 
     {verification&&ready&&storyOpen&&createPortal(<div className={`story-overlay ${storyClosing?'is-closing':''}`} data-testid="evidence-review" role="dialog" aria-modal="true" aria-label="SEAL verification review">
      <div ref={storyPlayerRef} className={`story-player ${storyPlaying?'is-playing':'is-paused'} ${storyFocusBox?'has-story-focus':'no-story-focus'}`}>
