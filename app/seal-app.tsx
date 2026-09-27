@@ -1046,7 +1046,7 @@ async function upload(uploaded:File){
     <div className={`intake ${pasteMode?'is-paste-mode':'is-upload-mode'}`}>
      {!pasteMode?
       <>
-       <button className={`upload-row ${dragging?'is-dragging':''} ${busy?'is-busy':''}`} type="button" disabled={busy||!hydrated} onClick={()=>{filePickerArmed.current=true;input.current?.click()}}
+       <button className={`upload-row ${dragging?'is-dragging':''} ${busy?'is-busy':''}`} data-testid="upload-file" type="button" disabled={busy||!hydrated} onClick={()=>{filePickerArmed.current=true;input.current?.click()}}
         onDragOver={event=>{if(event.dataTransfer.types.includes('Files')){event.preventDefault();setDragging(true)}}}
         onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
         onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
