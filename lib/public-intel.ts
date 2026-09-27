@@ -55,9 +55,9 @@ const official={
   'John Marshall Criminal/Traffic: (804) 646-6431. John Marshall Courts Building, 400 N. 9th Street, Richmond.'
  ),
  nhTollRules:snapshot(
-  'New Hampshire Administrative Rules — toll payment requests',
-  'https://www.gc.nh.gov/rules/state_agencies/tra700.html',
-  'New Hampshire toll payment requests identify the unpaid transaction and use staged payment requests and notices of violation through the E-ZPass/vendor process.'
+  'New Hampshire RSA 236:31 — toll advisory and payment requests',
+  'https://www.gc.nh.gov/rsa/html/xx/236/236-mrg.htm',
+  'RSA 236:31 requires an advisory and payment request for toll violations to identify the date, time, and location of the alleged violation, state the toll or charge and a reasonable administrative fee, and describe the next enforcement step.'
  ),
  nhCourtCollection:snapshot(
   'New Hampshire Judicial Branch — judgment collection process',
@@ -77,9 +77,9 @@ const normalize=(value:string)=>value.replace(/\s+/g,' ').trim();
 const sectionFrom=(value:string)=>value.match(/46\.2-\d+(?:\.\d+)?(?::\d+)?/i)?.[0]||'';
 const isVirginia=(text:string)=>/\b(?:commonwealth of virginia|virginia court|district court of virginia|richmond,?\s*va|va\.?\s*code|virginia code)\b/i.test(text);
 const isNewHampshire=(text:string)=>/\b(?:state of new hampshire|new hampshire|nh\s+(?:court|judicial|e-?zpass|turnpike))\b/i.test(text);
-const isUsContext=(text:string)=>/\b(?:united states|u\.?s\.?\s+(?:district|federal|court)|commonwealth of virginia|state of (?:maryland|virginia|texas|florida|california|connecticut)|virginia court|richmond,?\s*va|dallas,?\s*texas|miami-?dade|baltimore,?\s*maryland|va\.?\s*code|virginia code)\b/i.test(text);
-const hasTrafficSubject=(text:string)=>/\b(?:traffic|parking|toll|vehicle|citation)\b/i.test(text);
-const hasTollSubject=(text:string)=>/\b(?:electronic toll|toll violation|toll evasion|unpaid toll|failure to pay[^\n]{0,50}toll)\b/i.test(text);
+const isUsContext=(text:string)=>/\b(?:united states|u\.?s\.?\s+(?:district|federal|court)|commonwealth of virginia|state of (?:maryland|virginia|texas|florida|california|connecticut|new hampshire)|virginia court|richmond,?\s*va|dallas,?\s*texas|miami-?dade|baltimore,?\s*maryland|va\.?\s*code|virginia code)\b/i.test(text);
+const hasTrafficSubject=(text:string)=>/\b(?:traffic|parking|tolls?|vehicle|citation)\b/i.test(text);
+const hasTollSubject=(text:string)=>/\b(?:(?:electronic|unpaid)\s+tolls?|tolls?\s+(?:violation|evasion)|failure to pay[^\n]{0,50}tolls?)\b/i.test(text);
 const hasRequested=(claims:Claim[],kind:string)=>claims.some(c=>c.action?.kind===kind);
 const hasScan=(claims:Claim[],text:string)=>claims.some(c=>c.action?.verb==='scan')||/\b(?:scan|qr code)\b/i.test(text);
 
@@ -129,8 +129,8 @@ export function analyzePublicIntelligence(text:string,claims:Claim[],results:Res
 }{
  const signals:SourceSignal[]=[];
  const compact=normalize(text);
- const rawTraffic=/\b(?:traffic|toll|citation|parking|vehicle|speeding)\b/i.test(compact);
- const rawPay=/\b(?:remit|pay|payment|settle)\b.{0,150}\b(?:fine|fee|toll|balance|amount|cost|penalt|full|total)\b|\b(?:full\s+payment|payment\s+instruction)\b/i.test(compact);
+ const rawTraffic=/\b(?:traffic|tolls?|citation|parking|vehicle|speeding)\b/i.test(compact);
+ const rawPay=/\b(?:remit|pay|payment|settle)\b.{0,150}\b(?:fines?|fees?|tolls?|balance|amount|costs?|penalt(?:y|ies)|full|total)\b|\b(?:full\s+payment|payment\s+instruction)\b/i.test(compact);
  const rawScan=/\bscan\b.{0,70}\bqr\b|\bqr\b.{0,70}\b(?:code|scan|payment)\b/i.test(compact);
  const rawAppear=/\bappear\b.{0,130}\b(?:court|hearing)|\b(?:court|hearing)\b.{0,130}\bappear\b/i.test(compact);
  const rawCase=/\b(?:case|docket)\s*(?:no\.?|number|#)?\s*[:#-]?\s*[A-Z0-9]{1,6}(?:\s*[-–]\s*[A-Z0-9]{1,10}){1,5}\b/i.test(compact);
@@ -149,14 +149,14 @@ export function analyzePublicIntelligence(text:string,claims:Claim[],results:Res
   });
  }
  const nhTollDemand=isNewHampshire(compact)
-  &&/\b(?:toll|e-?zpass|turnpike)\b/i.test(compact)
+  &&/\b(?:tolls?|e-?zpass|turnpike)\b/i.test(compact)
   &&(hasRequested(claims,'pay')||rawPay);
  if(nhTollDemand){
   signals.push({
    id:'nh-toll-process',
    kind:'OFFICIAL_PROCESS',
    title:'New Hampshire publishes a different process for toll and court collections',
-   summary:'State toll rules describe E-ZPass/vendor payment requests with transaction details and staged notices. Judicial Branch materials describe judgment collection through filed motions, service, hearings, and court orders.',
+   summary:'New Hampshire law describes toll notices with transaction-specific details and a defined enforcement path. Judicial Branch materials separately describe judgment collection through filed motions, service, hearings, and court orders.',
    evidence:[official.nhTollRules,official.nhCourtCollection]
   });
  }
