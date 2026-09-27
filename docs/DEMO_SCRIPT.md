@@ -1,103 +1,116 @@
-# Final judge demo — target 2:00–2:20
+# Final judge demo — target 2:15–2:35
 
 Keep the recording under three minutes. Record the deployed Cloudflare build, not localhost.
 
-## 0:00–0:12 — Start on a real artifact
+The demo thesis is simple:
 
-Open **Browse real cases** and land on:
+> ChatGPT can analyze what you gave it. SEAL is built to distrust what you gave it.
 
-**Traffic default notice with QR payment — Dallas, Texas**
+Do not start with architecture.
+
+## 0:00–0:12 — Start on the artifact
+
+Open **Browse** and choose the Dallas traffic notice with the QR payment route.
 
 Say:
 
-> This notice looks official enough to obey. SEAL's job is not to decide whether it looks fake. It isolates what the message asks you to do, then shows what independent public sources can actually support.
+> This looks official enough to obey. SEAL does not decide whether it looks fake. It starts with the action the message wants me to take.
 
 Click **Run in SEAL**.
 
-Do not narrate implementation yet.
+## 0:12–0:35 — Requested action
 
-## 0:12–0:38 — Show the action, not the whole document
-
-Keep the same source artifact visible.
+Keep the original artifact visible.
 
 Show the decision-driving instruction:
 
 > Scan the QR code to settle your unpaid balance.
 
-Let the review film establish the document and requested action, then move immediately to the result.
+Say:
+
+> The document itself is not evidence. SEAL keeps the original attached to the check, extracts the requested action, and then verifies against sources outside the message.
+
+Move to **Evidence**.
+
+## 0:35–1:02 — Independent evidence
+
+Show the strongest public-source finding and open one original source briefly.
+
+Point out the distinction:
+
+- pattern/process evidence can match what the notice is doing;
+- that is not the same as authenticating the individual case.
 
 Say:
 
-> SEAL keeps the original beside the result so the evidence chain never becomes an AI summary detached from the message.
+> SEAL separates evidence about the pattern from evidence about the actual case. It does not turn a warning page into a fake-case verdict.
 
-## 0:38–1:05 — Independent evidence
+## 1:02–1:22 — Resolve
 
-Show the source relationship and the strongest evidence cards.
+Move horizontally to **Resolve**.
 
-Point out separately:
-
-- the FTC traffic-ticket scam warning matching the traffic hearing + case number + pay-or-appear + QR-payment pattern;
-- the Dallas/Miami-Dade published scam examples when the reused case-number pattern is present;
-- **direct court confirmation is still treated separately** when SEAL cannot establish the individual case.
+Show the independent next route rather than any number, URL, or QR code from the notice.
 
 Say:
 
-> Pattern evidence is not case authentication. SEAL keeps those two claims separate.
+> If SEAL cannot establish the case directly, it keeps the instruction unverified and gives me a route I can reach independently.
 
-Open one official source link briefly.
+## 1:22–1:50 — Global + parallel moment
 
-## 1:05–1:22 — Safe route
+Start **New check** while the Dallas check remains available.
 
-Show **Safest next step**.
+Run the New Delhi coverage-limit example.
 
-Say:
+Show the detected document language / jurisdiction context and the official India eCourts route.
 
-> When SEAL cannot verify the case directly, it does not tell the user the notice is safe or fake. It tells them not to use the supplied payment route and gives an independent path to verify before acting.
-
-## 1:22–1:45 — Legitimate contrast
-
-Return to **Browse real cases** and run:
-
-**Sample federal jury summons — District of Connecticut**
-
-Show that supported public details can MATCH while juror-specific or historical details remain **COULD NOT VERIFY**.
+If the display-language switch is stable in the deployed build, change it once and show that the explanation translates while the source evidence remains canonical.
 
 Say:
 
-> The same system can corroborate public details without authenticating a private summons. A match is not a blanket approval.
+> Language and jurisdiction are separate. SEAL can explain the check in the user's language, but verification still follows the document's jurisdiction. And starting a second check does not destroy the first one.
 
-This contrast is important. It shows SEAL is not a red-flag classifier.
+Switch back to Dallas once to prove the first check is still intact.
 
-## 1:45–2:03 — Reliability proof
+## 1:50–2:10 — Legitimate contrast
 
-Cut to a terminal or README section showing the release gates.
+Run the Connecticut sample.
+
+Show that public court details can match while private or historical details remain **COULD NOT VERIFY**.
 
 Say:
 
-> We built explicit abstention into the engine. Our fixture benchmark has zero false MISMATCH verdicts, and the current 15-case live action stress gate correctly extracts the requested action or refuses the input on all 15 cases. Those are engineering tests, not a claim of real-world accuracy.
+> A match is not a blanket approval. SEAL can corroborate a public detail without authenticating a private summons.
 
-Show only the numbers long enough to read:
+## 2:10–2:25 — Reliability proof
 
-- 15/15 live action extraction-or-refusal gate
-- 0 false MISMATCH on the checked-in benchmark
-- unsupported or unreadable inputs abstain
+Show the repository/release gates briefly.
 
-## 2:03–2:15 — Close
+Say:
 
-Return to the Dallas result with the original artifact still visible.
+> The engine is designed to abstain. Our checked-in benchmark has zero false MISMATCH verdicts, and unsupported or unreadable inputs stay unverified instead of being guessed.
+
+Show only:
+
+- zero false MISMATCH on the checked-in benchmark;
+- action extraction-or-refusal stress gate;
+- browser reliability / CI passing on the submission build.
+
+## 2:25–2:35 — Close
+
+Return to the live product.
 
 Final line:
 
-> SEAL does not ask people to trust another AI verdict. It shows what the message asks them to do, what independent sources support, what they do not, and where to verify before acting.
-
-End on the live product URL.
+> SEAL does not ask people to trust another AI verdict. It shows what the message asks them to do, what independent sources can support, what they cannot, and where to verify before acting.
 
 ## Recording rules
 
 - No feature tour.
 - No architecture monologue before value is visible.
-- No claim that SEAL detects scams, authenticates documents, or supports every court.
-- Never call pattern evidence direct case verification.
-- Keep the Dallas artifact visually continuous through the main demonstration.
-- If an API/model is rate-limited during recording, the conservative deterministic fallback is acceptable; do not hide an abstention.
-- Do not spend more than ~10 seconds in Browse.
+- Do not claim SEAL authenticates documents, determines fraud, or has direct case coverage for every court.
+- Never call pattern/process evidence direct case verification.
+- Keep the original artifact visible through the core result.
+- Show the horizontal Result → Original → Evidence → Resolve interaction once, not repeatedly.
+- Show parallel checks once; do not turn the demo into workspace management.
+- Translation may explain SEAL's result, but do not imply translated text replaces the original evidence.
+- If a model/API is rate-limited during recording, use the conservative fallback or record after the provider recovers; never hide an abstention.
