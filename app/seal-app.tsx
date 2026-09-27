@@ -2325,6 +2325,12 @@ const WORKSPACE_LIST_KEY='seal:workspace-list:v1';
 const ONBOARDING_KEY='seal:onboarding:v1';
 const DISPLAY_LOCALE_KEY='seal:display-locale:v1';
 const checkRoute=(id:string)=>`/check/${encodeURIComponent(id==='primary'?'primary':id.replace(/^check-/,''))}`;
+const isDisposableBlankWorkspace=(item:WorkspaceMeta)=>item.status==='idle'
+ &&/^new check(?: \d+)?$/i.test(cleanDisplayText(item.title||'')||'New check')
+ &&!cleanDisplayText(item.preview||'')
+ &&!item.language
+ &&!item.jurisdiction;
+
 const workspaceIdFromPath=(pathname:string)=>{
  const match=pathname.match(/^\/check\/([^/?#]+)/);
  if(!match)return '';
@@ -2335,8 +2341,8 @@ const workspaceIdFromPath=(pathname:string)=>{
 };
 
 export default function SealApp({initialDemo=false,initialText='',initialRun=false,initialWorkspaceId}:{initialDemo?:boolean;initialText?:string;initialRun?:boolean;initialWorkspaceId?:string}){
- const [workspaces,setWorkspaces]=useState<WorkspaceMeta[]>([{id:initialWorkspaceId||'primary',title:'New check',status:'idle'}]);
- const [activeWorkspace,setActiveWorkspace]=useState(initialWorkspaceId||'primary');
+ const [workspaces,setWorkspaces]=useState<WorkspaceMeta[]>([{id:'primary',title:'New check',status:'idle'}]);
+ const [activeWorkspace,setActiveWorkspace]=useState('primary');
  const [registryReady,setRegistryReady]=useState(false);
  const [onboardingOpen,setOnboardingOpen]=useState(false);
 
@@ -2346,13 +2352,17 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
     const raw=window.sessionStorage.getItem(WORKSPACE_LIST_KEY);
     if(raw){
      const parsed=JSON.parse(raw) as {active?:string;items?:WorkspaceMeta[]};
-     const items=Array.isArray(parsed.items)?parsed.items.filter(item=>item&&typeof item.id==='string').slice(0,8):[];
+     const rawItems=Array.isArray(parsed.items)?parsed.items.filter(item=>item&&typeof item.id==='string').slice(0,8):[];
+     const deduped=rawItems.filter((item,index,all)=>all.findIndex(candidate=>candidate.id===item.id)===index);
+     const requested=initialWorkspaceId&&deduped.some(item=>item.id===initialWorkspaceId)?initialWorkspaceId:undefined;
+     const preservedActive=requested||(deduped.some(item=>item.id===parsed.active)?parsed.active:undefined);
+     const cleaned=deduped.filter(item=>item.id===preservedActive||!isDisposableBlankWorkspace(item));
+     const items=(cleaned.length?cleaned:(preservedActive?deduped.filter(item=>item.id===preservedActive):deduped.slice(0,1))).slice(0,8);
      if(items.length){
       setWorkspaces(items.map(item=>({...item,status:(item.status==='reading'||item.status==='verifying'?'idle':item.status) as WorkspaceRunStatus})));
-      const requested=initialWorkspaceId&&items.some(item=>item.id===initialWorkspaceId)?initialWorkspaceId:undefined;
-      const nextActive=requested||(items.some(item=>item.id===parsed.active)?parsed.active!:items[0].id);
+      const nextActive=(preservedActive&&items.some(item=>item.id===preservedActive)?preservedActive:items[0].id);
       setActiveWorkspace(nextActive);
-      if(initialWorkspaceId&&!requested){
+      if(initialWorkspaceId!==nextActive){
        window.history.replaceState({workspaceId:nextActive},'',checkRoute(nextActive));
       }
      }
