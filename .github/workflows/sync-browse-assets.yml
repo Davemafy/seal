@@ -5,6 +5,7 @@ on:
     branches: [cloudflare-preview]
     paths:
       - 'lib/browse-cases.ts'
+      - 'lib/browse-discovered.generated.json'
       - 'scripts/sync-browse-assets.ts'
       - '.github/workflows/sync-browse-assets.yml'
   schedule:
