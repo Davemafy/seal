@@ -121,6 +121,57 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  assertNoRuntimeErrors();
 });
 
+test('a second check can finish while the first verification is still in flight',async({page})=>{
+ test.setTimeout(120000);
+ const assertNoRuntimeErrors=guardRuntime(page);
+ let verifyCount=0;
+ let releaseFirst!:()=>void;
+ const firstGate=new Promise<void>(resolve=>{releaseFirst=resolve});
+
+ await page.route('**/api/verify',async route=>{
+  verifyCount++;
+  if(verifyCount===1)await firstGate;
+  await route.continue();
+ });
+
+ await page.goto('/');
+ await page.getByRole('button',{name:/Paste text instead/i}).click();
+ await page.getByLabel('Paste the court message').fill(`UNITED STATES DISTRICT COURT — DISTRICT OF CONNECTICUT
+JURY STATUS CHECK
+Call 1-866-388-2430 after 5:30 PM for the status of your jury service.`);
+ await page.getByRole('button',{name:'Check this message'}).click();
+
+ await expect.poll(()=>verifyCount,{timeout:15000}).toBe(1);
+ let active=page.locator('.seal-workspace-instance:not([hidden])');
+ await expect(active.locator('.rail-check-state.is-verifying')).toBeVisible();
+
+ await active.locator('.rail-new-check').click();
+ active=page.locator('.seal-workspace-instance:not([hidden])');
+ await expect(active.getByTestId('entry-shell')).toBeVisible();
+ await active.getByRole('button',{name:/Paste text instead/i}).click();
+ await active.getByLabel('Paste the court message').fill(`STATE OF NEW HAMPSHIRE
+FINAL COURT-ORDERED MANDATORY COLLECTION NOTICE
+Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administrative fees, court costs, and enforcement surcharges.`);
+ await active.getByRole('button',{name:'Check this message'}).click();
+
+ await expect.poll(()=>verifyCount,{timeout:15000}).toBe(2);
+ await expect(active.getByTestId('result-shell')).toBeVisible({timeout:30000});
+ await expect(active.getByRole('heading',{level:1,name:'Check the toll or case outside this notice'})).toBeVisible();
+
+ releaseFirst();
+ const checks=active.locator('.rail-check-list .rail-check');
+ await expect(checks).toHaveCount(2);
+ await checks.nth(0).click();
+ active=page.locator('.seal-workspace-instance:not([hidden])');
+ await expect(active.getByTestId('result-shell')).toBeVisible({timeout:30000});
+ await expect(active.locator('.pasted-message')).toContainText('1-866-388-2430');
+
+ await active.locator('.rail-check-list .rail-check').nth(1).click();
+ active=page.locator('.seal-workspace-instance:not([hidden])');
+ await expect(active.getByRole('heading',{level:1,name:'Check the toll or case outside this notice'})).toBeVisible();
+ assertNoRuntimeErrors();
+});
+
 test('parallel checks keep completed results isolated and switch cleanly',async({page})=>{
  test.setTimeout(120000);
  const assertNoRuntimeErrors=guardRuntime(page);
