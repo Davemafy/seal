@@ -54,6 +54,18 @@ const formatStoryTime=(seconds:number)=>{
  return `${Math.floor(whole/60)}:${String(whole%60).padStart(2,'0')}`;
 };
 
+function DesignChevron({direction='down'}:{direction?:'down'|'right'|'left'|'up'}){
+ return <svg className={`design-chevron is-${direction}`} viewBox="0 0 14 14" aria-hidden="true" focusable="false">
+  <path d="M3.5 5.25 7 8.75l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+ </svg>;
+}
+
+function DesignPlayIcon(){
+ return <svg className="design-play-icon" viewBox="0 0 14 14" aria-hidden="true" focusable="false">
+  <path d="M5 3.6 10.1 7 5 10.4Z" fill="currentColor"/>
+ </svg>;
+}
+
 const actionSummaryWord=(claim:Claim)=>{
  const action=claim.action;
  if(!action)return '';
@@ -166,6 +178,16 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const [showIndex,setShowIndex]=useState(false);
  const [activeResultSection,setActiveResultSection]=useState<'summary'|'message'|'next'|'checked'>('summary');
  const [technicalOpen,setTechnicalOpen]=useState(false);
+ const jumpToResultSection=useCallback((event:React.MouseEvent<HTMLAnchorElement>,section:'summary'|'message'|'next'|'checked',target:string)=>{
+  event.preventDefault();
+  setActiveResultSection(section);
+  const node=document.querySelector<HTMLElement>(target);
+  if(!node)return;
+  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const top=Math.max(0,node.getBoundingClientRect().top+window.scrollY-16);
+  window.scrollTo({top,behavior:reduce?'auto':'smooth'});
+  window.history.replaceState(null,'',target);
+ },[]);
  const [reviewOffer,setReviewOffer]=useState<'idle'|'counting'|'skipped'|'watching'|'completed'>('idle');
  const [reviewCountdown,setReviewCountdown]=useState(3);
  const [reviewOfferPaused,setReviewOfferPaused]=useState(false);
@@ -1035,12 +1057,12 @@ async function upload(uploaded:File){
         
        </button>
        <label className="ocr-language-control"><span>Image language</span><select value={ocrLanguage} disabled={busy} onChange={event=>setOcrLanguage(event.target.value as OcrLanguage)}>{Object.entries(ocrLanguages).map(([code,label])=><option key={code} value={code}>{label}</option>)}</select></label>
-       <button className="paste-mode-switch" type="button" onClick={()=>setPasteMode(true)}>Paste text instead <span aria-hidden="true">→</span></button>
+       <button className="paste-mode-switch" type="button" onClick={()=>setPasteMode(true)}>Paste text instead <DesignChevron direction="right"/></button>
        <p className="privacy-note">Original file stays on this device. Extracted text may be sent for checking.</p>
       </>
       :
       <div className="paste-mode-panel">
-       <button className="paste-mode-switch paste-mode-back" type="button" onClick={()=>setPasteMode(false)}><span aria-hidden="true">←</span> Upload a file instead</button>
+       <button className="paste-mode-switch paste-mode-back" type="button" onClick={()=>setPasteMode(false)}><DesignChevron direction="left"/> Upload a file instead</button>
        <label className="paste-field">
         <span className="field-label">Message text</span>
         <textarea autoFocus aria-label="Paste the court message" value={draft} onChange={event=>setDraft(event.target.value)} placeholder="Paste the message exactly as you received it"/>
@@ -1094,10 +1116,10 @@ async function upload(uploaded:File){
      </div>
 
      {verification&&<nav className="result-chapters" aria-label="Result sections">
-      <a href="#review-summary" className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={()=>setActiveResultSection('summary')}>Summary</a>
-      <a href="#original-message" className={activeResultSection==='message'?'is-current':''} aria-current={activeResultSection==='message'?'location':undefined} onClick={()=>setActiveResultSection('message')}>Message</a>
-      <a href={verification.safe_action||verification.contact||decisionClaim?.action?'#next-step':'#source-checks'} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={()=>setActiveResultSection('next')}>Next step</a>
-      {!directCourtUnavailable&&<a href="#checked-details" className={activeResultSection==='checked'?'is-current':''} aria-current={activeResultSection==='checked'?'location':undefined} onClick={()=>setActiveResultSection('checked')}>Checked details</a>}
+      <a href="#review-summary" className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={event=>jumpToResultSection(event,'summary','#review-summary')}>Summary</a>
+      <a href="#original-message" className={activeResultSection==='message'?'is-current':''} aria-current={activeResultSection==='message'?'location':undefined} onClick={event=>jumpToResultSection(event,'message','#original-message')}>Message</a>
+      <a href={verification.safe_action||verification.contact||decisionClaim?.action?'#next-step':'#source-checks'} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={event=>jumpToResultSection(event,'next',verification.safe_action||verification.contact||decisionClaim?.action?'#next-step':'#source-checks')}>Next step</a>
+      {!directCourtUnavailable&&<a href="#checked-details" className={activeResultSection==='checked'?'is-current':''} aria-current={activeResultSection==='checked'?'location':undefined} onClick={event=>jumpToResultSection(event,'checked','#checked-details')}>Checked details</a>}
      </nav>}
     </header>
 
@@ -1270,7 +1292,7 @@ async function upload(uploaded:File){
         </div>
 
         {reviewWorthWatching&&!storyOpen&&<button type="button" className="decision-review-player" onClick={replayStory}>
-         <span className="decision-review-play" aria-hidden="true">▶</span>
+         <span className="decision-review-play" aria-hidden="true"><DesignPlayIcon/></span>
          <span><strong>Play evidence review</strong><small>17 sec · message → source → next step</small></span>
         </button>}
        </div>}
@@ -1371,8 +1393,8 @@ async function upload(uploaded:File){
       {messageDetails.length>0||scheduleQuote||noPaymentQuote?<dl className="message-detail-list">{messageDetails.map(claim=><div key={claim.id}><dt>{claim.type==='location'?'Location named':claim.label}</dt><dd>{cleanDisplayText(claim.value)}</dd></div>)}{scheduleQuote&&<div><dt>Schedule stated</dt><dd>{cleanDisplayText(scheduleQuote)}</dd></div>}{noPaymentQuote&&<div><dt>Payment statement</dt><dd>{cleanDisplayText(noPaymentQuote)}</dd></div>}</dl>:<p>No court or case details could be read reliably.</p>}
       <p>These are details printed in the message, not facts confirmed by a court. SEAL cannot establish whether the case exists or who sent it.</p>
       <p>If you need to respond, give the court name and case number above to a clerk reached through an official court site. Do not use payment or contact details supplied in the message until the court confirms them.</p>
-      {/\b(?:high court of lagos state|lagos state judiciary)\b/i.test(text)&&<a href="https://lagosjudiciary.gov.ng/search" target="_blank" rel="noopener noreferrer">Check a High Court reference on the Lagos Judiciary site →</a>}
-      {/\b(?:united states district court|u\.?s\.? district court)\b/i.test(text)&&<a href="https://www.uscourts.gov/federal-court-finder/find" target="_blank" rel="noopener noreferrer">Find the court through the U.S. Courts directory →</a>}
+      {/\b(?:high court of lagos state|lagos state judiciary)\b/i.test(text)&&<a href="https://lagosjudiciary.gov.ng/search" target="_blank" rel="noopener noreferrer">Check a High Court reference on the Lagos Judiciary site</a>}
+      {/\b(?:united states district court|u\.?s\.? district court)\b/i.test(text)&&<a href="https://www.uscourts.gov/federal-court-finder/find" target="_blank" rel="noopener noreferrer">Find the court through the U.S. Courts directory</a>}
      </div>}
      {verification?.safe_action&&<div className="safe-route" id="next-step">
       <div>
@@ -1450,7 +1472,7 @@ async function upload(uploaded:File){
          <div className="source-timestamp">{evidence.source_mode==='LIVE'?'Live official source':'Source snapshot'} · {new Date(evidence.checked_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'})}</div>
         </div>)}
         {currentResult.evidence.length>1&&currentResult.explanation!=='Official sources currently disagree.'&&<details className="additional-sources">
-         <summary>{currentResult.evidence.length-1} more source excerpt{currentResult.evidence.length>2?'s':''}</summary>
+         <summary><span>{currentResult.evidence.length-1} more source excerpt{currentResult.evidence.length>2?'s':''}</span><DesignChevron/></summary>
          {currentResult.evidence.slice(1).map((evidence,index)=><div key={index}>
           <div>{evidence.title}</div>
           <blockquote>{evidence.excerpt}</blockquote>
@@ -1464,7 +1486,7 @@ async function upload(uploaded:File){
      </div>
 
      <details className="technical-record" open={technicalOpen} onToggle={event=>setTechnicalOpen(event.currentTarget.open)}>
-      <summary>Technical record</summary>
+      <summary><span>Technical record</span><DesignChevron/></summary>
       <p>Extractor: {extractionMode} · {resolverSummary}</p>
       {technicalEvidence.map((evidence,index)=><p key={evidence.url||index}>{evidence.title} · {evidence.source_mode} · {evidence.checked_at} · <a href={evidence.url} target="_blank" rel="noopener noreferrer">Original source</a></p>)}
      </details>
