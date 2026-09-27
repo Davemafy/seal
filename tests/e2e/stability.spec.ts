@@ -86,6 +86,7 @@ Call 1-866-388-2430 after 5:30 PM for the status of your jury service.`);
 
 test('India coverage-limit message abstains and hands off to official eCourts',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
+ await page.setViewportSize({width:390,height:844});
  await page.goto('/');
  await page.getByRole('button',{name:/Paste text instead/i}).click();
  await page.getByLabel('Paste the court message').fill(`DISTRICT COURT — NEW DELHI, INDIA
@@ -95,6 +96,10 @@ Call +91 11 5555 0199 to confirm your attendance.`);
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.getByTestId('result-status')).toBeVisible();
+ await expect(page.getByTestId('document-language')).toBeVisible();
+ await expect(page.getByTestId('document-language')).toHaveText('English');
+ await expect(page.getByTestId('document-jurisdiction')).toBeVisible();
+ await expect(page.getByTestId('document-jurisdiction')).toContainText('India');
  await expect(page.getByTestId('two-risk-result')).toContainText('Not confirmed');
  await expect(page.getByText('Official directory',{exact:true})).toBeVisible();
  const route=page.getByTestId('case-reality-check').getByRole('link',{name:'Search India eCourts'});
