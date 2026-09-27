@@ -9,7 +9,7 @@ test('international message gets a safe resolution path without an authenticity 
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.getByTestId('check-object-header')).toContainText('DISTRICT COURT');
- await expect(page.getByTestId('check-object-header')).toContainText('DL-2026-4821');
+ await expect(page.getByTestId('case-reality-check')).toContainText('DL-2026-4821');
  await expect(page.getByTestId('two-risk-result')).toContainText('Not confirmed');
  await expect(page.getByTestId('two-risk-result')).toContainText('Not confirmed');
  await expect(page.getByTestId('primary-next-step').getByRole('link',{name:'Search India eCourts'})).toBeVisible();
