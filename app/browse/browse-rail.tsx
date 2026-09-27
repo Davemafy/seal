@@ -8,7 +8,7 @@ import BrowseLanguage from './browse-language';
 type WorkspaceRunStatus='idle'|'reading'|'verifying'|'done'|'error';
 type WorkspaceMeta={id:string;title:string;status:WorkspaceRunStatus;language?:string;jurisdiction?:string;preview?:string};
 const WORKSPACE_LIST_KEY='seal:workspace-list:v1';
-const checkRoute=(id:string)=>`/check/${encodeURIComponent(id.replace(/^check-/,''))}`;
+const checkRoute=(id:string)=>`/check/${encodeURIComponent(id==='primary'?'primary':id.replace(/^check-/,''))}`;
 
 const clean=(value:string)=>String(value||'').replace(/[\u0000-\u001F\u007F]/g,' ').replace(/\s+/g,' ').trim();
 
