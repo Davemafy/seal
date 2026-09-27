@@ -71,6 +71,31 @@ test('mobile SEAL brand returns a result to the clean entry state',async({page})
  assertNoRuntimeErrors();
 });
 
+test('mobile entry shell does not leave body space below its footer',async({page})=>{
+ const assertNoRuntimeErrors=guardRuntime(page);
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+
+ const metrics=await page.evaluate(()=>{
+  const footer=document.querySelector('.seal-footer') as HTMLElement|null;
+  const app=document.querySelector('.seal-app') as HTMLElement|null;
+  if(!footer||!app)return null;
+  const footerBox=footer.getBoundingClientRect();
+  const appBox=app.getBoundingClientRect();
+  return {
+   viewport:window.innerHeight,
+   bodyHeight:document.body.getBoundingClientRect().height,
+   appBottom:appBox.bottom,
+   footerBottom:footerBox.bottom
+  };
+ });
+
+ expect(metrics).not.toBeNull();
+ expect(Math.abs(metrics!.bodyHeight-metrics!.appBottom)).toBeLessThanOrEqual(2);
+ expect(metrics!.footerBottom).toBeGreaterThanOrEqual(metrics!.viewport-2);
+ assertNoRuntimeErrors();
+});
+
 test('official sample survives result review, refresh, and replay',async({page})=>{
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
