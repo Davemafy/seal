@@ -790,3 +790,46 @@
   overflow:visible!important
  }
 }
+
+
+/* Make the result continuation explicit instead of a dead divider. */
+@media(min-width:901px){
+ .result-slide-summary .decision-details{
+  width:100%!important;
+  max-width:960px!important;
+  margin:30px 0 0!important;
+  padding:0!important;
+  border-top:1px solid #e5e5e1!important;
+  border-bottom:1px solid #e5e5e1!important
+ }
+ .result-slide-summary .decision-details>summary{
+  width:100%!important;
+  min-height:52px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  padding:0 2px!important;
+  color:#1f1f1d!important;
+  font-size:12.5px!important;
+  line-height:18px!important;
+  font-weight:620!important;
+  cursor:pointer!important
+ }
+ .result-slide-summary .decision-details>summary>span{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important
+ }
+ .result-slide-summary .decision-details>summary .seal-guide-icon{
+  width:13px!important;
+  height:13px!important;
+  flex:0 0 auto!important;
+  color:#6f6f6b!important;
+  visibility:visible!important;
+  opacity:1!important
+ }
+ .result-slide-summary .decision-details[open]>.decision-details-body{
+  padding:4px 0 22px!important
+ }
+}
