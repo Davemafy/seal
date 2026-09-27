@@ -162,3 +162,16 @@ test('cinematic review stays fixed to the viewport after the result page has scr
  await page.getByRole('button',{name:'Full evidence'}).click();
  assertNoRuntimeErrors();
 });
+
+
+test('curated Dallas example preserves its source-backed resolution',async({page})=>{
+ test.setTimeout(90000);
+ const assertNoRuntimeErrors=guardRuntime(page);
+ await page.goto('/?case=dallas-traffic-qr-scam');
+ await expect(page.getByTestId('result-shell')).toBeVisible({timeout:60000});
+ await expect(page.getByRole('heading',{name:'Do not scan or pay from this message'})).toBeVisible();
+ await expect(page.getByText(/City of Dallas published this exact example as a scam/i)).toBeVisible();
+ await expect(page.getByRole('link',{name:/View the City of Dallas source/i})).toBeVisible();
+ await expect(page.getByTestId('play-evidence-review')).toBeVisible();
+ assertNoRuntimeErrors();
+});
