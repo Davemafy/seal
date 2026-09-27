@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {fallbackExtract,claimsFromExtraction} from '../lib/extract';
 import {verifyClaims} from '../lib/resolver';
 import {justiceSupportFor} from '../lib/justice-support';
-import {buildCaseReality,buildObligationMap,buildRiskSummary} from '../lib/user-guidance';
+import {buildCaseReality,buildCourtQuestionScript,buildHandoffSummary,buildObligationMap,buildRiskSummary} from '../lib/user-guidance';
 
 describe('user-first justice guidance',()=>{
  it('keeps an unsupported India message actionable without authenticating it',async()=>{
@@ -21,6 +21,18 @@ describe('user-first justice guidance',()=>{
   const items=buildObligationMap(claims,verification);
   expect(items.some(item=>item.text.includes('Call +91 11 5555 0199'))).toBe(true);
   expect(items.every(item=>item.statusLabel==='Message only — not confirmed')).toBe(true);
+ });
+ it('creates a portable court handoff without treating message instructions as genuine',async()=>{
+  const text='DISTRICT COURT — NEW DELHI, INDIA\nCase No: DL-2026-4821\nYou must appear at the court registry on October 14, 2026.\nCall +91 11 5555 0199 to confirm your attendance.';
+  const extraction=fallbackExtract(text);const claims=claimsFromExtraction(extraction,text);const verification=await verifyClaims(claims,extraction.court_name,'SNAPSHOT','',text);
+  const script=buildCourtQuestionScript(claims,verification);
+  const record=buildHandoffSummary(claims,verification,justiceSupportFor(text));
+  expect(script).toContain('DL-2026-4821');
+  expect(script).toContain('Call +91 11 5555 0199');
+  expect(script).toContain('not using phone numbers');
+  expect(record).toContain('WHAT TO ASK THE COURT');
+  expect(record).toContain('Official starting point: https://');
+  expect(record).toContain('A missing public record is not proof');
  });
  it('does not turn a matching case reference into sender authentication',()=>{
   const claims=[{id:'d',type:'docket' as const,label:'Case',value:'1:24-cv-100',exact_source_text:'Case 1:24-cv-100',page:1}];

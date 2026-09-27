@@ -21,7 +21,14 @@ test('international message gets a safe resolution path without an authenticity 
  await expect(page.getByText('In simple terms')).toBeVisible();
  await page.getByTestId('resolution-help').locator('summary').click();
  await expect(page.getByRole('link',{name:'Open NALSA legal aid'})).toBeVisible();
- await expect(page.getByRole('button',{name:'Copy verification summary'})).toBeVisible();
+ await expect(page.getByTestId('handoff-pack')).toContainText('Take this with you');
+ await expect(page.getByTestId('handoff-pack')).toContainText('DL-2026-4821');
+ await expect(page.getByRole('button',{name:'Copy what to ask'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Copy verification record'})).toBeVisible();
+ const downloadPromise=page.waitForEvent('download');
+ await page.getByRole('button',{name:'Save verification record'}).click();
+ const download=await downloadPromise;
+ expect(download.suggestedFilename()).toBe('seal-verification-dl-2026-4821.txt');
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
  expect(overflow).toBeLessThanOrEqual(1);
 });

@@ -13,7 +13,7 @@ import {clearOrphanedResultArtifacts,clearResultSession,persistResultSession,res
 import {officialCourtDirectoryFor} from '@/lib/official-directories';
 import {detectDocumentContext,type DetectedDocumentLanguage} from '@/lib/document-context';
 import {justiceSupportFor} from '@/lib/justice-support';
-import {buildCaseReality,buildHandoffSummary,buildObligationMap,buildPlainLanguageSummary,buildRiskSummary} from '@/lib/user-guidance';
+import {buildCaseReality,buildCourtQuestionScript,buildHandoffSummary,buildObligationMap,buildPlainLanguageSummary,buildRiskSummary} from '@/lib/user-guidance';
 import {DISPLAY_LANGUAGES,displayLocaleFor,uiCopy,type DisplayLocale,type UiCopyKey} from '@/lib/ui-locales';
 import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
 import './workspace.css';
@@ -241,6 +241,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [activeResultSection,setActiveResultSection]=useState<'summary'|'message'|'next'|'checked'>('summary');
  const [technicalOpen,setTechnicalOpen]=useState(false);
  const [handoffCopied,setHandoffCopied]=useState(false);
+ const [questionCopied,setQuestionCopied]=useState(false);
  const workspaceRootRef=useRef<HTMLElement>(null);
  const sectionId=(base:string)=>workspaceId==='primary'?base:`${base}-${workspaceId}`;
  const jumpToResultSection=useCallback((event:React.MouseEvent<HTMLAnchorElement>,section:'summary'|'message'|'next'|'checked',targetBase:string)=>{
@@ -433,6 +434,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const caseReality=useMemo(()=>verification?buildCaseReality(claims,verification):null,[claims,verification]);
  const obligations=useMemo(()=>verification?buildObligationMap(claims,verification):[],[claims,verification]);
  const plainExplanation=useMemo(()=>verification?buildPlainLanguageSummary(claims,verification):null,[claims,verification]);
+ const courtQuestionScript=useMemo(()=>verification?buildCourtQuestionScript(claims,verification):'',[claims,verification]);
  const displayedExplanation=plainExplanation?{
   title:translatedResult.plainTitle||plainExplanation.title,
   summary:translatedResult.plainSummary||plainExplanation.summary
@@ -541,7 +543,15 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    supportSharedTitle:'I shared personal information',
    supportSharedCopy:'Do not send anything else through the message. Use an official recovery service if one is available for this jurisdiction.',
    supportLegalTitle:'I need legal help',
-   supportLegalCopy:'Use an official legal-aid service to understand your options for a real legal matter.'
+   supportLegalCopy:'Use an official legal-aid service to understand your options for a real legal matter.',
+   handoffEyebrow:'Take this with you',
+   handoffTitle:'Ask the court without relying on the message',
+   handoffCopy:'Use this wording with an independently sourced court channel. It carries the case reference and the exact instructions SEAL recovered without treating them as genuine.',
+   courtQuestionScript,
+   copyQuestion:'Copy what to ask',
+   copyRecord:'Copy verification record',
+   saveRecord:'Save verification record',
+   handoffNote:'The saved record includes verification states, source links, and source-check timestamps. It does not include a legal opinion.'
   };
   (verification.signals||[]).forEach((signal,index)=>{
    strings['signalTitle'+index]=signal.title;
@@ -559,7 +569,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    strings.safePrimary=verification.safe_action.primary_label;
   }
   return strings;
- },[verification,claims,file?.sample,conciseDecisionTitle,decision.summary,decisionRelationship,plainExplanation,riskSummary,caseReality]);
+ },[verification,claims,file?.sample,conciseDecisionTitle,decision.summary,decisionRelationship,plainExplanation,riskSummary,caseReality,courtQuestionScript]);
 
  useEffect(()=>{
   if(!verification||displayLocale==='en')return;
@@ -1065,10 +1075,28 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   setLanguageMenuOpen(false);
  }
 
+ async function copyCourtQuestion(){
+  if(!courtQuestionScript)return;
+  try{await navigator.clipboard.writeText(translatedResult.courtQuestionScript||courtQuestionScript);setQuestionCopied(true);window.setTimeout(()=>setQuestionCopied(false),1800)}
+  catch{setQuestionCopied(false)}
+ }
+
  async function copyHandoff(){
   if(!verification)return;
   try{await navigator.clipboard.writeText(buildHandoffSummary(claims,verification,justiceSupport));setHandoffCopied(true);window.setTimeout(()=>setHandoffCopied(false),1800)}
   catch{setHandoffCopied(false)}
+ }
+
+ function saveHandoff(){
+  if(!verification)return;
+  const record=buildHandoffSummary(claims,verification,justiceSupport);
+  const reference=caseReality?.reference||'check';
+  const slug=reference.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,48)||'check';
+  const url=URL.createObjectURL(new Blob([record],{type:'text/plain;charset=utf-8'}));
+  const anchor=document.createElement('a');
+  anchor.href=url;anchor.download='seal-verification-'+slug+'.txt';anchor.style.display='none';
+  document.body.appendChild(anchor);anchor.click();anchor.remove();
+  window.setTimeout(()=>URL.revokeObjectURL(url),1000);
  }
 
  function clear(){
@@ -1093,7 +1121,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   storyPhaseRef.current=0;
   runId.current++;
   if(file)URL.revokeObjectURL(file.preview);
-  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setActiveResultSection('summary');setTechnicalOpen(false);setHandoffCopied(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryArtifactReady(true);setStoryStartPending(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);
+  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setActiveResultSection('summary');setTechnicalOpen(false);setHandoffCopied(false);setQuestionCopied(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryArtifactReady(true);setStoryStartPending(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);
  }
 
  function chooseFixture(key:FixtureKey){clear();setFixture(key);setText(fixtures[key].text);void run('SNAPSHOT',{text:fixtures[key].text,file:null})}
@@ -1883,8 +1911,18 @@ async function upload(uploaded:File){
        <div className="support-path"><strong>{translatedResult.supportPaidTitle||'I already paid'}</strong><p>{translatedResult.supportPaidCopy||'Contact your bank or payment provider through its official app, card, or website and report the transaction immediately.'}</p>{justiceSupport?.recovery&&<a className="journey-link" href={justiceSupport.recovery.url} target="_blank" rel="noopener noreferrer">{justiceSupport.recovery.label}</a>}</div>
        <div className="support-path"><strong>{translatedResult.supportSharedTitle||'I shared personal information'}</strong><p>{translatedResult.supportSharedCopy||'Do not send anything else through the message. Use an official recovery service if one is available for this jurisdiction.'}</p>{justiceSupport?.recovery&&<a className="journey-link" href={justiceSupport.recovery.url} target="_blank" rel="noopener noreferrer">{justiceSupport.recovery.label}</a>}</div>
        <div className="support-path"><strong>{translatedResult.supportLegalTitle||'I need legal help'}</strong><p>{translatedResult.supportLegalCopy||'Use an official legal-aid service to understand your options for a real legal matter.'}</p>{justiceSupport?.legalAid?<a className="journey-link" href={justiceSupport.legalAid.url} target="_blank" rel="noopener noreferrer">{justiceSupport.legalAid.label}</a>:<span className="support-unavailable">No reviewed legal-aid directory is linked for this jurisdiction yet.</span>}</div>
-       <button type="button" className="handoff-copy" onClick={()=>void copyHandoff()}>{handoffCopied?'Summary copied':'Copy verification summary'}</button>
-       <p className="journey-note">The copied summary contains extracted claims, verification states, and source links — not an AI opinion about what you should do legally.</p>
+       <div className="handoff-pack" data-testid="handoff-pack">
+        <span>{translatedResult.handoffEyebrow||'Take this with you'}</span>
+        <strong>{translatedResult.handoffTitle||'Ask the court without relying on the message'}</strong>
+        <p>{translatedResult.handoffCopy||'Use this wording with an independently sourced court channel. It carries the case reference and the exact instructions SEAL recovered without treating them as genuine.'}</p>
+        <blockquote>{translatedResult.courtQuestionScript||courtQuestionScript}</blockquote>
+        <div className="handoff-actions">
+         <button type="button" onClick={()=>void copyCourtQuestion()}>{questionCopied?'Copied':translatedResult.copyQuestion||'Copy what to ask'}</button>
+         <button type="button" onClick={()=>void copyHandoff()}>{handoffCopied?'Record copied':translatedResult.copyRecord||'Copy verification record'}</button>
+         <button type="button" onClick={saveHandoff}>{translatedResult.saveRecord||'Save verification record'}</button>
+        </div>
+        <small>{translatedResult.handoffNote||'The saved record includes verification states, source links, and source-check timestamps. It does not include a legal opinion.'}</small>
+       </div>
       </div>
      </details>
     </section>}

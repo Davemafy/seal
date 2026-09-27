@@ -73,14 +73,45 @@ export function buildPlainLanguageSummary(claims:Claim[],verification:Verificati
  return {title:'In simple terms',summary:actionText+' '+risk.instructions.title+' '+reality.title+'. Use an independently opened court source before acting on anything that remains unconfirmed.'};
 }
 
+export function buildCourtQuestionScript(claims:Claim[],verification:Verification):string{
+ const reality=buildCaseReality(claims,verification);
+ const obligations=buildObligationMap(claims,verification);
+ const opening='I received a message claiming to be from '+reality.court+(reality.reference?' about case/reference '+reality.reference:'')+'.';
+ const caseQuestion=reality.reference
+  ?'Can you confirm whether that case/reference exists in your records and whether this communication matches your court’s records?'
+  :'Can you confirm whether this communication matches your court’s records and whether there is a matter I need to respond to?';
+ const actionQuestion=obligations.length
+  ?'The message says: “'+obligations.slice(0,2).map(item=>item.text).join('” and “')+'”. Can you confirm whether those instructions are genuine and, if so, what official process and deadline I should use?'
+  :'Can you confirm whether there is anything I am required to do, and what official process I should use?';
+ return [opening,caseQuestion,actionQuestion,'I am not using phone numbers, links, QR codes, or payment details from the message itself.'].join(' ');
+}
+
 export function buildHandoffSummary(claims:Claim[],verification:Verification,support?:JusticeSupport):string{
- const reality=buildCaseReality(claims,verification);const obligations=buildObligationMap(claims,verification);
+ const reality=buildCaseReality(claims,verification);
+ const obligations=buildObligationMap(claims,verification);
+ const risk=buildRiskSummary(claims,verification);
  const evidence=[...new Map([...verification.results.flatMap(result=>result.evidence),...(verification.signals||[]).flatMap(signal=>signal.evidence),...(verification.safe_action?.evidence||[])].map(item=>[item.url,item])).values()];
- const lines=['SEAL verification summary','Court claimed: '+reality.court,'Case/reference: '+(reality.reference||'Not verified'),'Underlying matter: '+reality.title,'','Actions stated in the message:'];
- lines.push(...(obligations.length?obligations.map(item=>'- '+item.text+(item.deadline?' | Time/date stated: '+item.deadline:'')+' | '+item.statusLabel):['- No clear requested action was recovered']));
- lines.push('','Independent sources:');
- lines.push(...evidence.map(item=>'- '+item.title+': '+item.url));
+ const lines=[
+  'SEAL verification record',
+  'Prepared from a public-source check. Keep the original message with this record.',
+  '',
+  'CLAIMED MATTER',
+  'Court claimed: '+reality.court,
+  'Case/reference: '+(reality.reference||'Not verified'),
+  'Underlying matter: '+reality.title,
+  '',
+  'MESSAGE INSTRUCTIONS',
+  risk.instructions.title,
+  risk.instructions.detail,
+  ...(obligations.length?obligations.map(item=>'- '+item.text+(item.deadline?' | Time/date stated: '+item.deadline:'')+' | '+item.statusLabel):['- No clear requested action was recovered']),
+  '',
+  'WHAT TO ASK THE COURT',
+  buildCourtQuestionScript(claims,verification),
+  '',
+  'INDEPENDENT SOURCES'
+ ];
+ lines.push(...(evidence.length?evidence.map(item=>'- '+item.title+' | '+item.source_mode+' | checked '+item.checked_at+' | '+item.url):['- No direct evidence source was established in this check.']));
  if(support)lines.push('- Official starting point: '+support.court.url);
- lines.push('','SEAL does not authenticate a sender from appearance alone and does not provide legal advice.');
+ lines.push('','LIMITS','SEAL does not authenticate a sender from appearance alone. A missing public record is not proof that a legal matter is false. This record is not legal advice.');
  return lines.join('\n');
 }

@@ -2434,3 +2434,22 @@
  .document-heading{font-size:12px}
  .document-paper{min-height:0}
 }
+
+
+/* Portable incident handoff: the useful artifact leaves SEAL with the user. */
+.handoff-pack{margin-top:16px;padding-top:16px;border-top:1px solid #dedede}
+.handoff-pack>span{display:block;color:#777;font-size:10px;line-height:15px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.handoff-pack>strong{display:block;margin-top:3px;color:#171717;font-size:14px;line-height:20px;font-weight:600}
+.handoff-pack>p{max-width:620px;margin:5px 0 0;color:#666;font-size:12px;line-height:18px}
+.handoff-pack blockquote{max-width:650px;margin:13px 0 0;padding:0 0 0 12px;border-left:2px solid #bdbdbd;color:#2b2b2b;font-size:12.5px;line-height:19px}
+.handoff-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.handoff-actions button{min-height:34px;padding:7px 10px;border:1px solid #d1d1d1;border-radius:4px;background:#fff;color:#171717;font:inherit;font-size:11px;line-height:17px;font-weight:560;cursor:pointer}
+.handoff-actions button:first-child{border-color:#222}
+.handoff-actions button:hover{border-color:#111}
+.handoff-pack>small{display:block;max-width:620px;margin-top:8px;color:#7a7a7a;font-size:10px;line-height:15px}
+@media(max-width:599px){
+ .handoff-pack{margin-top:14px;padding-top:14px}
+ .handoff-pack blockquote{font-size:12px;line-height:18px}
+ .handoff-actions{display:grid;grid-template-columns:1fr}
+ .handoff-actions button{width:100%;min-height:40px;text-align:left}
+}
