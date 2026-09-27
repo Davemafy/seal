@@ -369,17 +369,15 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    :undefined;
  const storySourceCopy=storySignal?.summary||storyEvidence?.excerpt||storyResult?.explanation||'SEAL could not establish this detail from a supported source.';
  const storySourceDisplay=cinematicExcerpt(storySourceCopy);
- const storyVerdict=storySignal?.id==='nh-toll-process'
-  ?'New Hampshire publishes a specific collection process.'
-  :storySignal?.id.startsWith('curated-')
-   ?'The issuing authority published this example as a scam.'
-   :storySignal?.id==='traffic-qr-warning'
-    ?'This pattern matches an official scam warning.'
+ const storyVerdict=storySignal?.id.startsWith('curated-')
+  ?'The issuing authority published this example as a scam.'
+  :storySignal
+   ?storySignal.title
    :storyResult?.verdict==='MATCH'
-   ?'This detail matches the source.'
-   :storyResult?.verdict==='MISMATCH'
-    ?'This detail conflicts with the source.'
-    :'We couldn’t confirm this detail.';
+    ?'This detail matches the source.'
+    :storyResult?.verdict==='MISMATCH'
+     ?'This detail conflicts with the source.'
+     :'We couldn’t confirm this detail.';
  const storyFinalTitle=storySignal?.id==='traffic-qr-warning'
   ?verification?.safe_action?.title||'Verify independently before you pay.'
   :storyClaim?.type==='authority'&&verification?.safe_action
@@ -396,17 +394,17 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
       :'Use the court’s own website or independently sourced contact information before responding.');
  const storySourceLabel=!storyEvidence
   ?'Source check'
-  :storySignal?.id==='nh-toll-process'
-   ?'New Hampshire public sources'
+  :storySignal?.kind==='OFFICIAL_PROCESS'
+   ?'Official process'
    :storySignal?.id.startsWith('curated-')
-   ?'Issuing authority'
-   :storySignal?.id==='traffic-qr-warning'&&/ftc\.gov/i.test(storyEvidence.url)
-   ?'Federal consumer guidance'
-   :storySignal?.kind==='SOURCE_CONFLICT'
-    ?'State law'
-    :['connecticut','riverside','courtlistener'].includes(storyResult?.resolver_id||verification?.resolver_id||'')
-     ?'Official court source'
-     :'Independent official source';
+    ?'Issuing authority'
+    :storySignal?.id==='traffic-qr-warning'&&/ftc\.gov/i.test(storyEvidence.url)
+     ?'Federal consumer guidance'
+     :storySignal?.kind==='SOURCE_CONFLICT'
+      ?'Official source'
+      :['connecticut','riverside','courtlistener'].includes(storyResult?.resolver_id||verification?.resolver_id||'')
+       ?'Official court source'
+       :'Independent official source';
  const decisionResult=decisionClaim?resultById.get(decisionClaim.id):undefined;
  const decisionClaimDisplay=cleanDisplayText(decisionClaim?.action?.source_text||decisionClaim?.exact_source_text||decisionClaim?.value||'');
  const directEvidenceFindings=verification
@@ -419,23 +417,17 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const curatedAuthorityMatch=Boolean(storySignal?.id.startsWith('curated-')&&verification?.safe_action?.evidence?.length);
  const officialDirectory=useMemo(()=>officialCourtDirectoryFor(text),[text]);
  const directCheckSummary=directCourtUnavailable&&!curatedAuthorityMatch?'SEAL did not classify the sender, case, or payment request as genuine or fraudulent.':'';
- const decisionRelationship=storySignal?.id==='nh-toll-process'
-  ?storySignal.summary
-  :storySignal?.id.startsWith('curated-')
-   ?'The issuing authority published this artifact as a scam example.'
-   :storySignal?.kind==='SOURCE_CONFLICT'
-   ?'This detail conflicts with an official source.'
-   :storySignal?.id==='traffic-qr-warning'
-   ?'Published official warnings match this payment pattern.'
-   :storySignal
-    ?'Published official warnings match this pattern.'
-    :decisionResult?.verdict==='MATCH'
-     ?'This detail matches the independent source.'
-     :decisionResult?.verdict==='MISMATCH'
-      ?'This detail conflicts with the independent source.'
-      :directCourtUnavailable
-       ?'No reviewed direct court source was available in this check.'
-       :'Independent source evidence was not sufficient to verify this detail.';
+ const decisionRelationship=storySignal?.id.startsWith('curated-')
+  ?'The issuing authority published this artifact as a scam example.'
+  :storySignal
+   ?storySignal.summary
+   :decisionResult?.verdict==='MATCH'
+    ?'This detail matches the independent source.'
+    :decisionResult?.verdict==='MISMATCH'
+     ?'This detail conflicts with the independent source.'
+     :directCourtUnavailable
+      ?'No reviewed direct court source was available in this check.'
+      :'Independent source evidence was not sufficient to verify this detail.';
  const decisionRelationshipConflict=storySignal?.kind==='SOURCE_CONFLICT'||(!storySignal&&decisionResult?.verdict==='MISMATCH');
  const current=claims.find(claim=>claim.id===selected)||claims[0];
  const currentResult=current&&resultById.get(current.id);
@@ -460,20 +452,14 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   &&!(verification?.signals?.length)
   &&directEvidenceFindings.length===0
  );
- const nhProcessSignal=verification?.signals?.find(signal=>signal.id==='nh-toll-process');
- const decision=nhProcessSignal
+ const decision=unsupportedWithoutIndependentFinding
   ?{
-   title:'Compare this payment demand with New Hampshire’s official process.',
-   summary:'The notice asks for full payment of tolls, fines, fees, and court costs. New Hampshire law describes transaction-specific toll notices and a defined enforcement path; Judicial Branch materials separately describe court judgment collection. SEAL has not verified this notice or the amount owed.'
+   title:'This message needs a direct court check.',
+   summary:groundedActions.length
+    ?'SEAL found the instruction below in the original message, but it does not have a reviewed source for this court yet.'
+    :'SEAL could read parts of the message, but it does not have a reviewed source for this court yet.'
   }
-  :unsupportedWithoutIndependentFinding
-   ?{
-    title:'This message needs a direct court check.',
-    summary:groundedActions.length
-     ?'SEAL found the instruction below in the original message, but it does not have a reviewed source for this court yet.'
-     :'SEAL could read parts of the message, but it does not have a reviewed source for this court yet.'
-   }
-   :decisionCopy(verification,decisionClaim);
+  :decisionCopy(verification,decisionClaim);
  const technicalEvidence=useMemo(()=>{
   if(!verification)return [];
   const all=[
@@ -1600,7 +1586,7 @@ async function upload(uploaded:File){
         const primary=signal.id===storySignal?.id;
         const evidenceTitles=signal.evidence.map(evidence=>evidence.title);
         return <article className={`source-signal ${primary?'is-primary':'is-secondary'}`} key={signal.id}>
-         <p className="signal-kind">{signal.id==='nh-toll-process'?'Official process':signal.kind==='SOURCE_CONFLICT'?'Source conflict':signal.kind==='KNOWN_PATTERN'?'Known pattern':'Official warning'}</p>
+         <p className="signal-kind">{signal.kind==='OFFICIAL_PROCESS'?'Official process':signal.kind==='SOURCE_CONFLICT'?'Source conflict':signal.kind==='KNOWN_PATTERN'?'Known pattern':'Official warning'}</p>
          <h3>{signal.title}</h3>
          <p>{signal.summary}</p>
          {signal.evidence.length>0&&<div className="signal-links">
