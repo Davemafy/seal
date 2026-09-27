@@ -53,6 +53,16 @@ const official={
   'Richmond City General District Court',
   'https://vacourts.gov/courts/gd/richmond_city/home',
   'John Marshall Criminal/Traffic: (804) 646-6431. John Marshall Courts Building, 400 N. 9th Street, Richmond.'
+ ),
+ nhTollRules:snapshot(
+  'New Hampshire Administrative Rules — toll payment requests',
+  'https://www.gc.nh.gov/rules/state_agencies/tra700.html',
+  'New Hampshire toll payment requests identify the unpaid transaction and use staged payment requests and notices of violation through the E-ZPass/vendor process.'
+ ),
+ nhCourtCollection:snapshot(
+  'New Hampshire Judicial Branch — judgment collection process',
+  'https://www.courts.nh.gov/sites/g/files/ehbemt471/files/documents/2021-07/basicprocessforcollectingonjudgment.pdf',
+  'The Judicial Branch describes post-judgment collection through court motions, service, payment hearings, and court orders. The Information Center number is 1-855-212-1234.'
  )
 };
 
@@ -66,6 +76,7 @@ const vaStatutes:Record<string,{evidence:Evidence;topic:'behavioral-health-parki
 const normalize=(value:string)=>value.replace(/\s+/g,' ').trim();
 const sectionFrom=(value:string)=>value.match(/46\.2-\d+(?:\.\d+)?(?::\d+)?/i)?.[0]||'';
 const isVirginia=(text:string)=>/\b(?:commonwealth of virginia|virginia court|district court of virginia|richmond,?\s*va|va\.?\s*code|virginia code)\b/i.test(text);
+const isNewHampshire=(text:string)=>/\b(?:state of new hampshire|new hampshire|nh\s+(?:court|judicial|e-?zpass|turnpike))\b/i.test(text);
 const isUsContext=(text:string)=>/\b(?:united states|u\.?s\.?\s+(?:district|federal|court)|commonwealth of virginia|state of (?:maryland|virginia|texas|florida|california|connecticut)|virginia court|richmond,?\s*va|dallas,?\s*texas|miami-?dade|baltimore,?\s*maryland|va\.?\s*code|virginia code)\b/i.test(text);
 const hasTrafficSubject=(text:string)=>/\b(?:traffic|parking|toll|vehicle|citation)\b/i.test(text);
 const hasTollSubject=(text:string)=>/\b(?:electronic toll|toll violation|toll evasion|unpaid toll|failure to pay[^\n]{0,50}toll)\b/i.test(text);
@@ -137,6 +148,19 @@ export function analyzePublicIntelligence(text:string,claims:Claim[],results:Res
    evidence:[official.ftcTraffic]
   });
  }
+ const nhTollDemand=isNewHampshire(compact)
+  &&/\b(?:toll|e-?zpass|turnpike)\b/i.test(compact)
+  &&(hasRequested(claims,'pay')||rawPay);
+ if(nhTollDemand){
+  signals.push({
+   id:'nh-toll-process',
+   kind:'OFFICIAL_WARNING',
+   title:'New Hampshire publishes a different process for toll and court collections',
+   summary:'State toll rules describe E-ZPass/vendor payment requests with transaction details and staged notices. Judicial Branch materials describe judgment collection through filed motions, service, hearings, and court orders.',
+   evidence:[official.nhTollRules,official.nhCourtCollection]
+  });
+ }
+
  if(/(?:^|[^0-9])(?:[A-Z]{2}-)?26[-\s]?TR[-\s]?273196(?:[^0-9]|$)/i.test(compact)){
   signals.push({
    id:'reused-case-pattern',
@@ -159,6 +183,31 @@ export function analyzePublicIntelligence(text:string,claims:Claim[],results:Res
  }
 
  if(!signals.length)return {signals};
+
+ const newHampshire=isNewHampshire(compact);
+ if(newHampshire&&signals.some(signal=>signal.id==='nh-toll-process')){
+  return {
+   signals,
+   safe_action:{
+    title:'Check the toll or case outside this notice',
+    summary:'Use New Hampshire’s official toll or court channels before paying through any route printed in this notice.',
+    primary_url:'https://www.ezpassnh.com/',
+    primary_label:'Open NH E-ZPass',
+    steps:[
+     'Check the toll through the official NH E-ZPass site using information you already know.',
+     'If the notice claims a court order or judgment, contact the New Hampshire Judicial Branch independently.',
+     'Do not use the payment route in the notice until the demand matches an official record.'
+    ],
+    evidence:[official.nhTollRules,official.nhCourtCollection]
+   },
+   contact:{
+    name:'New Hampshire Judicial Branch Information Center',
+    phone:'1-855-212-1234',
+    website:'https://www.courts.nh.gov/',
+    source:official.nhCourtCollection
+   }
+  };
+ }
 
  const virginia=isVirginia(compact);
  const richmond=virginia&&/\brichmond\b/i.test(compact);

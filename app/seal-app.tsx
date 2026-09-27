@@ -349,10 +349,12 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    :undefined;
  const storySourceCopy=storySignal?.summary||storyEvidence?.excerpt||storyResult?.explanation||'SEAL could not establish this detail from a supported source.';
  const storySourceDisplay=cinematicExcerpt(storySourceCopy);
- const storyVerdict=storySignal?.id.startsWith('curated-')
-  ?'The issuing authority published this example as a scam.'
-  :storySignal?.id==='traffic-qr-warning'
-   ?'This pattern matches an official scam warning.'
+ const storyVerdict=storySignal?.id==='nh-toll-process'
+  ?'New Hampshire publishes a different collection process.'
+  :storySignal?.id.startsWith('curated-')
+   ?'The issuing authority published this example as a scam.'
+   :storySignal?.id==='traffic-qr-warning'
+    ?'This pattern matches an official scam warning.'
    :storyResult?.verdict==='MATCH'
    ?'This detail matches the source.'
    :storyResult?.verdict==='MISMATCH'
@@ -374,7 +376,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
       :'Use the court’s own website or independently sourced contact information before responding.');
  const storySourceLabel=!storyEvidence
   ?'Source check'
-  :storySignal?.id.startsWith('curated-')
+  :storySignal?.id==='nh-toll-process'
+   ?'New Hampshire public sources'
+   :storySignal?.id.startsWith('curated-')
    ?'Issuing authority'
    :storySignal?.id==='traffic-qr-warning'&&/ftc\.gov/i.test(storyEvidence.url)
    ?'Federal consumer guidance'
@@ -395,9 +399,11 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const curatedAuthorityMatch=Boolean(storySignal?.id.startsWith('curated-')&&verification?.safe_action?.evidence?.length);
  const officialDirectory=useMemo(()=>officialCourtDirectoryFor(text),[text]);
  const directCheckSummary=directCourtUnavailable&&!curatedAuthorityMatch?'SEAL did not classify the sender, case, or payment request as genuine or fraudulent.':'';
- const decisionRelationship=storySignal?.id.startsWith('curated-')
-  ?'The issuing authority published this artifact as a scam example.'
-  :storySignal?.kind==='SOURCE_CONFLICT'
+ const decisionRelationship=storySignal?.id==='nh-toll-process'
+  ?storySignal.summary
+  :storySignal?.id.startsWith('curated-')
+   ?'The issuing authority published this artifact as a scam example.'
+   :storySignal?.kind==='SOURCE_CONFLICT'
    ?'This detail conflicts with an official source.'
    :storySignal?.id==='traffic-qr-warning'
    ?'Published official warnings match this payment pattern.'
@@ -434,26 +440,20 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   &&!(verification?.signals?.length)
   &&directEvidenceFindings.length===0
  );
- const decision=unsupportedWithoutIndependentFinding
+ const nhProcessSignal=verification?.signals?.find(signal=>signal.id==='nh-toll-process');
+ const decision=nhProcessSignal
   ?{
-   title:'SEAL couldn’t independently verify this court yet.',
-   summary:groundedActions.length
-    ?'SEAL found the instruction below in the original message. It did not confirm the sender, case, or payment request with a reviewed court source.'
-    :'SEAL could read parts of the message, but it did not confirm the sender or case with a reviewed court source.'
+   title:'New Hampshire publishes a different process for this payment demand.',
+   summary:'The notice asks for full payment of tolls, fines, fees, and court costs. New Hampshire’s published toll and court-collection materials describe a more specific process and official channels for checking what is actually owed.'
   }
-  :decisionCopy(verification,decisionClaim);
- const groundedDecision=Boolean((decisionClaim&&claimReliable(decisionClaim))||groundedActions.length);
- const independentState=curatedAuthorityMatch
-  ?'Issuing authority match'
-  :directCourtUnavailable
-   ?'Direct court check unavailable'
-   :decisionResult?.verdict==='MATCH'
-   ?'Independent match found'
-   :decisionResult?.verdict==='MISMATCH'
-    ?'Independent conflict found'
-    :storySignal
-     ?'Independent evidence found'
-     :'Could not verify';
+  :unsupportedWithoutIndependentFinding
+   ?{
+    title:'This message needs a direct court check.',
+    summary:groundedActions.length
+     ?'SEAL found the instruction below in the original message, but it does not have a reviewed source for this court yet.'
+     :'SEAL could read parts of the message, but it does not have a reviewed source for this court yet.'
+   }
+   :decisionCopy(verification,decisionClaim);
  const technicalEvidence=useMemo(()=>{
   if(!verification)return [];
   const all=[
@@ -1286,13 +1286,13 @@ async function upload(uploaded:File){
     <header className="result-masthead" id="result-top">
      <div className="result-masthead-row">
       <div>
-       <h1>Verification report</h1>
-       <p className="result-origin">{file?(file.kind==='pdf'?'PDF · document text extracted locally':'Image · text extracted locally'):'Pasted text'}</p>
+       <h1>Check result</h1>
+       <p className="result-origin">{file?(file.kind==='pdf'?'From your PDF · checked against public sources':'From your image · checked against public sources'):'From pasted text · checked against public sources'}</p>
       </div>
      </div>
 
      {verification&&<nav className="result-chapters" aria-label="Result sections">
-      <a href="#review-summary" className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={event=>jumpToResultSection(event,'summary','#review-summary')}>Summary</a>
+      <a href="#review-summary" className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={event=>jumpToResultSection(event,'summary','#review-summary')}>Result</a>
       <a href="#original-message" className={activeResultSection==='message'?'is-current':''} aria-current={activeResultSection==='message'?'location':undefined} onClick={event=>jumpToResultSection(event,'message','#original-message')}>Original</a>
       <a href={verification.safe_action||verification.contact||decisionClaim?.action?'#next-step':'#source-checks'} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={event=>jumpToResultSection(event,'next',verification.safe_action||verification.contact||decisionClaim?.action?'#next-step':'#source-checks')}>Next step</a>
       {!directCourtUnavailable&&<a href="#checked-details" className={activeResultSection==='checked'?'is-current':''} aria-current={activeResultSection==='checked'?'location':undefined} onClick={event=>jumpToResultSection(event,'checked','#checked-details')}>Checked details</a>}
@@ -1453,14 +1453,10 @@ async function upload(uploaded:File){
         <h1>{file?.sample?'This is a sample form.':decision.title}</h1>
         <p className="decision-summary">{file?.sample?'Some printed details match official court pages, but this example form is not a summons to act on. The matches do not authenticate any notice you received.':decision.summary}</p>
 
-        <div className="verification-ledger" aria-label="Verification scope">
-         <div><span>Original</span><strong>{file?(file.kind==='pdf'?'PDF received':'Image received'):'Pasted text received'}</strong></div>
-         <div><span>Grounding</span><strong>{groundedDecision?'Located in the original':'No grounded instruction found'}</strong></div>
-         <div><span>Independent source</span><strong>{independentState}</strong></div>
-        </div>
+
 
         {directCourtUnavailable&&groundedActions.length>0?<div className="decision-claim">
-         <span>Grounded instruction</span>
+         <span>The message asks</span>
          <ul className="message-action-list">{groundedActions.map(claim=><li key={claim.id}>{cleanDisplayText(claim.action?.source_text||claim.exact_source_text||claim.value)}</li>)}</ul>
         </div>:decisionClaim&&<div className="decision-claim">
          <span>From the message</span>
@@ -1468,14 +1464,15 @@ async function upload(uploaded:File){
         </div>}
 
         <div className={`decision-evidence decision-relationship-block ${decisionRelationshipConflict?'is-conflict':''}`}>
-         <span>Independent source result</span>
+         <span>What public sources say</span>
          <strong>{decisionRelationship}</strong>
-         {directCheckSummary&&<small className="decision-direct-check">{directCheckSummary}</small>}
+         {storyEvidence&&<a className="decision-source-link" href={storyEvidence.url} target="_blank" rel="noopener noreferrer">Open public source</a>}
+         {directCheckSummary&&!storySignal&&<small className="decision-direct-check">{directCheckSummary}</small>}
         </div>
 
         {reviewWorthWatching&&!storyOpen&&<button ref={replayButton} type="button" className="decision-review-player" data-testid="play-evidence-review" onClick={replayStory}>
          <span className="decision-review-play" aria-hidden="true"><DesignPlayIcon/></span>
-         <span><strong>Play evidence review</strong><small>17 sec · message → source → next step</small></span>
+         <span><strong>See how SEAL checked it</strong><small>17 sec · notice → public source → next step</small></span>
         </button>}
        </div>}
      </div>
@@ -1535,7 +1532,7 @@ async function upload(uploaded:File){
         const primary=signal.id===storySignal?.id;
         const evidenceTitles=signal.evidence.map(evidence=>evidence.title);
         return <article className={`source-signal ${primary?'is-primary':'is-secondary'}`} key={signal.id}>
-         <p className="signal-kind">{signal.kind==='SOURCE_CONFLICT'?'Source conflict':signal.kind==='KNOWN_PATTERN'?'Known pattern':'Official warning'}</p>
+         <p className="signal-kind">{signal.id==='nh-toll-process'?'Official process':signal.kind==='SOURCE_CONFLICT'?'Source conflict':signal.kind==='KNOWN_PATTERN'?'Known pattern':'Official warning'}</p>
          <h3>{signal.title}</h3>
          <p>{signal.summary}</p>
          {signal.evidence.length>0&&<div className="signal-links">

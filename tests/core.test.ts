@@ -19,6 +19,19 @@ describe('independent court directory routing',()=>{
  });
 });
 
+describe('New Hampshire public intelligence',()=>{
+ it('finds official process evidence for a New Hampshire toll payment demand',async()=>{
+  const text=`STATE OF NEW HAMPSHIRE
+FINAL COURT-ORDERED MANDATORY COLLECTION NOTICE
+Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administrative fees, court costs, and enforcement surcharges.`;
+  const extraction=fallbackExtract(text);
+  const verification=await verifyClaims(claimsFromExtraction(extraction,text),extraction.court_name,'SNAPSHOT',extraction.jurisdiction_hint,text);
+  expect(verification.signals?.some(signal=>signal.id==='nh-toll-process')).toBe(true);
+  expect(verification.safe_action?.primary_url).toBe('https://www.ezpassnh.com/');
+  expect(verification.contact?.phone).toBe('1-855-212-1234');
+ });
+});
+
 describe('extraction and source links',()=>{
  it('validates schema and does not convert juror IDs to dockets',()=>{const {e}=claims('riverside-mismatch-demo');expect(extractionSchema.parse(e)).toEqual(e);expect(e.juror_or_reference_number).toBe('10472893');expect(e.case_or_docket_number).toBe('');expect(e.delivery_method).toBe('text message')});
  it('normalizes only comparable values',()=>{expect(phoneDigits('(951) 275-5076')).toBe('9512755076');expect(domain('https://www.riverside.courts.ca.gov/path')).toBe('riverside.courts.ca.gov');expect(address('4050 Main Street, Riverside, CA 92501')).toBe(address('4050 Main St Riverside CA 92501'))});

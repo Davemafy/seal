@@ -41,7 +41,7 @@ test('deployed app stays idle on refresh and completes a real browser image flow
 
  await chooseFile(page,fixture);
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:60000});
- await expect(page.getByRole('heading',{name:'Verification report'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Check result'})).toBeVisible();
  await expect(page.locator('.inspection-error')).toHaveCount(0);
  await page.screenshot({path:'test-results/production-good-result.png',fullPage:true});
  assertNoRuntimeErrors();

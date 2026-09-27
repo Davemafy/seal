@@ -2083,3 +2083,31 @@
  .decision-direct-check{font-size:10.5px;line-height:16px}
  .document-heading{padding-top:2px}
 }
+
+
+/* Fresh result surface — evidence-led, not pipeline-led. */
+.verification-ledger{display:none!important}
+.result-origin{margin-top:4px;color:#6f6f6f;font-size:11px;line-height:17px}
+.decision{max-width:620px}
+.decision h1{max-width:620px}
+.decision-summary{max-width:590px}
+.decision-claim{margin-top:28px;padding:20px 0 0;border-top:1px solid var(--line)}
+.decision-claim>span,.decision-evidence>span{margin-bottom:8px;color:#777;font-size:11px;line-height:17px}
+.message-action-list li{padding-left:0;font-size:17px;line-height:25px;font-weight:560}
+.message-action-list li::before{display:none}
+.decision-evidence{margin-top:26px;padding:20px 0 0;border-top:1px solid var(--line)}
+.decision-relationship-block strong{max-width:590px;color:#202020;font-size:15px;line-height:23px;font-weight:500}
+.decision-source-link{display:inline-flex;margin-top:9px;color:#111;font-size:12px;line-height:18px;font-weight:560;text-decoration:underline;text-underline-offset:3px}
+.decision-review-player{margin-top:28px;padding:15px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+@media(max-width:599px){
+ .result-masthead h1{font-size:25px;line-height:31px}
+ .result-origin{max-width:320px;font-size:10px;line-height:15px}
+ .decision h1{font-size:30px;line-height:37px;letter-spacing:-.018em}
+ .decision-summary{margin-top:12px;font-size:14px;line-height:21px}
+ .decision-claim{margin-top:26px;padding-top:18px}
+ .message-action-list li{padding-left:0;font-size:16px;line-height:24px;font-weight:560}
+ .decision-evidence{margin-top:24px;padding-top:18px}
+ .decision-relationship-block strong{font-size:14px;line-height:21px}
+ .decision-source-link{margin-top:8px;font-size:12px;line-height:18px}
+ .decision-review-player{margin-top:24px;padding:14px 0}
+}
