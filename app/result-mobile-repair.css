@@ -1,5 +1,6 @@
-/* Mobile result surface: Base-system repair.
-   Keep this file narrow and corrective; workspace.css remains the shared source. */
+/* Mobile result surface — distinct tab pages, Base-system spacing, no duplicated source object. */
+.evidence-review-entry{display:none}
+
 @media(max-width:599px){
  .seal-app:has(.review-shell){
   height:100dvh!important;
@@ -18,148 +19,265 @@
   overflow:hidden!important;
   padding:10px 0 0!important
  }
- .review-shell .result-masthead{flex:0 0 auto!important;padding:0 16px!important}
- .review-shell .result-carousel{
+ .seal-app .review-shell .result-masthead{
+  flex:0 0 auto!important;
+  margin:0!important;
+  padding:0 16px!important
+ }
+ .seal-app .review-shell .result-carousel{
   flex:1 1 auto!important;
+  width:100%!important;
   height:auto!important;
   min-height:0!important;
   margin-top:0!important
  }
- .result-masthead-row{padding:0 0 10px!important}
- .result-masthead-title{
+
+ /* A compact object header. The content below should own the screen. */
+ .seal-app .result-masthead-row{min-height:0!important;padding:0 0 10px!important}
+ .seal-app .result-masthead-title{
   margin:0 0 3px!important;
   color:var(--muted)!important;
   font-size:11px!important;
   line-height:16px!important;
   font-weight:500!important
  }
- .check-object-identity h1{
+ .seal-app .check-object-identity h1{
+  display:block!important;
   max-width:320px!important;
+  margin:0!important;
+  color:var(--ink)!important;
   font-size:20px!important;
   line-height:28px!important;
   font-weight:700!important;
-  letter-spacing:0!important
+  letter-spacing:0!important;
+  white-space:normal!important
  }
- .check-object-meta{margin-top:4px!important;font-size:12px!important;line-height:18px!important}
- .result-chapters{margin-top:6px!important;border-bottom:1px solid var(--line)!important}
- .result-chapters a{
-  padding:10px 4px 11px!important;
+ .seal-app .check-object-meta{
+  margin-top:3px!important;
+  color:var(--muted)!important;
+  font-size:12px!important;
+  line-height:18px!important
+ }
+
+ /* Tabs behave as real sibling pages, not anchors on one long report. */
+ .seal-app .result-chapters{
+  width:100%!important;
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:0!important;
+  margin:6px 0 0!important;
+  border-bottom:1px solid var(--line)!important
+ }
+ .seal-app .result-chapters a{
+  min-width:0!important;
+  padding:10px 3px 11px!important;
+  color:#6f6f6f!important;
   font-size:13px!important;
   line-height:20px!important;
-  font-weight:500!important
+  font-weight:500!important;
+  text-align:center!important;
+  white-space:nowrap!important
  }
- .result-chapters a.is-current::after{left:12px!important;right:12px!important;height:2px!important}
+ .seal-app .result-chapters a.is-current{color:var(--ink)!important}
+ .seal-app .result-chapters a.is-current::after{
+  left:12px!important;
+  right:12px!important;
+  height:2px!important
+ }
 
- .result-slide-summary{padding:24px 16px 36px!important}
- .result-slide-summary .decision{width:100%!important;max-width:none!important}
- .decision-overview{display:flex!important;flex-direction:column!important;gap:0!important}
- .decision-copy{display:contents!important}
- .result-slide-summary .decision-status{
-  order:1;
-  margin:0 0 8px!important;
+ /* Summary is a summary. The original document belongs to Original. */
+ .seal-app .result-slide-summary{
+  display:block!important;
+  align-items:initial!important;
+  justify-content:initial!important;
+  padding:28px 18px 38px!important
+ }
+ .seal-app .result-slide-summary .decision{
+  width:100%!important;
+  max-width:560px!important;
+  margin:0!important
+ }
+ .seal-app .result-slide-summary .decision-overview{
+  display:block!important;
+  width:100%!important
+ }
+ .seal-app .result-slide-summary .decision-copy{
+  display:block!important;
+  max-width:360px!important
+ }
+ .seal-app .result-slide-summary .decision-status{
+  display:block!important;
+  margin:0 0 7px!important;
+  color:#666!important;
   font-size:12px!important;
   line-height:18px!important;
   font-weight:500!important
  }
- .result-slide-summary .decision-copy>h1{
-  order:2;
-  max-width:340px!important;
-  font-size:28px!important;
-  line-height:36px!important;
-  letter-spacing:0!important
+ .seal-app .result-slide-summary .decision-copy>h1{
+  display:block!important;
+  max-width:342px!important;
+  margin:0!important;
+  color:var(--ink)!important;
+  font-size:27px!important;
+  line-height:33px!important;
+  font-weight:700!important;
+  letter-spacing:-.01em!important;
+  text-wrap:balance!important
  }
- .result-slide-summary .decision-summary{
-  order:3;
-  max-width:340px!important;
-  margin-top:12px!important;
+ .seal-app .result-slide-summary .decision-summary{
+  display:block!important;
+  max-width:342px!important;
+  margin:11px 0 0!important;
+  color:#4b4b4b!important;
   font-size:14px!important;
-  line-height:20px!important
+  line-height:21px!important
  }
 
- .result-slide-summary .decision-primary-route{order:4;margin-top:22px!important}
- .result-slide-summary .decision-primary-route>span{
+ .seal-app .result-slide-summary .decision-primary-route{
+  display:grid!important;
+  gap:5px!important;
+  max-width:342px!important;
+  margin-top:22px!important
+ }
+ .seal-app .result-slide-summary .decision-primary-route>span{
+  color:#6f6f6f!important;
   font-size:12px!important;
   line-height:18px!important;
   font-weight:500!important;
   text-transform:none!important;
   letter-spacing:0!important
  }
- .result-slide-summary .decision-primary-route>a{
+ .seal-app .result-slide-summary .decision-primary-route>a{
   width:max-content!important;
   max-width:100%!important;
   min-height:48px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
   padding:12px 16px!important;
   border-radius:8px!important;
+  background:#111!important;
+  color:#fff!important;
   font-size:16px!important;
   line-height:20px!important;
   font-weight:500!important
  }
- .result-slide-summary .decision-primary-route>small{
-  margin-top:4px!important;
+ .seal-app .result-slide-summary .decision-primary-route>small{
+  margin:0!important;
+  color:#777!important;
   font-size:12px!important;
   line-height:18px!important
  }
 
- .result-slide-summary .decision-visual{
-  order:5;
-  width:100%!important;
-  max-width:none!important;
-  margin-top:24px!important;
-  gap:8px!important;
-  padding-top:0!important
- }
- .result-slide-summary .decision-artifact{
-  height:156px!important;
-  border-radius:8px!important;
-  background:var(--secondary)!important
- }
- .result-slide-summary .decision-artifact>img,
- .result-slide-summary .decision-artifact .story-pdf-wrap img{box-shadow:none!important}
- .result-slide-summary .decision-artifact-caption{padding:0!important}
- .result-slide-summary .decision-artifact-caption strong,
- .result-slide-summary .decision-artifact-caption span{font-size:12px!important;line-height:18px!important}
- .result-slide-summary .decision-source-brief{display:none!important}
-
- .result-slide-summary .decision-review-player{
-  width:48px!important;
-  height:48px!important;
-  min-height:48px!important;
+ .seal-app .result-slide-summary .decision-at-a-glance{
   display:grid!important;
-  place-items:center!important;
-  margin-top:8px!important;
-  padding:0!important;
-  border:0!important;
-  border-radius:8px!important;
-  background:var(--secondary)!important;
-  color:var(--ink)!important
- }
- .result-slide-summary .decision-review-player>span:last-child{display:none!important}
- .result-slide-summary .decision-review-play{
-  width:auto!important;
-  height:auto!important;
-  background:transparent!important;
-  color:inherit!important
- }
-
- .result-slide-summary .decision-at-a-glance{
-  order:6;
   grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  gap:24px!important;
-  margin-top:24px!important
+  gap:26px!important;
+  max-width:342px!important;
+  margin-top:24px!important;
+  border:0!important
  }
- .result-slide-summary .decision-at-a-glance span{font-size:12px!important;line-height:18px!important}
- .result-slide-summary .decision-at-a-glance strong{
+ .seal-app .result-slide-summary .decision-at-a-glance>div{
+  min-width:0!important;
+  padding:0!important;
+  border:0!important
+ }
+ .seal-app .result-slide-summary .decision-at-a-glance span{
+  margin:0 0 3px!important;
+  color:#777!important;
+  font-size:12px!important;
+  line-height:18px!important
+ }
+ .seal-app .result-slide-summary .decision-at-a-glance strong{
+  color:#202020!important;
   font-size:14px!important;
   line-height:20px!important;
   font-weight:500!important
  }
- .result-slide-summary .translation-note{
-  order:7;
-  max-width:340px!important;
+
+ /* Do not preview Original or source counts inside Summary on phones. */
+ .seal-app .result-slide-summary .decision-visual{display:none!important}
+
+ .seal-app .result-slide-summary .translation-note{
+  max-width:342px!important;
   margin:14px 0 0!important;
   color:var(--muted)!important;
   font-size:12px!important;
   line-height:18px!important
  }
- .result-slide-summary .decision-details{margin-top:24px!important}
+ .seal-app .result-slide-summary .decision-details{
+  max-width:342px!important;
+  margin-top:24px!important
+ }
+ .seal-app .result-slide-summary .decision-details>summary{
+  min-height:40px!important;
+  width:max-content!important;
+  color:#303030!important;
+  font-size:13px!important;
+  line-height:20px!important;
+  font-weight:500!important
+ }
+
+ /* Original is the source page: one object, no summary leftovers. */
+ .seal-app .result-slide-original{padding:20px 14px 30px!important}
+ .seal-app .result-slide-original .document-heading{
+  margin-bottom:10px!important;
+  font-size:12px!important;
+  line-height:18px!important
+ }
+ .seal-app .result-slide-original .document-paper{
+  width:100%!important;
+  padding:6px!important;
+  border-radius:8px!important;
+  background:var(--secondary)!important
+ }
+
+ /* Playback belongs with evidence, not in the summary. */
+ .seal-app .result-slide-evidence{padding:26px 18px 38px!important}
+ .seal-app .result-slide-evidence .evidence-review-entry{
+  width:100%!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:12px!important;
+  margin:0 0 28px!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  color:var(--ink)!important;
+  text-align:left!important
+ }
+ .seal-app .evidence-review-icon{
+  width:36px!important;
+  height:36px!important;
+  flex:0 0 36px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:6px!important;
+  background:#111!important;
+  color:#fff!important
+ }
+ .seal-app .evidence-review-entry>span:last-child{display:grid!important;gap:1px!important}
+ .seal-app .evidence-review-entry strong{
+  font-size:14px!important;
+  line-height:20px!important;
+  font-weight:600!important
+ }
+ .seal-app .evidence-review-entry small{
+  color:#777!important;
+  font-size:12px!important;
+  line-height:18px!important
+ }
+ .seal-app .result-slide-evidence .source-resolution{
+  gap:16px!important;
+  padding:0!important
+ }
+ .seal-app .result-slide-evidence .source-resolution>.section-heading{margin:0 0 20px!important}
+ .seal-app .result-slide-evidence .source-resolution>.section-heading h2{
+  max-width:320px!important;
+  font-size:25px!important;
+  line-height:32px!important;
+  letter-spacing:-.01em!important
+ }
+
+ .seal-app .result-slide-resolve{padding:28px 18px 40px!important}
 }
