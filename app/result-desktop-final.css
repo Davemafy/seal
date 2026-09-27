@@ -1333,3 +1333,34 @@
   transform:translateY(0)!important
  }
 }
+
+
+/* Result refresh control safe area — icon and tooltip never touch viewport edge. */
+@media(min-width:901px){
+ .result-masthead-row{
+  padding-top:6px!important;
+  padding-right:22px!important
+ }
+ .check-object-actions{
+  margin-right:0!important;
+  padding-top:0!important;
+  padding-right:2px!important
+ }
+ .check-object-actions .result-icon-action{
+  width:38px!important;
+  height:38px!important;
+  min-width:38px!important;
+  min-height:38px!important;
+  padding:7px!important;
+  border-radius:50%!important;
+  overflow:visible!important
+ }
+ .check-object-actions .result-icon-action .seal-ui-icon{
+  width:18px!important;
+  height:18px!important;
+  overflow:visible!important
+ }
+ .check-object-actions .result-icon-action .seal-ui-icon path{
+  vector-effect:non-scaling-stroke
+ }
+}
