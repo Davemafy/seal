@@ -2840,6 +2840,14 @@
 @media(max-width:900px){
  .seal-app:has(.review-shell){height:100dvh}
 }
+@media(max-width:900px){
+ .seal-app:not(:has(.review-shell)){
+  min-height:100dvh;
+  display:flex;
+  flex-direction:column
+ }
+ .seal-app:not(:has(.review-shell))>.seal-footer{margin-top:auto}
+}
 @media(max-width:599px){
  .seal-footer{display:flex}
  .seal-app:has(.review-shell)>.seal-footer{display:none}
