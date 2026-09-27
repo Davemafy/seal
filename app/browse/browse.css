@@ -310,3 +310,89 @@
  font-size:10.5px!important;
  font-weight:600!important
 }
+
+
+/* Browse scale normalization. */
+@media(min-width:901px){
+ .browse-shell{
+  max-width:980px!important
+ }
+ .browse-eyebrow{
+  font-size:12px!important;
+  line-height:17px!important
+ }
+ .browse-intro h1{
+  font-size:36px!important;
+  line-height:42px!important
+ }
+ .browse-deck{
+  max-width:760px!important;
+  font-size:16px!important;
+  line-height:24px!important
+ }
+ .browse-scope{
+  max-width:760px!important;
+  font-size:12px!important;
+  line-height:18px!important
+ }
+ .case-filter-row button{
+  min-height:36px!important;
+  padding:7px 11px!important;
+  font-size:13px!important;
+  line-height:19px!important
+ }
+ .case-filter-count{
+  font-size:12px!important;
+  line-height:18px!important
+ }
+ .case-card{
+  grid-template-columns:188px minmax(0,1fr)!important;
+  gap:24px!important;
+  padding:18px!important
+ }
+ .case-visual{
+  height:148px!important
+ }
+ .case-kicker,
+ .case-context,
+ .case-source{
+  font-size:12px!important;
+  line-height:18px!important
+ }
+ .case-copy h2{
+  font-size:20px!important;
+  line-height:26px!important
+ }
+ .case-note{
+  font-size:14px!important;
+  line-height:21px!important
+ }
+ .case-actions a{
+  min-height:36px!important;
+  padding:8px 12px!important;
+  font-size:13px!important;
+  line-height:19px!important
+ }
+}
+@media(max-width:900px){
+ .browse-eyebrow,
+ .browse-scope,
+ .case-kicker,
+ .case-context,
+ .case-filter-count{
+  font-size:12px!important;
+  line-height:18px!important
+ }
+ .browse-deck{
+  font-size:15px!important;
+  line-height:22px!important
+ }
+ .case-filter-row button{
+  font-size:13px!important;
+  line-height:19px!important
+ }
+ .case-note{
+  font-size:12.5px!important;
+  line-height:18px!important
+ }
+}
