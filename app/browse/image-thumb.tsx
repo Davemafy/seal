@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- Source previews use proxied runtime URLs and native load/error events. */
 'use client';
 
 import {useState} from 'react';
