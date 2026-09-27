@@ -1958,6 +1958,10 @@ async function upload(uploaded:File){
     </div>
 
     <section className="result-slide result-slide-evidence" data-result-section="evidence" aria-label="Evidence panel">
+     {reviewWorthWatching&&!storyOpen&&<button type="button" className="evidence-review-entry" data-testid="mobile-evidence-review" onClick={replayStory}>
+      <span className="evidence-review-icon" aria-hidden="true"><DesignPlayIcon/></span>
+      <span><strong>Watch how SEAL checked this</strong><small>17 sec · message · public source · next step</small></span>
+     </button>}
      {ready&&verification&&<section className="source-resolution" id={sectionId('source-checks')} aria-label="What SEAL found">
      <div className="section-heading evidence-heading">
       <h2>{ui('independentEvidence')}</h2>
