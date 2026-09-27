@@ -7375,3 +7375,23 @@
   max-width:208px!important
  }
 }
+
+
+/* Quiet footer endpoints — no full-width divider bars. */
+@media(min-width:901px){
+ .rail-bottom{
+  border-top:0!important;
+  padding-top:0!important
+ }
+ .seal-footer{
+  border-top:0!important;
+  padding-top:12px!important;
+  padding-bottom:16px!important;
+  color:#666!important
+ }
+ .seal-footer::before,
+ .rail-bottom::before{
+  display:none!important;
+  content:none!important
+ }
+}
