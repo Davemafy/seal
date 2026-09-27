@@ -2228,3 +2228,15 @@
  .support-path{grid-template-columns:1fr;gap:4px;padding:11px 0}
  .support-path .journey-link,.support-unavailable{grid-column:1}
 }
+
+
+/* Locale and translation controls */
+.rail-language{display:grid;gap:5px;margin:0 12px 14px;color:#777;font-size:9px;line-height:13px}
+.rail-language select{width:100%;min-height:34px;padding:6px 24px 6px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;color:#222;font-size:11px}
+.mobile-nav-tools{display:flex;align-items:center;gap:12px}
+.mobile-language-select{max-width:88px;min-height:32px;padding:4px 20px 4px 6px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#333;font-size:10px}
+.translation-note{max-width:520px;margin:9px 0 0!important;color:#8a8a8a!important;font-size:10px!important;line-height:15px!important}
+@media(max-width:599px){
+ .mobile-nav-tools{gap:9px}
+ .mobile-language-select{max-width:74px;font-size:9px}
+}

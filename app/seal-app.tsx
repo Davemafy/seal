@@ -31,6 +31,31 @@ type SealWorkspaceProps={
  onWorkspaceMeta:(id:string,patch:Partial<WorkspaceMeta>)=>void;
 };
 
+const DISPLAY_LANGUAGES={
+ en:'English',zh:'中文',es:'Español',pt:'Português',fr:'Français',de:'Deutsch',it:'Italiano',
+ hi:'हिन्दी',ar:'العربية',ja:'日本語',ko:'한국어',ru:'Русский',tr:'Türkçe',nl:'Nederlands'
+} as const;
+type DisplayLocale=keyof typeof DISPLAY_LANGUAGES;
+const displayLocaleFor=(locale:string):DisplayLocale=>{
+ const base=(locale||'en').toLowerCase().split('-')[0] as DisplayLocale;
+ return base in DISPLAY_LANGUAGES?base:'en';
+};
+const UI_COPY={
+ checks:'Checks',newCheck:'New check',browse:'Browse',browseCases:'Browse real cases',
+ displayLanguage:'Display language',
+ checkCourtMessage:'Check a court message',
+ entrySummary:'See what it asks you to do, what independent public sources can confirm, and where to check next.',
+ upload:'Upload a notice or screenshot',
+ uploadHint:'Drop here or browse files · PDF, PNG, or JPG · up to 16 MB',
+ imageLanguage:'Image language',pasteInstead:'Paste text instead',
+ resultTitle:'Check result',result:'Result',original:'Original',nextStep:'Next step',checkedDetails:'Checked details',
+ messageAsks:'The message asks',fromMessage:'From the message',publicSourcesSay:'What public sources say',
+ openPublicSource:'Open public source',seeHowChecked:'See how SEAL checked it',
+ evidenceReviewHint:'17 sec · notice → public source → next step',
+ translatedNote:'Translated for your display language. Source quotations remain in their original wording.'
+} as const;
+type UiCopyKey=keyof typeof UI_COPY;
+
 const verdictLabel=(value:Result['verdict'])=>value==='MATCH'?'Matches':value==='MISMATCH'?'Conflicts':'Could not verify';
 const stateWord=verdictLabel;
 const compactEvidenceTitle=(title:string,index:number,allTitles:string[])=>{
@@ -230,6 +255,9 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [dragging,setDragging]=useState(false);
  const [pasteMode,setPasteMode]=useState(false);
  const [ocrLanguage,setOcrLanguage]=useState<OcrLanguage>('eng');
+ const [displayLocale,setDisplayLocale]=useState<DisplayLocale>('en');
+ const [translatedUi,setTranslatedUi]=useState<Record<string,string>>({});
+ const [translatedResult,setTranslatedResult]=useState<Record<string,string>>({});
  const [documentLanguage,setDocumentLanguage]=useState<DetectedDocumentLanguage|null>(null);
  const [jurisdiction,setJurisdiction]=useState('');
  const [workspaceTitle,setWorkspaceTitle]=useState('New check');
@@ -287,6 +315,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const input=useRef<HTMLInputElement>(null);
  const anchors=useRef<Record<string,HTMLElement|null>>({});
  const runId=useRef(0);
+ const ui=(key:UiCopyKey)=>translatedUi[key]||UI_COPY[key];
 
  const handleStoryArtifactReady=useCallback(()=>{
   setStoryArtifactReady(true);
@@ -478,6 +507,39 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
     :'SEAL could read parts of the message, but it does not have a reviewed source for this court yet.'
   }
   :decisionCopy(verification,decisionClaim);
+ const resultTranslationSource=useMemo(()=>{
+  if(!verification)return {};
+  const strings:Record<string,string>={
+   decisionTitle:file?.sample?'This is a sample form.':decision.title,
+   decisionSummary:file?.sample?'Some printed details match official court pages, but this example form is not a summons to act on. The matches do not authenticate any notice you received.':decision.summary,
+   relationship:decisionRelationship
+  };
+  groundedActions.forEach((claim,index)=>{strings[`action${index}`]=cleanDisplayText(claim.action?.source_text||claim.exact_source_text||claim.value)});
+  if(decisionClaim&&!groundedActions.length)strings.decisionClaim=decisionClaimDisplay||cleanDisplayText(decisionClaim.value);
+  if(verification.safe_action){
+   strings.safeTitle=verification.safe_action.title;
+   strings.safeSummary=verification.safe_action.summary;
+   verification.safe_action.steps.forEach((step,index)=>{strings[`safeStep${index}`]=step});
+   strings.safePrimary=verification.safe_action.primary_label;
+  }
+  return strings;
+ },[verification,file?.sample,decision.title,decision.summary,decisionRelationship,groundedActions,decisionClaim,decisionClaimDisplay]);
+
+ const resultTranslationSignature=JSON.stringify(resultTranslationSource);
+ useEffect(()=>{
+  if(!verification||displayLocale==='en'){setTranslatedResult({});return}
+  const controller=new AbortController();
+  void fetch('/api/translate',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({locale:displayLocale,strings:resultTranslationSource}),signal:controller.signal
+  }).then(async response=>{
+   if(!response.ok)return;
+   const payload=await response.json() as {strings?:Record<string,string>};
+   if(payload.strings)setTranslatedResult(payload.strings);
+  }).catch(()=>{});
+  return()=>controller.abort();
+ },[verification,displayLocale,resultTranslationSignature]);
+
  const technicalEvidence=useMemo(()=>{
   if(!verification)return [];
   const all=[
@@ -777,8 +839,24 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   if(!hydrated||localeInitialized.current)return;
   localeInitialized.current=true;
   const browserLocale=typeof navigator!=='undefined'?(navigator.languages?.[0]||navigator.language||'en'):'en';
+  setDisplayLocale(displayLocaleFor(browserLocale));
   setOcrLanguage(ocrLanguageForLocale(browserLocale));
  },[hydrated]);
+
+ useEffect(()=>{
+  if(!hydrated)return;
+  if(displayLocale==='en'){setTranslatedUi({});return}
+  const controller=new AbortController();
+  void fetch('/api/translate',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({locale:displayLocale,strings:UI_COPY}),signal:controller.signal
+  }).then(async response=>{
+   if(!response.ok)return;
+   const payload=await response.json() as {strings?:Record<string,string>};
+   if(payload.strings)setTranslatedUi(payload.strings);
+  }).catch(()=>{});
+  return()=>controller.abort();
+ },[hydrated,displayLocale]);
 
  useEffect(()=>{
   if(!hydrated||busy||verification)return;
@@ -987,6 +1065,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   sourceBlobRef.current=null;
   if(uploadPreviewRef.current){URL.revokeObjectURL(uploadPreviewRef.current);uploadPreviewRef.current=null}
   setUploadPreview(null);
+  setTranslatedResult({});
   setDocumentLanguage(null);
   setJurisdiction('');
   setWorkspaceTitle('New check');
@@ -1245,8 +1324,8 @@ async function upload(uploaded:File){
  return <main ref={workspaceRootRef} className="seal-app" data-testid="seal-app">
   <aside className="workspace-rail" aria-label="Workspace">
    <Link href="/" className="rail-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
-   <div className="rail-group-label">CHECKS</div>
-   <button className="rail-item rail-new-check" type="button" onClick={onNewWorkspace}><span>＋</span> New check</button>
+   <div className="rail-group-label">{ui('checks').toUpperCase()}</div>
+   <button className="rail-item rail-new-check" type="button" onClick={onNewWorkspace}><span>＋</span> {ui('newCheck')}</button>
    <div className="rail-check-list" aria-label="Open checks">
     {workspaces.map((item,index)=><button
      type="button"
@@ -1259,15 +1338,26 @@ async function upload(uploaded:File){
      <span className="rail-check-copy"><strong>{item.title||`Check ${index+1}`}</strong><small>{item.status==='verifying'?'Checking sources':item.status==='reading'?'Reading':item.status==='done'?'Ready':item.status==='error'?'Needs attention':'New'}</small></span>
     </button>)}
    </div>
-   <Link className="rail-item rail-browse" href="/browse">Browse real cases</Link>
+   <Link className="rail-item rail-browse" href="/browse">{ui('browseCases')}</Link>
    <div className="rail-spacer"/>
+   <label className="rail-language">
+    <span>{ui('displayLanguage')}</span>
+    <select value={displayLocale} onChange={event=>setDisplayLocale(event.target.value as DisplayLocale)} aria-label={ui('displayLanguage')}>
+     {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><option key={code} value={code}>{label}</option>)}
+    </select>
+   </label>
    <div className="rail-foot"><strong>Public sources only</strong><span>Every item links back to the issuing court or agency.</span></div>
   </aside>
   <header className="seal-nav mobile-only-nav">
    <Link href="/" className="mobile-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></Link>
+   <div className="mobile-nav-tools">
+    <select className="mobile-language-select" value={displayLocale} onChange={event=>setDisplayLocale(event.target.value as DisplayLocale)} aria-label={ui('displayLanguage')}>
+     {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><option key={code} value={code}>{label}</option>)}
+    </select>
    {!verification&&!busy&&workspaces.length===1
-    ?<Link href="/browse" className="mobile-nav-action">Browse</Link>
-    :<button className="mobile-nav-action mobile-nav-button" type="button" onClick={onNewWorkspace}>New check</button>}
+    ?<Link href="/browse" className="mobile-nav-action">{ui('browse')}</Link>
+    :<button className="mobile-nav-action mobile-nav-button" type="button" onClick={onNewWorkspace}>{ui('newCheck')}</button>}
+   </div>
   </header>
   {workspaces.length>1&&<nav className="mobile-check-strip" aria-label="Open checks">
    {workspaces.map((item,index)=><button
@@ -1284,8 +1374,8 @@ async function upload(uploaded:File){
   {!verification?
    <section className={`entry-shell ${busy?'is-processing':''}`} data-testid="entry-shell">
    <div className="entry-copy">
-     <h1>Check a court message</h1>
-     <p>See what it asks you to do, what independent public sources can confirm, and where to check next.</p>
+     <h1>{ui('checkCourtMessage')}</h1>
+     <p>{ui('entrySummary')}</p>
     </div>
 
     <div ref={processingIntakeRef} className={`intake ${pasteMode?'is-paste-mode':'is-upload-mode'} ${busy?'is-processing-intake':''}`}>
@@ -1341,15 +1431,15 @@ async function upload(uploaded:File){
          </span>
          :<span className="upload-group">
           <span className="upload-copy">
-           <strong>Upload a notice or screenshot</strong>
-           <small>Drop here or browse files · PDF, PNG, or JPG · up to 16 MB</small>
+           <strong>{ui('upload')}</strong>
+           <small>{ui('uploadHint')}</small>
           </span>
           <span className="upload-browse">Browse files</span>
          </span>}
        </button>
        {!busy&&<>
-        <label className="ocr-language-control"><span>Image language</span><select value={ocrLanguage} onChange={event=>setOcrLanguage(event.target.value as OcrLanguage)}>{Object.entries(ocrLanguages).map(([code,label])=><option key={code} value={code}>{label}</option>)}</select></label>
-        <button className="paste-mode-switch" type="button" onClick={()=>setPasteMode(true)}>Paste text instead <DesignChevron direction="right"/></button>
+        <label className="ocr-language-control"><span>{ui('imageLanguage')}</span><select value={ocrLanguage} onChange={event=>setOcrLanguage(event.target.value as OcrLanguage)}>{Object.entries(ocrLanguages).map(([code,label])=><option key={code} value={code}>{label}</option>)}</select></label>
+        <button className="paste-mode-switch" type="button" onClick={()=>setPasteMode(true)}>{ui('pasteInstead')} <DesignChevron direction="right"/></button>
         <p className="privacy-note">Original file stays on this device. Extracted text may be sent for checking.</p>
        </>}
       </>
@@ -1378,16 +1468,21 @@ async function upload(uploaded:File){
     <header className="result-masthead" id={sectionId('result-top')}>
      <div className="result-masthead-row">
       <div>
-       <h1>Check result</h1>
-       <p className="result-origin">{file?(file.kind==='pdf'?'From your PDF · checked against public sources':'From your image · checked against public sources'):'From pasted text · checked against public sources'}</p>
+       <h1>{ui('resultTitle')}</h1>
+       <p className="result-origin">{[
+        file?(file.kind==='pdf'?'PDF':'Image'):'Text',
+        documentLanguage?.label,
+        jurisdiction,
+        displayLocale!=='en'?'→ '+DISPLAY_LANGUAGES[displayLocale]:''
+       ].filter(Boolean).join(' · ')}</p>
       </div>
      </div>
 
      {verification&&<nav className="result-chapters" aria-label="Result sections">
-      <a href={`#${sectionId('review-summary')}`} className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={event=>jumpToResultSection(event,'summary','review-summary')}>Result</a>
-      <a href={`#${sectionId('original-message')}`} className={activeResultSection==='message'?'is-current':''} aria-current={activeResultSection==='message'?'location':undefined} onClick={event=>jumpToResultSection(event,'message','original-message')}>Original</a>
-      <a href={`#${sectionId('user-actions')}`} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={event=>jumpToResultSection(event,'next','user-actions')}>Next step</a>
-      {!directCourtUnavailable&&<a href={`#${sectionId('checked-details')}`} className={activeResultSection==='checked'?'is-current':''} aria-current={activeResultSection==='checked'?'location':undefined} onClick={event=>jumpToResultSection(event,'checked','checked-details')}>Checked details</a>}
+      <a href={`#${sectionId('review-summary')}`} className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={event=>jumpToResultSection(event,'summary','review-summary')}>{ui('result')}</a>
+      <a href={`#${sectionId('original-message')}`} className={activeResultSection==='message'?'is-current':''} aria-current={activeResultSection==='message'?'location':undefined} onClick={event=>jumpToResultSection(event,'message','original-message')}>{ui('original')}</a>
+      <a href={`#${sectionId('user-actions')}`} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={event=>jumpToResultSection(event,'next','user-actions')}>{ui('nextStep')}</a>
+      {!directCourtUnavailable&&<a href={`#${sectionId('checked-details')}`} className={activeResultSection==='checked'?'is-current':''} aria-current={activeResultSection==='checked'?'location':undefined} onClick={event=>jumpToResultSection(event,'checked','checked-details')}>{ui('checkedDetails')}</a>}
      </nav>}
     </header>
 
@@ -1436,7 +1531,7 @@ async function upload(uploaded:File){
         </div>
 
         <div className="story-claim-anchor" aria-hidden={storyStep<1||storyStep>2}>
-         <span>From the message</span>
+         <span>{ui('fromMessage')}</span>
          <strong>{storyClaimDisplay||storyClaimHeading}</strong>
         </div>
 
@@ -1452,7 +1547,7 @@ async function upload(uploaded:File){
          {verification.contact?.name&&<small>{verification.contact.name}{verification.contact.phone?` · ${verification.contact.phone}`:''}</small>}
          <div className="story-final-actions">
           {verification.contact?.website&&<a href={verification.contact.website} target="_blank" rel="noopener noreferrer" tabIndex={storyStep===4?0:-1}>Open official court website</a>}
-          {!verification.contact?.website&&verification.safe_action&&<a href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer" tabIndex={storyStep===4?0:-1}>{verification.safe_action.primary_label}</a>}
+          {!verification.contact?.website&&verification.safe_action&&<a href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer" tabIndex={storyStep===4?0:-1}>{translatedResult.safePrimary||verification.safe_action.primary_label}</a>}
          </div>
         </div>
        </div>
@@ -1542,8 +1637,9 @@ async function upload(uploaded:File){
        </div>
        :
        <div className="decision">
-        <h1>{file?.sample?'This is a sample form.':decision.title}</h1>
-        <p className="decision-summary">{file?.sample?'Some printed details match official court pages, but this example form is not a summons to act on. The matches do not authenticate any notice you received.':decision.summary}</p>
+        <h1>{translatedResult.decisionTitle||(file?.sample?'This is a sample form.':decision.title)}</h1>
+        <p className="decision-summary">{translatedResult.decisionSummary||(file?.sample?'Some printed details match official court pages, but this example form is not a summons to act on. The matches do not authenticate any notice you received.':decision.summary)}</p>
+        {displayLocale!=='en'&&Object.keys(translatedResult).length>0&&<p className="translation-note">{ui('translatedNote')}</p>}
 
         {riskSummary&&<div className="decision-risks" data-testid="two-risk-result">
          <div className="decision-risk-row"><span>Message instructions</span><div><strong>{riskSummary.instructions.title}</strong><small>{riskSummary.instructions.detail}</small></div></div>
@@ -1551,23 +1647,23 @@ async function upload(uploaded:File){
         </div>}
 
         {directCourtUnavailable&&groundedActions.length>0?<div className="decision-claim">
-         <span>The message asks</span>
-         <ul className="message-action-list">{groundedActions.map(claim=><li key={claim.id}>{cleanDisplayText(claim.action?.source_text||claim.exact_source_text||claim.value)}</li>)}</ul>
+         <span>{ui('messageAsks')}</span>
+         <ul className="message-action-list">{groundedActions.map((claim,index)=><li key={claim.id}>{translatedResult[`action${index}`]||cleanDisplayText(claim.action?.source_text||claim.exact_source_text||claim.value)}</li>)}</ul>
         </div>:decisionClaim&&<div className="decision-claim">
          <span>From the message</span>
-         <p>{decisionClaimDisplay||cleanDisplayText(decisionClaim.value)}</p>
+         <p>{translatedResult.decisionClaim||decisionClaimDisplay||cleanDisplayText(decisionClaim.value)}</p>
         </div>}
 
         <div className={`decision-evidence decision-relationship-block ${decisionRelationshipConflict?'is-conflict':''}`}>
-         <span>What public sources say</span>
-         <strong>{decisionRelationship}</strong>
-         {storyEvidence&&<a className="decision-source-link" href={storyEvidence.url} target="_blank" rel="noopener noreferrer">Open public source</a>}
+         <span>{ui('publicSourcesSay')}</span>
+         <strong>{translatedResult.relationship||decisionRelationship}</strong>
+         {storyEvidence&&<a className="decision-source-link" href={storyEvidence.url} target="_blank" rel="noopener noreferrer">{ui('openPublicSource')}</a>}
          {directCheckSummary&&!storySignal&&<small className="decision-direct-check">{directCheckSummary}</small>}
         </div>
 
         {reviewWorthWatching&&!storyOpen&&<button ref={replayButton} type="button" className="decision-review-player" data-testid="play-evidence-review" onClick={replayStory}>
          <span className="decision-review-play" aria-hidden="true"><DesignPlayIcon/></span>
-         <span><strong>See how SEAL checked it</strong><small>17 sec · notice → public source → next step</small></span>
+         <span><strong>{ui('seeHowChecked')}</strong><small>{ui('evidenceReviewHint')}</small></span>
         </button>}
        </div>}
      </div>
@@ -1675,11 +1771,11 @@ async function upload(uploaded:File){
      </div>}
      {verification?.safe_action&&<div className="safe-route" id={sectionId('next-step')}>
       <div>
-       <h2>{verification.safe_action.title}</h2>
-       <p>{verification.safe_action.summary}</p>
+       <h2>{translatedResult.safeTitle||verification.safe_action.title}</h2>
+       <p>{translatedResult.safeSummary||verification.safe_action.summary}</p>
       </div>
       <div>
-       <ol className="safe-steps">{verification.safe_action.steps.map((step,index)=><li key={index}>{step}</li>)}</ol>
+       <ol className="safe-steps">{verification.safe_action.steps.map((step,index)=><li key={index}>{translatedResult[`safeStep${index}`]||step}</li>)}</ol>
        <div className="safe-route-actions">
         {verification.contact?.website&&<a className="safe-primary" href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open official court website</a>}
         {verification.safe_action.primary_url&&verification.safe_action.primary_url!==verification.contact?.website&&<a className="safe-source-link" href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>}
