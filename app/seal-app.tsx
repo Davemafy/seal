@@ -164,6 +164,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const [text,setText]=useState(initialText||(initialDemo?fixtures['action-message-demo'].text:''));
  const [draft,setDraft]=useState('');
  const [file,setFile]=useState<BrowserDocument|null>(null);
+ const [uploadPreview,setUploadPreview]=useState<{url:string;name:string;kind:'image'|'pdf'}|null>(null);
  const [claims,setClaims]=useState<Claim[]>([]);
  const [verification,setVerification]=useState<Verification|null>(null);
  const [mode,setMode]=useState<Mode>('SNAPSHOT');
@@ -212,6 +213,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const initialRunStarted=useRef(false);
  const filePickerArmed=useRef(false);
  const sourceBlobRef=useRef<Blob|null>(null);
+ const uploadPreviewRef=useRef<string|null>(null);
  const activeReadRef=useRef<AbortController|null>(null);
  const activeRequestRef=useRef<AbortController|null>(null);
  const input=useRef<HTMLInputElement>(null);
@@ -813,6 +815,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   activeRequestRef.current?.abort();
   activeRequestRef.current=null;
   sourceBlobRef.current=null;
+  if(uploadPreviewRef.current){URL.revokeObjectURL(uploadPreviewRef.current);uploadPreviewRef.current=null}
+  setUploadPreview(null);
   if(typeof window!=='undefined'&&(window.location.search||window.location.hash)){
    window.history.replaceState(null,'',window.location.pathname);
   }
@@ -829,6 +833,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
 
 async function upload(uploaded:File){
   clear();
+  const selectedPreview=URL.createObjectURL(uploaded);
+  uploadPreviewRef.current=selectedPreview;
+  setUploadPreview({url:selectedPreview,name:uploaded.name,kind:uploaded.type==='application/pdf'?'pdf':'image'});
   sourceBlobRef.current=uploaded;
   const controller=new AbortController();
   activeReadRef.current=controller;
@@ -843,6 +850,7 @@ async function upload(uploaded:File){
    if(!controller.signal.aborted&&runId.current===uploadId)setError(e instanceof Error?e.message:'Could not read this file.');
   }finally{
    if(activeReadRef.current===controller)activeReadRef.current=null;
+   if(uploadPreviewRef.current===selectedPreview){URL.revokeObjectURL(selectedPreview);uploadPreviewRef.current=null;setUploadPreview(null)}
    if(runId.current===uploadId){setBusy(false);setStatus('')}
   }
  }
@@ -1003,6 +1011,24 @@ async function upload(uploaded:File){
   return()=>window.removeEventListener('keydown',onKey);
  },[verification,claims,selected,select]);
 
+ const processingStage=status==='Checking independent sources'?2:status==='Reading requested actions'?1:0;
+ const processingTitle=
+  status==='Reading text from the image'?'Reading image':
+  status==='Reading text from the PDF'?'Reading PDF':
+  status==='Scanning the first page'?'Scanning PDF':
+  status==='Reading requested actions'?'Finding the requested action':
+  status==='Checking independent sources'?'Checking public sources':
+  status==='Preparing the image'?'Opening image':
+  status==='Opening the PDF'?'Opening PDF':
+  status||'Opening file';
+ const processingDetail=
+  status==='Reading text from the image'?'Looking for the words and layout in your image.':
+  status==='Reading text from the PDF'?'Reading the text layer in your PDF.':
+  status==='Scanning the first page'?'The PDF has no usable text layer, so SEAL is reading its first page as an image.':
+  status==='Reading requested actions'?'The document is read. Finding the action you were asked to take.':
+  status==='Checking independent sources'?'Comparing supported details with independent public sources.':
+  'Preparing the file locally.';
+
  const renderTextLines=(lines:string[])=><div className="message-lines">{lines.map((line,index)=>{
   const claim=claims.find(candidate=>candidate.exact_source_text===line||line.includes(candidate.value));
   const result=claim&&resultById.get(claim.id);
@@ -1054,36 +1080,43 @@ async function upload(uploaded:File){
     <div className={`intake ${pasteMode?'is-paste-mode':'is-upload-mode'}`}>
      {!pasteMode?
       <>
-       <button className={`upload-row ${dragging?'is-dragging':''} ${busy?'is-busy':''}`} data-testid="upload-file" type="button" disabled={busy||!hydrated} onClick={()=>{filePickerArmed.current=true;input.current?.click()}}
+       <button className={`upload-row ${dragging?'is-dragging':''} ${busy?'is-busy':''}`} data-testid="upload-file" type="button" disabled={busy||!hydrated} aria-busy={busy} onClick={()=>{filePickerArmed.current=true;input.current?.click()}}
         onDragOver={event=>{if(event.dataTransfer.types.includes('Files')){event.preventDefault();setDragging(true)}}}
         onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
         onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
-        <span className="upload-group">
-         <span className="upload-copy">
-          {busy&&<img className="upload-busy-mark" src="/brand/seal-mark-black.svg" alt=""/>}
-          {busy&&<span className="upload-process-label">{status==='Checking independent sources'?'PUBLIC SOURCE CHECK':status==='Reading requested actions'?'MESSAGE STRUCTURE':'ON THIS DEVICE'}</span>}
-          <strong>{busy?(
-           status==='Reading text from the image'?'Reading image':
-           status==='Reading text from the PDF'?'Reading PDF':
-           status==='Reading requested actions'?'Finding the requested action':
-           status==='Checking independent sources'?'Checking public sources':
-           status
-          ):'Upload a notice or screenshot'}</strong>
-          <small>{busy?(
-           status==='Reading text from the image'?'Reading the words in your image. Nothing has been sent yet.':
-           status==='Reading text from the PDF'?'Reading the text layer in this PDF. Nothing has been sent yet.':
-           status==='Reading requested actions'?'The document is read. SEAL is structuring what it asks you to do.':
-           status==='Checking independent sources'?'Comparing supported details with independent public sources.':
-           'Preparing the file locally.'
-          ):'Drop here or browse files · PDF, PNG, or JPG · up to 16 MB'}</small>
+        {busy?
+         <span className="upload-process" role="status" aria-live="polite">
+          <span className={`upload-process-media ${uploadPreview?.kind==='pdf'?'is-pdf':''}`} data-testid="processing-preview">
+           {uploadPreview?.kind==='image'
+            ?<img src={uploadPreview.url} alt="Selected court message"/>
+            :<span className="upload-pdf-preview" aria-hidden="true"><b>PDF</b><i/></span>}
+           <span className="upload-scan-line" aria-hidden="true"/>
+          </span>
+          <span className="upload-process-body">
+           <span className="upload-process-label">{processingStage===2?'PUBLIC SOURCE CHECK':processingStage===1?'MESSAGE STRUCTURE':'ON THIS DEVICE'}</span>
+           <strong>{processingTitle}</strong>
+           <small>{processingDetail}</small>
+           {uploadPreview?.name&&<span className="upload-file-name" title={uploadPreview.name}>{uploadPreview.name}</span>}
+           <span className="upload-stage-rail" aria-label={`Step ${processingStage+1} of 3`}>
+            <span className={`upload-stage ${processingStage>0?'is-complete':processingStage===0?'is-current':''}`}>Read</span>
+            <span className={`upload-stage ${processingStage>1?'is-complete':processingStage===1?'is-current':''}`}>Find action</span>
+            <span className={`upload-stage ${processingStage===2?'is-current':''}`}>Check sources</span>
+           </span>
+          </span>
          </span>
-         {!busy&&<span className="upload-browse">Browse files</span>}
-        </span>
-        
+         :<span className="upload-group">
+          <span className="upload-copy">
+           <strong>Upload a notice or screenshot</strong>
+           <small>Drop here or browse files · PDF, PNG, or JPG · up to 16 MB</small>
+          </span>
+          <span className="upload-browse">Browse files</span>
+         </span>}
        </button>
-       <label className="ocr-language-control"><span>Image language</span><select value={ocrLanguage} disabled={busy} onChange={event=>setOcrLanguage(event.target.value as OcrLanguage)}>{Object.entries(ocrLanguages).map(([code,label])=><option key={code} value={code}>{label}</option>)}</select></label>
-       <button className="paste-mode-switch" type="button" onClick={()=>setPasteMode(true)}>Paste text instead <DesignChevron direction="right"/></button>
-       <p className="privacy-note">Original file stays on this device. Extracted text may be sent for checking.</p>
+       {!busy?<>
+        <label className="ocr-language-control"><span>Image language</span><select value={ocrLanguage} onChange={event=>setOcrLanguage(event.target.value as OcrLanguage)}>{Object.entries(ocrLanguages).map(([code,label])=><option key={code} value={code}>{label}</option>)}</select></label>
+        <button className="paste-mode-switch" type="button" onClick={()=>setPasteMode(true)}>Paste text instead <DesignChevron direction="right"/></button>
+        <p className="privacy-note">Original file stays on this device. Extracted text may be sent for checking.</p>
+       </>:<p className="processing-footnote">Keep this tab open. The original file stays on this device; extracted text may be sent for checking.</p>}
       </>
       :
       <div className="paste-mode-panel">
