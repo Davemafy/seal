@@ -2693,7 +2693,32 @@
   text-overflow:ellipsis;
   white-space:nowrap
  }
- .check-object-meta{display:none}
+ .check-object-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:3px 9px;
+  max-width:330px;
+  margin-top:3px;
+  color:#777;
+  font-size:9px;
+  line-height:13px
+ }
+ .check-object-meta .meta-reference,
+ .check-object-meta .meta-status,
+ .check-object-meta .meta-date,
+ .check-object-meta .meta-sources{display:none}
+ .check-object-meta .meta-language,
+ .check-object-meta .meta-jurisdiction,
+ .check-object-meta .meta-display-language{
+  display:inline-flex;
+  align-items:center
+ }
+ .check-object-meta .meta-language+.meta-jurisdiction::before,
+ .check-object-meta .meta-jurisdiction+.meta-display-language::before{
+  content:"·";
+  margin-right:9px;
+  color:#aaa
+ }
  .result-chapters{
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
