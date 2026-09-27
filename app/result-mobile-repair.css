@@ -968,3 +968,11 @@
   min-height:100%!important
  }
 }
+
+
+/* Mobile keeps language access in the result header. */
+@media(max-width:900px){
+ .result-masthead .result-language-control{
+  display:inline-flex!important
+ }
+}
