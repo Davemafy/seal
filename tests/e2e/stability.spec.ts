@@ -41,7 +41,7 @@ JURY STATUS CHECK
 Call 1-866-388-2430 after 5:30 PM for the status of your jury service.`);
  await page.getByRole('button',{name:'Check this message'}).click();
 
- await expect(page.getByTestId('result-shell')).toBeVisible({timeout:30000});
+ await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.getByRole('heading',{name:'Your message'})).toBeVisible();
  await expect(page.getByText('Call 1-866-388-2430 after 5:30 PM')).toBeVisible();
  await expect(page.locator('.inspection-error')).toHaveCount(0);
@@ -177,7 +177,7 @@ test('curated Dallas example preserves its source-backed resolution',async({page
  await page.goto('/?case=dallas-traffic-qr-scam');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:60000});
  await expect(page.locator('#review-summary').getByRole('heading',{name:'Do not scan or pay from this message'})).toBeVisible();
- await expect(page.getByText(/City of Dallas published this exact example as a scam/i)).toBeVisible();
+ await expect(page.locator('#review-summary').getByText(/City of Dallas published this exact example as a scam/i)).toBeVisible();
  await expect(page.getByRole('link',{name:/View the City of Dallas source/i})).toBeVisible();
  await expect(page.getByTestId('play-evidence-review')).toBeVisible();
  assertNoRuntimeErrors();

@@ -241,7 +241,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   ||verification?.signals?.find(signal=>signal.kind==='SOURCE_CONFLICT')
   ||verification?.signals?.[0];
  const decisionClaim=verification?chooseDecisionClaim(claims,verification):undefined;
- const storyClaim=decisionClaim;
+ const evidenceBackedClaim=verification?claims.find(claim=>Boolean(resultById.get(claim.id)?.evidence?.length)):undefined;
+ const storyClaim=decisionClaim||evidenceBackedClaim;
  const storyResult=storyClaim?resultById.get(storyClaim.id):undefined;
  const storyEvidence=storySignal?.evidence?.[0]||storyResult?.evidence?.[0];
  const storyClaimHeading=storySignal?.id==='traffic-qr-warning'&&storyClaim?.action
