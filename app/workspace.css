@@ -2852,3 +2852,20 @@
  .seal-footer{display:flex}
  .seal-app:has(.review-shell)>.seal-footer{display:none}
 }
+
+
+/* Mobile entry viewport pin */
+@media(max-width:900px){
+ .seal-app:not(:has(.review-shell)){
+  min-height:100dvh;
+  display:flex;
+  flex-direction:column
+ }
+ .seal-app:not(:has(.review-shell))>.entry-shell{
+  width:100%;
+  flex:1 0 auto
+ }
+ .seal-app:not(:has(.review-shell))>.seal-footer{
+  margin-top:auto
+ }
+}
