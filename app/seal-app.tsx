@@ -256,6 +256,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [draft,setDraft]=useState('');
  const [file,setFile]=useState<BrowserDocument|null>(null);
  const [uploadPreview,setUploadPreview]=useState<{url:string;name:string;kind:'image'|'pdf'}|null>(null);
+ const [documentPreviewOpen,setDocumentPreviewOpen]=useState(false);
+ const [documentPreviewClosing,setDocumentPreviewClosing]=useState(false);
  const [claims,setClaims]=useState<Claim[]>([]);
  const [verification,setVerification]=useState<Verification|null>(null);
  const [mode,setMode]=useState<Mode>('SNAPSHOT');
@@ -373,6 +375,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const sourceBlobRef=useRef<Blob|null>(null);
  const uploadPreviewRef=useRef<string|null>(null);
  const processingIntakeRef=useRef<HTMLDivElement>(null);
+ const documentPreviewPanelRef=useRef<HTMLDivElement>(null);
+ const documentPreviewOriginRef=useRef<{left:number;top:number;width:number;height:number}|null>(null);
  const uploadOriginRectRef=useRef<{left:number;top:number;width:number;height:number}|null>(null);
  const activeReadRef=useRef<AbortController|null>(null);
  const activeRequestRef=useRef<AbortController|null>(null);
@@ -380,6 +384,11 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const anchors=useRef<Record<string,HTMLElement|null>>({});
  const runId=useRef(0);
  const ui=(key:UiCopyKey)=>uiCopy(displayLocale,key);
+ const documentPreviewAsset=uploadPreview
+  ?uploadPreview
+  :file
+   ?{url:file.preview,name:workspaceTitle||'Court message',kind:file.kind}
+   :null;
 
  useEffect(()=>()=> {
   activeReadRef.current?.abort();
@@ -397,6 +406,77 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   window.addEventListener('keydown',onKey);
   return()=>{document.body.style.overflow=previous;window.removeEventListener('keydown',onKey)};
  },[workspaceDrawerOpen]);
+
+ const openDocumentPreview=useCallback((origin?:HTMLElement|null)=>{
+  if(!documentPreviewAsset)return;
+  const rect=origin?.getBoundingClientRect();
+  documentPreviewOriginRef.current=rect?{left:rect.left,top:rect.top,width:rect.width,height:rect.height}:null;
+  setDocumentPreviewClosing(false);
+  setDocumentPreviewOpen(true);
+ },[documentPreviewAsset]);
+
+ const closeDocumentPreview=useCallback(()=>{
+  if(!documentPreviewOpen||documentPreviewClosing)return;
+  const panel=documentPreviewPanelRef.current;
+  const origin=documentPreviewOriginRef.current;
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!panel||!origin||reduced){
+   setDocumentPreviewOpen(false);
+   setDocumentPreviewClosing(false);
+   return;
+  }
+  const current=panel.getBoundingClientRect();
+  setDocumentPreviewClosing(true);
+  gsap.to(panel,{
+   x:origin.left-current.left,
+   y:origin.top-current.top,
+   scaleX:Math.max(.02,origin.width/current.width),
+   scaleY:Math.max(.02,origin.height/current.height),
+   borderRadius:18,
+   duration:.38,
+   ease:'power3.inOut',
+   transformOrigin:'0 0',
+   onComplete:()=>{
+    setDocumentPreviewOpen(false);
+    setDocumentPreviewClosing(false);
+   }
+  });
+ },[documentPreviewOpen,documentPreviewClosing]);
+
+ useLayoutEffect(()=>{
+  if(!documentPreviewOpen||!documentPreviewPanelRef.current)return;
+  const panel=documentPreviewPanelRef.current;
+  const origin=documentPreviewOriginRef.current;
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!origin||reduced)return;
+  const current=panel.getBoundingClientRect();
+  const context=gsap.context(()=>{
+   gsap.fromTo(panel,{
+    x:origin.left-current.left,
+    y:origin.top-current.top,
+    scaleX:Math.max(.02,origin.width/current.width),
+    scaleY:Math.max(.02,origin.height/current.height),
+    borderRadius:18,
+    transformOrigin:'0 0'
+   },{
+    x:0,y:0,scaleX:1,scaleY:1,borderRadius:0,
+    duration:.46,ease:'power3.inOut',clearProps:'transform,borderRadius'
+   });
+  },panel);
+  return()=>context.revert();
+ },[documentPreviewOpen]);
+
+ useEffect(()=>{
+  if(!documentPreviewOpen)return;
+  const previous=document.body.style.overflow;
+  document.body.style.overflow='hidden';
+  const onKey=(event:KeyboardEvent)=>{if(event.key==='Escape')closeDocumentPreview()};
+  window.addEventListener('keydown',onKey);
+  return()=>{
+   document.body.style.overflow=previous;
+   window.removeEventListener('keydown',onKey);
+  };
+ },[documentPreviewOpen,closeDocumentPreview]);
 
  const handleStoryArtifactReady=useCallback(()=>{
   setStoryArtifactReady(true);
@@ -1323,6 +1403,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   sourceBlobRef.current=null;
   if(uploadPreviewRef.current){URL.revokeObjectURL(uploadPreviewRef.current);uploadPreviewRef.current=null}
   setUploadPreview(null);
+  setDocumentPreviewOpen(false);
+  setDocumentPreviewClosing(false);
   setTranslatedResult({});
   setResultTranslationState('idle');
   setDocumentLanguage(null);
@@ -1741,13 +1823,16 @@ async function upload(uploaded:File){
     <div ref={processingIntakeRef} className={`intake ${pasteMode?'is-paste-mode':'is-upload-mode'} ${busy?'is-processing-intake':''}`}>
      {!pasteMode?
       <>
-       <button className={`upload-row ${dragging?'is-dragging':''} ${busy?'is-busy':''}`} data-testid="upload-file" type="button" disabled={busy||!hydrated} aria-busy={busy} onClick={()=>{filePickerArmed.current=true;input.current?.click()}}
+       <button className={`upload-row ${dragging?'is-dragging':''} ${busy?'is-busy':''}`} data-testid="upload-file" type="button" disabled={!hydrated} aria-busy={busy} onClick={event=>{
+         if(busy){openDocumentPreview(event.currentTarget.querySelector<HTMLElement>('.upload-process-media'));return}
+         filePickerArmed.current=true;input.current?.click()
+        }}
         onDragOver={event=>{if(event.dataTransfer.types.includes('Files')){event.preventDefault();setDragging(true)}}}
         onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
         onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
         {busy?
          <span className="upload-process" role="status" aria-live="polite" aria-label={processingTitle}>
-          <span className={`upload-process-media ${uploadPreview?.kind==='pdf'?'is-pdf':''}`} data-testid="processing-preview">
+          <span className={`upload-process-media ${uploadPreview?.kind==='pdf'?'is-pdf':''}`} data-testid="processing-preview" aria-label="Open full document preview">
            {uploadPreview?.kind==='image'
             ?<img src={uploadPreview.url} alt="Selected court message"/>
             :<span className="upload-pdf-preview" aria-hidden="true"><b>PDF</b><i/></span>}
@@ -2085,7 +2170,9 @@ async function upload(uploaded:File){
          {renderTextLines(text.split('\n'))}
         </div>
         :file.kind==='image'?
-        <div className="preview-box">
+        <div className="preview-box is-expandable" role="button" tabIndex={0} aria-label="Open full document preview"
+         onClick={event=>openDocumentPreview(event.currentTarget)}
+         onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openDocumentPreview(event.currentTarget)}}}>
          <img src={file.preview} alt="Uploaded notice"/>
          {claims.filter(claim=>claim.source_bbox&&claim.page===1).map(claim=><button
           type="button"
@@ -2344,6 +2431,21 @@ async function upload(uploaded:File){
     </section>
     </div>
    </section>}
+
+  {documentPreviewOpen&&documentPreviewAsset&&createPortal(<div className={`document-preview-layer ${documentPreviewClosing?'is-closing':''}`} data-testid="document-preview" role="dialog" aria-modal="true" aria-label="Full document preview">
+   <button className="document-preview-backdrop" type="button" aria-label="Close document preview" onClick={closeDocumentPreview}/>
+   <div ref={documentPreviewPanelRef} className={`document-preview-panel is-${documentPreviewAsset.kind}`}>
+    <header className="document-preview-topbar">
+     <div><span>Document</span><strong>{documentPreviewAsset.name}</strong></div>
+     <button type="button" className="document-preview-close" aria-label="Close document preview" onClick={closeDocumentPreview}><SealUiIcon name="close"/></button>
+    </header>
+    <div className="document-preview-stage">
+     {documentPreviewAsset.kind==='image'
+      ?<img src={documentPreviewAsset.url} alt="Full uploaded court message"/>
+      :<StoryPdfPage url={documentPreviewAsset.url}/>}
+    </div>
+   </div>
+  </div>,document.body)}
 
   <input ref={input} hidden type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" onChange={event=>{
    const armed=filePickerArmed.current;
