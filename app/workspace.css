@@ -4949,3 +4949,20 @@
   min-height:210px!important;
  }
 }
+
+
+/* Keep rail language utility pinned and visible. */
+@media(min-width:901px){
+ .rail-spacer{flex:1 1 auto!important;min-height:12px!important}
+ .rail-bottom{
+  flex:0 0 auto!important;
+  display:grid!important;
+  gap:8px!important;
+  width:100%!important;
+  margin-top:auto!important;
+  padding-top:10px!important;
+  background:inherit!important
+ }
+ .browse-rail-note{padding-bottom:2px!important}
+ .browse-workspace-rail .rail-language{display:block!important}
+}
