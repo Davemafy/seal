@@ -76,7 +76,7 @@ export async function readInBrowser(file:File,onStatus:(status:string)=>void=()=
    canvas.width=1;canvas.height=1;
    return {...recognized,preview,kind:'pdf',sample};
   }finally{
-   try{await doc.destroy()}catch{}
+   try{await loading.destroy()}catch{}
   }
  }
  onStatus('Preparing the image');
