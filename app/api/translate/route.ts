@@ -15,7 +15,7 @@ export async function POST(req:Request){
   if(baseLocale==='en')return NextResponse.json({strings:data.strings,mode:'SOURCE'});
 
   const key=process.env.GROQ_API_KEY;
-  if(!key)return NextResponse.json({strings:data.strings,mode:'UNAVAILABLE'});
+  if(!key)return NextResponse.json({error:'Translation provider is not configured.',mode:'UNAVAILABLE'},{status:503});
   const base=process.env.GROQ_BASE_URL||'https://api.groq.com/openai/v1';
   if(new URL(base).hostname!=='api.groq.com')throw new Error('Provider host not allowed');
 
@@ -48,6 +48,6 @@ export async function POST(req:Request){
   }
   return NextResponse.json({strings,mode:'TRANSLATED'});
  }catch{
-  return NextResponse.json({error:'Translation unavailable.'},{status:400});
+  return NextResponse.json({error:'Translation unavailable.',mode:'UNAVAILABLE'},{status:503});
  }
 }
