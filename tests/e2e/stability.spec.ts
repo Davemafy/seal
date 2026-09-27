@@ -123,6 +123,22 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.getByTestId('result-status')).toHaveText('We could not confirm this notice');
  await expect(page.getByRole('heading',{level:1,name:'Check it independently before you pay.'})).toBeVisible();
+ const visualLanguage=await page.evaluate(()=>{
+  const glance=document.querySelector('.decision-at-a-glance') as HTMLElement|null;
+  const metaSpans=document.querySelectorAll('.check-object-meta span');
+  const secondMeta=metaSpans.item(1) as HTMLElement|null;
+  const masthead=document.querySelector('.result-masthead-title') as HTMLElement|null;
+  return {
+   glanceTop:glance?getComputedStyle(glance).borderTopWidth:null,
+   glanceBottom:glance?getComputedStyle(glance).borderBottomWidth:null,
+   metaSeparator:secondMeta?getComputedStyle(secondMeta,'::before').content:null,
+   mastheadTransform:masthead?getComputedStyle(masthead).textTransform:null
+  };
+ });
+ expect(visualLanguage.glanceTop).toBe('0px');
+ expect(visualLanguage.glanceBottom).toBe('0px');
+ expect(['none','normal','""']).toContain(visualLanguage.metaSeparator);
+ expect(visualLanguage.mastheadTransform).toBe('none');
 
  const chapters=page.locator('.result-chapters');
  const carousel=page.getByTestId('result-carousel');

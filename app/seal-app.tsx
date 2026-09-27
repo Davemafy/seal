@@ -1432,7 +1432,7 @@ async function upload(uploaded:File){
  return <main ref={workspaceRootRef} className="seal-app" data-testid="seal-app">
   <aside className="workspace-rail" aria-label="Workspace">
    <Link href="/" className="rail-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
-   <div className="rail-group-label">{ui('checks').toUpperCase()}</div>
+   <div className="rail-group-label">{ui('checks')}</div>
    <button className="rail-item rail-new-check" type="button" onClick={onNewWorkspace}>{ui('newCheck')}</button>
    <div className="rail-check-list" aria-label="Open checks">
     {workspaces.map((item,index)=><button
@@ -1507,7 +1507,7 @@ async function upload(uploaded:File){
             :<span className="upload-pdf-preview" aria-hidden="true"><b>PDF</b><i/></span>}
           </span>
           <span className="upload-process-body">
-           <span className="upload-process-kicker">CHECK IN PROGRESS</span>
+           <span className="upload-process-kicker">Check in progress</span>
            <strong>{processingTitle}</strong>
            <span className="process-stage-list" aria-label="Check progress">
             <span className={`process-stage-row ${processingStage===0?'is-current':'is-done'}`}>
@@ -1593,7 +1593,7 @@ async function upload(uploaded:File){
      </nav>}
     </header>
 
-    {file?.sample&&<div className="source-failure sample-warning" role="status"><strong>SAMPLE DOCUMENT</strong><span>Example form only — not a summons to act on.</span></div>}
+    {file?.sample&&<div className="source-failure sample-warning" role="status"><strong>Sample document</strong><span>Example form only — not a summons to act on.</span></div>}
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
 
     {verification&&ready&&storyOpen&&<div className={`story-overlay ${storyClosing?'is-closing':''}`} data-testid="evidence-review" role="dialog" aria-modal="true" aria-label="SEAL verification review">
@@ -2001,7 +2001,7 @@ async function upload(uploaded:File){
 
      </div>}
      {ready&&verification&&caseReality&&<section className="user-actions" id={sectionId('user-actions')} aria-label="What to do next">
-     <div className="user-actions-heading"><span>NEXT</span><h2>What to do next</h2><p>Keep the message, but use a court site or support service you opened yourself for anything you do next.</p></div>
+     <div className="user-actions-heading"><h2>What to do next</h2><p>Keep the message, but use a court site or support service you opened yourself for anything you do next.</p></div>
      <div className="journey-block case-reality-block" data-testid="case-reality-check">
       <div className="journey-label">The case</div>
       <div className="journey-content">

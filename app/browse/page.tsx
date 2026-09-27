@@ -21,7 +21,7 @@ export default function Browse(){
  return <main className="seal-app browse-page">
   <aside className="workspace-rail" aria-label="Workspace">
    <Link href="/" className="rail-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
-   <div className="rail-group-label">CHECKS</div>
+   <div className="rail-group-label">Checks</div>
    <Link className="rail-item rail-new-check" href="/">New check</Link>
    <Link className="rail-item rail-browse is-current" href="/browse">Browse</Link>
    <div className="rail-spacer"/>
@@ -35,7 +35,7 @@ export default function Browse(){
 
   <section className="browse-shell">
    <header className="browse-intro">
-    <p className="browse-eyebrow">PUBLIC SOURCES</p>
+    <p className="browse-eyebrow">Public sources</p>
     <h1>Browse real cases</h1>
     <p className="browse-deck">Court documents and scam warnings published by courts and public agencies. Each entry keeps the original source attached and can be checked in SEAL.</p>
     <p className="browse-scope">Source coverage varies by jurisdiction. When SEAL cannot independently verify a court, it leaves the claim unconfirmed and points to an official directory when one is available.</p>
