@@ -1531,6 +1531,7 @@ async function upload(uploaded:File){
  },[verification,claims,selected,select]);
 
  useEffect(()=>{
+  if(!hydrated)return;
   const courtTitle=claims.find(claim=>claim.type==='court'&&claimReliable(claim))?.value;
   const title=cleanDisplayText(courtTitle||workspaceTitle||'New check');
   const firstAction=claims.find(claim=>Boolean(claim.action)&&claimReliable(claim));
@@ -1538,7 +1539,7 @@ async function upload(uploaded:File){
   const preview=cleanDisplayText(firstAction?.action?.source_text||firstAction?.value||firstUsefulLine||'').slice(0,84);
   const state:WorkspaceRunStatus=error?'error':verification?'done':busy?(status==='Checking independent sources'?'verifying':'reading'):'idle';
   onWorkspaceMeta(workspaceId,{title,status:state,language:documentLanguage?.label,jurisdiction,preview});
- },[workspaceId,workspaceTitle,claims,text,error,verification,busy,status,documentLanguage?.label,jurisdiction,onWorkspaceMeta]);
+ },[hydrated,workspaceId,workspaceTitle,claims,text,error,verification,busy,status,documentLanguage?.label,jurisdiction,onWorkspaceMeta]);
 
  const processingStage=status==='Checking independent sources'?2:status==='Reading requested actions'?1:0;
  const processingTitle=processingStage===2?'Checking public sources':processingStage===1?'Finding the instructions':'Reading your document';
