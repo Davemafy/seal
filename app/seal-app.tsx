@@ -1478,7 +1478,7 @@ async function upload(uploaded:File){
   <aside className="workspace-rail" aria-label="Workspace">
    <Link href="/" className="rail-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
    <div className="rail-command-row">
-    <button className="icon-control rail-icon-control" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} data-tooltip={ui('newCheck')} onClick={onNewWorkspace}><SealUiIcon name="add"/></button>
+    <button className="icon-control rail-icon-control rail-new-check" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} data-tooltip={ui('newCheck')} onClick={onNewWorkspace}><SealUiIcon name="add"/></button>
     <Link className="icon-control rail-icon-control" href="/browse" aria-label={ui('browse')} title={ui('browse')} data-tooltip={ui('browse')}><SealUiIcon name="browse"/></Link>
    </div>
    <div className="rail-check-list" aria-label="Open checks">
