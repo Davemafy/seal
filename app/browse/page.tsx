@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import {browseCases} from '@/lib/browse-cases';
 import BrowseGrid from './browse-grid';
+import BrowseLanguage from './browse-language';
 import '../workspace.css';
 import './browse.css';
 
@@ -34,6 +35,7 @@ export default function Browse(){
    <div className="rail-spacer"/>
    <div className="rail-bottom">
     <div className="browse-rail-note"><strong>Public sources</strong><span>Original court and agency material.</span></div>
+    <BrowseLanguage/>
    </div>
   </aside>
 
