@@ -706,6 +706,14 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   .replace(/·\s*·/g,'·')
   .replace(/·\s*$/,'');
  const checkObjectReference=caseReality?.reference||'';
+ const jurisdictionLooksLikeAddress=/\d|\b(?:street|st\.?|road|rd\.?|avenue|ave\.?|boulevard|blvd\.?|drive|dr\.?|lane|ln\.?|court|ct\.?)\b/i.test(jurisdiction);
+ const documentJurisdictionLabel=jurisdictionLooksLikeAddress
+  ?(/\bnew hampshire\b/i.test(text)?'United States · New Hampshire'
+    :/\bconnecticut\b/i.test(text)?'United States · Connecticut'
+     :/\b(?:dallas|texas)\b/i.test(text)?'United States · Texas'
+      :/\b(?:riverside|california)\b/i.test(text)?'United States · California'
+       :'')
+  :jurisdiction;
  const checkSourceCount=technicalEvidence.length;
  const latestCheckTimestamp=technicalEvidence.reduce((latest,evidence)=>{
   const value=Date.parse(evidence.checked_at);
@@ -1701,7 +1709,7 @@ async function upload(uploaded:File){
        <div className="check-object-meta">
         <span className="meta-status">{resultStatusLabel}</span>
         {documentLanguage?.label&&<span className="meta-language" data-testid="document-language">{documentLanguage.label}</span>}
-        {jurisdiction&&<span className="meta-jurisdiction" data-testid="document-jurisdiction">{jurisdiction}</span>}
+        {documentJurisdictionLabel&&<span className="meta-jurisdiction" data-testid="document-jurisdiction">{documentJurisdictionLabel}</span>}
        </div>
       </div>
       <div className="check-object-actions" aria-label="Check actions">
