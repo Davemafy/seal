@@ -17,7 +17,7 @@ September 25, 2026. Scope: the entry and review journey, using Base Gallery's in
 
 ## Product decisions
 
-1. **First action:** the entry view asks for a document or text. File upload, paste, and example each start a check in one action. The old upload → ready screen → check flow asked the user to confirm the same intent twice.
+1. **First action:** the entry view asks for a document or text. File upload, paste, and example each start a check in one action. The old upload, ready screen, check flow asked the user to confirm the same intent twice.
 2. **Navigation:** the desktop rail is orientation, not a fake account product. No invented history, settings, team, analytics, or saved cases. A compact header replaces the landing-page hero after entry.
 3. **Result hierarchy:** lead with what the available sources found, keep the original visible, then show a source-backed next step and the detailed claim ledger. The in-page links lead to actual sections.
 4. **Voice:** describe what SEAL can do and what it found. State authenticity limits once in the relevant context. Keep warnings specific to the detected action instead of opening with a list of things the user should fear.
