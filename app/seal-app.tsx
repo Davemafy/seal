@@ -124,7 +124,7 @@ function SealUiIcon({name}:{name:SealUiIconName}){
   {name==='add'&&<><path {...common} d="M12 5v14"/><path {...common} d="M5 12h14"/></>}
   {name==='browse'&&<><rect {...common} x="4.5" y="4.5" width="5.5" height="5.5" rx="1.2"/><rect {...common} x="14" y="4.5" width="5.5" height="5.5" rx="1.2"/><rect {...common} x="4.5" y="14" width="5.5" height="5.5" rx="1.2"/><rect {...common} x="14" y="14" width="5.5" height="5.5" rx="1.2"/></>}
   {name==='globe'&&<><circle {...common} cx="12" cy="12" r="8.25"/><path {...common} d="M3.9 12h16.2M12 3.75c2.15 2.2 3.2 4.95 3.2 8.25S14.15 18.05 12 20.25C9.85 18.05 8.8 15.3 8.8 12S9.85 5.95 12 3.75Z"/></>}
-  {name==='refresh'&&<><path {...common} d="M19 8.2V4.8h-3.4"/><path {...common} d="M18.15 6.2A7.55 7.55 0 1 0 19.2 15"/></>}
+  {name==='refresh'&&<><path {...common} d="M17.7 7.6V4.9h-2.8"/><path {...common} d="M17.4 6.2A6.8 6.8 0 1 0 18.1 14.4"/></>}
   {name==='copy'&&<><rect {...common} x="8.25" y="8.25" width="10.25" height="10.25" rx="2"/><path {...common} d="M15.75 8.25V6.6a2.1 2.1 0 0 0-2.1-2.1H6.6a2.1 2.1 0 0 0-2.1 2.1v7.05a2.1 2.1 0 0 0 2.1 2.1h1.65"/></>}
   {name==='message'&&<><path {...common} d="M5.1 5.25h13.8a1.85 1.85 0 0 1 1.85 1.85v8.15a1.85 1.85 0 0 1-1.85 1.85H10l-4.75 3v-3H5.1a1.85 1.85 0 0 1-1.85-1.85V7.1A1.85 1.85 0 0 1 5.1 5.25Z"/><path {...common} d="M8 9.25h8M8 13h5.25"/></>}
   {name==='download'&&<><path {...common} d="M12 4.5v10.25"/><path {...common} d="m8.3 11.4 3.7 3.7 3.7-3.7"/><path {...common} d="M5 18.75h14"/></>}
