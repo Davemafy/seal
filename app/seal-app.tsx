@@ -2257,7 +2257,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   setActiveWorkspace(id);
   workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),720);
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
- },[]);
+ },[activeWorkspace]);
 
  const selectWorkspace=useCallback((id:string)=>{
   const from=workspaces.findIndex(item=>item.id===activeWorkspace);
@@ -2296,6 +2296,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
     const visible=workspace.id===activeWorkspace||leaving;
     return <div
      className={`seal-workspace-instance ${entering?`is-entering-${workspaceMotion.direction}`:''} ${leaving?'is-leaving':''}`}
+     data-workspace-id={workspace.id}
      key={workspace.id}
      hidden={!visible}
      aria-hidden={workspace.id!==activeWorkspace}
