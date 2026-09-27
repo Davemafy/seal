@@ -353,3 +353,52 @@
   min-height:210px!important;
  }
 }
+
+
+/* Workspace switch safety: result chrome must never collapse or inherit stale scroll state. */
+@media(min-width:901px){
+ .result-masthead,
+ .result-masthead-row,
+ .check-object-identity,
+ .check-object-identity h1,
+ .check-object-meta,
+ .result-chapters{
+  visibility:visible!important;
+  opacity:1!important;
+ }
+ .check-object-identity{
+  display:block!important;
+  width:auto!important;
+  height:auto!important;
+  min-height:0!important;
+  overflow:visible!important;
+ }
+ .check-object-identity h1{
+  display:block!important;
+  height:auto!important;
+  min-height:28px!important;
+  overflow:visible!important;
+ }
+ .check-object-meta{
+  min-height:15px!important;
+ }
+ .result-chapters{
+  min-height:28px!important;
+ }
+ .result-carousel{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+ }
+ .result-slide-summary{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+ }
+ .result-slide-summary .decision,
+ .result-slide-summary .decision-copy{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+ }
+}
