@@ -213,7 +213,8 @@ async function modelCurate(candidate:Candidate){
    title:candidate.title,
    text:candidate.text.slice(0,12000)
   });
-  return remote?curatorSchema.parse(remote):null;
+  if(!remote)throw new Error('Curator model unavailable');
+  return curatorSchema.parse(remote);
  }
  const base=process.env.GROQ_BASE_URL||'https://api.groq.com/openai/v1';
  if(new URL(base).hostname!=='api.groq.com')throw new Error('Groq host not allowed');
@@ -249,22 +250,12 @@ async function modelCurate(candidate:Candidate){
  return curatorSchema.parse(JSON.parse(body.choices?.[0]?.message?.content||'{}'));
 }
 
-function fallbackCopy(candidate:Candidate){
- const scam=candidate.source.classification==='Confirmed scam example';
- return {
-  publish:true,
-  visualNote:scam
-   ?`${candidate.source.issuer} published this example as a scam warning. The original authority asset is shown above.`
-   :`${candidate.source.issuer} published this official warning. SEAL preserves the source asset and its provenance.`,
-  excerpt:normalize(candidate.text).slice(0,260),
-  category:candidate.source.category,
-  confidence:1,
-  reason:'Passed deterministic official-source and explicit-evidence gates.'
- };
-}
 
 const found:BrowseCase[]=[];
 const seenRun=new Set<string>();
+let curatorAttempts=0;
+let curatorSuccesses=0;
+let curatorFailures=0;
 
 try{
  for(const source of browseDiscoverySources){
@@ -288,25 +279,22 @@ try{
    }
    if(!candidate)continue;
 
-   let curated=undefined as z.infer<typeof curatorSchema>|ReturnType<typeof fallbackCopy>|undefined;
+   let curated:z.infer<typeof curatorSchema>|undefined;
+   curatorAttempts++;
    try{
     const model=await modelCurate(candidate);
-    if(model){
-     console.log(`CURATOR model ${url}`);
-     if(!model.publish||model.confidence<.78){
-      console.log(`QUARANTINE model ${url}: ${model.reason}`);
-      continue;
-     }
-     curated=model;
-    }else{
-     console.log(`CURATOR deterministic ${url}`);
-     curated=fallbackCopy(candidate);
+    curatorSuccesses++;
+    console.log(`CURATOR model ${url}`);
+    if(!model.publish||model.confidence<.78){
+     console.log(`QUARANTINE model ${url}: ${model.reason}`);
+     continue;
     }
+    curated=model;
    }catch(error){
+    curatorFailures++;
     console.log(`QUARANTINE model_error ${url}: ${error instanceof Error?error.message:String(error)}`);
     continue;
    }
-   if(!curated)continue;
 
    const id=`feed-${slug(source.id)}-${createHash('sha256').update(canonical).digest('hex').slice(0,9)}`;
    const displayTitle=compactTitle(candidate.title,source);
@@ -336,6 +324,10 @@ try{
  }
 }finally{
  await rm(tempRoot,{recursive:true,force:true});
+}
+
+if(curatorAttempts>0&&curatorSuccesses===0&&curatorFailures>0){
+ throw new Error(`Model curator unavailable for all ${curatorAttempts} eligible candidates`);
 }
 
 const ranked=[...existingGenerated,...found]
