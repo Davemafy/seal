@@ -2263,10 +2263,13 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
 
  useEffect(()=>{
   if(!registryReady||initialDemo||initialText||initialRun)return;
-  try{
-   const mobileFirstRun=window.matchMedia('(max-width: 900px) and (pointer: coarse)').matches;
-   if(mobileFirstRun&&!window.localStorage.getItem(ONBOARDING_KEY))setOnboardingOpen(true);
-  }catch{}
+  const timer=window.setTimeout(()=>{
+   try{
+    const mobileFirstRun=window.matchMedia('(max-width: 900px) and (pointer: coarse)').matches;
+    if(mobileFirstRun&&!window.localStorage.getItem(ONBOARDING_KEY))setOnboardingOpen(true);
+   }catch{}
+  },0);
+  return()=>window.clearTimeout(timer);
  },[registryReady,initialDemo,initialText,initialRun]);
 
  useEffect(()=>{
