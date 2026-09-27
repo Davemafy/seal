@@ -2385,15 +2385,6 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  },[registryReady]);
 
  useEffect(()=>{
-  if(!registryReady||!initialWorkspaceId)return;
-  setWorkspaces(items=>{
-   if(!items.some(item=>item.id===initialWorkspaceId))return items;
-   setActiveWorkspace(initialWorkspaceId);
-   return items;
-  });
- },[registryReady,initialWorkspaceId]);
-
- useEffect(()=>{
   if(!registryReady||initialDemo||initialText||initialRun)return;
   const timer=window.setTimeout(()=>{
    try{
