@@ -637,3 +637,37 @@
   line-height:31px!important
  }
 }
+
+
+/* Mobile result type floor. */
+@media(max-width:900px){
+ .seal-app .result-masthead-title,
+ .seal-app .check-object-meta,
+ .seal-app .decision-primary-route>span,
+ .seal-app .decision-primary-route>small,
+ .seal-app .decision-at-a-glance span,
+ .seal-app .decision-details>summary{
+  font-size:12.5px!important;
+  line-height:18px!important
+ }
+ .seal-app .result-chapters a{
+  font-size:13.5px!important;
+  line-height:19px!important
+ }
+ .seal-app .result-slide-summary .decision-status{
+  font-size:13px!important;
+  line-height:19px!important
+ }
+ .seal-app .result-slide-summary .decision-summary{
+  font-size:15px!important;
+  line-height:22px!important
+ }
+ .seal-app .result-slide-summary .decision-primary-route>a{
+  font-size:15px!important;
+  line-height:21px!important
+ }
+ .seal-app .result-slide-summary .decision-at-a-glance strong{
+  font-size:14px!important;
+  line-height:20px!important
+ }
+}
