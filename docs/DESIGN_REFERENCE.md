@@ -8,7 +8,7 @@ The product order remains document, decision, independent evidence, and safe rou
 
 ## Inspected Base Gallery implementation
 
-Source: Figma file `44ILRjXYsYqh7uvqC131lu`, page `❖ Base Components` (`3:4200`). Screenshots and design context were inspected for Light tokens → Core (`21149:262835`), Typography → Heading (`21149:267211`) and Paragraph (`21149:267227`), Button → Medium (`21149:269195`), Input → Text area (`21154:265672`), File drop (`21156:279679`), and Banner (`21151:253939`). Layout → Normal (`20615:223835`) establishes 4 columns at 320–599 with 16px margins/gutters, 8 columns at 600–1135 with 36px margins/gutters, and 12 columns at 1136+ with 64px margins and 36px gutters.
+Source: Figma file `44ILRjXYsYqh7uvqC131lu`, page `❖ Base Components` (`3:4200`). Screenshots and design context were inspected for Light tokens / Core (`21149:262835`), Typography / Heading (`21149:267211`) and Paragraph (`21149:267227`), Button / Medium (`21149:269195`), Input / Text area (`21154:265672`), File drop (`21156:279679`), and Banner (`21151:253939`). Layout / Normal (`20615:223835`) establishes 4 columns at 320–599 with 16px margins/gutters, 8 columns at 600–1135 with 36px margins/gutters, and 12 columns at 1136+ with 64px margins and 36px gutters.
 
 | Base role | Inspected value | SEAL use |
 | --- | --- | --- |
@@ -53,7 +53,7 @@ The Figma file uses Uber Move and Uber Move Text. The user supplied `UberMoveMed
 
 21. **Case Study Presentation Template** — Useful for sequencing. Learn: problem, evidence, and outcome should be revealed in a narrative order. Avoid: slide-deck styling.
 22. **Visual Portfolio Template** — Useful for large visual surfaces. Learn: imagery can dominate while supporting text stays compact. Avoid: portfolio theatrics.
-23. **Case Study Template [Community]** — Useful for problem → evidence → conclusion order. Avoid: pastel case-study styling.
+23. **Case Study Template [Community]** — Useful for problem / evidence / conclusion order. Avoid: pastel case-study styling.
 24. **Case Study Template** — Useful for alternative narrative pacing. Learn: not every section needs identical framing. Avoid: decorative section numbering.
 25. **UI/UX Case Study Template** — Useful for explaining reasoning. Learn: show source, interpretation, and outcome next to each other. Avoid: process-diagram clutter.
 26. **Xoppin.k UX/UI Case Study** — Useful for pacing. Learn: one strong point per section. Avoid: resume/portfolio tropes.
@@ -69,7 +69,7 @@ The Figma file uses Uber Move and Uber Move Text. The user supplied `UberMoveMed
 33. **Sales Dashboard** — Useful only for compact information grouping. Avoid: analytics visual language.
 34. **Article App** — Creator describes an iOS/mobile design-system UI kit and their creation process. Do not use it as evidence for a long-form reading layout.
 35. **Bulletproof Forms** — Useful for field states. Learn: validation belongs at the exact field, not as a global warning. Avoid: form-heavy composition.
-36. **Omnichart** — Useful for relationships. Learn: source → claim → outcome needs explicit connection. Avoid: visible flowchart arrows as decoration.
+36. **Omnichart** — Useful for relationships. Learn: source / claim / outcome needs explicit connection. Avoid: visible flowchart arrows as decoration.
 37. **Grids** — Useful for discipline. Learn: use a repeatable desktop/tablet/mobile grid rather than arbitrary offsets. Avoid: showing the grid.
 38. **User Flow Kit** — Useful for safe-path logic. Learn: each next step should have one obvious destination. Avoid: diagram styling.
 39. **Ultimate Figma Project Setup + UXR Kit** — Useful for organizing evidence and annotations. Learn: separate raw evidence from synthesis. Avoid: research-repository UI.
@@ -104,7 +104,7 @@ Direction: preserve readable source material, exact highlights where provenance 
 
 ### SEAL / evidence
 Candidate reference: VENCE for reading, pending inspection. Base Gallery controls and tokens have now been inspected as recorded above. The listed case-study templates are portfolio or marketing resources rather than verified claim/evidence patterns.
-Direction: each contradiction reads as claim → official source → explanation. Known-pattern evidence gets its own rhythm instead of a generic signal card.
+Direction: each contradiction reads as claim / official source / explanation. Known-pattern evidence gets its own rhythm instead of a generic signal card.
 
 ### SEAL / safe action
 Chosen references: Customer Journey Map, User Flow Kit, Contra Wireframe Kit.
