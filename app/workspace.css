@@ -646,3 +646,134 @@
  .upload-row.is-busy{min-height:168px;padding:24px 20px}
  .upload-busy-mark{margin-bottom:24px}
 }
+
+
+/* Scan → result continuity */
+.review-shell{
+ animation:seal-result-enter .28s cubic-bezier(.16,1,.3,1) both
+}
+@keyframes seal-result-enter{
+ from{opacity:.01;transform:translateY(8px)}
+ to{opacity:1;transform:translateY(0)}
+}
+.entry-shell.is-processing .entry-copy{
+ opacity:.7;
+ transition:opacity .18s ease
+}
+.entry-shell.is-processing .intake{
+ transition:background-color .18s ease,border-color .18s ease
+}
+
+/* Scrollable chapter rails without browser scroll chrome */
+.result-chapters,.review-tabs{
+ scrollbar-width:none;
+ -ms-overflow-style:none
+}
+.result-chapters::-webkit-scrollbar,
+.review-tabs::-webkit-scrollbar{
+ display:none;
+ width:0;
+ height:0
+}
+
+/* Compact sample notice */
+.source-failure.sample-warning{
+ display:flex;
+ align-items:center;
+ justify-content:flex-start;
+ gap:10px
+}
+.source-failure.sample-warning strong{
+ flex:0 0 auto;
+ font-size:10px;
+ line-height:14px;
+ letter-spacing:.08em
+}
+.source-failure.sample-warning span{
+ color:#555
+}
+
+@media(max-width:599px){
+ .review-shell{
+  padding:16px 16px 40px
+ }
+ .result-masthead{
+  margin-bottom:12px;
+  padding-top:0
+ }
+ .result-masthead-row{
+  min-height:42px
+ }
+ .result-masthead h1{
+  max-width:none;
+  font-size:28px;
+  line-height:34px;
+  letter-spacing:-.02em
+ }
+ .result-chapters{
+  gap:22px;
+  margin-top:2px;
+  padding-right:12px
+ }
+ .result-chapters a{
+  padding-bottom:10px;
+  font-size:12px;
+  line-height:18px
+ }
+ .source-failure.sample-warning{
+  margin:8px 0 14px;
+  padding:10px 12px;
+  border-radius:10px;
+  font-size:12px;
+  line-height:17px
+ }
+ .review-tools{
+  display:none
+ }
+ .review-hero{
+  gap:24px;
+  padding:14px 0 36px
+ }
+ .decision h1,.precheck h1{
+  font-size:28px;
+  line-height:34px;
+  letter-spacing:-.018em
+ }
+ .decision-summary,.precheck>p{
+  margin-top:10px;
+  font-size:15px;
+  line-height:22px
+ }
+ .decision-claim{
+  margin-top:18px;
+  padding-top:14px
+ }
+ .decision-claim p{
+  font-size:17px;
+  line-height:24px
+ }
+ .decision-evidence{
+  margin-top:14px;
+  padding-top:14px
+ }
+ .decision-relationship-block strong{
+  font-size:15px;
+  line-height:22px
+ }
+ .decision-review-player{
+  margin-top:16px;
+  padding:14px 0
+ }
+ .document-heading{
+  margin-bottom:8px
+ }
+ .review-hero .document-zone{
+  margin-top:0
+ }
+}
+
+@media(prefers-reduced-motion:reduce){
+ .review-shell{animation:none!important}
+ .entry-shell.is-processing .entry-copy,
+ .entry-shell.is-processing .intake{transition:none!important}
+}
