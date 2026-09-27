@@ -6,7 +6,9 @@
 .browse-eyebrow{margin:0 0 12px;color:#777;font-size:11px;font-weight:700;letter-spacing:.09em}
 .browse-intro h1{margin:0;font-size:52px;line-height:60px;letter-spacing:-.025em}
 .browse-deck{max-width:680px;margin:18px 0 0;color:#4b4b4b;font-size:18px;line-height:28px}
-.browse-proof{display:flex;gap:8px 20px;align-items:center;flex-wrap:wrap;margin-top:24px;color:#777;font-size:13px;line-height:20px}
+.browse-scope{max-width:760px;margin:18px 0 0;padding-top:14px;border-top:1px solid #e7e7e7;color:#696969;font-size:12px;line-height:19px}
+.browse-scope strong{color:#222;font-weight:650}
+.browse-proof{display:flex;gap:8px 20px;align-items:center;flex-wrap:wrap;margin-top:20px;color:#777;font-size:13px;line-height:20px}
 .browse-proof span{display:inline-flex;gap:5px;align-items:baseline}
 .browse-proof strong{color:#111;font-size:15px;font-weight:600}
 
