@@ -2322,7 +2322,7 @@ async function upload(uploaded:File){
 }
 
 const WORKSPACE_LIST_KEY='seal:workspace-list:v1';
-const ONBOARDING_KEY='seal:onboarding:v1';
+const ONBOARDING_KEY='seal:onboarding:v2';
 const DISPLAY_LOCALE_KEY='seal:display-locale:v1';
 const checkRoute=(id:string)=>`/check/${encodeURIComponent(id==='primary'?'primary':id.replace(/^check-/,''))}`;
 const isDisposableBlankWorkspace=(item:WorkspaceMeta)=>item.status==='idle'
@@ -2345,6 +2345,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const [activeWorkspace,setActiveWorkspace]=useState('primary');
  const [registryReady,setRegistryReady]=useState(false);
  const [onboardingOpen,setOnboardingOpen]=useState(false);
+ const [onboardingStep,setOnboardingStep]=useState(0);
+ const onboardingTouchStart=useRef<number|null>(null);
 
  useEffect(()=>{
   const timer=window.setTimeout(()=>{
@@ -2401,8 +2403,10 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   if(!registryReady||initialDemo||initialText||initialRun)return;
   const timer=window.setTimeout(()=>{
    try{
-    const mobileFirstRun=window.matchMedia('(max-width: 900px) and (pointer: coarse)').matches;
-    if(mobileFirstRun&&!window.localStorage.getItem(ONBOARDING_KEY))setOnboardingOpen(true);
+    if(!window.localStorage.getItem(ONBOARDING_KEY)){
+     setOnboardingStep(0);
+     setOnboardingOpen(true);
+    }
    }catch{}
   },0);
   return()=>window.clearTimeout(timer);
@@ -2424,6 +2428,16 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    window.setTimeout(()=>button?.focus(),260);
   });
  },[]);
+
+ const advanceOnboarding=useCallback(()=>{
+  setOnboardingStep(step=>step>=2?step:step+1);
+ },[]);
+ const retreatOnboarding=useCallback(()=>{
+  setOnboardingStep(step=>step<=0?0:step-1);
+ },[]);
+ const finishOnboarding=useCallback(()=>{
+  dismissOnboarding(true);
+ },[dismissOnboarding]);
 
  const animateWorkspaceTo=useCallback((id:string)=>{
   if(id===activeWorkspace)return;
@@ -2486,25 +2500,107 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  },[workspaces,activeWorkspace]);
 
  return <>
-  {onboardingOpen&&<div className="first-run-layer" data-testid="first-run-onboarding">
-   <button className="first-run-backdrop" type="button" aria-label="Close introduction" onClick={()=>dismissOnboarding(false)}/>
-   <section className="first-run-sheet" role="dialog" aria-modal="true" aria-labelledby="first-run-title">
-    <div className="first-run-mark"><img src="/brand/seal-mark-black.svg" alt=""/></div>
-    <div className="first-run-copy">
-     <p>SEAL</p>
-     <h1 id="first-run-title">Check the message. Then check the source.</h1>
-     <span>See what a court message asks you to do, what public sources can confirm, and where to check next.</span>
+  {onboardingOpen&&<div
+   className="first-run-layer"
+   data-testid="first-run-onboarding"
+   data-step={onboardingStep}
+   onTouchStart={event=>{onboardingTouchStart.current=event.changedTouches[0]?.clientX??null}}
+   onTouchEnd={event=>{
+    const start=onboardingTouchStart.current;
+    onboardingTouchStart.current=null;
+    const end=event.changedTouches[0]?.clientX;
+    if(start==null||end==null)return;
+    const delta=end-start;
+    if(delta<-48)advanceOnboarding();
+    if(delta>48)retreatOnboarding();
+   }}
+  >
+   <div className="onboarding-shell" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+    <header className="onboarding-topbar">
+     <div className="onboarding-brand"><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></div>
+     {onboardingStep<2&&<button type="button" className="onboarding-skip" onClick={()=>dismissOnboarding(false)}>Skip</button>}
+    </header>
+
+    <div className="onboarding-progress" aria-label={`Step ${onboardingStep+1} of 3`}>
+     {[0,1,2].map(step=><span className={step<=onboardingStep?'is-active':''} key={step}/>)}
     </div>
-    <div className="first-run-principles">
-     <div><strong>Message</strong><span>What it actually asks</span></div>
-     <div><strong>Public evidence</strong><span>What can be confirmed</span></div>
-     <div><strong>Next step</strong><span>Where to verify safely</span></div>
+
+    <div className="onboarding-stage" key={onboardingStep}>
+     {onboardingStep===0&&<>
+      <div className="onboarding-visual onboarding-visual-input" aria-hidden="true">
+       <div className="onboarding-upload-card">
+        <div className="onboarding-file-sheet">
+         <span/>
+         <span/>
+         <span/>
+         <strong>COURT NOTICE</strong>
+         <small>Payment requested today</small>
+        </div>
+        <div className="onboarding-input-dock">
+         <div><span>Screenshot</span><small>PNG · JPG</small></div>
+         <div><span>Document</span><small>PDF</small></div>
+         <div><span>Paste text</span><small>Message</small></div>
+        </div>
+       </div>
+      </div>
+      <div className="onboarding-copy">
+       <span className="onboarding-kicker">Start with the message</span>
+       <h1 id="onboarding-title">Bring the notice you received.</h1>
+       <p>Upload a screenshot or PDF, or paste the text. SEAL reads the message before it checks anything else.</p>
+      </div>
+     </>}
+
+     {onboardingStep===1&&<>
+      <div className="onboarding-visual onboarding-visual-evidence" aria-hidden="true">
+       <div className="onboarding-claim-card">
+        <span>Message says</span>
+        <strong>Pay today to avoid arrest.</strong>
+        <small>Instruction found in the message</small>
+       </div>
+       <div className="onboarding-source-card">
+        <div className="onboarding-source-head"><span>Public source</span><em>Official</em></div>
+        <strong>Courts do not demand payment this way.</strong>
+        <small>Independent court guidance</small>
+       </div>
+       <div className="onboarding-match-line"><span>Compared independently</span></div>
+      </div>
+      <div className="onboarding-copy">
+       <span className="onboarding-kicker">Independent evidence</span>
+       <h1 id="onboarding-title">A real court name is not enough.</h1>
+       <p>SEAL separates what the message asks you to do from official-looking details, then checks only what public sources can establish.</p>
+      </div>
+     </>}
+
+     {onboardingStep===2&&<>
+      <div className="onboarding-visual onboarding-visual-result" aria-hidden="true">
+       <div className="onboarding-result-card">
+        <span>Check result</span>
+        <h2>Check it independently before you pay.</h2>
+        <p>We found an official process, but not enough to confirm this notice or the case.</p>
+        <div className="onboarding-result-action">
+         <small>Next step</small>
+         <strong>Open the official court service</strong>
+        </div>
+       </div>
+      </div>
+      <div className="onboarding-copy">
+       <span className="onboarding-kicker">Leave with a next step</span>
+       <h1 id="onboarding-title">Know what to do next.</h1>
+       <p>SEAL does not authenticate a message just because some details match. It shows what is confirmed, what is not, and where to verify safely.</p>
+      </div>
+     </>}
     </div>
-    <div className="first-run-actions">
-     <button type="button" onClick={()=>dismissOnboarding(true)}>Check a message</button>
-     <Link href="/browse" onClick={()=>dismissOnboarding(false)}>Browse examples</Link>
-    </div>
-   </section>
+
+    <footer className="onboarding-controls">
+     <button type="button" className="onboarding-back" onClick={retreatOnboarding} disabled={onboardingStep===0}>Back</button>
+     {onboardingStep<2
+      ?<button type="button" className="onboarding-next" onClick={advanceOnboarding}>Next</button>
+      :<div className="onboarding-final-actions">
+        <Link href="/browse" onClick={()=>dismissOnboarding(false)}>Browse examples</Link>
+        <button type="button" className="onboarding-next" onClick={finishOnboarding}>Start a check</button>
+       </div>}
+    </footer>
+   </div>
   </div>}
   <div className={`seal-workspace-stack ${workspaces.length>1?'has-multiple':''}`} data-workspace-count={workspaces.length}>
    {registryReady&&workspaces.map((workspace,index)=>{
