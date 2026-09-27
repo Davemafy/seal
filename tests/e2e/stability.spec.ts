@@ -591,7 +591,7 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  await page.waitForTimeout(760);
 
  await expect(page.locator('.seal-workspace-stack')).toHaveClass(/has-multiple/);
- await expect(active.locator('.mobile-workspace-count')).toHaveText('3');
+ await expect(page.locator('.mobile-workspace-count')).toHaveCount(0);
  await expect(page.locator('.workspace-page-edges')).toBeVisible();
 
  await page.getByRole('button',{name:/Open checks, 3 open/}).click();
