@@ -6375,3 +6375,119 @@
  .entry-motion-petals,.entry-motion-petal{animation:none!important}
  .entry-motion-petal{transform:scaleY(.88)!important;opacity:.76!important}
 }
+
+
+/* Entry kinetic object — sculptural glass, not a spinner. */
+@media(min-width:901px){
+ .entry-motion{
+  width:278px!important;
+  height:278px!important;
+  margin:52px 0 0 -4px!important;
+  opacity:1!important;
+  position:relative!important
+ }
+ .entry-motion::before{
+  content:"";
+  position:absolute;
+  inset:19%;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(0,0,0,.055),rgba(0,0,0,0) 68%);
+  filter:blur(16px);
+  transform:translateY(12px) scale(1.06);
+  pointer-events:none
+ }
+ .entry-motion svg{
+  position:relative;
+  z-index:1;
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  overflow:visible!important
+ }
+ .entry-motion-field{opacity:.9}
+ .entry-motion-orbit-ring{
+  fill:none;
+  stroke:rgba(0,0,0,.055);
+  stroke-width:1
+ }
+ .entry-motion-rotor{
+  transform-box:view-box!important;
+  transform-origin:160px 160px!important;
+  animation:entry-rotor-drift 28s linear infinite!important
+ }
+ .entry-motion-blade-wrap{
+  transform-box:view-box!important;
+  transform-origin:160px 160px!important
+ }
+ .entry-motion-blade{
+  fill:url(#entryGlassBlade)!important;
+  transform-box:fill-box!important;
+  transform-origin:50% 100%!important;
+  animation:entry-blade-bloom 7.6s cubic-bezier(.42,0,.22,1) infinite!important
+ }
+ .entry-motion-blade-edge{
+  fill:none;
+  stroke:rgba(255,255,255,.52);
+  stroke-width:.75;
+  stroke-linecap:round;
+  opacity:.58;
+  pointer-events:none
+ }
+ .entry-motion-blade-wrap.is-soft .entry-motion-blade{opacity:.58!important}
+ .entry-motion-blade-wrap.is-deep .entry-motion-blade{opacity:.92!important}
+ .entry-motion-blade-wrap:nth-child(1) .entry-motion-blade{animation-delay:0s!important}
+ .entry-motion-blade-wrap:nth-child(2) .entry-motion-blade{animation-delay:-.36s!important}
+ .entry-motion-blade-wrap:nth-child(3) .entry-motion-blade{animation-delay:-.72s!important}
+ .entry-motion-blade-wrap:nth-child(4) .entry-motion-blade{animation-delay:-1.08s!important}
+ .entry-motion-blade-wrap:nth-child(5) .entry-motion-blade{animation-delay:-1.44s!important}
+ .entry-motion-blade-wrap:nth-child(6) .entry-motion-blade{animation-delay:-1.80s!important}
+ .entry-motion-blade-wrap:nth-child(7) .entry-motion-blade{animation-delay:-2.16s!important}
+ .entry-motion-blade-wrap:nth-child(8) .entry-motion-blade{animation-delay:-2.52s!important}
+ .entry-motion-blade-wrap:nth-child(9) .entry-motion-blade{animation-delay:-2.88s!important}
+ .entry-motion-blade-wrap:nth-child(10) .entry-motion-blade{animation-delay:-3.24s!important}
+ .entry-motion-blade-wrap:nth-child(11) .entry-motion-blade{animation-delay:-3.60s!important}
+ .entry-motion-blade-wrap:nth-child(12) .entry-motion-blade{animation-delay:-3.96s!important}
+ .entry-motion-blade-wrap:nth-child(13) .entry-motion-blade{animation-delay:-4.32s!important}
+ .entry-motion-blade-wrap:nth-child(14) .entry-motion-blade{animation-delay:-4.68s!important}
+ .entry-motion-blade-wrap:nth-child(15) .entry-motion-blade{animation-delay:-5.04s!important}
+ .entry-motion-blade-wrap:nth-child(16) .entry-motion-blade{animation-delay:-5.40s!important}
+ .entry-motion-blade-wrap:nth-child(17) .entry-motion-blade{animation-delay:-5.76s!important}
+ .entry-motion-blade-wrap:nth-child(18) .entry-motion-blade{animation-delay:-6.12s!important}
+ .entry-motion-blade-wrap:nth-child(19) .entry-motion-blade{animation-delay:-6.48s!important}
+ .entry-motion-blade-wrap:nth-child(20) .entry-motion-blade{animation-delay:-6.84s!important}
+ .entry-motion-aperture-ring{
+  fill:#fff;
+  stroke:rgba(0,0,0,.12);
+  stroke-width:1
+ }
+ .entry-motion-aperture{
+  fill:#fff;
+  stroke:rgba(0,0,0,.42);
+  stroke-width:.8;
+  filter:drop-shadow(0 7px 15px rgba(0,0,0,.08))
+ }
+ .entry-motion-aperture-glint{
+  fill:rgba(255,255,255,.96);
+  opacity:.85
+ }
+}
+@keyframes entry-blade-bloom{
+ 0%,100%{transform:scaleY(.72) scaleX(.92);opacity:.48}
+ 34%{transform:scaleY(1.035) scaleX(1);opacity:.94}
+ 58%{transform:scaleY(.94) scaleX(.98);opacity:.78}
+ 76%{transform:scaleY(.79) scaleX(.94);opacity:.56}
+}
+@keyframes entry-rotor-drift{
+ to{transform:rotate(360deg)}
+}
+@media(min-width:901px) and (max-width:1180px){
+ .entry-motion{
+  width:236px!important;
+  height:236px!important;
+  margin-top:44px!important
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .entry-motion-rotor,.entry-motion-blade{animation:none!important}
+ .entry-motion-blade{transform:scaleY(.9)!important;opacity:.72!important}
+}
