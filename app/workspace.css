@@ -6287,3 +6287,91 @@
 @media(prefers-reduced-motion:reduce){
  .entry-motion-petals,.entry-motion-petal{animation:none!important}
 }
+
+
+/* Entry motion premium rebuild — preserve spoke rotation, animate inner petals. */
+@media(min-width:901px){
+ .entry-motion{
+  width:292px!important;
+  height:292px!important;
+  margin:50px 0 0 -8px!important;
+  opacity:1!important;
+  filter:none!important
+ }
+ .entry-motion svg{
+  overflow:visible!important
+ }
+ .entry-motion-petals{
+  transform-box:view-box!important;
+  transform-origin:160px 160px!important;
+  animation:entry-motion-orbit 18s linear infinite!important
+ }
+ .entry-motion-spoke{
+  transform-box:view-box!important;
+  transform-origin:160px 160px!important
+ }
+ .entry-motion-petal{
+  fill:url(#entryPetalFill)!important;
+  transform-box:fill-box!important;
+  transform-origin:50% 100%!important;
+  animation:entry-petal-wave 5.4s cubic-bezier(.4,0,.2,1) infinite!important
+ }
+ .entry-motion-spoke:nth-child(2n) .entry-motion-petal{opacity:.86}
+ .entry-motion-spoke:nth-child(3n) .entry-motion-petal{opacity:.72}
+ .entry-motion-spoke:nth-child(4n) .entry-motion-petal{opacity:.58}
+ .entry-motion-spoke:nth-child(1) .entry-motion-petal{animation-delay:0s!important}
+ .entry-motion-spoke:nth-child(2) .entry-motion-petal{animation-delay:-.22s!important}
+ .entry-motion-spoke:nth-child(3) .entry-motion-petal{animation-delay:-.44s!important}
+ .entry-motion-spoke:nth-child(4) .entry-motion-petal{animation-delay:-.66s!important}
+ .entry-motion-spoke:nth-child(5) .entry-motion-petal{animation-delay:-.88s!important}
+ .entry-motion-spoke:nth-child(6) .entry-motion-petal{animation-delay:-1.10s!important}
+ .entry-motion-spoke:nth-child(7) .entry-motion-petal{animation-delay:-1.32s!important}
+ .entry-motion-spoke:nth-child(8) .entry-motion-petal{animation-delay:-1.54s!important}
+ .entry-motion-spoke:nth-child(9) .entry-motion-petal{animation-delay:-1.76s!important}
+ .entry-motion-spoke:nth-child(10) .entry-motion-petal{animation-delay:-1.98s!important}
+ .entry-motion-spoke:nth-child(11) .entry-motion-petal{animation-delay:-2.20s!important}
+ .entry-motion-spoke:nth-child(12) .entry-motion-petal{animation-delay:-2.42s!important}
+ .entry-motion-spoke:nth-child(13) .entry-motion-petal{animation-delay:-2.64s!important}
+ .entry-motion-spoke:nth-child(14) .entry-motion-petal{animation-delay:-2.86s!important}
+ .entry-motion-spoke:nth-child(15) .entry-motion-petal{animation-delay:-3.08s!important}
+ .entry-motion-spoke:nth-child(16) .entry-motion-petal{animation-delay:-3.30s!important}
+ .entry-motion-spoke:nth-child(17) .entry-motion-petal{animation-delay:-3.52s!important}
+ .entry-motion-spoke:nth-child(18) .entry-motion-petal{animation-delay:-3.74s!important}
+ .entry-motion-spoke:nth-child(19) .entry-motion-petal{animation-delay:-3.96s!important}
+ .entry-motion-spoke:nth-child(20) .entry-motion-petal{animation-delay:-4.18s!important}
+ .entry-motion-spoke:nth-child(21) .entry-motion-petal{animation-delay:-4.40s!important}
+ .entry-motion-spoke:nth-child(22) .entry-motion-petal{animation-delay:-4.62s!important}
+ .entry-motion-spoke:nth-child(23) .entry-motion-petal{animation-delay:-4.84s!important}
+ .entry-motion-spoke:nth-child(24) .entry-motion-petal{animation-delay:-5.06s!important}
+ .entry-motion-ring{
+  fill:#fff!important;
+  stroke:rgba(0,0,0,.16)!important;
+  stroke-width:1!important
+ }
+ .entry-motion-core{
+  fill:#fff!important;
+  stroke:#111!important;
+  stroke-width:1.1!important;
+  filter:drop-shadow(0 3px 8px rgba(0,0,0,.08))
+ }
+}
+@keyframes entry-petal-wave{
+ 0%,100%{transform:scaleY(.46) scaleX(.82);opacity:.30}
+ 36%{transform:scaleY(1.03) scaleX(1);opacity:1}
+ 57%{transform:scaleY(.90) scaleX(.94);opacity:.80}
+ 76%{transform:scaleY(.58) scaleX(.86);opacity:.44}
+}
+@keyframes entry-motion-orbit{
+ to{transform:rotate(360deg)}
+}
+@media(min-width:901px) and (max-width:1180px){
+ .entry-motion{
+  width:246px!important;
+  height:246px!important;
+  margin-top:42px!important
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .entry-motion-petals,.entry-motion-petal{animation:none!important}
+ .entry-motion-petal{transform:scaleY(.88)!important;opacity:.76!important}
+}
