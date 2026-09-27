@@ -19,8 +19,8 @@ export const metadata:Metadata={
  description:'Check court messages against independent public sources before you act.',
  applicationName:'Seal',
  icons:{
-  icon:{url:'/icon.svg',type:'image/svg+xml'},
-  shortcut:'/icon.svg'
+  icon:{url:'/favicon-seal-v2.svg',type:'image/svg+xml'},
+  shortcut:'/favicon-seal-v2.svg'
  }
 };
 
