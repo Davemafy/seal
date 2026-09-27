@@ -1548,12 +1548,13 @@ async function upload(uploaded:File){
       {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><button type="button" role="option" aria-selected={code===displayLocale} className={code===displayLocale?'is-selected':''} key={code} onClick={()=>changeDisplayLanguage(code as DisplayLocale)}><span>{label}</span><small>{code.toUpperCase()}</small></button>)}
      </div>}
     </div>
+    <span className="mobile-nav-divider" aria-hidden="true"/>
     <button className="icon-control mobile-nav-icon mobile-workspace-trigger" type="button" aria-label="Open checks" title="Open checks" aria-haspopup="dialog" aria-expanded={workspaceDrawerOpen} onClick={()=>{setLanguageMenuOpen(false);setWorkspaceDrawerOpen(true)}}><SealUiIcon name="sidebar"/></button>
-    <button className="icon-control mobile-nav-icon" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} onClick={()=>{setWorkspaceDrawerOpen(false);onNewWorkspace()}}><SealUiIcon name="add"/></button>
+    <button className="icon-control mobile-nav-icon mobile-new-check" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} onClick={()=>{setWorkspaceDrawerOpen(false);onNewWorkspace()}}><SealUiIcon name="add"/></button>
    </div>
   </header>
 
-  {workspaceDrawerOpen&&<div className="workspace-drawer-layer" data-testid="workspace-drawer-layer">
+  <div className={`workspace-drawer-layer ${workspaceDrawerOpen?'is-open':''}`} data-testid="workspace-drawer-layer" aria-hidden={!workspaceDrawerOpen}>
    <button className="workspace-drawer-backdrop" type="button" aria-label="Close checks" onClick={()=>setWorkspaceDrawerOpen(false)}/>
    <aside className="workspace-drawer" role="dialog" aria-modal="true" aria-label="Checks">
     <div className="workspace-drawer-head">
@@ -1583,7 +1584,7 @@ async function upload(uploaded:File){
      <Link className="workspace-drawer-browse" href="/browse" onClick={()=>setWorkspaceDrawerOpen(false)}><SealUiIcon name="browse"/><span>{ui('browse')}</span></Link>
     </div>
    </aside>
-  </div>}
+  </div>
 
   {!verification?
    <section className={`entry-shell ${busy?'is-processing':''}`} data-testid="entry-shell">
@@ -2192,6 +2193,8 @@ const WORKSPACE_LIST_KEY='seal:workspace-list:v1';
 export default function SealApp({initialDemo=false,initialText='',initialRun=false}:{initialDemo?:boolean;initialText?:string;initialRun?:boolean}){
  const [workspaces,setWorkspaces]=useState<WorkspaceMeta[]>([{id:'primary',title:'New check',status:'idle'}]);
  const [activeWorkspace,setActiveWorkspace]=useState('primary');
+ const [workspaceMotion,setWorkspaceMotion]=useState<{id:string;direction:'forward'|'backward'}|null>(null);
+ const workspaceMotionTimer=useRef<number|undefined>(undefined);
  const [registryReady,setRegistryReady]=useState(false);
 
  useEffect(()=>{
@@ -2217,6 +2220,17 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   try{window.sessionStorage.setItem(WORKSPACE_LIST_KEY,JSON.stringify({active:activeWorkspace,items:workspaces}))}catch{}
  },[registryReady,activeWorkspace,workspaces]);
 
+ useEffect(()=>()=>{if(workspaceMotionTimer.current)window.clearTimeout(workspaceMotionTimer.current)},[]);
+
+ const animateWorkspaceTo=useCallback((id:string,direction:'forward'|'backward')=>{
+  if(id===activeWorkspace)return;
+  if(workspaceMotionTimer.current)window.clearTimeout(workspaceMotionTimer.current);
+  setWorkspaceMotion({id,direction});
+  setActiveWorkspace(id);
+  workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),360);
+  window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
+ },[activeWorkspace]);
+
  const updateWorkspace=useCallback((id:string,patch:Partial<WorkspaceMeta>)=>{
   setWorkspaces(items=>items.map(item=>{
    if(item.id!==id)return item;
@@ -2238,9 +2252,18 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    const title=number===1?'New check':`New check ${number}`;
    return [...items,{id,title,status:'idle' as WorkspaceRunStatus}].slice(-8);
   });
+  if(workspaceMotionTimer.current)window.clearTimeout(workspaceMotionTimer.current);
+  setWorkspaceMotion({id,direction:'forward'});
   setActiveWorkspace(id);
+  workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),360);
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
  },[]);
+
+ const selectWorkspace=useCallback((id:string)=>{
+  const from=workspaces.findIndex(item=>item.id===activeWorkspace);
+  const to=workspaces.findIndex(item=>item.id===id);
+  animateWorkspaceTo(id,to>=from?'forward':'backward');
+ },[workspaces,activeWorkspace,animateWorkspaceTo]);
 
  const deleteWorkspace=useCallback((id:string)=>{
   const index=workspaces.findIndex(item=>item.id===id);
@@ -2253,7 +2276,13 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    setActiveWorkspace(replacementId);
   }else{
    setWorkspaces(remaining);
-   if(activeWorkspace===id)setActiveWorkspace(remaining[Math.min(index,remaining.length-1)].id);
+   if(activeWorkspace===id){
+    const next=remaining[Math.min(index,remaining.length-1)];
+    if(workspaceMotionTimer.current)window.clearTimeout(workspaceMotionTimer.current);
+    setWorkspaceMotion({id:next.id,direction:index>=remaining.length?'backward':'forward'});
+    setActiveWorkspace(next.id);
+    workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),360);
+   }
   }
   toast.success('Check removed');
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
@@ -2274,7 +2303,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      workspaceId={workspace.id}
      workspaces={workspaces}
      onNewWorkspace={createWorkspace}
-     onSelectWorkspace={setActiveWorkspace}
+     onSelectWorkspace={selectWorkspace}
      onDeleteWorkspace={deleteWorkspace}
      onWorkspaceMeta={updateWorkspace}
     />
