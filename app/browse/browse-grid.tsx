@@ -26,7 +26,7 @@ function CaseMedia({item,priority=false}:{item:BrowseCase;priority?:boolean}){
 
 function matchesFilter(item:BrowseCase,filter:BrowseFilter){
  if(filter==='runnable')return Boolean(item.runText);
- if(filter==='scam')return item.classification==='Confirmed scam example';
+ if(filter==='scam')return item.classification==='Confirmed scam example'||item.category==='official-scam-guidance';
  if(filter==='official')return item.classification!=='Confirmed scam example';
  if(filter==='international')return item.country!=='United States';
  return true;
