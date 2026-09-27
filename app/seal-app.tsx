@@ -271,6 +271,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [,setQuestionCopied]=useState(false);
  const workspaceRootRef=useRef<HTMLElement>(null);
  const resultCarouselRef=useRef<HTMLDivElement>(null);
+ const resultSectionStorageKey=`seal:result-section:${workspaceId}`;
  const sectionId=(base:string)=>workspaceId==='primary'?base:`${base}-${workspaceId}`;
  const jumpToResultSection=useCallback((event:React.MouseEvent<HTMLAnchorElement>,section:'summary'|'message'|'evidence'|'next',targetBase:string)=>{
   event.preventDefault();
@@ -284,10 +285,11 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const adjacent=Math.abs(targetIndex-currentIndex)===1;
   setActiveResultSection(section);
+  try{window.sessionStorage.setItem(resultSectionStorageKey,section)}catch{}
   carousel.scrollTo({top:slide.offsetTop,left:0,behavior:reduce||!adjacent?'auto':'smooth'});
   const id=workspaceId==='primary'?targetBase:`${targetBase}-${workspaceId}`;
   window.history.replaceState(null,'',`#${id}`);
- },[workspaceId,activeResultSection]);
+ },[workspaceId,activeResultSection,resultSectionStorageKey]);
  const syncResultCarousel=useCallback((event:React.UIEvent<HTMLDivElement>)=>{
   const carousel=event.currentTarget;
   const slides=Array.from(carousel.querySelectorAll<HTMLElement>('.result-slide'));
@@ -300,30 +302,30 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   }
   if(carousel.scrollTop+carousel.clientHeight>=carousel.scrollHeight-4)index=slides.length-1;
   const next=(['summary','message','evidence','next'] as const)[Math.min(3,index)];
-  setActiveResultSection(current=>current===next?current:next);
- },[]);
-
- useLayoutEffect(()=>{
-  if(!verification)return;
-  const frame=window.requestAnimationFrame(()=>{
-   const carousel=resultCarouselRef.current;
-   if(!carousel)return;
-   carousel.scrollTo({top:0,left:0,behavior:'auto'});
-   setActiveResultSection('summary');
-   if(window.location.hash)window.history.replaceState(null,'',window.location.pathname+window.location.search);
+  setActiveResultSection(current=>{
+   if(current===next)return current;
+   try{window.sessionStorage.setItem(resultSectionStorageKey,next)}catch{}
+   return next;
   });
-  return()=>window.cancelAnimationFrame(frame);
- },[verification,workspaceId]);
+ },[resultSectionStorageKey]);
 
  useLayoutEffect(()=>{
   if(!workspaceActive||!verification)return;
   const frame=window.requestAnimationFrame(()=>{
    const carousel=resultCarouselRef.current;
-   if(carousel)carousel.scrollTo({top:0,left:0,behavior:'auto'});
-   setActiveResultSection('summary');
+   if(!carousel)return;
+   let target:'summary'|'message'|'evidence'|'next'='summary';
+   try{
+    const stored=window.sessionStorage.getItem(resultSectionStorageKey);
+    if(stored==='summary'||stored==='message'||stored==='evidence'||stored==='next')target=stored;
+   }catch{}
+   const slide=carousel.querySelector<HTMLElement>(`[data-result-section="${target}"]`);
+   carousel.scrollTo({top:slide?.offsetTop||0,left:0,behavior:'auto'});
+   setActiveResultSection(target);
+   if(window.location.hash)window.history.replaceState(null,'',window.location.pathname+window.location.search);
   });
   return()=>window.cancelAnimationFrame(frame);
- },[workspaceActive,verification]);
+ },[workspaceActive,verification,resultSectionStorageKey]);
  const [reviewOffer,setReviewOffer]=useState<'idle'|'counting'|'skipped'|'watching'|'completed'>('idle');
  const [reviewCountdown,setReviewCountdown]=useState(3);
  const [reviewOfferPaused,setReviewOfferPaused]=useState(false);
@@ -1365,6 +1367,7 @@ async function upload(uploaded:File){
   storyTimelineRef.current?.kill();
   storyTimelineTime.current=0;
   storyPhaseRef.current=0;
+  try{window.sessionStorage.removeItem(resultSectionStorageKey)}catch{}
   setBusy(true);setError('');setVerification(null);setRevealed(0);setSelected('');setTechnicalOpen(false);
   setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);
   setStoryStartPending(false);setStoryOpen(false);setStoryStep(0);setStoryPlaying(false);setStoryClosing(false);
