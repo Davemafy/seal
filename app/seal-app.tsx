@@ -1572,7 +1572,7 @@ async function upload(uploaded:File){
 
   <div className={`workspace-drawer-layer ${workspaceDrawerOpen?'is-open':''}`} data-testid="workspace-drawer-layer" aria-hidden={!workspaceDrawerOpen}>
    <button className="workspace-drawer-backdrop" type="button" aria-label="Close checks" onClick={()=>setWorkspaceDrawerOpen(false)}/>
-   <aside className="workspace-drawer" role="dialog" aria-modal="true" aria-label="Checks">
+   <aside className="workspace-drawer" role={workspaceDrawerOpen?'dialog':undefined} aria-modal={workspaceDrawerOpen?'true':undefined} aria-label={workspaceDrawerOpen?'Checks':undefined}>
     <div className="workspace-drawer-head">
      <div className="workspace-drawer-title"><strong>Checks</strong><span>{workspaces.length}</span></div>
      <div className="workspace-drawer-head-actions">
