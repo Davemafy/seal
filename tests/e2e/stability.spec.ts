@@ -658,3 +658,35 @@ test('entry layout stays inside the viewport across desktop compression',async({
  }
  assertNoRuntimeErrors();
 });
+
+
+test('desktop entry keeps sidebar and canvas in proportion',async({page})=>{
+ const assertNoRuntimeErrors=guardRuntime(page);
+ await page.setViewportSize({width:1440,height:900});
+ await page.goto('/');
+ await expect(page.getByTestId('entry-shell')).toBeVisible();
+ const metrics=await page.evaluate(()=>{
+  const rail=document.querySelector<HTMLElement>('.workspace-rail')!;
+  const shell=document.querySelector<HTMLElement>('[data-testid="entry-shell"]')!;
+  const heading=shell.querySelector<HTMLElement>('.entry-copy h1')!;
+  const intake=shell.querySelector<HTMLElement>('.intake')!;
+  const railTitle=rail.querySelector<HTMLElement>('.rail-brand-word')!;
+  return {
+   railWidth:rail.getBoundingClientRect().width,
+   shellWidth:shell.getBoundingClientRect().width,
+   intakeWidth:intake.getBoundingClientRect().width,
+   headingSize:Number.parseFloat(getComputedStyle(heading).fontSize),
+   railTitleSize:Number.parseFloat(getComputedStyle(railTitle).fontSize),
+   overflow:document.documentElement.scrollWidth-window.innerWidth
+  };
+ });
+ expect(metrics.railWidth).toBeGreaterThanOrEqual(228);
+ expect(metrics.railWidth).toBeLessThanOrEqual(244);
+ expect(metrics.shellWidth).toBeLessThanOrEqual(1082);
+ expect(metrics.intakeWidth).toBeLessThanOrEqual(532);
+ expect(metrics.headingSize).toBeLessThanOrEqual(47);
+ expect(metrics.headingSize).toBeGreaterThanOrEqual(44);
+ expect(metrics.railTitleSize).toBeGreaterThanOrEqual(16);
+ expect(metrics.overflow).toBeLessThanOrEqual(1);
+ assertNoRuntimeErrors();
+});
