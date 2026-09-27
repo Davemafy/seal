@@ -34,7 +34,7 @@ Evidence is rendered as a reading sequence, not equal cards. Each item names wha
 
 ## Mobile order
 
-Decision → primary safe route → requested actions → document → evidence → safe route details → verification record → technical record.
+Decision, primary safe route, requested actions, document, evidence, safe route details, verification record, technical record.
 
 ## Interaction
 
