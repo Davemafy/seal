@@ -1517,7 +1517,7 @@ async function upload(uploaded:File){
        <span className={`rail-check-state is-${item.status}`} aria-hidden="true"/>
        <span className="rail-check-copy"><strong>{title}</strong><small>{[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · ')}</small></span>
       </button>
-      <button className="rail-check-delete icon-control" type="button" aria-label={`Delete ${title}`} title={`Delete ${title}`} onClick={()=>onDeleteWorkspace(item.id)}><SealUiIcon name="delete"/></button>
+      <button className="rail-check-delete icon-control" type="button" aria-label={`Delete check ${index+1}: ${title}`} title={`Delete ${title}`} onClick={()=>onDeleteWorkspace(item.id)}><SealUiIcon name="delete"/></button>
      </div>;
     })}
    </div>
@@ -1569,7 +1569,7 @@ async function upload(uploaded:File){
         <span className={`rail-check-state is-${item.status}`} aria-hidden="true"/>
         <span className="workspace-drawer-copy"><strong>{title}</strong><small>{[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · ')}</small></span>
        </button>
-       <button className="icon-control workspace-drawer-delete" type="button" aria-label={`Delete ${title}`} title={`Delete ${title}`} onClick={()=>{if(item.id===workspaceId)setWorkspaceDrawerOpen(false);onDeleteWorkspace(item.id)}}><SealUiIcon name="delete"/></button>
+       <button className="icon-control workspace-drawer-delete" type="button" aria-label={`Delete check ${index+1}: ${title}`} title={`Delete ${title}`} onClick={()=>{if(item.id===workspaceId)setWorkspaceDrawerOpen(false);onDeleteWorkspace(item.id)}}><SealUiIcon name="delete"/></button>
       </div>;
      })}
     </div>
