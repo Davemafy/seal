@@ -12,10 +12,14 @@ const uberMove=localFont({
 });
 
 export const metadata:Metadata={
- title:'SEAL — Verify before you act.',
- description:'See what a court message asks you to do, what independent public sources support, and what remains unverified.',
+ title:{
+  default:'SEAL',
+  template:'%s · SEAL'
+ },
+ description:'Check court messages against independent public sources before you act.',
+ applicationName:'SEAL',
  icons:{
-  icon:'/icon.svg',
+  icon:{url:'/icon.svg',type:'image/svg+xml'},
   shortcut:'/icon.svg'
  }
 };
