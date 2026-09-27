@@ -4530,3 +4530,95 @@
   line-height:14px!important;
  }
 }
+
+
+/* Final workspace rail polish: visible Browse, quiet blank checks. */
+@media(min-width:901px){
+ .rail-topbar{
+  min-height:38px!important;
+  padding-bottom:12px!important
+ }
+ .rail-primary-nav{
+  display:grid;
+  gap:2px;
+  margin:0 0 16px;
+ }
+ .rail-nav-item{
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 10px;
+  border-radius:7px;
+  color:#4e4e4b;
+  font-size:12px;
+  line-height:18px;
+  font-weight:560;
+  text-decoration:none
+ }
+ .rail-nav-item .seal-ui-icon{width:16px;height:16px}
+ .rail-nav-item:hover{background:#eeeeeb;color:#111}
+ .rail-nav-item.is-current{background:#e9e9e6;color:#111}
+ .rail-section-head{
+  margin-top:0!important;
+  padding-inline:10px!important
+ }
+ .rail-check-list{
+  gap:1px!important
+ }
+ .rail-check-row{
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important
+ }
+ .rail-check-row.is-current{
+  background:#ececea!important;
+  border:0!important;
+  box-shadow:none!important
+ }
+ .rail-check-row.is-current::before{
+  left:0!important;
+  top:12px!important;
+  bottom:12px!important;
+  width:2px!important
+ }
+ .rail-check{
+  min-height:48px!important;
+  padding:7px 10px 7px 12px!important;
+  border-radius:7px!important
+ }
+ .rail-check-copy strong{
+  font-size:12.5px!important;
+  line-height:17px!important
+ }
+ .rail-check-copy small{
+  margin-top:1px!important;
+  font-size:9.5px!important;
+  line-height:13px!important
+ }
+ .rail-check-delete{
+  width:26px!important;
+  height:26px!important
+ }
+ .browse-rail-empty{padding:0 2px}
+ .browse-start-check{
+  min-height:48px;
+  display:grid;
+  align-content:center;
+  padding:7px 10px;
+  border-radius:7px;
+  color:#222;
+  text-decoration:none
+ }
+ .browse-start-check:hover{background:#eeeeeb}
+ .browse-start-check span{font-size:12.5px;line-height:17px;font-weight:620}
+ .browse-start-check small{margin-top:1px;color:#888;font-size:9.5px;line-height:13px}
+ .browse-rail-note{
+  display:grid;
+  gap:2px;
+  padding:7px 10px;
+  color:#777
+ }
+ .browse-rail-note strong{color:#333;font-size:10.5px;line-height:15px;font-weight:620}
+ .browse-rail-note span{font-size:9px;line-height:14px}
+}
