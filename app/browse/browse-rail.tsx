@@ -99,7 +99,7 @@ export default function BrowseRail(){
    <button className="icon-control rail-icon-control rail-new-check" type="button" aria-label="New check" title="New check" onClick={newCheck}><PlusIcon/></button>
   </div>
   <nav className="rail-primary-nav" aria-label="Primary">
-   <Link className="rail-nav-item is-current" href="/browse"><BrowseIcon/><span>Browse</span></Link>
+   <Link className="rail-nav-item is-current" href="/browse"><span>Browse</span></Link>
   </nav>
   <div className="rail-section-head"><span>Checks</span><small>{workspaces.length}</small></div>
   <div className="rail-check-list" aria-label="Open checks">
