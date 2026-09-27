@@ -3698,3 +3698,116 @@
  .process-stage-row{min-height:42px!important}
  .process-live-meta{font-size:9px;line-height:13px}
 }
+
+/* Desktop workspace rail: compact, deliberate, overflow-safe. */
+@media(min-width:901px){
+ .seal-app{
+  grid-template-columns:204px minmax(0,1fr)!important
+ }
+ .workspace-rail{
+  width:204px!important;
+  min-width:0!important;
+  max-width:204px!important;
+  height:100svh!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  padding:14px 10px 12px!important;
+  border-right:1px solid #e5e5e2!important;
+  background:#f7f7f5!important
+ }
+ .rail-topbar{
+  min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:2px 2px 12px
+ }
+ .rail-brand{
+  min-width:0!important;display:flex!important;align-items:center!important;gap:7px!important;
+  padding:0!important;margin:0!important
+ }
+ .rail-brand img{width:20px!important;height:20px!important}
+ .rail-brand-word{font-size:15px!important;line-height:20px!important;font-weight:700!important;letter-spacing:-.02em!important}
+ .rail-brand-reg{top:-5px!important;margin-left:-4px!important;font-size:6px!important}
+ .rail-command-row{
+  flex:0 0 auto!important;display:flex!important;align-items:center!important;gap:2px!important;
+  margin:0!important
+ }
+ .rail-icon-control{
+  width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;
+  border-radius:6px!important
+ }
+ .rail-icon-control .seal-ui-icon{width:15px!important;height:15px!important}
+ .rail-section-head{
+  min-height:24px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:0 7px;margin:2px 0 4px;color:#777
+ }
+ .rail-section-head>span{
+  font-size:9px;line-height:14px;font-weight:650;letter-spacing:.055em;text-transform:uppercase
+ }
+ .rail-section-head>small{
+  min-width:16px;height:16px;display:grid;place-items:center;padding:0 4px;border-radius:4px;
+  background:#ecece9;color:#777;font-size:8px;line-height:1;font-weight:650
+ }
+ .rail-check-list{
+  min-width:0!important;width:100%!important;max-height:min(58vh,560px)!important;
+  display:grid!important;gap:2px!important;margin:0!important;padding:0!important;
+  overflow-y:auto!important;overflow-x:hidden!important
+ }
+ .rail-check-row{
+  width:100%!important;min-width:0!important;display:grid!important;
+  grid-template-columns:minmax(0,1fr) 26px!important;align-items:center!important;
+  border:1px solid transparent!important;border-radius:7px!important;background:transparent!important
+ }
+ .rail-check-row.is-current{
+  background:#fff!important;border-color:#dfdfdc!important;box-shadow:0 1px 0 rgba(0,0,0,.025)!important
+ }
+ .rail-check-row.is-current::before{
+  content:"";position:absolute;left:-1px;top:10px;bottom:10px;width:2px;border-radius:2px;background:#111
+ }
+ .rail-check{
+  width:100%!important;min-width:0!important;min-height:48px!important;
+  display:grid!important;grid-template-columns:6px minmax(0,1fr)!important;gap:9px!important;
+  align-items:center!important;padding:7px 7px 7px 9px!important;border-radius:7px!important
+ }
+ .rail-check:hover{background:rgba(0,0,0,.025)!important}
+ .rail-check.is-current{background:transparent!important}
+ .rail-check-copy{min-width:0!important;overflow:hidden!important}
+ .rail-check-copy strong{
+  display:block!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;
+  white-space:nowrap!important;color:#1e1e1e!important;font-size:10.5px!important;line-height:14px!important;font-weight:620!important
+ }
+ .rail-check-copy small{
+  display:block!important;max-width:100%!important;margin-top:2px!important;overflow:hidden!important;
+  text-overflow:ellipsis!important;white-space:nowrap!important;color:#8a8a86!important;
+  font-size:8.5px!important;line-height:12px!important
+ }
+ .rail-check-state{width:5px!important;height:5px!important}
+ .rail-check-delete{
+  width:24px!important;height:24px!important;justify-self:center!important;
+  opacity:0!important;color:#858581!important
+ }
+ .rail-check-row:hover .rail-check-delete,.rail-check-delete:focus-visible{opacity:1!important}
+ .rail-check-row.is-current .rail-check-delete{opacity:0!important}
+ .rail-check-row.is-current:hover .rail-check-delete,.rail-check-row.is-current .rail-check-delete:focus-visible{opacity:1!important}
+ .rail-check-delete:hover{background:#efefec!important;color:#111!important}
+ .rail-spacer{min-height:18px!important;flex:1 1 auto!important}
+ .rail-bottom{
+  width:100%;min-width:0;padding-top:9px;border-top:1px solid #e5e5e2
+ }
+ .rail-language{
+  width:100%!important;min-width:0!important;margin:0!important
+ }
+ .rail-language-menu{width:100%!important;min-width:0!important}
+ .rail-language-trigger{
+  width:100%!important;min-width:0!important;min-height:34px!important;
+  justify-content:flex-start!important;gap:8px!important;padding:7px 8px!important;
+  border:0!important;border-radius:7px!important;background:transparent!important;color:#333!important
+ }
+ .rail-language-trigger:hover,.rail-language-trigger:focus-visible{background:#ededeb!important}
+ .rail-language-trigger>.seal-ui-icon{width:14px!important;height:14px!important}
+ .rail-language-trigger>span{font-size:9.5px!important;line-height:14px!important;font-weight:650!important;letter-spacing:.04em!important}
+ .rail-language-trigger .seal-guide-icon{margin-left:auto!important;width:9px!important;height:9px!important}
+ .rail-language-popover{
+  left:0!important;right:0!important;bottom:40px!important;width:auto!important;max-width:100%!important;
+  box-sizing:border-box!important
+ }
+ .workspace-rail *{box-sizing:border-box}
+}
