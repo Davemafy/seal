@@ -6191,3 +6191,99 @@
 @media(prefers-reduced-motion:reduce){
  .document-preview-backdrop{animation:none!important}
 }
+
+
+/* Extracted spiral motion motif — balances the empty entry canvas. */
+.entry-motion{
+ display:none
+}
+@media(min-width:901px){
+ .entry-copy{
+  min-height:520px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start
+ }
+ .entry-motion{
+  width:258px;
+  height:258px;
+  display:block;
+  margin:58px 0 0 2px;
+  color:#111;
+  pointer-events:none;
+  user-select:none;
+  opacity:.96
+ }
+ .entry-motion svg{
+  width:100%;
+  height:100%;
+  display:block;
+  overflow:visible
+ }
+ .entry-motion-petals{
+  transform-origin:160px 160px;
+  animation:entry-motion-turn 11s linear infinite
+ }
+ .entry-motion-petal{
+  fill:currentColor;
+  transform-box:fill-box;
+  transform-origin:center bottom;
+  animation:entry-motion-breathe 4.2s cubic-bezier(.45,0,.2,1) infinite
+ }
+ .entry-motion-petal:nth-child(2n){opacity:.88}
+ .entry-motion-petal:nth-child(3n){opacity:.68}
+ .entry-motion-petal:nth-child(4n){opacity:.5}
+ .entry-motion-petal:nth-child(5n){opacity:.34}
+ .entry-motion-petal:nth-child(1){animation-delay:-0.00s}
+ .entry-motion-petal:nth-child(2){animation-delay:-0.19s}
+ .entry-motion-petal:nth-child(3){animation-delay:-0.38s}
+ .entry-motion-petal:nth-child(4){animation-delay:-0.57s}
+ .entry-motion-petal:nth-child(5){animation-delay:-0.76s}
+ .entry-motion-petal:nth-child(6){animation-delay:-0.95s}
+ .entry-motion-petal:nth-child(7){animation-delay:-1.14s}
+ .entry-motion-petal:nth-child(8){animation-delay:-1.33s}
+ .entry-motion-petal:nth-child(9){animation-delay:-1.52s}
+ .entry-motion-petal:nth-child(10){animation-delay:-1.71s}
+ .entry-motion-petal:nth-child(11){animation-delay:-1.90s}
+ .entry-motion-petal:nth-child(12){animation-delay:-2.09s}
+ .entry-motion-petal:nth-child(13){animation-delay:-2.28s}
+ .entry-motion-petal:nth-child(14){animation-delay:-2.47s}
+ .entry-motion-petal:nth-child(15){animation-delay:-2.66s}
+ .entry-motion-petal:nth-child(16){animation-delay:-2.85s}
+ .entry-motion-petal:nth-child(17){animation-delay:-3.04s}
+ .entry-motion-petal:nth-child(18){animation-delay:-3.23s}
+ .entry-motion-petal:nth-child(19){animation-delay:-3.42s}
+ .entry-motion-petal:nth-child(20){animation-delay:-3.61s}
+ .entry-motion-petal:nth-child(21){animation-delay:-3.80s}
+ .entry-motion-petal:nth-child(22){animation-delay:-3.99s}
+ .entry-motion-core{
+  fill:#fff;
+  stroke:#111;
+  stroke-width:1.25
+ }
+ .entry-shell.is-processing .entry-motion{
+  display:none!important
+ }
+}
+@keyframes entry-motion-breathe{
+ 0%,100%{transform:scaleY(.48) scaleX(.78);opacity:.28}
+ 40%{transform:scaleY(1.08) scaleX(1);opacity:1}
+ 62%{transform:scaleY(.82) scaleX(.9);opacity:.72}
+}
+@keyframes entry-motion-turn{
+ to{transform:rotate(360deg)}
+}
+@media(min-width:901px) and (max-width:1180px){
+ .entry-copy{min-height:460px}
+ .entry-motion{
+  width:220px;
+  height:220px;
+  margin-top:44px
+ }
+}
+@media(max-width:900px){
+ .entry-motion{display:none!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .entry-motion-petals,.entry-motion-petal{animation:none!important}
+}
