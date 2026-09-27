@@ -1115,6 +1115,16 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  }
  function replayStory(){startStory()}
 
+ useEffect(()=>{
+  if(!ready||busy||storyOpen||reviewOffer!=='idle'||!reviewWorthWatching)return;
+  if(typeof document!=='undefined'&&document.visibilityState==='hidden')return;
+  if(typeof window!=='undefined'&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const timer=window.setTimeout(()=>startStory(),260);
+  return()=>window.clearTimeout(timer);
+ // startStory is a local command over the current result state.
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[ready,busy,storyOpen,reviewOffer,reviewWorthWatching,storyArtifactReady,file?.kind]);
+
  function changeDisplayLanguage(locale:DisplayLocale){
   setTranslatedResult({});
   setResultTranslationState('idle');
