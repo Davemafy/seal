@@ -91,11 +91,6 @@ const STORY_CHAPTERS=[
  {label:'Next step',start:13.2}
 ] as const;
 const STORY_TOTAL=17.2;
-const EXPLANATION_LOCALES=[
- {code:'en',label:'English'},{code:'es',label:'Español'},{code:'fr',label:'Français'},
- {code:'pt',label:'Português'},{code:'hi',label:'हिन्दी'},{code:'ar',label:'العربية'},
- {code:'zh',label:'中文'},{code:'ja',label:'日本語'},{code:'ko',label:'한국어'}
-] as const;
 
 const formatStoryTime=(seconds:number)=>{
  const whole=Math.max(0,Math.floor(seconds));
@@ -267,9 +262,6 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [showIndex,setShowIndex]=useState(false);
  const [activeResultSection,setActiveResultSection]=useState<'summary'|'message'|'next'|'checked'>('summary');
  const [technicalOpen,setTechnicalOpen]=useState(false);
- const [explainLocale,setExplainLocale]=useState('en');
- const [translatedExplanation,setTranslatedExplanation]=useState<{title:string;summary:string}|null>(null);
- const [translationState,setTranslationState]=useState<'idle'|'loading'|'unavailable'>('idle');
  const [handoffCopied,setHandoffCopied]=useState(false);
  const workspaceRootRef=useRef<HTMLElement>(null);
  const sectionId=(base:string)=>workspaceId==='primary'?base:`${base}-${workspaceId}`;
@@ -461,7 +453,10 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const caseReality=useMemo(()=>verification?buildCaseReality(claims,verification):null,[claims,verification]);
  const obligations=useMemo(()=>verification?buildObligationMap(claims,verification):[],[claims,verification]);
  const plainExplanation=useMemo(()=>verification?buildPlainLanguageSummary(claims,verification):null,[claims,verification]);
- const displayedExplanation=translatedExplanation||plainExplanation;
+ const displayedExplanation=plainExplanation?{
+  title:translatedResult.plainTitle||plainExplanation.title,
+  summary:translatedResult.plainSummary||plainExplanation.summary
+ }:null;
  const officialLookup=justiceSupport?.caseLookup||justiceSupport?.court;
  const directCheckSummary=directCourtUnavailable&&!curatedAuthorityMatch?'SEAL did not classify the sender, case, or payment request as genuine or fraudulent.':'';
  const decisionRelationship=storySignal?.id.startsWith('curated-')
@@ -512,7 +507,23 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   const strings:Record<string,string>={
    decisionTitle:file?.sample?'This is a sample form.':decision.title,
    decisionSummary:file?.sample?'Some printed details match official court pages, but this example form is not a summons to act on. The matches do not authenticate any notice you received.':decision.summary,
-   relationship:decisionRelationship
+   relationship:decisionRelationship,
+   plainTitle:plainExplanation?.title||'',
+   plainSummary:plainExplanation?.summary||'',
+   riskInstructionsTitle:riskSummary?.instructions.title||'',
+   riskInstructionsDetail:riskSummary?.instructions.detail||'',
+   riskMatterTitle:riskSummary?.matter.title||'',
+   riskMatterDetail:riskSummary?.matter.detail||'',
+   caseRealityTitle:caseReality?.title||'',
+   caseRealityDetail:caseReality?.detail||'',
+   supportHaventTitle:'I haven’t acted yet',
+   supportHaventCopy:'Use the independently sourced court route above before calling, paying, scanning, replying, or appearing because of this message.',
+   supportPaidTitle:'I already paid',
+   supportPaidCopy:'Contact your bank or payment provider through its official app, card, or website and report the transaction immediately.',
+   supportSharedTitle:'I shared personal information',
+   supportSharedCopy:'Do not send anything else through the message. Use an official recovery service if one is available for this jurisdiction.',
+   supportLegalTitle:'I need legal help',
+   supportLegalCopy:'Use an official legal-aid service to understand your options for a real legal matter.'
   };
   if(verification.safe_action){
    strings.safeTitle=verification.safe_action.title;
@@ -521,7 +532,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    strings.safePrimary=verification.safe_action.primary_label;
   }
   return strings;
- },[verification,file?.sample,decision.title,decision.summary,decisionRelationship]);
+ },[verification,file?.sample,decision.title,decision.summary,decisionRelationship,plainExplanation,riskSummary,caseReality]);
 
  useEffect(()=>{
   if(!verification||displayLocale==='en')return;
@@ -1038,20 +1049,6 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   setDisplayLocale(locale);
  }
 
- async function changeExplanationLocale(locale:string){
-  setExplainLocale(locale);setTranslatedExplanation(null);setTranslationState('idle');
-  if(locale==='en'||!plainExplanation)return;
-  const requestId=runId.current;setTranslationState('loading');
-  try{
-   const response=await fetch('/api/translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({locale,strings:{title:plainExplanation.title,summary:plainExplanation.summary}})});
-   if(runId.current!==requestId)return;
-   if(!response.ok){setTranslationState('unavailable');return}
-   const data=await response.json() as {strings?:{title?:string;summary?:string};mode?:string};
-   if(data.mode==='UNAVAILABLE'||!data.strings?.summary){setTranslationState('unavailable');return}
-   setTranslatedExplanation({title:data.strings.title||plainExplanation.title,summary:data.strings.summary});
-  }catch{if(runId.current===requestId)setTranslationState('unavailable')}
- }
-
  async function copyHandoff(){
   if(!verification)return;
   try{await navigator.clipboard.writeText(buildHandoffSummary(claims,verification,justiceSupport));setHandoffCopied(true);window.setTimeout(()=>setHandoffCopied(false),1800)}
@@ -1079,7 +1076,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   storyPhaseRef.current=0;
   runId.current++;
   if(file)URL.revokeObjectURL(file.preview);
-  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setActiveResultSection('summary');setTechnicalOpen(false);setExplainLocale('en');setTranslatedExplanation(null);setTranslationState('idle');setHandoffCopied(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryArtifactReady(true);setStoryStartPending(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);
+  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setActiveResultSection('summary');setTechnicalOpen(false);setHandoffCopied(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryArtifactReady(true);setStoryStartPending(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);
  }
 
  function chooseFixture(key:FixtureKey){clear();setFixture(key);setText(fixtures[key].text);void run('SNAPSHOT',{text:fixtures[key].text,file:null})}
@@ -1644,8 +1641,8 @@ async function upload(uploaded:File){
         {displayLocale!=='en'&&Object.keys(translatedResult).length>0&&<p className="translation-note">{ui('translatedNote')}</p>}
 
         {riskSummary&&<div className="decision-risks" data-testid="two-risk-result">
-         <div className="decision-risk-row"><span>Message instructions</span><div><strong>{riskSummary.instructions.title}</strong><small>{riskSummary.instructions.detail}</small></div></div>
-         <div className="decision-risk-row"><span>Underlying matter</span><div><strong>{riskSummary.matter.title}</strong><small>{riskSummary.matter.detail}</small></div></div>
+         <div className="decision-risk-row"><span>Message instructions</span><div><strong>{translatedResult.riskInstructionsTitle||riskSummary.instructions.title}</strong><small>{translatedResult.riskInstructionsDetail||riskSummary.instructions.detail}</small></div></div>
+         <div className="decision-risk-row"><span>Underlying matter</span><div><strong>{translatedResult.riskMatterTitle||riskSummary.matter.title}</strong><small>{translatedResult.riskMatterDetail||riskSummary.matter.detail}</small></div></div>
         </div>}
 
         {directCourtUnavailable&&groundedActions.length>0?<div className="decision-claim">
@@ -1793,7 +1790,7 @@ async function upload(uploaded:File){
      <div className="journey-block case-reality-block" data-testid="case-reality-check">
       <div className="journey-label">Case reality check</div>
       <div className="journey-content">
-       <h3>{caseReality.title}</h3><p>{caseReality.detail}</p>
+       <h3>{translatedResult.caseRealityTitle||caseReality.title}</h3><p>{translatedResult.caseRealityDetail||caseReality.detail}</p>
        <dl className="case-reality-facts"><div><dt>Court claimed</dt><dd>{caseReality.court}</dd></div><div><dt>Case/reference</dt><dd>{caseReality.reference||'Not verified'}</dd></div></dl>
        {verification.contact?.website?<a className="journey-link" href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open the court website independently</a>:officialLookup&&<a className="journey-link" href={officialLookup.url} target="_blank" rel="noopener noreferrer">{officialLookup.label}</a>}
        {officialLookup&&<small className="journey-note">{officialLookup.note}</small>}
@@ -1806,20 +1803,18 @@ async function upload(uploaded:File){
      <details className="journey-details" data-testid="plain-language-explanation">
       <summary><span>Explain this notice</span><small>Plain language + translation</small><DesignChevron/></summary>
       <div className="journey-details-body">
-       <div className="explanation-controls"><label><span>Read explanation in</span><select value={explainLocale} onChange={event=>void changeExplanationLocale(event.target.value)}>{EXPLANATION_LOCALES.map(locale=><option value={locale.code} key={locale.code}>{locale.label}</option>)}</select></label><small>Detected document language: {documentLanguage?.label||'Unknown'}{documentLanguage?.confidence==='low'?' · low confidence':''}</small></div>
+       <div className="explanation-controls"><small>Explanation follows Display language: {DISPLAY_LANGUAGES[displayLocale]} · detected document language: {documentLanguage?.label||'Unknown'}{documentLanguage?.confidence==='low'?' · low confidence':''}</small></div>
        {displayedExplanation&&<div className="plain-explanation" aria-live="polite"><h3>{displayedExplanation.title}</h3><p>{displayedExplanation.summary}</p></div>}
-       {translationState==='loading'&&<p className="translation-note">Translating the explanation…</p>}
-       {translationState==='unavailable'&&<p className="translation-note">Translation is unavailable right now. Showing English without changing the source facts.</p>}
        <p className="journey-note">This explains what SEAL extracted and verified. It is not legal advice.</p>
       </div>
      </details>
      <details className="journey-details" data-testid="resolution-help">
       <summary><span>Get help resolving this</span><small>Court, recovery, and legal-aid paths</small><DesignChevron/></summary>
       <div className="journey-details-body support-paths">
-       <div className="support-path"><strong>I haven’t acted yet</strong><p>Use the independently sourced court route above before calling, paying, scanning, replying, or appearing because of this message.</p></div>
-       <div className="support-path"><strong>I already paid</strong><p>Contact your bank or payment provider through its official app, card, or website and report the transaction immediately.</p>{justiceSupport?.recovery&&<a className="journey-link" href={justiceSupport.recovery.url} target="_blank" rel="noopener noreferrer">{justiceSupport.recovery.label}</a>}</div>
-       <div className="support-path"><strong>I shared personal information</strong><p>Do not send anything else through the message. Use an official recovery service if one is available for this jurisdiction.</p>{justiceSupport?.recovery&&<a className="journey-link" href={justiceSupport.recovery.url} target="_blank" rel="noopener noreferrer">{justiceSupport.recovery.label}</a>}</div>
-       <div className="support-path"><strong>I need legal help</strong><p>Use an official legal-aid service to understand your options for a real legal matter.</p>{justiceSupport?.legalAid?<a className="journey-link" href={justiceSupport.legalAid.url} target="_blank" rel="noopener noreferrer">{justiceSupport.legalAid.label}</a>:<span className="support-unavailable">No reviewed legal-aid directory is linked for this jurisdiction yet.</span>}</div>
+       <div className="support-path"><strong>{translatedResult.supportHaventTitle||'I haven’t acted yet'}</strong><p>{translatedResult.supportHaventCopy||'Use the independently sourced court route above before calling, paying, scanning, replying, or appearing because of this message.'}</p></div>
+       <div className="support-path"><strong>{translatedResult.supportPaidTitle||'I already paid'}</strong><p>{translatedResult.supportPaidCopy||'Contact your bank or payment provider through its official app, card, or website and report the transaction immediately.'}</p>{justiceSupport?.recovery&&<a className="journey-link" href={justiceSupport.recovery.url} target="_blank" rel="noopener noreferrer">{justiceSupport.recovery.label}</a>}</div>
+       <div className="support-path"><strong>{translatedResult.supportSharedTitle||'I shared personal information'}</strong><p>{translatedResult.supportSharedCopy||'Do not send anything else through the message. Use an official recovery service if one is available for this jurisdiction.'}</p>{justiceSupport?.recovery&&<a className="journey-link" href={justiceSupport.recovery.url} target="_blank" rel="noopener noreferrer">{justiceSupport.recovery.label}</a>}</div>
+       <div className="support-path"><strong>{translatedResult.supportLegalTitle||'I need legal help'}</strong><p>{translatedResult.supportLegalCopy||'Use an official legal-aid service to understand your options for a real legal matter.'}</p>{justiceSupport?.legalAid?<a className="journey-link" href={justiceSupport.legalAid.url} target="_blank" rel="noopener noreferrer">{justiceSupport.legalAid.label}</a>:<span className="support-unavailable">No reviewed legal-aid directory is linked for this jurisdiction yet.</span>}</div>
        <button type="button" className="handoff-copy" onClick={()=>void copyHandoff()}>{handoffCopied?'Summary copied':'Copy verification summary'}</button>
        <p className="journey-note">The copied summary contains extracted claims, verification states, and source links — not an AI opinion about what you should do legally.</p>
       </div>
