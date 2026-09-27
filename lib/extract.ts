@@ -78,7 +78,7 @@ function tokenActionSegments(tokens:Token[]):string[]{
 }
 
 function directiveVerb(source:string){
- const semantic=source.replace(/^[^:]{1,50}:\s*(?=\S)/,'').replace(/^[\s•*\-–—\d.)]+/,'').trim();
+ const semantic=source.replace(/^[\p{L}][\p{L}\p{M}\s/&()'’.\-]{1,40}:\s*(?=\S)/u,'').replace(/^[\s•*\-–—\d.)]+/,'').trim();
  const verbs=[...semantic.matchAll(new RegExp(ACTION_VERBS.source,'ig'))];
  for(const match of verbs){
   const verb=match[1].toLowerCase(),at=match.index||0,before=semantic.slice(0,at);
