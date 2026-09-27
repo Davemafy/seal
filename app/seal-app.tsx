@@ -12,6 +12,8 @@ import {readInBrowser,warmOcr,ocrLanguages,ocrLanguageForLocale,type OcrLanguage
 import {clearOrphanedResultArtifacts,clearResultSession,persistResultSession,restoreResultSession} from '@/lib/result-session';
 import {officialCourtDirectoryFor} from '@/lib/official-directories';
 import {detectDocumentContext,type DetectedDocumentLanguage} from '@/lib/document-context';
+import {justiceSupportFor} from '@/lib/justice-support';
+import {buildCaseReality,buildHandoffSummary,buildObligationMap,buildPlainLanguageSummary,buildRiskSummary} from '@/lib/user-guidance';
 import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
 import './workspace.css';
 
@@ -64,6 +66,11 @@ const STORY_CHAPTERS=[
  {label:'Next step',start:13.2}
 ] as const;
 const STORY_TOTAL=17.2;
+const EXPLANATION_LOCALES=[
+ {code:'en',label:'English'},{code:'es',label:'Español'},{code:'fr',label:'Français'},
+ {code:'pt',label:'Português'},{code:'hi',label:'हिन्दी'},{code:'ar',label:'العربية'},
+ {code:'zh',label:'中文'},{code:'ja',label:'日本語'},{code:'ko',label:'한국어'}
+] as const;
 
 const formatStoryTime=(seconds:number)=>{
  const whole=Math.max(0,Math.floor(seconds));
@@ -232,6 +239,10 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [showIndex,setShowIndex]=useState(false);
  const [activeResultSection,setActiveResultSection]=useState<'summary'|'message'|'next'|'checked'>('summary');
  const [technicalOpen,setTechnicalOpen]=useState(false);
+ const [explainLocale,setExplainLocale]=useState('en');
+ const [translatedExplanation,setTranslatedExplanation]=useState<{title:string;summary:string}|null>(null);
+ const [translationState,setTranslationState]=useState<'idle'|'loading'|'unavailable'>('idle');
+ const [handoffCopied,setHandoffCopied]=useState(false);
  const workspaceRootRef=useRef<HTMLElement>(null);
  const sectionId=(base:string)=>workspaceId==='primary'?base:`${base}-${workspaceId}`;
  const jumpToResultSection=useCallback((event:React.MouseEvent<HTMLAnchorElement>,section:'summary'|'message'|'next'|'checked',targetBase:string)=>{
@@ -416,6 +427,13 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const directCourtUnavailable=verification?.resolver_id==='unsupported';
  const curatedAuthorityMatch=Boolean(storySignal?.id.startsWith('curated-')&&verification?.safe_action?.evidence?.length);
  const officialDirectory=useMemo(()=>officialCourtDirectoryFor(text),[text]);
+ const justiceSupport=useMemo(()=>justiceSupportFor(text),[text]);
+ const riskSummary=useMemo(()=>verification?buildRiskSummary(claims,verification):null,[claims,verification]);
+ const caseReality=useMemo(()=>verification?buildCaseReality(claims,verification):null,[claims,verification]);
+ const obligations=useMemo(()=>verification?buildObligationMap(claims,verification):[],[claims,verification]);
+ const plainExplanation=useMemo(()=>verification?buildPlainLanguageSummary(claims,verification):null,[claims,verification]);
+ const displayedExplanation=translatedExplanation||plainExplanation;
+ const officialLookup=justiceSupport?.caseLookup||justiceSupport?.court;
  const directCheckSummary=directCourtUnavailable&&!curatedAuthorityMatch?'SEAL did not classify the sender, case, or payment request as genuine or fraudulent.':'';
  const decisionRelationship=storySignal?.id.startsWith('curated-')
   ?'The issuing authority published this artifact as a scam example.'
@@ -940,6 +958,26 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  }
  function replayStory(){startStory()}
 
+ async function changeExplanationLocale(locale:string){
+  setExplainLocale(locale);setTranslatedExplanation(null);setTranslationState('idle');
+  if(locale==='en'||!plainExplanation)return;
+  const requestId=runId.current;setTranslationState('loading');
+  try{
+   const response=await fetch('/api/translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({locale,strings:{title:plainExplanation.title,summary:plainExplanation.summary}})});
+   if(runId.current!==requestId)return;
+   if(!response.ok){setTranslationState('unavailable');return}
+   const data=await response.json() as {strings?:{title?:string;summary?:string};mode?:string};
+   if(data.mode==='UNAVAILABLE'||!data.strings?.summary){setTranslationState('unavailable');return}
+   setTranslatedExplanation({title:data.strings.title||plainExplanation.title,summary:data.strings.summary});
+  }catch{if(runId.current===requestId)setTranslationState('unavailable')}
+ }
+
+ async function copyHandoff(){
+  if(!verification)return;
+  try{await navigator.clipboard.writeText(buildHandoffSummary(claims,verification,justiceSupport));setHandoffCopied(true);window.setTimeout(()=>setHandoffCopied(false),1800)}
+  catch{setHandoffCopied(false)}
+ }
+
  function clear(){
   clearResultSession(workspaceId);
   activeReadRef.current?.abort();
@@ -960,7 +998,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   storyPhaseRef.current=0;
   runId.current++;
   if(file)URL.revokeObjectURL(file.preview);
-  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setActiveResultSection('summary');setTechnicalOpen(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryArtifactReady(true);setStoryStartPending(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);
+  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setActiveResultSection('summary');setTechnicalOpen(false);setExplainLocale('en');setTranslatedExplanation(null);setTranslationState('idle');setHandoffCopied(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryArtifactReady(true);setStoryStartPending(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);
  }
 
  function chooseFixture(key:FixtureKey){clear();setFixture(key);setText(fixtures[key].text);void run('SNAPSHOT',{text:fixtures[key].text,file:null})}
@@ -1348,7 +1386,7 @@ async function upload(uploaded:File){
      {verification&&<nav className="result-chapters" aria-label="Result sections">
       <a href={`#${sectionId('review-summary')}`} className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={event=>jumpToResultSection(event,'summary','review-summary')}>Result</a>
       <a href={`#${sectionId('original-message')}`} className={activeResultSection==='message'?'is-current':''} aria-current={activeResultSection==='message'?'location':undefined} onClick={event=>jumpToResultSection(event,'message','original-message')}>Original</a>
-      <a href={`#${sectionId(verification.safe_action||verification.contact||decisionClaim?.action?'next-step':'source-checks')}`} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={event=>jumpToResultSection(event,'next',verification.safe_action||verification.contact||decisionClaim?.action?'next-step':'source-checks')}>Next step</a>
+      <a href={`#${sectionId('user-actions')}`} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={event=>jumpToResultSection(event,'next','user-actions')}>Next step</a>
       {!directCourtUnavailable&&<a href={`#${sectionId('checked-details')}`} className={activeResultSection==='checked'?'is-current':''} aria-current={activeResultSection==='checked'?'location':undefined} onClick={event=>jumpToResultSection(event,'checked','checked-details')}>Checked details</a>}
      </nav>}
     </header>
@@ -1507,7 +1545,10 @@ async function upload(uploaded:File){
         <h1>{file?.sample?'This is a sample form.':decision.title}</h1>
         <p className="decision-summary">{file?.sample?'Some printed details match official court pages, but this example form is not a summons to act on. The matches do not authenticate any notice you received.':decision.summary}</p>
 
-
+        {riskSummary&&<div className="decision-risks" data-testid="two-risk-result">
+         <div className="decision-risk-row"><span>Message instructions</span><div><strong>{riskSummary.instructions.title}</strong><small>{riskSummary.instructions.detail}</small></div></div>
+         <div className="decision-risk-row"><span>Underlying matter</span><div><strong>{riskSummary.matter.title}</strong><small>{riskSummary.matter.detail}</small></div></div>
+        </div>}
 
         {directCourtUnavailable&&groundedActions.length>0?<div className="decision-claim">
          <span>The message asks</span>
@@ -1647,6 +1688,44 @@ async function upload(uploaded:File){
      </div>}
 
      <p className="resolution-disclaimer">{curatedSignal?'This conclusion applies to this published example. It does not classify unrelated messages.':'These sources can inform the check, but they cannot confirm who sent the message.'}</p>
+    </section>}
+
+    {ready&&verification&&caseReality&&<section className="user-actions" id={sectionId('user-actions')} aria-label="Resolve this safely">
+     <div className="user-actions-heading"><span>YOUR NEXT MOVE</span><h2>Resolve this safely</h2><p>Keep the message as evidence, but use independently opened court and support channels for anything you do next.</p></div>
+     <div className="journey-block case-reality-block" data-testid="case-reality-check">
+      <div className="journey-label">Case reality check</div>
+      <div className="journey-content">
+       <h3>{caseReality.title}</h3><p>{caseReality.detail}</p>
+       <dl className="case-reality-facts"><div><dt>Court claimed</dt><dd>{caseReality.court}</dd></div><div><dt>Case/reference</dt><dd>{caseReality.reference||'Not verified'}</dd></div></dl>
+       {verification.contact?.website?<a className="journey-link" href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open the court website independently</a>:officialLookup&&<a className="journey-link" href={officialLookup.url} target="_blank" rel="noopener noreferrer">{officialLookup.label}</a>}
+       {officialLookup&&<small className="journey-note">{officialLookup.note}</small>}
+      </div>
+     </div>
+     {obligations.length>0&&<div className="journey-block obligation-block" data-testid="obligation-map">
+      <div className="journey-label">What the message asks</div>
+      <div className="journey-content"><div className="obligation-list">{obligations.map(item=><div className="obligation-row" key={item.id}><div><strong>{cleanDisplayText(item.text)}</strong>{item.deadline&&<small>Time/date stated: {item.deadline}</small>}</div><span className={item.status==='MISMATCH'?'is-conflict':item.status==='MATCH'?'is-match':''}>{item.statusLabel}</span></div>)}</div><p className="journey-note">Dates and instructions here come from the message unless a row explicitly says it matches a public source.</p></div>
+     </div>}
+     <details className="journey-details" data-testid="plain-language-explanation">
+      <summary><span>Explain this notice</span><small>Plain language + translation</small><DesignChevron/></summary>
+      <div className="journey-details-body">
+       <div className="explanation-controls"><label><span>Read explanation in</span><select value={explainLocale} onChange={event=>void changeExplanationLocale(event.target.value)}>{EXPLANATION_LOCALES.map(locale=><option value={locale.code} key={locale.code}>{locale.label}</option>)}</select></label><small>Detected document language: {documentLanguage?.label||'Unknown'}{documentLanguage?.confidence==='low'?' · low confidence':''}</small></div>
+       {displayedExplanation&&<div className="plain-explanation" aria-live="polite"><h3>{displayedExplanation.title}</h3><p>{displayedExplanation.summary}</p></div>}
+       {translationState==='loading'&&<p className="translation-note">Translating the explanation…</p>}
+       {translationState==='unavailable'&&<p className="translation-note">Translation is unavailable right now. Showing English without changing the source facts.</p>}
+       <p className="journey-note">This explains what SEAL extracted and verified. It is not legal advice.</p>
+      </div>
+     </details>
+     <details className="journey-details" data-testid="resolution-help">
+      <summary><span>Get help resolving this</span><small>Court, recovery, and legal-aid paths</small><DesignChevron/></summary>
+      <div className="journey-details-body support-paths">
+       <div className="support-path"><strong>I haven’t acted yet</strong><p>Use the independently sourced court route above before calling, paying, scanning, replying, or appearing because of this message.</p></div>
+       <div className="support-path"><strong>I already paid</strong><p>Contact your bank or payment provider through its official app, card, or website and report the transaction immediately.</p>{justiceSupport?.recovery&&<a className="journey-link" href={justiceSupport.recovery.url} target="_blank" rel="noopener noreferrer">{justiceSupport.recovery.label}</a>}</div>
+       <div className="support-path"><strong>I shared personal information</strong><p>Do not send anything else through the message. Use an official recovery service if one is available for this jurisdiction.</p>{justiceSupport?.recovery&&<a className="journey-link" href={justiceSupport.recovery.url} target="_blank" rel="noopener noreferrer">{justiceSupport.recovery.label}</a>}</div>
+       <div className="support-path"><strong>I need legal help</strong><p>Use an official legal-aid service to understand your options for a real legal matter.</p>{justiceSupport?.legalAid?<a className="journey-link" href={justiceSupport.legalAid.url} target="_blank" rel="noopener noreferrer">{justiceSupport.legalAid.label}</a>:<span className="support-unavailable">No reviewed legal-aid directory is linked for this jurisdiction yet.</span>}</div>
+       <button type="button" className="handoff-copy" onClick={()=>void copyHandoff()}>{handoffCopied?'Summary copied':'Copy verification summary'}</button>
+       <p className="journey-note">The copied summary contains extracted claims, verification states, and source links — not an AI opinion about what you should do legally.</p>
+      </div>
+     </details>
     </section>}
 
     {ready&&verification?.contact&&<section className="contact-section" id={verification.safe_action?undefined:sectionId('next-step')} aria-label="Independent court contact">
