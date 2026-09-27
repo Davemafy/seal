@@ -56,10 +56,15 @@ Call 1-866-388-2430 after 5:30 PM for the status of your jury service.`);
  assertNoRuntimeErrors();
 });
 
-test('India coverage-limit demo abstains and hands off to official eCourts',async({page})=>{
+test('India coverage-limit message abstains and hands off to official eCourts',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
- await page.goto('/demo');
- await page.getByLabel('Choose demo fixture').selectOption('unsupported-court-demo');
+ await page.goto('/');
+ await page.getByRole('button',{name:/Paste text instead/i}).click();
+ await page.getByLabel('Paste the court message').fill(`DISTRICT COURT — NEW DELHI, INDIA
+Case reference: DL-2026-4821
+You must appear at the court registry on October 14, 2026.
+Call +91 11 5555 0199 to confirm your attendance.`);
+ await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.getByRole('heading',{name:'SEAL couldn’t independently verify this court yet.'})).toBeVisible();
  await expect(page.getByText('This court is not in SEAL’s direct-check network yet.')).toBeVisible();
