@@ -48,12 +48,12 @@ export default function BrowseGrid({items}:{items:BrowseCase[]}){
   <p className="case-filter-count" aria-live="polite">{visible.length} {visible.length===1?'document':'documents'}</p>
 
   <div className="case-archive">
-   {visible.map((item,index)=><article className={`case-card ${index===0&&filter==='all'?'is-lead':''}`} key={item.id}>
+   {visible.map((item,index)=><article className="case-card" key={item.id}>
     <CaseMedia item={item} priority={index<2}/>
     <div className="case-copy">
      <p className="case-kicker"><span>{item.jurisdiction}</span><span>{item.language||'English'}</span></p>
      <h2>{item.title}</h2>
-     <p className="case-context"><span>{item.classification}</span><span aria-hidden="true">·</span><strong>Runs from source asset</strong></p>
+     <p className="case-context"><span>{item.classification}</span><span aria-hidden="true">·</span><strong>Original source attached</strong></p>
      <p className="case-note">{item.visualNote}</p>
      <p className="case-source">Source: {item.sourceTitle}</p>
      <div className="case-actions">

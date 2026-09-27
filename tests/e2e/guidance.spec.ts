@@ -8,6 +8,8 @@ test('international message gets a safe resolution path without an authenticity 
  await page.getByLabel('Paste the court message').fill('DISTRICT COURT — NEW DELHI, INDIA\nCase No: DL-2026-4821\nYou must appear at the court registry on October 14, 2026.\nCall +91 11 5555 0199 to confirm your attendance.');
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
+ await expect(page.getByTestId('check-object-header')).toContainText('DISTRICT COURT');
+ await expect(page.getByTestId('check-object-header')).toContainText('DL-2026-4821');
  await expect(page.getByTestId('two-risk-result')).toContainText('Not confirmed');
  await expect(page.getByTestId('two-risk-result')).toContainText('Not confirmed');
  await expect(page.getByTestId('primary-next-step').getByRole('link',{name:'Search India eCourts'})).toBeVisible();

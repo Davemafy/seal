@@ -18,15 +18,12 @@ const visualOrder=[
 export default function Browse(){
  const order=new Map(visualOrder.map((id,index)=>[id,index]));
  const rankedCases=[...browseCases].sort((a,b)=>(order.get(a.id)??99)-(order.get(b.id)??99));
- const countryCount=new Set(browseCases.map(item=>item.country)).size;
- const languageCount=new Set(browseCases.map(item=>item.language||'English')).size;
-
  return <main className="seal-app browse-page">
   <aside className="workspace-rail" aria-label="Workspace">
    <Link href="/" className="rail-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
-   <div className="rail-group-label">WORKSPACE</div>
-   <Link className="rail-item" href="/">Check a message</Link>
-   <Link className="rail-item is-current" href="/browse">Browse real cases</Link>
+   <div className="rail-group-label">CHECKS</div>
+   <Link className="rail-item rail-new-check" href="/">New check</Link>
+   <Link className="rail-item rail-browse is-current" href="/browse">Browse</Link>
    <div className="rail-spacer"/>
    <div className="rail-foot"><strong>Public sources only</strong><span>Every item links back to the issuing court or agency.</span></div>
   </aside>
@@ -38,15 +35,10 @@ export default function Browse(){
 
   <section className="browse-shell">
    <header className="browse-intro">
-    <p className="browse-eyebrow">PUBLIC SOURCE LIBRARY</p>
+    <p className="browse-eyebrow">PUBLIC SOURCES</p>
     <h1>Browse real cases</h1>
-    <p className="browse-deck">Published court documents and scam examples from official sources. Run any item in SEAL from its original PDF or image, or open the source yourself.</p>
-    <p className="browse-scope"><strong>Coverage:</strong> Every card can be read from its source asset. Direct source verification is jurisdiction-bounded; when SEAL cannot independently verify a court, it abstains and points to an official directory when one is available.</p>
-    <div className="browse-proof" aria-label="Browse collection coverage">
-     <span><strong>{browseCases.length}</strong> source documents</span>
-     <span><strong>{countryCount}</strong> countries</span>
-     <span><strong>{languageCount}</strong> languages</span>
-    </div>
+    <p className="browse-deck">Court documents and scam warnings published by courts and public agencies. Each entry keeps the original source attached and can be checked in SEAL.</p>
+    <p className="browse-scope">Source coverage varies by jurisdiction. When SEAL cannot independently verify a court, it leaves the claim unconfirmed and points to an official directory when one is available.</p>
    </header>
 
    <BrowseGrid items={rankedCases}/>

@@ -624,6 +624,18 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const resolverSummary=verification
   ?`Court resolver: ${verification.resolver_id==='unsupported'?'unavailable':verification.resolver_id} · Source intelligence: ${verification.signals?.length||verification.safe_action?'active':'inactive'} · Mode: ${mode}`
   :'';
+
+ const checkObjectTitle=caseReality?.court&&caseReality.court!=='Court not identified'?cleanDisplayText(caseReality.court):'Court message';
+ const checkObjectReference=caseReality?.reference||'';
+ const checkSourceCount=technicalEvidence.length;
+ const latestCheckTimestamp=technicalEvidence.reduce((latest,evidence)=>{
+  const value=Date.parse(evidence.checked_at);
+  return Number.isFinite(value)&&value>latest?value:latest;
+ },0);
+ const checkDateLabel=latestCheckTimestamp
+  ?new Date(latestCheckTimestamp).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})
+  :'';
+ const checkInputLabel=file?(file.kind==='pdf'?'PDF':'Image'):'Text';
  const liveFailed=mode==='LIVE'&&['riverside','connecticut'].includes(verification?.resolver_id||'')&&verification?.results.some(result=>result.explanation==='Official source could not be reached during this check.');
 
  const syncStoryTime=useCallback((time:number)=>{
@@ -1377,13 +1389,9 @@ async function upload(uploaded:File){
   onWorkspaceMeta(workspaceId,{title,status:state,language:documentLanguage?.label,jurisdiction});
  },[workspaceId,workspaceTitle,claims,error,verification,busy,status,documentLanguage?.label,jurisdiction,onWorkspaceMeta]);
 
-  const processingStage=status==='Checking independent sources'?2:status==='Reading requested actions'?1:0;
- const processingTitle=processingStage===2?'Resolve against public sources':processingStage===1?'Ground the requested action':'Map the document';
+ const processingStage=status==='Checking independent sources'?2:status==='Reading requested actions'?1:0;
+ const processingTitle=processingStage===2?'Checking public sources':processingStage===1?'Reading what the message asks':'Reading your document';
  const processingTextRegionsVisible=useMemo(()=>file?.tokens?processingTextRegions(file.tokens):[],[file]);
- const processingClaimRegions=useMemo(()=>claims
-  .filter(claim=>claim.page===1&&claim.source_bbox&&claimReliable(claim))
-  .slice(0,8)
-  .map(claim=>({id:claim.id,...claim.source_bbox!})),[claims]);
  const processingRegionCount=processingTextRegionsVisible.length;
  const processingActionCount=claims.filter(claim=>Boolean(claim.action)&&claimReliable(claim)).length;
 
@@ -1416,7 +1424,7 @@ async function upload(uploaded:File){
   <aside className="workspace-rail" aria-label="Workspace">
    <Link href="/" className="rail-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
    <div className="rail-group-label">{ui('checks').toUpperCase()}</div>
-   <button className="rail-item rail-new-check" type="button" onClick={onNewWorkspace}><span>＋</span> {ui('newCheck')}</button>
+   <button className="rail-item rail-new-check" type="button" onClick={onNewWorkspace}>{ui('newCheck')}</button>
    <div className="rail-check-list" aria-label="Open checks">
     {workspaces.map((item,index)=><button
      type="button"
@@ -1429,7 +1437,7 @@ async function upload(uploaded:File){
      <span className="rail-check-copy"><strong>{item.title||`Check ${index+1}`}</strong><small>{item.status==='verifying'?'Checking sources':item.status==='reading'?'Reading':item.status==='done'?'Ready':item.status==='error'?'Needs attention':'New'}</small></span>
     </button>)}
    </div>
-   <Link className="rail-item rail-browse" href="/browse">{ui('browseCases')}</Link>
+   <Link className="rail-item rail-browse" href="/browse">{ui('browse')}</Link>
    <div className="rail-spacer"/>
    <label className="rail-language">
     <span>{ui('displayLanguage')}</span>
@@ -1484,42 +1492,26 @@ async function upload(uploaded:File){
         onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
         {busy?
          <span className="upload-process" role="status" aria-live="polite" aria-label={processingTitle}>
-          <span className={`upload-process-media stage-${processingStage} ${uploadPreview?.kind==='pdf'?'is-pdf':''}`} data-testid="processing-preview">
+          <span className={`upload-process-media ${uploadPreview?.kind==='pdf'?'is-pdf':''}`} data-testid="processing-preview">
            {uploadPreview?.kind==='image'
             ?<img src={uploadPreview.url} alt="Selected court message"/>
             :<span className="upload-pdf-preview" aria-hidden="true"><b>PDF</b><i/></span>}
-           <span className="process-registration" aria-hidden="true"><i/><i/><i/><i/></span>
-           <span className="process-scan-beam" data-testid="processing-scan" aria-hidden="true"><i/></span>
-           {processingStage>=1&&processingTextRegionsVisible.map((region,index)=><span
-            className="process-text-region"
-            key={`text-${index}`}
-            style={{left:`${region.x*100}%`,top:`${region.y*100}%`,width:`${region.width*100}%`,height:`${Math.max(region.height,.008)*100}%`}}
-           />)}
-           {processingStage>=2&&processingClaimRegions.map(region=><span
-            className="process-claim-region"
-            key={region.id}
-            style={{left:`${region.x*100}%`,top:`${region.y*100}%`,width:`${region.width*100}%`,height:`${Math.max(region.height,.012)*100}%`}}
-           />)}
           </span>
           <span className="upload-process-body">
+           <span className="upload-process-kicker">CHECK IN PROGRESS</span>
            <strong>{processingTitle}</strong>
-           <span className="process-flow" aria-hidden="true">
-            <span className={`process-node ${processingStage===0?'is-current':processingStage>0?'is-complete':''}`}><i><img src="/brand/seal-mark-black.svg" alt=""/></i><small>Read</small></span>
-            <span className={`process-link ${processingStage>=1?'is-complete':''}`}><i/></span>
-            <span className={`process-node ${processingStage===1?'is-current':processingStage>1?'is-complete':''}`}><i><img src="/brand/seal-mark-black.svg" alt=""/></i><small>Ground</small></span>
-            <span className={`process-link ${processingStage>=2?'is-complete':''}`}><i/></span>
-            <span className={`process-node ${processingStage===2?'is-current':''}`}><i><img src="/brand/seal-mark-black.svg" alt=""/></i><small>Verify</small></span>
-           </span>
-           <span className="process-readout">
-            <span className="process-readout-main">
-             {processingStage===0?'Reading locally':
-              processingStage===1?(processingRegionCount?processingRegionCount+' text regions mapped':'Text regions mapped'):
-              (processingActionCount?processingActionCount+' grounded action'+(processingActionCount===1?'':'s'):'Grounded details ready')}
+           <span className="process-stage-list" aria-label="Check progress">
+            <span className={`process-stage-row ${processingStage===0?'is-current':'is-done'}`}>
+             <span><b>Read document</b><small>{processingStage>0?(processingRegionCount?`${processingRegionCount} text regions recovered`:'Text recovered'):'Reading on this device'}</small></span>
+             <em>{processingStage>0?'Done':'Now'}</em>
             </span>
-            <span className="process-readout-detail">
-             {processingStage===0?(uploadPreview?.kind==='pdf'?'PDF':'Image')+' · '+ocrLanguages[ocrLanguage]:
-              processingStage===1?'Exact source spans':
-              'Independent sources'}
+            <span className={`process-stage-row ${processingStage===1?'is-current':processingStage>1?'is-done':'is-next'}`}>
+             <span><b>Find requested actions</b><small>{processingStage>1?(processingActionCount?`${processingActionCount} action${processingActionCount===1?'':'s'} grounded`:'No clear action yet'):'Keep wording tied to the message'}</small></span>
+             <em>{processingStage>1?'Done':processingStage===1?'Now':'Next'}</em>
+            </span>
+            <span className={`process-stage-row ${processingStage===2?'is-current':'is-next'}`}>
+             <span><b>Check public sources</b><small>Independent court and agency sources</small></span>
+             <em>{processingStage===2?'Now':'Next'}</em>
             </span>
            </span>
            {uploadPreview?.name&&<span className="upload-file-name" title={uploadPreview.name}>{uploadPreview.name}</span>}
@@ -1562,15 +1554,22 @@ async function upload(uploaded:File){
     onPointerDownCapture={event=>{if(reviewOffer==='counting'&&!(event.target as Element).closest('[data-review-offer]'))skipReviewOffer()}}
     onDragOver={event=>{if(event.dataTransfer.types.includes('Files'))event.preventDefault()}}
     onDrop={event=>{if(event.dataTransfer.files.length){event.preventDefault();skipReviewOffer();upload(event.dataTransfer.files[0])}}}>
-    <header className="result-masthead" id={sectionId('result-top')}>
+    <header className="result-masthead" id={sectionId('result-top')} data-testid="check-object-header">
      <div className="result-masthead-row">
-      <div>
+      <div className="check-object-identity">
        <p className="result-masthead-title">{ui('resultTitle')}</p>
-       <p className="result-origin">{[
-        file?(file.kind==='pdf'?'PDF':'Image'):'Text',
-        documentLanguage?.label,
-        displayLocale!=='en'?'Display '+DISPLAY_LANGUAGES[displayLocale]:''
-       ].filter(Boolean).join(' · ')}</p>
+       <h1>{checkObjectTitle}</h1>
+       <div className="check-object-meta">
+        {checkObjectReference&&<span>Case/reference {checkObjectReference}</span>}
+        <span>{resultStatusLabel}</span>
+        {checkDateLabel&&<span>Checked {checkDateLabel}</span>}
+        <span>{checkSourceCount?checkSourceCount+' public source'+(checkSourceCount===1?'':'s'):'No independent source attached'}</span>
+       </div>
+      </div>
+      <div className="check-object-actions" aria-label="Check actions">
+       <button type="button" onClick={()=>run('LIVE')} disabled={busy}>Check again</button>
+       <button type="button" onClick={saveHandoff}>Save record</button>
+       <button type="button" onClick={onNewWorkspace}>{ui('newCheck')}</button>
       </div>
      </div>
 
@@ -1705,14 +1704,6 @@ async function upload(uploaded:File){
 
     <div className="review-hero">
      <div className="decision-pane result-screen result-screen-summary" id={sectionId('review-summary')}>
-      <div className="review-tools">
-       {isDemo&&<select aria-label="Choose demo fixture" value={fixture} onChange={event=>chooseFixture(event.target.value as FixtureKey)}>
-        {Object.entries(fixtures).map(([key,value])=><option value={key} key={key}>{value.title}</option>)}
-       </select>}
-       {verification&&<a href={`#${sectionId('full-evidence')}`} className="full-evidence-link">Full evidence</a>}
-       <button type="button" className="review-new-check" onClick={clear}>Check another message</button>
-      </div>
-
       {!verification?
        <div className={`precheck ${error?'has-error':''}`}>
         <h1>{busy?'Checking this message':error?(file?'We couldn’t check this image.':'We couldn’t check this message.'):'Ready to check this message.'}</h1>
@@ -1828,8 +1819,6 @@ async function upload(uploaded:File){
       </div>
      </div>
     </div>
-
-    {ready&&<div id={sectionId('full-evidence')} className="full-evidence-anchor" aria-hidden="true"/>}
 
     {ready&&verification&&<section className="source-resolution result-screen result-screen-evidence" id={sectionId('source-checks')} aria-label="What SEAL found">
      <div className="section-heading evidence-heading">
@@ -1967,6 +1956,21 @@ async function upload(uploaded:File){
        <p className="contact-source">This contact came from the court source, not from the message. {verification.contact.source.source_mode==='SNAPSHOT'?'Source snapshot checked '+new Date(verification.contact.source.checked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.':'Live source checked '+new Date(verification.contact.source.checked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.'}</p>
       </div>
      </div>
+    </section>}
+
+    {ready&&verification&&<section className="check-metadata-section" aria-label="Check details">
+     <details className="check-record-details" data-testid="check-details">
+      <summary><span>Check details</span><SealGuideIcon/></summary>
+      <dl>
+       <div><dt>Input</dt><dd>{checkInputLabel}</dd></div>
+       <div><dt>Document language</dt><dd>{documentLanguage?.label||'Not resolved'}</dd></div>
+       <div><dt>Jurisdiction</dt><dd>{jurisdiction||'Not resolved'}</dd></div>
+       <div><dt>Source mode</dt><dd>{mode==='LIVE'?'Live public sources':'Source snapshot'}</dd></div>
+       <div><dt>Sources attached</dt><dd>{String(checkSourceCount)}</dd></div>
+       {checkDateLabel&&<div><dt>Checked</dt><dd>{checkDateLabel}</dd></div>}
+      </dl>
+      <p>Original files stay in this browser. Source quotations remain attached to the check so the result can be inspected later.</p>
+     </details>
     </section>}
 
     {ready&&!directCourtUnavailable&&<section className="record-section" id={sectionId('checked-details')}>
