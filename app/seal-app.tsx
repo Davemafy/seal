@@ -1121,7 +1121,7 @@ async function upload(uploaded:File){
        <span className="story-brand"><img src="/brand/seal-mark-white.svg" alt=""/><span>SEAL</span></span>
        <div className="story-top-actions">
         <span className="story-chapter-label" aria-live="polite">{STORY_CHAPTERS[storyStep].label}</span>
-        <button type="button" onClick={closeStory}>Full evidence</button>
+        <button type="button" onClick={closeStory}>Back to result</button>
        </div>
       </div>
 
