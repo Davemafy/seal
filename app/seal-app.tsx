@@ -251,9 +251,13 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   const carousel=resultCarouselRef.current;
   const slide=carousel?.querySelector<HTMLElement>(`[data-result-section="${section}"]`);
   if(!carousel||!slide)return;
-  setActiveResultSection(section);
+  const currentIndex=carousel.clientWidth?Math.round(carousel.scrollLeft/carousel.clientWidth):0;
+  const targetIndex=Math.max(0,Math.round(slide.offsetLeft/Math.max(1,carousel.clientWidth)));
   const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  carousel.scrollTo({left:slide.offsetLeft,behavior:reduce?'auto':'smooth'});
+  const adjacent=Math.abs(targetIndex-currentIndex)===1;
+  slide.scrollTo({top:0,behavior:'auto'});
+  setActiveResultSection(section);
+  carousel.scrollTo({left:slide.offsetLeft,behavior:reduce||!adjacent?'auto':'smooth'});
   const id=workspaceId==='primary'?targetBase:`${targetBase}-${workspaceId}`;
   window.history.replaceState(null,'',`#${id}`);
  },[workspaceId]);
@@ -2115,7 +2119,11 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
 
  const createWorkspace=useCallback(()=>{
   const id=`check-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
-  setWorkspaces(items=>[...items,{id,title:'New check',status:'idle' as WorkspaceRunStatus}].slice(-8));
+  setWorkspaces(items=>{
+   const number=items.filter(item=>/^New check(?: \\d+)?$/.test(item.title)).length+1;
+   const title=number===1?'New check':`New check ${number}`;
+   return [...items,{id,title,status:'idle' as WorkspaceRunStatus}].slice(-8);
+  });
   setActiveWorkspace(id);
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
  },[]);

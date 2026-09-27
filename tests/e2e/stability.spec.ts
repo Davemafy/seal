@@ -135,13 +135,39 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  expect(await carousel.locator(':scope > .result-slide, :scope > .review-hero > .result-slide').count(),'carousel children should be exactly four full-width slides').toBeGreaterThanOrEqual(2);
  expect(metrics.snap).toContain('x');
 
- for(const [label,index] of [['Original',1],['Evidence',2],['Resolve',3]] as const){
-  await chapters.getByRole('link',{name:label}).click();
-  await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeGreaterThan(metrics.width*index-12);
-  await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeLessThan(metrics.width*index+12);
-  await expect(chapters.getByRole('link',{name:label})).toHaveAttribute('aria-current','location');
-  expect(await page.evaluate(()=>window.scrollX)).toBe(0);
- }
+ const calls=await carousel.evaluate(node=>{
+  const element=node as HTMLElement & {__sealScrollCalls?:Array<ScrollToOptions>};
+  element.__sealScrollCalls=[];
+  const original=element.scrollTo.bind(element);
+  element.scrollTo=(options?:ScrollToOptions|number,y?:number)=>{
+   if(typeof options==='object')element.__sealScrollCalls!.push(options);
+   return typeof options==='number'?original(options,y):original(options||{});
+  };
+  return true;
+ });
+ expect(calls).toBe(true);
+
+ await chapters.getByRole('link',{name:'Original'}).click();
+ await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeGreaterThan(metrics.width-12);
+ await expect(chapters.getByRole('link',{name:'Original'})).toHaveAttribute('aria-current','location');
+ const originalSlide=page.locator('[data-result-section="message"]');
+ await originalSlide.evaluate(node=>node.scrollTo({top:220,behavior:'auto'}));
+ expect(await originalSlide.evaluate(node=>node.scrollTop)).toBeGreaterThan(100);
+
+ await chapters.getByRole('link',{name:'Evidence'}).click();
+ await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeGreaterThan(metrics.width*2-12);
+ await chapters.getByRole('link',{name:'Original'}).click();
+ await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeLessThan(metrics.width+12);
+ expect(await originalSlide.evaluate(node=>node.scrollTop),'tab entry should restart at the top rather than restore a stale internal scroll position').toBeLessThanOrEqual(2);
+
+ await chapters.getByRole('link',{name:'Resolve'}).click();
+ await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeGreaterThan(metrics.width*3-12);
+ await chapters.getByRole('link',{name:'Summary'}).click();
+ await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:3000}).toBeLessThan(4);
+ const scrollCalls=await carousel.evaluate(node=>(node as HTMLElement & {__sealScrollCalls?:Array<ScrollToOptions>}).__sealScrollCalls||[]);
+ expect(scrollCalls.some(call=>call.behavior==='smooth'),'adjacent tab moves should still feel like a carousel').toBe(true);
+ expect(scrollCalls.at(-1)?.behavior,'far tab jumps must not visibly traverse intermediate result screens').toBe('auto');
+ expect(await page.evaluate(()=>window.scrollX)).toBe(0);
 
  await carousel.evaluate(node=>node.scrollTo({left:0,behavior:'auto'}));
  await expect(chapters.getByRole('link',{name:'Summary'})).toHaveAttribute('aria-current','location');
@@ -231,6 +257,8 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  releaseFirst();
  const checks=active.locator('.rail-check-list .rail-check');
  await expect(checks).toHaveCount(2);
+ const names=await checks.locator('.rail-check-copy strong').allTextContents();
+ expect(new Set(names).size,'blank parallel checks should not be indistinguishable in the workspace rail').toBe(names.length);
  await checks.nth(0).click();
  active=page.locator('.seal-workspace-instance:not([hidden])');
  await expect(active.getByTestId('result-shell')).toBeVisible({timeout:30000});
@@ -406,6 +434,17 @@ test('mobile result has no horizontal overflow and keeps the review accessible',
  await expect(page.getByTestId('evidence-review')).toBeVisible({timeout:15000});
  await page.getByRole('button',{name:'Back to result'}).click();
  await expect(page.getByTestId('evidence-review')).toHaveCount(0,{timeout:5000});
+ assertNoRuntimeErrors();
+});
+
+test('desktop entry and Browse never create a page-level horizontal scrollbar',async({page})=>{
+ const assertNoRuntimeErrors=guardRuntime(page);
+ await page.setViewportSize({width:1214,height:642});
+ for(const path of ['/','/browse']){
+  await page.goto(path);
+  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
+  expect(overflow,`${path} should not expose the browser horizontal scrollbar`).toBeLessThanOrEqual(1);
+ }
  assertNoRuntimeErrors();
 });
 
