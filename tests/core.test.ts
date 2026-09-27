@@ -25,7 +25,7 @@ describe('New Hampshire public intelligence',()=>{
 FINAL COURT-ORDERED MANDATORY COLLECTION NOTICE
 Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administrative fees, court costs, and enforcement surcharges.`;
   const extraction=fallbackExtract(text);
-  const verification=await verifyClaims(claimsFromExtraction(extraction,text),extraction.court_name,'SNAPSHOT',extraction.jurisdiction_hint,text);
+  const verification=await verifyClaims(claimsFromExtraction(extraction,text),extraction.court_name,'SNAPSHOT','',text);
   expect(verification.signals?.some(signal=>signal.id==='nh-toll-process')).toBe(true);
   expect(verification.safe_action?.primary_url).toBe('https://www.ezpassnh.com/');
   expect(verification.contact?.phone).toBe('1-855-212-1234');
