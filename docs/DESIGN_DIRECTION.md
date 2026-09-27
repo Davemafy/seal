@@ -36,6 +36,10 @@ Evidence is rendered as a reading sequence, not equal cards. Each item names wha
 
 Decision, primary safe route, requested actions, document, evidence, safe route details, verification record, technical record.
 
+## Icon system
+
+Directional affordances use the SEAL-specific `SealGuideIcon`, whose stepped two-band geometry is derived from the SEAL mark. Do not use Unicode arrow glyphs, stock chevrons, arrow suffixes on links, or unrelated icon-library arrows. Direction is expressed by rotating the same branded primitive; disclosure states use down/up, while back/forward actions use left/right.
+
 ## Interaction
 
 Motion is limited to opacity/position transitions that clarify focus. No parallax, 3D, spring cards, cursor effects, fake AI thinking, or ambient decoration. Reduced-motion remains respected.
