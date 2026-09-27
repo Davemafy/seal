@@ -428,6 +428,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   ?'Source check'
   :storySignal?.kind==='OFFICIAL_PROCESS'
    ?'Official process'
+   :storySignal?.kind==='OFFICIAL_DIRECTORY'
+    ?'Official court directory'
    :storySignal?.id.startsWith('curated-')
     ?'Issuing authority'
     :storySignal?.id==='traffic-qr-warning'&&/ftc\.gov/i.test(storyEvidence.url)
@@ -1722,7 +1724,7 @@ async function upload(uploaded:File){
         const primary=signal.id===storySignal?.id;
         const evidenceTitles=signal.evidence.map(evidence=>evidence.title);
         return <article className={`source-signal ${primary?'is-primary':'is-secondary'}`} key={signal.id}>
-         <p className="signal-kind">{signal.kind==='OFFICIAL_PROCESS'?'Official process':signal.kind==='SOURCE_CONFLICT'?'Source conflict':signal.kind==='KNOWN_PATTERN'?'Known pattern':'Official warning'}</p>
+         <p className="signal-kind">{signal.kind==='OFFICIAL_PROCESS'?'Official process':signal.kind==='OFFICIAL_DIRECTORY'?'Official directory':signal.kind==='SOURCE_CONFLICT'?'Source conflict':signal.kind==='KNOWN_PATTERN'?'Known pattern':'Official warning'}</p>
          <h3>{signal.title}</h3>
          <p>{signal.summary}</p>
          {signal.evidence.length>0&&<div className="signal-links">
