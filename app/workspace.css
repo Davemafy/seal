@@ -1027,10 +1027,10 @@
 @media(max-width:599px){.result-masthead-row{min-height:42px}}
 
 
-/* Result evidence density — Figma 33:1617 / 33:1771 */
+/* Result evidence density — follows the imported base-system spacing and type scale. */
 .source-resolution{
  border-top:0;
- padding-top:40px
+ padding-top:36px
 }
 .source-resolution>.section-heading h2,
 .record-section .section-heading h2{
@@ -1040,30 +1040,46 @@
 .source-signals{
  gap:18px
 }
+.direct-evidence-findings{
+ gap:16px
+}
 .direct-evidence-finding.is-primary h3,
 .direct-evidence-finding.is-secondary h3{
- font-size:20px;
- line-height:27px;
+ font-size:19px;
+ line-height:26px;
+ font-weight:600;
  letter-spacing:-.004em
 }
 .source-signal>p:not(.signal-kind){
  margin-top:7px
 }
 .direct-evidence-finding .signal-kind{
- margin-bottom:5px
+ margin:0 0 4px;
+ color:#717171;
+ font-size:11px;
+ line-height:16px;
+ font-weight:500;
+ letter-spacing:.02em
 }
 .signal-links{
  gap:4px;
- margin-top:10px
+ margin-top:8px
 }
 .signal-links a,
 .official-link,
 .additional-sources a{
+ display:inline;
+ min-height:0;
  padding:0;
  border:0;
  border-radius:0;
  background:transparent;
- box-shadow:none
+ box-shadow:none;
+ color:#202020;
+ font-weight:500;
+ text-decoration:underline;
+ text-decoration-thickness:1px;
+ text-underline-offset:3px
 }
 .unsupported-next-step{
  margin-top:24px;
@@ -1105,7 +1121,7 @@
  margin-top:18px
 }
 .record-section{
- margin-top:44px;
+ margin-top:40px;
  padding-top:0;
  border-top:0
 }
@@ -1160,8 +1176,8 @@
 
 @media(max-width:900px){
  .source-resolution{
-  gap:16px;
-  padding-top:30px
+  gap:14px;
+  padding-top:28px
  }
  .source-signals{
   gap:16px
@@ -1284,7 +1300,7 @@
 }
 
 
-/* Result balance pass — Base/Linear density discipline, Figma 33:1617 */
+/* Result balance pass — restrained base-system density. */
 .message-action-list{
  display:grid;
  gap:10px;
@@ -1322,11 +1338,11 @@
  font-size:27px;
  line-height:34px
 }
-.source-signal.is-primary h3{
+.source-signal.is-primary:not(.direct-evidence-finding) h3{
  font-size:23px;
  line-height:30px
 }
-.source-signal.is-secondary h3{
+.source-signal.is-secondary:not(.direct-evidence-finding) h3{
  font-size:18px;
  line-height:25px;
  font-weight:600
@@ -1468,8 +1484,8 @@
   border-radius:4px
  }
  .source-resolution{
-  gap:16px;
-  padding-top:32px
+  gap:12px;
+  padding-top:24px
  }
  .source-resolution>.section-heading h2,
  .record-section .section-heading h2{
@@ -1477,22 +1493,29 @@
   line-height:30px
  }
  .source-signals{
-  gap:18px
+  gap:14px
+ }
+ .direct-evidence-findings{
+  gap:14px
  }
  .signal-kind{
-  margin-bottom:5px;
+  margin-bottom:4px;
   font-size:11px;
-  line-height:17px
+  line-height:16px
  }
  .source-signal.is-primary h3{
   font-size:20px;
   line-height:27px
  }
- .source-signal.is-secondary h3,
- .direct-evidence-finding.is-primary h3,
- .direct-evidence-finding.is-secondary h3{
+ .source-signal.is-secondary h3{
   font-size:17px;
   line-height:23px;
+  font-weight:600
+ }
+ .direct-evidence-finding.is-primary h3,
+ .direct-evidence-finding.is-secondary h3{
+  font-size:18px;
+  line-height:25px;
   font-weight:600
  }
  .source-signal>p:not(.signal-kind),
@@ -1503,14 +1526,14 @@
  }
  .signal-links{
   gap:3px;
-  margin-top:9px
+  margin-top:8px
  }
  .signal-links a{
   font-size:12px;
   line-height:18px
  }
  .resolution-disclaimer{
-  margin-top:20px;
+  margin-top:14px;
   font-size:12px;
   line-height:18px
  }
