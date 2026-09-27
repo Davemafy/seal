@@ -29,12 +29,12 @@ export type BrowseCase={
 
 export const browseCases:BrowseCase[]=[
  {
-  id:'brazil-judicial-notification-form',category:'legitimate-court-notice',section:'legitimate-reference',
-  title:'Blank judicial notification form',language:'Português',ocrLanguage:'por',jurisdiction:'Brasil · cooperação internacional',issuer:'Tribunal de Justiça de São Paulo',
-  sourceTitle:'TJSP — Formulários A e B de carta rogatória',sourceUrl:'https://www.tjsp.jus.br/Download/Corregedoria/CartasRogatorias/Documentos/FormularioMexicoPanamaColombia.pdf',
-  classification:'Official blank court form',visualNote:'Court-hosted Portuguese forms include a notice to the recipient and spaces for a response and hearing details. The fields are blank; this does not summon a named person.',
-  excerpt:'Formulário B apresenta as informações essenciais para o destinatário de uma comunicação judicial.',
-  preview:{type:'pdf',url:'https://www.tjsp.jus.br/Download/Corregedoria/CartasRogatorias/Documentos/FormularioMexicoPanamaColombia.pdf',alt:'Portuguese judicial notification form hosted by the São Paulo court'}
+  id:'brazil-parana-citation-notice',category:'legitimate-court-notice',section:'legitimate-reference',
+  title:'Public citation notice with response period',language:'Português',ocrLanguage:'por',jurisdiction:'Paraná, Brasil',issuer:'Tribunal de Justiça do Paraná',
+  sourceTitle:'TJPR — Edital de citação (April 2026)',sourceUrl:'https://portal.tjpr.jus.br/pesquisa_athos/anexo/7156272',
+  classification:'Published judicial notice',visualNote:'An actual one-page court citation published in 2026. It says the named recipient may file a response within 15 working days after the notice period; this archived example is not a current instruction to you.',
+  excerpt:'O destinatário pode oferecer contestação em 15 dias úteis após o prazo do edital.',
+  preview:{type:'pdf',url:'https://portal.tjpr.jus.br/pesquisa_athos/anexo/7156272',alt:'Paraná court published judicial citation PDF in Portuguese'}
  },
  {
   id:'spain-public-judicial-notice',category:'legitimate-court-notice',section:'legitimate-reference',

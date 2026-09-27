@@ -857,7 +857,7 @@ async function upload(uploaded:File){
     ?extractedClaims.map(claim=>({...claim,verification_eligible:true}))
     :extractedClaims;
    const reliableAction=found.some(claim=>Boolean(claim.action)&&claimReliable(claim));
-   const courtRelated=/\b(?:court|jury|summons|hearing|case|docket|judge|tribunal|magistrate|citation|parking violation|juzgado|gericht|tribunale|mahakama|mahkama|mahkeme|pengadilan|cour|llys)\b|न्यायालय|अदालत|محكمة|المحكمة|法院|裁判所|법원|\bсуд\b/iu.test(sourceText)
+   const courtRelated=/\b(?:court|jury|summons|hearing|case|docket|judge|tribunal|magistrate|citation|parking violation|juzgado|gericht|tribunale|mahakama|mahkama|mahkeme|pengadilan|cour|llys)\b|poder judiciário|vara cível|edital de citação|न्यायालय|अदालत|محكمة|المحكمة|法院|裁判所|법원|\bсуд\b/iu.test(sourceText)
     ||Boolean(extraction.court_name&&sourceText.toLocaleLowerCase().includes(extraction.court_name.toLocaleLowerCase()));
    if(!sourceCurated&&(!courtRelated||!reliableAction))throw new Error(!courtRelated
     ?'This does not look like a court message SEAL can check. Try a court notice, text, or email.'
