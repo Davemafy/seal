@@ -34,6 +34,8 @@ test('entry stays idle across refresh until the user chooses an input',async({pa
 
 test('pasted court instructions reach a complete result without intermediate result state',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
+ let extractRequests=0;
+ page.on('request',request=>{if(request.url().includes('/api/extract'))extractRequests++});
  page.on('response',response=>{if(response.url().includes('/api/'))console.log('PASTE_API',response.request().method(),response.url(),response.status())});
  page.on('requestfailed',request=>{if(request.url().includes('/api/'))console.log('PASTE_API_FAILED',request.method(),request.url(),request.failure()?.errorText)});
  await page.goto('/');
@@ -50,6 +52,7 @@ Call 1-866-388-2430 after 5:30 PM for the status of your jury service.`);
  await expect(page.getByRole('heading',{name:'Your message'})).toBeVisible();
  await expect(page.getByText('Call 1-866-388-2430 after 5:30 PM')).toBeVisible();
  await expect(page.locator('.inspection-error')).toHaveCount(0);
+ expect(extractRequests,'clear pasted actions should not depend on the optional model extractor').toBe(0);
  assertNoRuntimeErrors();
 });
 
