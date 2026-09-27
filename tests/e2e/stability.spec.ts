@@ -752,3 +752,23 @@ test('1208 desktop keeps sidebar visually substantial and canvas restrained',asy
  expect(metrics.overflow).toBeLessThanOrEqual(1);
  assertNoRuntimeErrors();
 });
+
+
+test('desktop rail keeps Browse visible and consistent across pages',async({page})=>{
+ const assertNoRuntimeErrors=guardRuntime(page);
+ await page.setViewportSize({width:1208,height:664});
+ await page.goto('/');
+ const appRail=page.locator('.workspace-rail');
+ await expect(appRail.getByRole('link',{name:'Browse',exact:true})).toBeVisible();
+ const appWidth=await appRail.evaluate(node=>node.getBoundingClientRect().width);
+
+ await page.goto('/browse');
+ const browseRail=page.locator('.workspace-rail');
+ await expect(browseRail.getByRole('link',{name:'Browse',exact:true})).toBeVisible();
+ await expect(browseRail.getByRole('link',{name:'Browse',exact:true})).toHaveClass(/is-current/);
+ await expect(browseRail.getByRole('link',{name:'New check',exact:true})).toBeVisible();
+ const browseWidth=await browseRail.evaluate(node=>node.getBoundingClientRect().width);
+ expect(Math.abs(appWidth-browseWidth)).toBeLessThanOrEqual(1);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth)).toBeLessThanOrEqual(1);
+ assertNoRuntimeErrors();
+});
