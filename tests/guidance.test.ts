@@ -24,7 +24,7 @@ describe('user-first justice guidance',()=>{
  });
  it('does not turn a matching case reference into sender authentication',()=>{
   const claims=[{id:'d',type:'docket' as const,label:'Case',value:'1:24-cv-100',exact_source_text:'Case 1:24-cv-100',page:1}];
-  const verification={resolver_id:'test',results:[{claim_id:'d',verdict:'MATCH' as const,explanation:'Exact record',evidence:[{title:'Court record',url:'https://court.example/case',excerpt:'1:24-cv-100',checked_at:'2026-09-27T00:00:00.000Z',source_mode:'SNAPSHOT' as const}]}]};
+  const verification={resolver_id:'test',results:[{claim_id:'d',verdict:'MATCH' as const,explanation:'Exact record',evidence:[{title:'Court record',url:'https://court.example/case',excerpt:'1:24-cv-100',checked_at:'2026-09-27T00:00:00.000Z',source_mode:'SNAPSHOT' as const}],resolver_id:'test'}]};
   const reality=buildCaseReality(claims,verification);
   expect(reality.status).toBe('FOUND');expect(reality.detail).toContain('does not prove');
  });
