@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- Native images are required for local blob previews and unoptimized brand marks. */
 'use client';
 
 import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
@@ -701,6 +702,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
     if(activeReadRef.current===controller)activeReadRef.current=null;
    }
   })();
+ // This is a one-shot URL handoff. Adding run/ocrLanguage would replay the
+ // case after the effect itself mutates result state.
+ // eslint-disable-next-line react-hooks/exhaustive-deps
  },[hydrated,initialRun,initialText]);
 
  useEffect(()=>{
@@ -732,7 +736,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   };
   window.addEventListener('keydown',onKey);
   return()=>{document.body.style.overflow=previous;window.removeEventListener('keydown',onKey)};
- },[storyOpen,seekStoryBy,toggleStoryPlayback]);
+ },[storyOpen,seekStoryBy,toggleStoryPlayback,closeStory]);
 
  function startStory(){
   if(!storyArtifactReady&&file?.kind!=='pdf'){
@@ -857,7 +861,7 @@ async function upload(uploaded:File){
    if(!sourceIsDemo){
     let response:Response;
     try{response=await fetch('/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:sourceText}),signal:controller.signal});}
-    catch(error){
+    catch{
      if(controller.signal.aborted)throw new DOMException('Check cancelled.','AbortError');
      throw new Error('We couldn’t reach the instruction reader. Please try again in a moment.');
     }
