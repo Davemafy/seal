@@ -46,10 +46,10 @@ export default function Browse(){
 
   <section className="browse-shell">
    <header className="browse-intro">
-    <p className="browse-eyebrow">Source library</p>
-    <h1>Court notices and scam warnings</h1>
-    <p className="browse-deck">Open the original court or agency source, or run any example through SEAL.</p>
-    <p className="browse-scope">Coverage varies by jurisdiction. Claims SEAL cannot verify stay unconfirmed.</p>
+    <p className="browse-eyebrow">Real examples</p>
+    <h1>See what real court messages look like</h1>
+    <p className="browse-deck">Browse notices and scam warnings published by courts and public agencies. Open the original source, or check an example in SEAL.</p>
+    <p className="browse-scope">If a detail cannot be independently confirmed, SEAL leaves it unconfirmed.</p>
    </header>
 
    <BrowseGrid items={rankedCases}/>
