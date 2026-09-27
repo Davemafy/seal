@@ -4877,3 +4877,75 @@
   padding:28px 18px 34px!important;
  }
 }
+
+
+/* Original tab height repair — launch QA. */
+@media(min-width:901px){
+ .review-shell{
+  padding-top:16px!important;
+  padding-bottom:16px!important;
+ }
+ .result-masthead-row{
+  padding-bottom:6px!important;
+ }
+ .result-chapters{
+  margin-top:10px!important;
+ }
+ .result-carousel{
+  height:clamp(220px,calc(100dvh - 150px),680px)!important;
+ }
+ .result-slide-original{
+  padding:14px 28px 24px!important;
+ }
+ .result-slide-original .document-heading{
+  width:min(100%,720px)!important;
+  max-width:720px!important;
+  margin:0 0 8px!important;
+ }
+ .result-slide-original .document-paper{
+  width:min(100%,720px)!important;
+  max-width:720px!important;
+  height:min(54vh,430px)!important;
+  min-height:260px!important;
+  margin:0!important;
+  padding:8px!important;
+  display:grid!important;
+  place-items:center!important;
+  overflow:hidden!important;
+  border-radius:7px!important;
+ }
+ .result-slide-original .preview-box{
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  display:grid!important;
+  place-items:center!important;
+  overflow:hidden!important;
+ }
+ .result-slide-original .preview-box img{
+  width:auto!important;
+  height:auto!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  object-fit:contain!important;
+  margin:auto!important;
+ }
+}
+@media(min-width:901px) and (max-height:620px){
+ .review-shell{
+  padding-top:10px!important;
+ }
+ .result-masthead-row{
+  padding-bottom:2px!important;
+ }
+ .result-chapters{
+  margin-top:6px!important;
+ }
+ .result-slide-original{
+  padding-top:10px!important;
+ }
+ .result-slide-original .document-paper{
+  height:calc(100dvh - 210px)!important;
+  min-height:210px!important;
+ }
+}
