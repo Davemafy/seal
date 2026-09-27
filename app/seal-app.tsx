@@ -1170,7 +1170,7 @@ async function upload(uploaded:File){
           <span className="upload-browse">Browse files</span>
          </span>}
        </button>
-       {!busy?<>
+       {!busy&&<>
         <label className="ocr-language-control"><span>Image language</span><select value={ocrLanguage} onChange={event=>setOcrLanguage(event.target.value as OcrLanguage)}>{Object.entries(ocrLanguages).map(([code,label])=><option key={code} value={code}>{label}</option>)}</select></label>
         <button className="paste-mode-switch" type="button" onClick={()=>setPasteMode(true)}>Paste text instead <DesignChevron direction="right"/></button>
         <p className="privacy-note">Original file stays on this device. Extracted text may be sent for checking.</p>
