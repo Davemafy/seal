@@ -594,7 +594,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    strings.safePrimary=verification.safe_action.primary_label;
   }
   return strings;
- },[verification,claims,file?.sample,conciseDecisionTitle,decision.summary,decisionRelationship,plainExplanation,riskSummary,caseReality,courtQuestionScript]);
+ },[verification,claims,file?.sample,conciseDecisionTitle,humanDecisionSummary,decisionRelationship,plainExplanation,riskSummary,caseReality,courtQuestionScript]);
 
  useEffect(()=>{
   if(!verification||displayLocale==='en')return;
