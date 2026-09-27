@@ -2,6 +2,7 @@
 
 import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import {gsap} from 'gsap';
+import Link from 'next/link';
 import PDFPreview from './pdf-preview';
 import StoryPdfPage from './story-pdf-page';
 import {fixtures,type FixtureKey} from '@/lib/fixtures';
@@ -227,11 +228,6 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  ),[claims]);
  const scheduleQuote=useMemo(()=>text.match(/\b(?:hearing|conference|appearance|court date)\b[^.!?\n]{0,90}\b(?:scheduled for|set for|on)\b[^.!?\n]{0,120}/i)?.[0].trim()||'',[text]);
  const noPaymentQuote=useMemo(()=>text.match(/\b(?:no payment (?:is )?(?:requested|required|due)|payment is not (?:requested|required|due)|do not (?:pay|send payment))\b[^.!?\n]{0,70}/i)?.[0].trim()||'',[text]);
- const primaryAction=requestedActions[0];
- const actionSummary=useMemo(()=>{
-  const words=[...new Set(requestedActions.map(actionSummaryWord).filter(Boolean))];
-  return words.length?`${words.length} action${words.length===1?'':'s'}: ${words.join(' · ')}`:'';
- },[requestedActions]);
  const curatedSignal=verification?.signals?.find(signal=>signal.id.startsWith('curated-'));
  const storySignal=curatedSignal
   ||verification?.signals?.find(signal=>signal.id==='traffic-qr-warning')
@@ -270,7 +266,6 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    :storyResult?.verdict==='MISMATCH'
     ?'This detail conflicts with the source.'
     :'We couldn’t confirm this detail.';
- const storyVerdictCopy=storySignal?.summary||storyResult?.explanation||decisionCopy(verification).summary;
  const storyFinalTitle=storySignal?.id==='traffic-qr-warning'
   ?verification?.safe_action?.title||'Verify independently before you pay.'
   :storyClaim?.type==='authority'&&verification?.safe_action
@@ -338,7 +333,6 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   &&claimReliable(storyClaim)
   &&storyHasIndependentEvidence
  );
- const count=(value:Result['verdict'])=>verification?.results.filter(result=>result.verdict===value).length||0;
  const decision=decisionCopy(verification,decisionClaim);
  const technicalEvidence=useMemo(()=>{
   if(!verification)return [];
@@ -353,7 +347,6 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   ?`Court resolver: ${verification.resolver_id==='unsupported'?'unavailable':verification.resolver_id} · Source intelligence: ${verification.signals?.length||verification.safe_action?'active':'inactive'} · Mode: ${mode}`
   :'';
  const liveFailed=mode==='LIVE'&&['riverside','connecticut'].includes(verification?.resolver_id||'')&&verification?.results.some(result=>result.explanation==='Official source could not be reached during this check.');
- const sourceLabel=verification?.signals?.length?'OFFICIAL SOURCE FINDINGS':verification?.resolver_id==='riverside'?(mode==='LIVE'?'LIVE SOURCE CHECK':'SOURCE SNAPSHOT · 24 SEP 2026'):verification?.resolver_id==='connecticut'?(mode==='LIVE'?'LIVE SOURCE CHECK':'SOURCE SNAPSHOT · 25 SEP 2026'):verification?.resolver_id==='courtlistener'?(claims.some(claim=>claim.type==='docket')?'FEDERAL DOCKET INDEX':'NO JURY-SOURCE COVERAGE'):verification?.resolver_id==='ocr'?'LOW CONFIDENCE OCR':verification?'NO SUPPORTED SOURCE':error?'NOT CHECKED':isActionDemo?'SOURCE SNAPSHOT · 25 SEP 2026':isDemo?'SOURCE SNAPSHOT · 24 SEP 2026':'SOURCE CHECK PENDING';
 
  const syncStoryTime=useCallback((time:number)=>{
   const clamped=Math.max(0,Math.min(STORY_TOTAL,time));
@@ -690,7 +683,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
     }
 
     throw new Error('Case asset unavailable');
-   }catch(error){
+   }catch{
     if(controller.signal.aborted||runId.current!==handoffId)return;
     setBusy(false);
     setStatus('');
@@ -1034,17 +1027,17 @@ async function upload(uploaded:File){
 
  return <main className="seal-app" data-testid="seal-app">
   <aside className="workspace-rail" aria-label="Workspace">
-   <a href="/" className="rail-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></a>
+   <Link href="/" className="rail-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
    <div className="rail-group-label">WORKSPACE</div>
    <button className="rail-item is-current" type="button" onClick={clear}>Check a message</button>
-   <a className="rail-item" href="/browse">Browse real cases</a>
+   <Link className="rail-item" href="/browse">Browse real cases</Link>
    <div className="rail-spacer"/>
    <div className="rail-foot"><strong>Public sources only</strong><span>Every item links back to the issuing court or agency.</span></div>
   </aside>
   <header className="seal-nav mobile-only-nav">
-   <a href="/" className="mobile-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></a>
+   <Link href="/" className="mobile-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></Link>
    {!verification
-    ?<a href="/browse" className="mobile-nav-action">Browse</a>
+    ?<Link href="/browse" className="mobile-nav-action">Browse</Link>
     :<button className="mobile-nav-action mobile-nav-button" type="button" onClick={clear}>New check</button>}
   </header>
 
