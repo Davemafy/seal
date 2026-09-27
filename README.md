@@ -62,7 +62,7 @@ A second coverage-limit demo uses a clearly fictional **New Delhi, India** court
 
 The review UI keeps one visual chain central:
 
-**message → requested action → official evidence → safe court contact**
+**message, requested action, official evidence, safe court contact**
 
 Selecting a claim highlights it in the original message/image and shows its verdict, exact official excerpt, source link, source mode, and checked timestamp.
 
