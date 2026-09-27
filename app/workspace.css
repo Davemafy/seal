@@ -3470,3 +3470,85 @@
   flex:0 0 auto!important;
  }
 }
+
+
+/* Mobile workspace motion and refined header. */
+@media(max-width:900px){
+ .seal-workspace-stack{overflow-x:hidden}
+ .seal-workspace-instance.is-entering-forward{animation:workspace-page-forward .34s cubic-bezier(.22,.84,.26,1) both}
+ .seal-workspace-instance.is-entering-backward{animation:workspace-page-backward .34s cubic-bezier(.22,.84,.26,1) both}
+ @keyframes workspace-page-forward{
+  from{opacity:.72;transform:translate3d(9vw,0,0)}
+  to{opacity:1;transform:translate3d(0,0,0)}
+ }
+ @keyframes workspace-page-backward{
+  from{opacity:.72;transform:translate3d(-7vw,0,0)}
+  to{opacity:1;transform:translate3d(0,0,0)}
+ }
+
+ .seal-nav.mobile-only-nav{
+  min-height:58px!important;
+  padding:0 18px!important;
+  border-bottom:1px solid #ececea!important;
+  background:rgba(255,255,255,.96)!important;
+ }
+ .mobile-brand{
+  width:30px!important;height:30px!important;
+  place-items:start!important
+ }
+ .mobile-brand img{width:27px!important;height:27px!important}
+ .mobile-nav-tools{gap:4px!important}
+ .mobile-nav-divider{width:1px;height:18px;margin:0 5px;background:#e4e4e1}
+ .mobile-language-trigger{
+  min-width:auto!important;width:auto!important;height:34px!important;gap:6px!important;padding:0 7px!important
+ }
+ .mobile-language-trigger>.seal-ui-icon{width:17px!important;height:17px!important}
+ .mobile-language-trigger>span{font-size:10px!important;font-weight:650!important;letter-spacing:.025em!important}
+ .mobile-nav-icon{
+  width:34px!important;min-width:34px!important;height:34px!important;border-radius:8px!important
+ }
+ .mobile-nav-icon>.seal-ui-icon{width:18px!important;height:18px!important}
+ .mobile-new-check{
+  margin-left:3px!important;
+  background:#111!important;color:#fff!important
+ }
+ .mobile-new-check:hover,.mobile-new-check:focus-visible{background:#242424!important;color:#fff!important}
+ .mobile-workspace-trigger[aria-expanded="true"]{background:#f0f0ee!important}
+}
+
+/* Keep the drawer mounted so closing animates instead of popping out. */
+@media(max-width:900px){
+ .workspace-drawer-layer{
+  visibility:hidden!important;
+  pointer-events:none!important;
+  opacity:1!important;
+  transition:visibility 0s linear .32s!important
+ }
+ .workspace-drawer-layer.is-open{
+  visibility:visible!important;
+  pointer-events:auto!important;
+  transition-delay:0s!important
+ }
+ .workspace-drawer-backdrop{
+  opacity:0!important;
+  backdrop-filter:blur(0)!important;
+  transition:opacity .26s ease,backdrop-filter .26s ease!important
+ }
+ .workspace-drawer{
+  transform:translate3d(102%,0,0)!important;
+  will-change:transform;
+  transition:transform .32s cubic-bezier(.22,.82,.24,1)!important
+ }
+ .workspace-drawer-layer.is-open .workspace-drawer-backdrop{
+  opacity:1!important;
+  backdrop-filter:blur(2px)!important
+ }
+ .workspace-drawer-layer.is-open .workspace-drawer{
+  transform:translate3d(0,0,0)!important
+ }
+}
+
+@media(prefers-reduced-motion:reduce){
+ .seal-workspace-instance.is-entering-forward,.seal-workspace-instance.is-entering-backward{animation:none!important}
+ .workspace-drawer,.workspace-drawer-backdrop{transition:none!important}
+}
