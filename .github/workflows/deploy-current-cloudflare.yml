@@ -1,6 +1,7 @@
 name: Deploy current SEAL to Cloudflare
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - cloudflare-preview
