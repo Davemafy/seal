@@ -1486,9 +1486,24 @@ async function upload(uploaded:File){
  },[workspaceId,workspaceTitle,claims,text,error,verification,busy,status,documentLanguage?.label,jurisdiction,onWorkspaceMeta]);
 
  const processingStage=status==='Checking independent sources'?2:status==='Reading requested actions'?1:0;
- const processingTitle=processingStage===2?'Checking public sources':processingStage===1?'Reading what the message asks':'Reading your document';
+ const processingTitle=processingStage===2?'Checking public sources':processingStage===1?'Finding the instructions':'Reading your document';
  const processingTextRegionsVisible=useMemo(()=>file?.tokens?processingTextRegions(file.tokens):[],[file]);
  const processingRegionCount=processingTextRegionsVisible.length;
+ const processingMeta=[documentLanguage?.label,jurisdiction].filter(Boolean).join(' · ');
+ const processingStages=[
+  {
+   label:'Read document',
+   detail:processingRegionCount?`${processingRegionCount} text regions recovered`:'Reading locally from the selected file'
+  },
+  {
+   label:'Find instructions',
+   detail:claims.length?`${claims.length} checkable detail${claims.length===1?'':'s'} found`:(processingStage>=1?'Identifying the actions that matter':'Waiting for document text')
+  },
+  {
+   label:'Check public sources',
+   detail:processingStage===2?'Comparing the extracted details with independent sources':'Starts after the message is understood'
+  }
+ ] as const;
 
  const renderTextLines=(lines:string[])=><div className="message-lines">{lines.map((line,index)=>{
   const claim=claims.find(candidate=>candidate.exact_source_text===line||line.includes(candidate.value));
@@ -1626,14 +1641,16 @@ async function upload(uploaded:File){
             :<span className="upload-pdf-preview" aria-hidden="true"><b>PDF</b><i/></span>}
           </span>
           <span className="upload-process-body">
-           <span className="upload-process-kicker">Check in progress</span>
            <strong>{processingTitle}</strong>
-           <span className="process-context">
-            {processingStage===0
-             ?'Reading locally from the selected file.'
-             :processingStage===1
-              ?(processingRegionCount?`${processingRegionCount} text regions recovered. Identifying the instructions that matter.`:'Identifying the instructions that matter.')
-              :'Comparing the recovered instructions with independent court and agency sources.'}
+           {processingMeta&&<span className="process-live-meta">{processingMeta}</span>}
+           <span className="process-stage-list" aria-label="Check progress">
+            {processingStages.map((stage,index)=>{
+             const state=index<processingStage?'done':index===processingStage?'current':'pending';
+             return <span className={`process-stage-row is-${state}`} key={stage.label} aria-current={state==='current'?'step':undefined}>
+              <span><b>{stage.label}</b><small>{stage.detail}</small></span>
+              <em>{state==='done'?'Done':state==='current'?'Now':''}</em>
+             </span>;
+            })}
            </span>
            {uploadPreview?.name&&<span className="upload-file-name" title={uploadPreview.name}>{uploadPreview.name}</span>}
            <span className="process-device-note"><span>Original stays on this device</span><small>Extracted text may be sent for checking</small></span>
@@ -2211,6 +2228,7 @@ async function upload(uploaded:File){
 }
 
 const WORKSPACE_LIST_KEY='seal:workspace-list:v1';
+const ONBOARDING_KEY='seal:onboarding:v1';
 
 export default function SealApp({initialDemo=false,initialText='',initialRun=false}:{initialDemo?:boolean;initialText?:string;initialRun?:boolean}){
  const [workspaces,setWorkspaces]=useState<WorkspaceMeta[]>([{id:'primary',title:'New check',status:'idle'}]);
@@ -2218,6 +2236,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const [workspaceMotion,setWorkspaceMotion]=useState<{id:string;fromId?:string;direction:'forward'|'backward'}|null>(null);
  const workspaceMotionTimer=useRef<number|undefined>(undefined);
  const [registryReady,setRegistryReady]=useState(false);
+ const [onboardingOpen,setOnboardingOpen]=useState(false);
 
  useEffect(()=>{
   const timer=window.setTimeout(()=>{
@@ -2241,6 +2260,31 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   if(!registryReady)return;
   try{window.sessionStorage.setItem(WORKSPACE_LIST_KEY,JSON.stringify({active:activeWorkspace,items:workspaces}))}catch{}
  },[registryReady,activeWorkspace,workspaces]);
+
+ useEffect(()=>{
+  if(!registryReady||initialDemo||initialText||initialRun)return;
+  try{
+   const mobileFirstRun=window.matchMedia('(max-width: 900px) and (pointer: coarse)').matches;
+   if(mobileFirstRun&&!window.localStorage.getItem(ONBOARDING_KEY))setOnboardingOpen(true);
+  }catch{}
+ },[registryReady,initialDemo,initialText,initialRun]);
+
+ useEffect(()=>{
+  if(!onboardingOpen)return;
+  const previous=document.body.style.overflow;
+  document.body.style.overflow='hidden';
+  return()=>{document.body.style.overflow=previous};
+ },[onboardingOpen]);
+
+ const dismissOnboarding=useCallback((focusEntry=false)=>{
+  try{window.localStorage.setItem(ONBOARDING_KEY,'seen')}catch{}
+  setOnboardingOpen(false);
+  if(focusEntry)window.requestAnimationFrame(()=>{
+   const button=document.querySelector<HTMLButtonElement>('.seal-workspace-instance[aria-hidden="false"] [data-testid="upload-file"]');
+   button?.scrollIntoView({block:'center',behavior:'smooth'});
+   window.setTimeout(()=>button?.focus(),260);
+  });
+ },[]);
 
  useEffect(()=>()=>{if(workspaceMotionTimer.current)window.clearTimeout(workspaceMotionTimer.current)},[]);
 
@@ -2311,6 +2355,26 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  },[workspaces,activeWorkspace]);
 
  return <>
+  {onboardingOpen&&<div className="first-run-layer" data-testid="first-run-onboarding">
+   <button className="first-run-backdrop" type="button" aria-label="Close introduction" onClick={()=>dismissOnboarding(false)}/>
+   <section className="first-run-sheet" role="dialog" aria-modal="true" aria-labelledby="first-run-title">
+    <div className="first-run-mark"><img src="/brand/seal-mark-black.svg" alt=""/></div>
+    <div className="first-run-copy">
+     <p>SEAL</p>
+     <h1 id="first-run-title">Check the message. Then check the source.</h1>
+     <span>See what a court message asks you to do, what public sources can confirm, and where to check next.</span>
+    </div>
+    <div className="first-run-principles">
+     <div><strong>Message</strong><span>What it actually asks</span></div>
+     <div><strong>Public evidence</strong><span>What can be confirmed</span></div>
+     <div><strong>Next step</strong><span>Where to verify safely</span></div>
+    </div>
+    <div className="first-run-actions">
+     <button type="button" onClick={()=>dismissOnboarding(true)}>Check a message</button>
+     <Link href="/browse" onClick={()=>dismissOnboarding(false)}>Browse examples</Link>
+    </div>
+   </section>
+  </div>}
   <div className={`seal-workspace-stack ${workspaces.length>1?'has-multiple':''}`} data-workspace-count={workspaces.length}>
    {workspaces.length>1&&<div className="workspace-page-edges" aria-hidden="true"><span/><span/></div>}
    {workspaces.map((workspace,index)=>{
