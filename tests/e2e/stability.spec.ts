@@ -119,7 +119,7 @@ Call +91 11 5555 0199 to confirm your attendance.`);
  assertNoRuntimeErrors();
 });
 
-test('mobile result keeps the decision first and uses the horizontal result carousel',async({page})=>{
+test('mobile result keeps the decision first and scrolls result sections vertically',async({page})=>{
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:390,height:844});
@@ -155,11 +155,19 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  await expect(chapters.getByRole('link')).toHaveCount(4);
  await expect(page.getByTestId('evidence-review'),'review must not auto-open over result navigation').toHaveCount(0);
  await expect(page.locator('.record-disclosure')).not.toHaveAttribute('open','');
- const metrics=await carousel.evaluate(node=>({width:node.clientWidth,scrollWidth:node.scrollWidth,snap:getComputedStyle(node).scrollSnapType}));
+ const metrics=await carousel.evaluate(node=>({
+  width:node.clientWidth,
+  height:node.clientHeight,
+  scrollWidth:node.scrollWidth,
+  scrollHeight:node.scrollHeight,
+  snap:getComputedStyle(node).scrollSnapType,
+  offsets:Array.from(node.querySelectorAll<HTMLElement>('.result-slide')).map(slide=>slide.offsetTop)
+ }));
  expect(metrics.width).toBeGreaterThan(300);
- expect(Math.abs(metrics.scrollWidth-metrics.width*4)).toBeLessThanOrEqual(8);
- expect(await carousel.locator(':scope > .result-slide, :scope > .review-hero > .result-slide').count(),'carousel children should be exactly four full-width slides').toBeGreaterThanOrEqual(2);
- expect(metrics.snap).toContain('x');
+ expect(metrics.scrollWidth-metrics.width,'result flow must not create horizontal overflow').toBeLessThanOrEqual(2);
+ expect(metrics.scrollHeight).toBeGreaterThan(metrics.height*3);
+ expect(metrics.offsets).toHaveLength(4);
+ expect(metrics.snap).toContain('y');
 
  const calls=await carousel.evaluate(node=>{
   const element=node as HTMLElement & {__sealScrollCalls?:Array<ScrollToOptions>};
@@ -175,32 +183,33 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  expect(calls).toBe(true);
 
  await chapters.getByRole('link',{name:'Original'}).click();
- await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeGreaterThan(metrics.width-12);
+ await expect.poll(()=>carousel.evaluate(node=>node.scrollTop),{timeout:5000}).toBeGreaterThan(metrics.offsets[1]-12);
  await expect(chapters.getByRole('link',{name:'Original'})).toHaveAttribute('aria-current','location');
 
  await chapters.getByRole('link',{name:'Evidence'}).click();
- await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeGreaterThan(metrics.width*2-12);
+ await expect.poll(()=>carousel.evaluate(node=>node.scrollTop),{timeout:5000}).toBeGreaterThan(metrics.offsets[2]-12);
+ await expect(chapters.getByRole('link',{name:'Evidence'})).toHaveAttribute('aria-current','location');
+
+ await carousel.evaluate((node,top)=>node.scrollTo({top:top+180,behavior:'auto'}),metrics.offsets[2]);
+ await expect(chapters.getByRole('link',{name:'Evidence'})).toHaveAttribute('aria-current','location');
 
  await chapters.getByRole('link',{name:'Resolve'}).click();
- await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeGreaterThan(metrics.width*3-12);
- const resolveSlide=page.locator('[data-result-section="next"]');
- await resolveSlide.evaluate(node=>node.scrollTo({top:240,behavior:'auto'}));
- expect(await resolveSlide.evaluate(node=>node.scrollTop)).toBeGreaterThan(100);
+ await expect.poll(()=>carousel.evaluate(node=>node.scrollTop),{timeout:5000}).toBeGreaterThan(metrics.offsets[3]-12);
+ await expect(chapters.getByRole('link',{name:'Resolve'})).toHaveAttribute('aria-current','location');
 
  await chapters.getByRole('link',{name:'Evidence'}).click();
- await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeGreaterThan(metrics.width*2-12);
- await chapters.getByRole('link',{name:'Resolve'}).click();
- await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeGreaterThan(metrics.width*3-12);
- expect(await resolveSlide.evaluate(node=>node.scrollTop),'tab entry should restart at the top rather than restore a stale internal scroll position').toBeLessThanOrEqual(2);
+ await expect.poll(()=>carousel.evaluate(node=>node.scrollTop),{timeout:5000}).toBeLessThanOrEqual(metrics.offsets[2]+8);
+ await expect.poll(()=>carousel.evaluate(node=>node.scrollTop),{timeout:5000}).toBeGreaterThanOrEqual(metrics.offsets[2]-8);
 
  await chapters.getByRole('link',{name:'Summary'}).click();
- await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:3000}).toBeLessThan(4);
+ await expect.poll(()=>carousel.evaluate(node=>node.scrollTop),{timeout:3000}).toBeLessThan(4);
  const scrollCalls=await carousel.evaluate(node=>(node as HTMLElement & {__sealScrollCalls?:Array<ScrollToOptions>}).__sealScrollCalls||[]);
- expect(scrollCalls.some(call=>call.behavior==='smooth'),'adjacent tab moves should still feel like a carousel').toBe(true);
- expect(scrollCalls.at(-1)?.behavior,'far tab jumps must not visibly traverse intermediate result screens').toBe('auto');
+ expect(scrollCalls.some(call=>call.behavior==='smooth'),'adjacent tab moves should scroll vertically with continuity').toBe(true);
+ expect(scrollCalls.at(-1)?.behavior,'far tab jumps must not sweep through every result section').toBe('auto');
+ expect(scrollCalls.every(call=>call.left===undefined||call.left===0),'tab navigation must never move horizontally').toBe(true);
  expect(await page.evaluate(()=>window.scrollX)).toBe(0);
 
- await carousel.evaluate(node=>node.scrollTo({left:0,behavior:'auto'}));
+ await carousel.evaluate(node=>node.scrollTo({top:0,left:0,behavior:'auto'}));
  await expect(chapters.getByRole('link',{name:'Summary'})).toHaveAttribute('aria-current','location');
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
  expect(overflow).toBeLessThanOrEqual(1);
