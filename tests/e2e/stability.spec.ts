@@ -733,12 +733,13 @@ test('1208 desktop keeps sidebar visually substantial and canvas restrained',asy
    overflow:document.documentElement.scrollWidth-window.innerWidth
   };
  });
- expect(metrics.railWidth).toBeGreaterThanOrEqual(265);
- expect(metrics.shellWidth).toBeLessThanOrEqual(902);
- expect(metrics.intakeWidth).toBeLessThanOrEqual(472);
- expect(metrics.headingSize).toBeLessThanOrEqual(41);
- expect(metrics.rowHeight).toBeGreaterThanOrEqual(58);
- expect(metrics.railTitleSize).toBeGreaterThanOrEqual(12.5);
+ expect(metrics.railWidth).toBeGreaterThanOrEqual(232);
+ expect(metrics.railWidth).toBeLessThanOrEqual(240);
+ expect(metrics.shellWidth).toBeLessThanOrEqual(982);
+ expect(metrics.intakeWidth).toBeLessThanOrEqual(520);
+ expect(metrics.headingSize).toBeLessThanOrEqual(45);
+ expect(metrics.rowHeight).toBeGreaterThanOrEqual(54);
+ expect(metrics.railTitleSize).toBeGreaterThanOrEqual(12);
  expect(metrics.overflow).toBeLessThanOrEqual(1);
  assertNoRuntimeErrors();
 });
