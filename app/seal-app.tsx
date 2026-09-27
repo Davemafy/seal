@@ -89,6 +89,22 @@ function DesignPlayIcon(){
  </svg>;
 }
 
+type SealUiIconName='add'|'browse'|'globe'|'refresh'|'copy'|'message'|'download'|'list';
+
+function SealUiIcon({name}:{name:SealUiIconName}){
+ const common={fill:'none',stroke:'currentColor',strokeWidth:1.7,strokeLinecap:'round' as const,strokeLinejoin:'round' as const};
+ return <svg className="seal-ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  {name==='add'&&<><path {...common} d="M12 5v14"/><path {...common} d="M5 12h14"/></>}
+  {name==='browse'&&<><rect {...common} x="4.5" y="4.5" width="5.5" height="5.5" rx="1.2"/><rect {...common} x="14" y="4.5" width="5.5" height="5.5" rx="1.2"/><rect {...common} x="4.5" y="14" width="5.5" height="5.5" rx="1.2"/><rect {...common} x="14" y="14" width="5.5" height="5.5" rx="1.2"/></>}
+  {name==='globe'&&<><circle {...common} cx="12" cy="12" r="8.25"/><path {...common} d="M3.9 12h16.2M12 3.75c2.15 2.2 3.2 4.95 3.2 8.25S14.15 18.05 12 20.25C9.85 18.05 8.8 15.3 8.8 12S9.85 5.95 12 3.75Z"/></>}
+  {name==='refresh'&&<><path {...common} d="M19 8.2V4.8h-3.4"/><path {...common} d="M18.15 6.2A7.55 7.55 0 1 0 19.2 15"/></>}
+  {name==='copy'&&<><rect {...common} x="8.25" y="8.25" width="10.25" height="10.25" rx="2"/><path {...common} d="M15.75 8.25V6.6a2.1 2.1 0 0 0-2.1-2.1H6.6a2.1 2.1 0 0 0-2.1 2.1v7.05a2.1 2.1 0 0 0 2.1 2.1h1.65"/></>}
+  {name==='message'&&<><path {...common} d="M5.1 5.25h13.8a1.85 1.85 0 0 1 1.85 1.85v8.15a1.85 1.85 0 0 1-1.85 1.85H10l-4.75 3v-3H5.1a1.85 1.85 0 0 1-1.85-1.85V7.1A1.85 1.85 0 0 1 5.1 5.25Z"/><path {...common} d="M8 9.25h8M8 13h5.25"/></>}
+  {name==='download'&&<><path {...common} d="M12 4.5v10.25"/><path {...common} d="m8.3 11.4 3.7 3.7 3.7-3.7"/><path {...common} d="M5 18.75h14"/></>}
+  {name==='list'&&<><path {...common} d="M9 6.5h10M9 12h10M9 17.5h10"/><circle cx="5" cy="6.5" r="1" fill="currentColor"/><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="5" cy="17.5" r="1" fill="currentColor"/></>}
+ </svg>;
+}
+
 const actionSummaryWord=(claim:Claim)=>{
  const action=claim.action;
  if(!action)return '';
@@ -1129,16 +1145,6 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  }
  function replayStory(){startStory()}
 
- useEffect(()=>{
-  if(!ready||busy||storyOpen||reviewOffer!=='idle'||!reviewWorthWatching)return;
-  if(typeof document!=='undefined'&&document.visibilityState==='hidden')return;
-  if(typeof window!=='undefined'&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-  const timer=window.setTimeout(()=>startStory(),260);
-  return()=>window.clearTimeout(timer);
- // startStory is a local command over the current result state.
- // eslint-disable-next-line react-hooks/exhaustive-deps
- },[ready,busy,storyOpen,reviewOffer,reviewWorthWatching,storyArtifactReady,file?.kind]);
-
  function changeDisplayLanguage(locale:DisplayLocale){
   setTranslatedResult({});
   setResultTranslationState('idle');
@@ -1471,8 +1477,10 @@ async function upload(uploaded:File){
  return <main ref={workspaceRootRef} className="seal-app" data-testid="seal-app">
   <aside className="workspace-rail" aria-label="Workspace">
    <Link href="/" className="rail-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
-   <div className="rail-group-label">{ui('checks')}</div>
-   <button className="rail-item rail-new-check" type="button" onClick={onNewWorkspace}>{ui('newCheck')}</button>
+   <div className="rail-command-row">
+    <button className="icon-control rail-icon-control" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} data-tooltip={ui('newCheck')} onClick={onNewWorkspace}><SealUiIcon name="add"/></button>
+    <Link className="icon-control rail-icon-control" href="/browse" aria-label={ui('browse')} title={ui('browse')} data-tooltip={ui('browse')}><SealUiIcon name="browse"/></Link>
+   </div>
    <div className="rail-check-list" aria-label="Open checks">
     {workspaces.filter(item=>item.status!=='idle'||item.id===workspaceId).map((item,index)=><button
      type="button"
@@ -1485,20 +1493,17 @@ async function upload(uploaded:File){
      <span className="rail-check-copy"><strong>{item.title||`Check ${index+1}`}</strong><small>{[item.jurisdiction||item.language,item.status==='verifying'?'Checking sources':item.status==='reading'?'Reading':item.status==='done'?'Checked':item.status==='error'?'Needs attention':'New'].filter(Boolean).join(' · ')}</small></span>
     </button>)}
    </div>
-   <Link className="rail-item rail-browse" href="/browse">{ui('browse')}</Link>
    <div className="rail-spacer"/>
    <div className="rail-language">
-    <span>{ui('displayLanguage')}</span>
     <div className="rail-language-menu">
-     <button type="button" className="rail-language-trigger" aria-label={ui('displayLanguage')} aria-haspopup="listbox" aria-expanded={languageMenuOpen} onClick={()=>setLanguageMenuOpen(open=>!open)}>
-      <span>{DISPLAY_LANGUAGES[displayLocale]}</span><SealGuideIcon/>
+     <button type="button" className="rail-language-trigger" aria-label={ui('displayLanguage')} title={ui('displayLanguage')} aria-haspopup="listbox" aria-expanded={languageMenuOpen} onClick={()=>setLanguageMenuOpen(open=>!open)}>
+      <SealUiIcon name="globe"/><span>{displayLocale.toUpperCase()}</span><SealGuideIcon/>
      </button>
      {languageMenuOpen&&<div className="rail-language-popover" role="listbox" aria-label={ui('displayLanguage')}>
       {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><button type="button" role="option" aria-selected={code===displayLocale} className={code===displayLocale?'is-selected':''} key={code} onClick={()=>changeDisplayLanguage(code as DisplayLocale)}><span>{label}</span><small>{code.toUpperCase()}</small></button>)}
      </div>}
     </div>
    </div>
-   <div className="rail-foot"><strong>{ui('publicSourcesOnly')}</strong><span>{ui('publicSourcesNote')}</span></div>
   </aside>
   <header className="seal-nav mobile-only-nav">
    <Link href="/" className="mobile-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></Link>
@@ -1513,8 +1518,8 @@ async function upload(uploaded:File){
      </div>}
     </div>
    {!verification&&!busy&&workspaces.length===1
-    ?<Link href="/browse" className="mobile-nav-action">{ui('browse')}</Link>
-    :<button className="mobile-nav-action mobile-nav-button" type="button" onClick={onNewWorkspace}>{ui('newCheck')}</button>}
+    ?<Link href="/browse" className="icon-control mobile-nav-icon" aria-label={ui('browse')} title={ui('browse')}><SealUiIcon name="browse"/></Link>
+    :<button className="icon-control mobile-nav-icon" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} onClick={onNewWorkspace}><SealUiIcon name="add"/></button>}
    </div>
   </header>
   {workspaces.length>1&&<nav className="mobile-check-strip" aria-label="Open checks">
@@ -1523,9 +1528,11 @@ async function upload(uploaded:File){
     className={`mobile-check-pill ${item.id===workspaceId?'is-current':''}`}
     key={item.id}
     onClick={()=>onSelectWorkspace(item.id)}
+    aria-label={item.title||`Check ${index+1}`}
+    title={item.title||`Check ${index+1}`}
    >
     <span className={`mobile-check-state is-${item.status}`} aria-hidden="true"/>
-    <span>{item.title||`Check ${index+1}`}</span>
+    <span className="mobile-check-number">{index+1}</span>
    </button>)}
   </nav>}
 
@@ -2087,10 +2094,10 @@ async function upload(uploaded:File){
         <strong>{translatedResult.handoffTitle||'Ask the court without relying on the message'}</strong>
         <p>{translatedResult.handoffCopy||'Use this wording with an independently sourced court channel. It carries the case reference and the exact instructions SEAL recovered without treating them as genuine.'}</p>
         <blockquote>{translatedResult.courtQuestionScript||courtQuestionScript}</blockquote>
-        <div className="handoff-actions">
-         <button type="button" onClick={()=>void copyCourtQuestion()}>{questionCopied?'Copied':translatedResult.copyQuestion||'Copy what to ask'}</button>
-         <button type="button" onClick={()=>void copyHandoff()}>{handoffCopied?'Record copied':translatedResult.copyRecord||'Copy verification record'}</button>
-         <button type="button" onClick={saveHandoff}>{translatedResult.saveRecord||'Save verification record'}</button>
+        <div className="handoff-actions" aria-label="Verification record actions">
+         <button type="button" className="icon-control" aria-label={translatedResult.copyQuestion||'Copy what to ask'} title={translatedResult.copyQuestion||'Copy what to ask'} data-tooltip={translatedResult.copyQuestion||'Copy what to ask'} onClick={()=>void copyCourtQuestion()}><SealUiIcon name="message"/></button>
+         <button type="button" className="icon-control" aria-label={translatedResult.copyRecord||'Copy verification record'} title={translatedResult.copyRecord||'Copy verification record'} data-tooltip={translatedResult.copyRecord||'Copy verification record'} onClick={()=>void copyHandoff()}><SealUiIcon name="copy"/></button>
+         <button type="button" className="icon-control" aria-label={translatedResult.saveRecord||'Save verification record'} title={translatedResult.saveRecord||'Save verification record'} data-tooltip={translatedResult.saveRecord||'Save verification record'} onClick={saveHandoff}><SealUiIcon name="download"/></button>
         </div>
         <small>{translatedResult.handoffNote||'The saved record includes verification states, source links, and source-check timestamps. It does not include a legal opinion.'}</small>
        </div>
