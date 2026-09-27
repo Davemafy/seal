@@ -20,5 +20,10 @@ describe('result surface design contract',()=>{
   expect(app).toContain("workspaceMotion?.id===workspace.id");
   expect(css).toContain('@keyframes workspace-page-forward');
   expect(css).toContain('.workspace-drawer-layer.is-open');
+  expect(app).toContain('finishWorkspaceSwipe');
+  expect(app).toContain('onTouchStart={beginWorkspaceSwipe}');
+  expect(app).toContain('mobile-current-check');
+  expect(app).toContain('name="workspaces"');
+  expect(css).toContain('font-size:35px!important');
  });
 });
