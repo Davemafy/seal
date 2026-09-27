@@ -589,3 +589,174 @@
   line-height:20px!important
  }
 }
+
+
+/* Summary composition reset — larger desktop scale and two-column action rail. */
+@media(min-width:901px){
+ .review-shell{
+  padding:20px 34px 24px!important
+ }
+ .result-masthead{
+  width:min(100%,1120px)!important;
+  max-width:1120px!important;
+  padding-bottom:2px!important
+ }
+ .result-masthead-row{
+  min-height:62px!important;
+  padding-bottom:10px!important
+ }
+ .result-masthead-title{
+  margin-bottom:4px!important;
+  font-size:11px!important;
+  line-height:15px!important
+ }
+ .check-object-identity h1{
+  max-width:780px!important;
+  font-size:24px!important;
+  line-height:30px!important;
+  letter-spacing:-.022em!important
+ }
+ .check-object-meta{
+  margin-top:5px!important;
+  gap:5px 14px!important;
+  font-size:11px!important;
+  line-height:16px!important
+ }
+ .result-chapters{
+  width:min(100%,1120px)!important;
+  max-width:1120px!important;
+  gap:30px!important;
+  margin-top:12px!important
+ }
+ .result-chapters a{
+  padding-bottom:11px!important;
+  font-size:13px!important;
+  line-height:18px!important;
+  font-weight:560!important
+ }
+
+ .result-carousel{
+  width:min(100%,1120px)!important;
+  max-width:1120px!important
+ }
+ .result-slide-summary{
+  padding:42px 42px 44px!important
+ }
+ .result-slide-summary .decision{
+  width:100%!important;
+  max-width:960px!important
+ }
+ .result-slide-summary .decision-overview{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr)!important;
+  gap:64px!important;
+  align-items:start!important
+ }
+ .result-slide-summary .decision-copy{
+  max-width:600px!important
+ }
+ .result-slide-summary .decision-status{
+  margin:0 0 8px!important;
+  font-size:11.5px!important;
+  line-height:16px!important
+ }
+ .result-slide-summary .decision h1{
+  max-width:590px!important;
+  font-size:40px!important;
+  line-height:45px!important;
+  letter-spacing:-.032em!important
+ }
+ .result-slide-summary .decision-summary{
+  max-width:570px!important;
+  margin-top:15px!important;
+  font-size:16px!important;
+  line-height:24px!important
+ }
+ .decision-summary-side{
+  min-width:0;
+  padding-top:22px
+ }
+ .result-slide-summary .decision-primary-route{
+  max-width:none!important;
+  margin:0!important;
+  padding:18px 0 22px!important;
+  border-top:1px solid #e7e7e3!important;
+  border-bottom:1px solid #e7e7e3!important
+ }
+ .result-slide-summary .decision-primary-route>span{
+  margin-bottom:8px!important;
+  font-size:10.5px!important;
+  line-height:15px!important
+ }
+ .result-slide-summary .decision-primary-route>a{
+  min-height:46px!important;
+  padding:12px 15px!important;
+  font-size:13.5px!important;
+  line-height:19px!important
+ }
+ .result-slide-summary .decision-primary-route>small{
+  max-width:300px!important;
+  margin-top:7px!important;
+  font-size:10.5px!important;
+  line-height:16px!important
+ }
+ .result-slide-summary .decision-at-a-glance{
+  width:100%!important;
+  max-width:none!important;
+  grid-template-columns:1fr!important;
+  gap:0!important;
+  margin:0!important;
+  padding:0!important;
+  border-top:0!important
+ }
+ .result-slide-summary .decision-at-a-glance>div{
+  padding:16px 0!important;
+  border-bottom:1px solid #e7e7e3!important
+ }
+ .result-slide-summary .decision-at-a-glance span{
+  font-size:10.5px!important;
+  line-height:15px!important
+ }
+ .result-slide-summary .decision-at-a-glance strong{
+  margin-top:4px!important;
+  font-size:14px!important;
+  line-height:20px!important
+ }
+ .result-slide-summary .decision-details{
+  width:min(100%,960px)!important;
+  max-width:960px!important;
+  margin-top:34px!important;
+  padding-top:20px!important
+ }
+ .result-slide-summary .decision-details>summary{
+  font-size:12px!important;
+  line-height:17px!important
+ }
+}
+
+@media(min-width:901px) and (max-width:1180px){
+ .result-slide-summary{
+  padding:34px 30px 40px!important
+ }
+ .result-slide-summary .decision-overview{
+  grid-template-columns:minmax(0,1.2fr) minmax(240px,.8fr)!important;
+  gap:38px!important
+ }
+ .result-slide-summary .decision h1{
+  font-size:36px!important;
+  line-height:41px!important
+ }
+ .result-slide-summary .decision-summary{
+  font-size:15px!important;
+  line-height:22px!important
+ }
+}
+
+@media(max-width:900px){
+ .result-slide-summary .decision-overview{
+  display:block!important
+ }
+ .decision-summary-side{
+  padding-top:0
+ }
+}
