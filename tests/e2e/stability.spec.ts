@@ -34,6 +34,8 @@ test('entry stays idle across refresh until the user chooses an input',async({pa
 
 test('pasted court instructions reach a complete result without intermediate result state',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
+ page.on('response',response=>{if(response.url().includes('/api/'))console.log('PASTE_API',response.request().method(),response.url(),response.status())});
+ page.on('requestfailed',request=>{if(request.url().includes('/api/'))console.log('PASTE_API_FAILED',request.method(),request.url(),request.failure()?.errorText)});
  await page.goto('/');
  await page.getByRole('button',{name:/Paste text instead/i}).click();
  await page.getByLabel('Paste the court message').fill(`UNITED STATES DISTRICT COURT — DISTRICT OF CONNECTICUT
@@ -41,7 +43,10 @@ JURY STATUS CHECK
 Call 1-866-388-2430 after 5:30 PM for the status of your jury service.`);
  await page.getByRole('button',{name:'Check this message'}).click();
 
- await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
+ await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000}).catch(async error=>{
+  console.log('PASTE_BODY',await page.locator('body').innerText());
+  throw error;
+ });
  await expect(page.getByRole('heading',{name:'Your message'})).toBeVisible();
  await expect(page.getByText('Call 1-866-388-2430 after 5:30 PM')).toBeVisible();
  await expect(page.locator('.inspection-error')).toHaveCount(0);
