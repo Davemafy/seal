@@ -30,6 +30,7 @@ type SealWorkspaceProps={
  initialText?:string;
  initialRun?:boolean;
  workspaceId:string;
+ active:boolean;
  workspaces:WorkspaceMeta[];
  onNewWorkspace:()=>void;
  onSelectWorkspace:(id:string)=>void;
@@ -236,7 +237,7 @@ function decisionCopy(verification:Verification|null,claim?:Claim){
  };
 }
 
-function SealWorkspace({initialDemo=false,initialText='',initialRun=false,workspaceId,workspaces,onNewWorkspace,onSelectWorkspace,onDeleteWorkspace,onWorkspaceMeta}:SealWorkspaceProps){
+function SealWorkspace({initialDemo=false,initialText='',initialRun=false,workspaceId,active,workspaces,onNewWorkspace,onSelectWorkspace,onDeleteWorkspace,onWorkspaceMeta}:SealWorkspaceProps){
  const [hydrated,setHydrated]=useState(false);
  const [text,setText]=useState(initialText||(initialDemo?fixtures['action-message-demo'].text:''));
  const [draft,setDraft]=useState('');
@@ -313,6 +314,16 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   });
   return()=>window.cancelAnimationFrame(frame);
  },[verification,workspaceId]);
+
+ useLayoutEffect(()=>{
+  if(!active||!verification)return;
+  const frame=window.requestAnimationFrame(()=>{
+   const carousel=resultCarouselRef.current;
+   if(carousel)carousel.scrollTo({top:0,left:0,behavior:'auto'});
+   setActiveResultSection('summary');
+  });
+  return()=>window.cancelAnimationFrame(frame);
+ },[active,verification]);
  const [reviewOffer,setReviewOffer]=useState<'idle'|'counting'|'skipped'|'watching'|'completed'>('idle');
  const [reviewCountdown,setReviewCountdown]=useState(3);
  const [reviewOfferPaused,setReviewOfferPaused]=useState(false);
@@ -1762,12 +1773,12 @@ async function upload(uploaded:File){
       </div>
      </div>
 
-     {verification&&<nav className="result-chapters" aria-label="Jump to result section">
+     <nav className="result-chapters" aria-label="Jump to result section">
       <a href={`#${sectionId('review-summary')}`} className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={event=>jumpToResultSection(event,'summary','review-summary')}>Summary</a>
       <a href={`#${sectionId('original-message')}`} className={activeResultSection==='message'?'is-current':''} aria-current={activeResultSection==='message'?'location':undefined} onClick={event=>jumpToResultSection(event,'message','original-message')}>{ui('original')}</a>
       <a href={`#${sectionId('source-checks')}`} className={activeResultSection==='evidence'?'is-current':''} aria-current={activeResultSection==='evidence'?'location':undefined} onClick={event=>jumpToResultSection(event,'evidence','source-checks')}>Evidence</a>
       <a href={`#${sectionId('user-actions')}`} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={event=>jumpToResultSection(event,'next','user-actions')}>Resolve</a>
-     </nav>}
+     </nav>
     </header>
 
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
@@ -2464,6 +2475,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      initialText={index===0?initialText:''}
      initialRun={index===0?initialRun:false}
      workspaceId={workspace.id}
+     active={workspace.id===activeWorkspace}
      workspaces={workspaces}
      onNewWorkspace={createWorkspace}
      onSelectWorkspace={selectWorkspace}
