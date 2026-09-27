@@ -57,7 +57,7 @@ test('deployed curated sample can open, review, close, and restore after refresh
 
  await page.getByTestId('play-evidence-review').click();
  await expect(page.getByTestId('evidence-review')).toBeVisible({timeout:20000});
- await page.getByRole('button',{name:'Full evidence'}).click();
+ await page.getByRole('button',{name:'Back to result'}).click();
  await expect(page.getByTestId('evidence-review')).toHaveCount(0,{timeout:5000});
 
  await page.reload();
