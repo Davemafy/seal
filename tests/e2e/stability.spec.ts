@@ -127,27 +127,64 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  await expect(page.locator('.decision-details')).not.toHaveAttribute('open','');
 
  const chapters=page.locator('.result-chapters');
+ const carousel=page.getByTestId('result-carousel');
  await expect(chapters).toBeVisible();
  await expect(chapters.getByRole('link')).toHaveCount(4);
- const horizontalBefore=await page.evaluate(()=>window.scrollX);
- await chapters.getByRole('link',{name:'Original'}).click();
- await expect.poll(()=>page.locator('#original-message').evaluate(node=>Math.abs(node.getBoundingClientRect().top-92)),{timeout:5000}).toBeLessThan(36);
- const originalY=await page.evaluate(()=>window.scrollY);
- expect(originalY).toBeGreaterThan(0);
+ await expect(page.locator('.record-disclosure')).not.toHaveAttribute('open','');
 
- await chapters.getByRole('link',{name:'Evidence'}).click();
- await expect.poll(()=>page.locator('#source-checks').evaluate(node=>Math.abs(node.getBoundingClientRect().top-92)),{timeout:5000}).toBeLessThan(36);
- const evidenceY=await page.evaluate(()=>window.scrollY);
- expect(evidenceY).toBeGreaterThan(originalY);
+ const metrics=await carousel.evaluate(node=>({
+  width:node.clientWidth,
+  scrollWidth:node.scrollWidth,
+  snap:getComputedStyle(node).scrollSnapType
+ }));
+ expect(metrics.width).toBeGreaterThan(300);
+ expect(Math.abs(metrics.scrollWidth-(metrics.width*4))).toBeLessThanOrEqual(8);
+ expect(metrics.snap).toContain('x');
 
- await chapters.getByRole('link',{name:'Resolve'}).click();
- await expect.poll(()=>page.locator('#user-actions').evaluate(node=>Math.abs(node.getBoundingClientRect().top-92)),{timeout:5000}).toBeLessThan(36);
- expect(await page.evaluate(()=>window.scrollX)).toBe(horizontalBefore);
- await expect(chapters).toBeVisible();
+ for(const [label,index] of [['Original',1],['Evidence',2],['Resolve',3]] as const){
+  await chapters.getByRole('link',{name:label}).click();
+  await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeGreaterThan(metrics.width*index-12);
+  await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:5000}).toBeLessThan(metrics.width*index+12);
+  await expect(chapters.getByRole('link',{name:label})).toHaveAttribute('aria-current','location');
+  expect(await page.evaluate(()=>window.scrollX)).toBe(0);
+ }
+
+ await carousel.evaluate(node=>node.scrollTo({left:0,behavior:'auto'}));
+ await expect.poll(()=>carousel.evaluate(node=>node.scrollLeft),{timeout:3000}).toBeLessThan(4);
+ await expect(chapters.getByRole('link',{name:'Summary'})).toHaveAttribute('aria-current','location');
 
  await expect(page.locator('.result-origin')).not.toContainText(/Street|Avenue|Road|Boulevard/i);
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
  expect(overflow).toBeLessThanOrEqual(1);
+ assertNoRuntimeErrors();
+});
+
+test('desktop result stays contained to one carousel stage instead of a long report',async({page})=>{
+ test.setTimeout(90000);
+ const assertNoRuntimeErrors=guardRuntime(page);
+ await page.setViewportSize({width:1440,height:900});
+ await page.goto('/');
+ await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
+ await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
+
+ const carousel=page.getByTestId('result-carousel');
+ const metrics=await carousel.evaluate(node=>({
+  width:node.clientWidth,
+  height:node.clientHeight,
+  scrollWidth:node.scrollWidth
+ }));
+ expect(Math.abs(metrics.scrollWidth-(metrics.width*4))).toBeLessThanOrEqual(8);
+ expect(metrics.height).toBeLessThanOrEqual(820);
+ expect(metrics.height).toBeGreaterThanOrEqual(580);
+ await expect(page.locator('.record-disclosure')).not.toHaveAttribute('open','');
+
+ const pageMetrics=await page.evaluate(()=>({
+  widthOverflow:document.documentElement.scrollWidth-window.innerWidth,
+  height:document.documentElement.scrollHeight,
+  viewport:window.innerHeight
+ }));
+ expect(pageMetrics.widthOverflow).toBeLessThanOrEqual(1);
+ expect(pageMetrics.height).toBeLessThan(pageMetrics.viewport*1.45);
  assertNoRuntimeErrors();
 });
 
