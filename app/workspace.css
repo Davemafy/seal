@@ -1025,3 +1025,260 @@
 /* QA: fixed descendants (the evidence player) must stay viewport-fixed. */
 .result-masthead-row{min-height:52px}
 @media(max-width:599px){.result-masthead-row{min-height:42px}}
+
+
+/* Result evidence density — Figma 33:1617 / 33:1771 */
+.source-resolution{
+ border-top:0;
+ padding-top:40px
+}
+.source-resolution>.section-heading h2,
+.record-section .section-heading h2{
+ font-size:28px;
+ line-height:36px
+}
+.source-signals{
+ gap:18px
+}
+.direct-evidence-finding.is-primary h3,
+.direct-evidence-finding.is-secondary h3{
+ font-size:20px;
+ line-height:27px;
+ letter-spacing:-.004em
+}
+.source-signal>p:not(.signal-kind){
+ margin-top:7px
+}
+.direct-evidence-finding .signal-kind{
+ margin-bottom:5px
+}
+.signal-links{
+ gap:4px;
+ margin-top:10px
+}
+.signal-links a,
+.official-link,
+.additional-sources a{
+ padding:0;
+ border:0;
+ border-radius:0;
+ background:transparent;
+ box-shadow:none
+}
+.unsupported-next-step{
+ margin-top:24px;
+ padding:0;
+ border:0
+}
+.unsupported-next-step>span{
+ margin-bottom:6px
+}
+.unsupported-next-step p{
+ margin-top:10px
+}
+.message-detail-list{
+ display:grid;
+ gap:8px;
+ max-width:760px;
+ margin:14px 0 0
+}
+.message-detail-list>div{
+ display:grid;
+ grid-template-columns:minmax(120px,.32fr) minmax(0,1fr);
+ gap:12px;
+ align-items:start
+}
+.message-detail-list dt{
+ color:var(--muted);
+ font-size:13px;
+ line-height:20px
+}
+.message-detail-list dd{
+ min-width:0;
+ margin:0;
+ color:#202020;
+ font-size:15px;
+ line-height:22px;
+ overflow-wrap:anywhere
+}
+.resolution-disclaimer{
+ margin-top:18px
+}
+.record-section{
+ margin-top:44px;
+ padding-top:0;
+ border-top:0
+}
+.record-section .section-heading{
+ margin-bottom:20px
+}
+.record-layout{
+ gap:36px
+}
+.from-label{
+ margin-top:22px
+}
+.source-label{
+ margin-top:26px
+}
+.source-quote{
+ margin-top:9px;
+ margin-bottom:11px
+}
+.why-line{
+ margin-top:20px
+}
+.additional-sources{
+ margin-top:14px
+}
+.additional-sources .design-chevron,
+.technical-record .design-chevron{
+ width:12px;
+ height:12px;
+ flex-basis:12px;
+ color:#777
+}
+.technical-record{
+ max-width:820px;
+ margin-top:28px;
+ color:#777
+}
+.technical-record summary{
+ gap:6px;
+ color:#666;
+ font-size:12px;
+ line-height:18px;
+ font-weight:500;
+ letter-spacing:.01em
+}
+.technical-record[open] summary{
+ margin-bottom:10px
+}
+.technical-record p{
+ margin-top:6px
+}
+
+@media(max-width:900px){
+ .source-resolution{
+  gap:16px;
+  padding-top:30px
+ }
+ .source-signals{
+  gap:16px
+ }
+ .record-section{
+  margin-top:36px
+ }
+ .record-section .section-heading,
+ .record-layout{
+  gap:14px
+ }
+}
+
+@media(max-width:599px){
+ .source-resolution{
+  gap:12px;
+  padding-top:24px
+ }
+ .source-resolution>.section-heading h2,
+ .record-section .section-heading h2{
+  font-size:25px;
+  line-height:32px
+ }
+ .source-signals{
+  gap:14px
+ }
+ .source-signal.is-primary h3{
+  font-size:21px;
+  line-height:28px
+ }
+ .source-signal.is-secondary h3,
+ .direct-evidence-finding.is-primary h3,
+ .direct-evidence-finding.is-secondary h3{
+  font-size:18px;
+  line-height:25px
+ }
+ .source-signal>p:not(.signal-kind),
+ .source-signal.is-secondary>p:not(.signal-kind){
+  margin-top:6px;
+  font-size:14px;
+  line-height:21px
+ }
+ .signal-links{
+  margin-top:8px
+ }
+ .unsupported-next-step{
+  margin-top:18px;
+  padding:0
+ }
+ .unsupported-next-step h2{
+  font-size:21px;
+  line-height:28px
+ }
+ .unsupported-next-step p{
+  margin-top:9px;
+  font-size:14px;
+  line-height:21px
+ }
+ .message-detail-list{
+  gap:10px;
+  margin-top:12px
+ }
+ .message-detail-list>div{
+  grid-template-columns:1fr;
+  gap:1px
+ }
+ .message-detail-list dt{
+  font-size:12px;
+  line-height:18px
+ }
+ .message-detail-list dd{
+  font-size:14px;
+  line-height:21px
+ }
+ .resolution-disclaimer{
+  margin-top:16px
+ }
+ .record-section{
+  margin-top:32px;
+  padding-top:0
+ }
+ .record-section .section-heading{
+  margin-bottom:16px
+ }
+ .record-layout{
+  gap:14px
+ }
+ .from-label{
+  margin-top:20px
+ }
+ .source-label{
+  margin-top:24px
+ }
+ .claim-value{
+  font-size:20px;
+  line-height:28px
+ }
+ .source-name{
+  font-size:15px;
+  line-height:22px
+ }
+ .source-quote,
+ .exact-source{
+  font-size:14px;
+  line-height:21px
+ }
+ .why-line{
+  margin-top:18px
+ }
+ .additional-sources{
+  margin-top:12px
+ }
+ .technical-record{
+  margin-top:26px
+ }
+ .additional-sources summary,
+ .technical-record summary{
+  min-height:30px
+ }
+}
