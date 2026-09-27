@@ -74,10 +74,11 @@ describe('model action grounding',()=>{
   expect(claims.some(c=>c.type==='payment')).toBe(false);
  });
 
- it('labels international Browse sources separately from runnable court artifacts',()=>{
-  expect(new Set(browseCases.filter(c=>c.preview.type==='source').map(c=>c.jurisdiction))).toEqual(new Set(['Lagos, Nigeria','Distrito Federal, Brasil','España','France']));
-  expect(browseCases.find(c=>c.id==='brazil-judicial-notification-form')?.preview.type).toBe('pdf');
-  expect(browseCases.filter(c=>c.preview.type==='source').every(c=>!c.runText)).toBe(true);
+ it('only offers real document assets in Browse, including multilingual PDFs',()=>{
+  expect(browseCases.every(c=>['pdf','image'].includes(c.preview.type))).toBe(true);
+  expect(browseCases.every(c=>c.preview.url.startsWith('https://'))).toBe(true);
+  expect(browseCases.filter(c=>c.ocrLanguage).map(c=>c.ocrLanguage)).toEqual(expect.arrayContaining(['spa','por','fra']));
+  expect(browseCases.filter(c=>c.ocrLanguage).every(c=>!c.runText)).toBe(true);
   expect(ocrLanguages).toMatchObject({spa:'Español',por:'Português',fra:'Français'});
  });
 });

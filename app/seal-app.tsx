@@ -628,7 +628,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      fetch(`/api/browse-asset?id=${encodeURIComponent(caseId)}`)
     ]);
     if(!caseResponse.ok)throw new Error('Case unavailable');
-    const payload=await caseResponse.json() as {runText?:string;assetType?:'pdf'|'image';title?:string};
+    const payload=await caseResponse.json() as {runText?:string;assetType?:'pdf'|'image';ocrLanguage?:OcrLanguage;title?:string};
     const seededText=payload.runText?.trim()||'';
 
     if(assetResponse.ok&&payload.assetType){
@@ -639,22 +639,18 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      const sourceFile=new File([blob],`${caseId}.${extension}`,{type});
      sourceBlobRef.current=sourceFile;
      setStatus('Opening the source document');
-     const doc=await readInBrowser(sourceFile,next=>setStatus(next),ocrLanguage);
+     const doc=await readInBrowser(sourceFile,next=>setStatus(next),payload.ocrLanguage||ocrLanguage);
      const analysisText=seededText||doc.text;
      if(!analysisText.trim())throw new Error('Case text unavailable');
      setFile(doc);
      setText(analysisText);
      setBusy(false);
      setStatus('');
-     await run('SNAPSHOT',{text:analysisText,file:doc,curated:true,curatedCaseId:caseId});
+     await run('SNAPSHOT',{text:analysisText,file:doc,curated:!!seededText,curatedCaseId:caseId});
      return;
     }
 
-    if(!seededText)throw new Error('Case asset unavailable');
-    setBusy(false);
-    setStatus('');
-    setText(seededText);
-    await run('SNAPSHOT',{text:seededText,file:null,curated:true,curatedCaseId:caseId});
+    throw new Error('Case asset unavailable');
    }catch{
     setBusy(false);
     setStatus('');

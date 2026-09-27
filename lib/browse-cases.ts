@@ -15,6 +15,7 @@ export type BrowseCase={
  featured?:boolean;
  title:string;
  language?:string;
+ ocrLanguage?:'eng'|'spa'|'por'|'fra';
  jurisdiction:string;
  issuer:string;
  sourceTitle:string;
@@ -22,50 +23,34 @@ export type BrowseCase={
  classification:string;
  visualNote:string;
  excerpt:string;
- runText:string;
- preview:{type:'pdf'|'image'|'source';url:string;alt:string};
+ runText?:string;
+ preview:{type:'pdf'|'image';url:string;alt:string};
 };
 
 export const browseCases:BrowseCase[]=[
  {
   id:'brazil-judicial-notification-form',category:'legitimate-court-notice',section:'legitimate-reference',
-  title:'Formulário de notificação judicial',language:'Português',jurisdiction:'Brasil · cooperação internacional',issuer:'Tribunal de Justiça de São Paulo',
+  title:'Blank judicial notification form',language:'Português',ocrLanguage:'por',jurisdiction:'Brasil · cooperação internacional',issuer:'Tribunal de Justiça de São Paulo',
   sourceTitle:'TJSP — Formulários A e B de carta rogatória',sourceUrl:'https://www.tjsp.jus.br/Download/Corregedoria/CartasRogatorias/Documentos/FormularioMexicoPanamaColombia.pdf',
   classification:'Official blank court form',visualNote:'Court-hosted Portuguese forms include a notice to the recipient and spaces for a response and hearing details. The fields are blank; this does not summon a named person.',
-  excerpt:'Formulário B apresenta as informações essenciais para o destinatário de uma comunicação judicial.',runText:'',
+  excerpt:'Formulário B apresenta as informações essenciais para o destinatário de uma comunicação judicial.',
   preview:{type:'pdf',url:'https://www.tjsp.jus.br/Download/Corregedoria/CartasRogatorias/Documentos/FormularioMexicoPanamaColombia.pdf',alt:'Portuguese judicial notification form hosted by the São Paulo court'}
  },
  {
-  id:'nigeria-lagos-court-search',category:'legitimate-court-notice',section:'legitimate-reference',
-  title:'High Court reference verification',language:'English',jurisdiction:'Lagos, Nigeria',issuer:'Lagos State Judiciary',
-  sourceTitle:'Lagos State Judiciary — Verification, High Court',sourceUrl:'https://lagosjudiciary.gov.ng/search',
-  classification:'Official verification portal',visualNote:'The judiciary provides a reference-number lookup. A result can help check the reference; it does not establish that a message or sender is genuine.',
-  excerpt:'The Lagos State Judiciary publishes a High Court verification page with a reference-number search.',runText:'',
-  preview:{type:'source',url:'https://lagosjudiciary.gov.ng/search',alt:'Lagos State Judiciary High Court reference verification'}
+  id:'spain-public-judicial-notice',category:'legitimate-court-notice',section:'legitimate-reference',
+  title:'Public notice to interested parties',language:'Español',ocrLanguage:'spa',jurisdiction:'Jaén, España',issuer:'Boletín Oficial del Estado',
+  sourceTitle:'BOE — Anuncio 24801 (21 July 2026)',sourceUrl:'https://www.boe.es/boe/dias/2026/07/21/pdfs/BOE-B-2026-24801.pdf',
+  classification:'Published judicial notice',visualNote:'A real public notice referring interested parties to a Jaén court within nine days of publication. The stated period has passed; it is not a current instruction to you.',
+  excerpt:'Los interesados podrán comparecer ante el Juzgado de lo Contencioso-Administrativo nº 1 de Jaén en el plazo indicado.',
+  preview:{type:'pdf',url:'https://www.boe.es/boe/dias/2026/07/21/pdfs/BOE-B-2026-24801.pdf',alt:'Official Spanish judicial public notice PDF'}
  },
  {
-  id:'brazil-false-judicial-contact',category:'court-payment-fee',section:'court-message-scams',
-  title:'Falso contato judicial e pedido de pagamento',language:'Português',jurisdiction:'Distrito Federal, Brasil',issuer:'TJDFT',
-  sourceTitle:'TJDFT — Golpe do falso contato judicial',sourceUrl:'https://www.tjdft.jus.br/institucional/imprensa/noticias/2026/setembro/golpe-do-falso-contato-judicial-tjdft-alerta-para-nova-forma-de-fraude',
-  classification:'Official court scam warning',visualNote:'The court warns about impersonators using real case details and urgent payment or transfer demands. This is an official warning, not a reproduced victim message.',
-  excerpt:'O tribunal descreve contatos por WhatsApp, e-mail, chamada ou vídeo que pressionam por pagamentos ligados a processos.',runText:'',
-  preview:{type:'source',url:'https://www.tjdft.jus.br/institucional/imprensa/noticias/2026/setembro/golpe-do-falso-contato-judicial-tjdft-alerta-para-nova-forma-de-fraude',alt:'TJDFT warning about false judicial contacts in Portuguese'}
- },
- {
-  id:'spain-hearing-alerts',category:'legitimate-court-notice',section:'legitimate-reference',
-  title:'Avisos de señalamientos judiciales',language:'Español',jurisdiction:'España',issuer:'Ministerio de Justicia',
-  sourceTitle:'Sede Judicial Electrónica — avisos de señalamientos',sourceUrl:'https://sedewaf.justicia.es/web/guest/-/nuevas-funcionalidades-de-la-sede-judicial-electronica-del-territorio-ministerio',
-  classification:'Official notification guidance',visualNote:'The ministry explains that participants can receive hearing alerts by SMS or email through the judicial portal in supported locations. A notification alone does not prove any individual case.',
-  excerpt:'La sede judicial describe los avisos de señalamientos y la consulta de documentos en el área privada.',runText:'',
-  preview:{type:'source',url:'https://sedewaf.justicia.es/web/guest/-/nuevas-funcionalidades-de-la-sede-judicial-electronica-del-territorio-ministerio',alt:'Spanish Ministry of Justice guidance on hearing alerts'}
- },
- {
-  id:'france-court-reminders',category:'legitimate-court-notice',section:'legitimate-reference',
-  title:'Rappels de convocation par SMS',language:'Français',jurisdiction:'France',issuer:'Ministère de la Justice',
-  sourceTitle:'Justice.fr — fonctionnement de l’espace personnel',sourceUrl:'https://www.justice.fr/contact/espace-perso',
-  classification:'Official notification guidance',visualNote:'The justice portal describes email updates and SMS reminders before a judicial appointment. This is service guidance, not a copy of a summons.',
-  excerpt:'Le service explique les mises à jour des dossiers et les rappels automatiques avant un rendez-vous judiciaire.',runText:'',
-  preview:{type:'source',url:'https://www.justice.fr/contact/espace-perso',alt:'French justice portal guidance on court appointment reminders'}
+  id:'france-court-convocation-form',category:'legitimate-court-notice',section:'legitimate-reference',
+  title:'Court appointment application form',language:'Français',ocrLanguage:'fra',jurisdiction:'Paris, France',issuer:'Tribunal judiciaire de Paris',
+  sourceTitle:'Tribunal judiciaire de Paris — Formulaire de demande de convocation',sourceUrl:'https://www.tribunal-de-paris.justice.fr/sites/default/files/2021-10/liste%2021-11%20al1%20version%20Octobre%202021.pdf',
+  classification:'Official blank court form',visualNote:'The Paris court asks applicants to assemble a file and submit this two-page form with supporting documents. It is an application, not a summons.',
+  excerpt:'Vous devez constituer un dossier par personne et adresser le formulaire au tribunal avec les pièces demandées.',
+  preview:{type:'pdf',url:'https://www.tribunal-de-paris.justice.fr/sites/default/files/2021-10/liste%2021-11%20al1%20version%20Octobre%202021.pdf',alt:'Official Paris court application PDF in French'}
  },
  {
   id:'dallas-traffic-qr-scam',
@@ -97,51 +82,6 @@ export const browseCases:BrowseCase[]=[
   excerpt:'Maryland Judiciary published the message as an example of a scam and warned recipients not to scan its QR code or provide payment.',
   runText:'NOTICE OF HEARING — PARKING VIOLATION. Appear for a hearing at the District Court in Baltimore City or resolve the matter by payment before the hearing date. Scan the QR code to pay.',
   preview:{type:'image',url:'https://www.mdcourts.gov/sites/default/files/import/media/news/images/textmessage030626.jpg',alt:'Maryland Judiciary published example of a scam court text message'}
- },
- {
-  id:'mississippi-jury-payment-warning',
-  category:'jury-duty-payment-demand',
-  section:'jury-duty-threats',
-  title:'Jury scam payment demand',
-  jurisdiction:'Northern District of Mississippi',
-  issuer:'U.S. District Court',
-  sourceTitle:'Jury Scam Alert: Do Not Pay Callers Who Threaten to Arrest You Unless You Pay',
-  sourceUrl:'https://www.msnd.uscourts.gov/sites/msnd/files/forms/Jury%20Scam%20Alert_0.pdf',
-  classification:'Official court scam warning',
-  visualNote:'Arrest pressure paired with an immediate request for money or gift-card details.',
-  excerpt:'The court warns that jury scammers threaten arrest and demand payment by phone, sometimes asking for prepaid gift-card numbers.',
-  runText:'You missed federal jury service. Avoid arrest by making an immediate payment over the phone or by providing a prepaid gift-card number.',
-  preview:{type:'pdf',url:'https://www.msnd.uscourts.gov/sites/msnd/files/forms/Jury%20Scam%20Alert_0.pdf',alt:'Federal court jury scam alert about arrest threats and payment demands'}
- },
- {
-  id:'nebraska-jury-phone-scam',
-  category:'fake-summons-arrest-threat',
-  section:'jury-duty-threats',
-  title:'Jury phone scam warning',
-  jurisdiction:'District of Nebraska',
-  issuer:'U.S. District Court',
-  sourceTitle:'WARNING – Jury Phone Scam',
-  sourceUrl:'https://www.ned.uscourts.gov/internetDocs/jury/Warning-Jury_Phone_Scam.pdf',
-  classification:'Official court scam warning',
-  visualNote:'Impersonation of marshals or court officers, using real court details to make an arrest threat sound credible.',
-  excerpt:'The District of Nebraska warns about callers claiming to be court or law-enforcement officials who seek money or financial information.',
-  runText:'A caller claims to be a U.S. Marshal or court officer and says you must pay a fine to avoid arrest for failing to report for jury duty.',
-  preview:{type:'pdf',url:'https://www.ned.uscourts.gov/internetDocs/jury/Warning-Jury_Phone_Scam.pdf',alt:'District of Nebraska jury phone scam warning PDF'}
- },
- {
-  id:'north-carolina-fake-warrant-warning',
-  category:'personal-information',
-  section:'jury-duty-threats',
-  title:'Fake warrant and settlement demand',
-  jurisdiction:'Eastern District of North Carolina',
-  issuer:'U.S. District Court',
-  sourceTitle:'WARNING OF JURY SCAM',
-  sourceUrl:'https://www.nced.uscourts.gov/pdfs/JuryScamNotice-04-11-2024.pdf',
-  classification:'Official court scam warning',
-  visualNote:'Fake warrants, settlement language, wire transfers, prepaid cards, and requests for sensitive account information.',
-  excerpt:'The court warns about fake arrest warrants and demands to wire money, provide prepaid cards, or share bank and card information.',
-  runText:'An email or caller claims an arrest warrant was issued for missed jury duty. To avoid arrest, call a settlement number, wire money, or provide a prepaid card.',
-  preview:{type:'pdf',url:'https://www.nced.uscourts.gov/pdfs/JuryScamNotice-04-11-2024.pdf',alt:'Eastern District of North Carolina jury scam warning PDF'}
  },
  {
   id:'connecticut-sample-jury-summons',
