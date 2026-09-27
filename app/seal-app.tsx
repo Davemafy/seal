@@ -79,10 +79,16 @@ function claimReliable(claim:Claim){
  const threshold=claim.action?66:80;
  return typeof claim.field_confidence!=='number'||claim.field_confidence>=threshold;
 }
+function claimNarrativelyUsable(claim:Claim){
+ if(!claim.action||!claimTextUseful(claim))return false;
+ if(typeof claim.field_confidence!=='number')return true;
+ return claim.field_confidence>=52;
+}
 
 function chooseDecisionClaim(claims:Claim[],verification:Verification){
  const resultById=new Map(verification.results.map(result=>[result.claim_id,result]));
  const actions=claims.filter(claim=>Boolean(claim.action)&&claimReliable(claim));
+ const usableActions=claims.filter(claimNarrativelyUsable);
  const reliable=claims.filter(claimReliable);
  const result=(claim:Claim)=>resultById.get(claim.id);
  const hasEvidence=(claim:Claim)=>Boolean(result(claim)?.evidence?.length);
@@ -106,6 +112,9 @@ function chooseDecisionClaim(claims:Claim[],verification:Verification){
   ||pay
   ||scan
   ||actions[0]
+  ||usableActions.find(claim=>mismatch(claim))
+  ||usableActions.find(hasEvidence)
+  ||usableActions[0]
   ||reliable.find(claim=>mismatch(claim)&&hasEvidence(claim))
   ||reliable.find(claim=>result(claim)?.verdict==='MATCH'&&hasEvidence(claim))
   ||reliable.find(hasEvidence)
@@ -826,8 +835,9 @@ async function upload(uploaded:File){
   const id=++runId.current;
   setBusy(true);setError('');setVerification(null);setRevealed(0);setSelected('');setTechnicalOpen(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryStartPending(false);setMode(sourceMode);setStatus('Reading requested actions');
   try{
-   if(sourceFile?.uncertain)throw new Error('We couldn’t reliably read the important instructions in this document. Try a clearer image or paste the message text.');
-
+   // Do not use the document-level OCR flag as a kill switch. A globally noisy
+   // transcript can still contain a clearly grounded action line that the
+   // extractor and claim-level confidence checks can safely use.
    let extraction:Extraction=fallbackExtract(sourceText);
    let extractor='DETERMINISTIC';
 
@@ -857,11 +867,13 @@ async function upload(uploaded:File){
     ?extractedClaims.map(claim=>({...claim,verification_eligible:true}))
     :extractedClaims;
    const reliableAction=found.some(claim=>Boolean(claim.action)&&claimReliable(claim));
+   const usableAction=found.some(claimNarrativelyUsable);
    const courtRelated=/\b(?:court|jury|summons|hearing|case|docket|judge|tribunal|magistrate|citation|parking violation|juzgado|gericht|tribunale|mahakama|mahkama|mahkeme|pengadilan|cour|llys)\b|poder judiciário|vara cível|edital de citação|न्यायालय|अदालत|محكمة|المحكمة|法院|裁判所|법원|\bсуд\b/iu.test(sourceText)
     ||Boolean(extraction.court_name&&sourceText.toLocaleLowerCase().includes(extraction.court_name.toLocaleLowerCase()));
-   if(!sourceCurated&&(!courtRelated||!reliableAction))throw new Error(!courtRelated
-    ?'This does not look like a court message SEAL can check. Try a court notice, text, or email.'
-    :'We couldn’t reliably read the important instructions in this document. Try a clearer image or paste the message text.');
+   if(!sourceCurated&&!courtRelated)throw new Error('This does not look like a court message SEAL can check. Try a court notice, text, or email.');
+   if(!sourceCurated&&!usableAction)throw new Error(sourceFile?.uncertain
+    ?'SEAL read parts of this document, but not a requested action clearly enough to check it safely. Try a clearer image or paste the instruction text.'
+    :'We couldn’t find a requested action in this court message. Try another image or paste the message text.');
    if(!found.length){
     if(sourceFile&&sourceText.trim().length>=40)throw new Error('We could read text in this image, but SEAL couldn’t find a court message or notice to check. Try another image or paste the message text.');
     throw new Error('We couldn’t read enough of this message to check it reliably. Try a clearer screenshot or paste the message text.');
@@ -871,6 +883,9 @@ async function upload(uploaded:File){
    setStatus('Checking independent sources');
 
    const verifiable=found.filter(claim=>claim.verification_eligible!==false);
+   // Low-confidence action claims may still drive the narrative, but they never
+   // get routed as canonical facts. Verification remains claim-gated.
+   void reliableAction;
    const courtClaim=found.find(claim=>claim.type==='court');
    const routingCourt=courtClaim?.verification_eligible===false?'':extraction.court_name;
 
