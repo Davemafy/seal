@@ -1549,21 +1549,22 @@ async function upload(uploaded:File){
   <aside className="workspace-rail" aria-label="Workspace">
    <div className="rail-topbar">
     <Link href="/" className="rail-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
-    <div className="rail-command-row" aria-label="Workspace actions">
-     <Link className="icon-control rail-icon-control" href="/browse" aria-label={ui('browse')} title={ui('browse')} data-tooltip={ui('browse')}><SealUiIcon name="browse"/></Link>
-     <button className="icon-control rail-icon-control rail-new-check" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} data-tooltip={ui('newCheck')} onClick={onNewWorkspace}><SealUiIcon name="add"/></button>
-    </div>
+    <button className="icon-control rail-icon-control rail-new-check" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} data-tooltip={ui('newCheck')} onClick={onNewWorkspace}><SealUiIcon name="add"/></button>
    </div>
+   <nav className="rail-primary-nav" aria-label="Primary">
+    <Link className="rail-nav-item" href="/browse"><SealUiIcon name="browse"/><span>{ui('browse')}</span></Link>
+   </nav>
    <div className="rail-section-head"><span>Checks</span><small>{workspaces.length}</small></div>
    <div className="rail-check-list" aria-label="Open checks">
     {workspaces.map((item,index)=>{
      const rawTitle=cleanDisplayText(item.title||'');
-     const title=rawTitle.length>=3?rawTitle:`Check ${index+1}`;
+     const blankTitle=!rawTitle||/^new check(?: \d+)?$/i.test(rawTitle);
+     const title=blankTitle?(workspaces.length===1?'New check':`Check ${index+1}`):(rawTitle.length>=3?rawTitle:`Check ${index+1}`);
      const usefulPreview=cleanDisplayText(item.preview||'');
-     const statusLabel=item.status==='verifying'?'Checking sources':item.status==='reading'?'Reading':item.status==='done'?'Checked':item.status==='error'?'Needs attention':'New';
+     const statusLabel=item.status==='verifying'?'Checking sources':item.status==='reading'?'Reading':item.status==='done'?'Checked':item.status==='error'?'Needs attention':'';
      const secondary=item.status==='reading'||item.status==='verifying'||item.status==='error'
       ?[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · ')
-      :(usefulPreview.length>=8?usefulPreview:[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · '));
+      :(usefulPreview.length>=8?usefulPreview:[item.jurisdiction||item.language,item.status==='done'?'Checked':''].filter(Boolean).join(' · '));
      return <div className={`rail-check-row ${item.id===workspaceId?'is-current':''}`} key={item.id}>
       <button
        type="button"
@@ -1572,7 +1573,7 @@ async function upload(uploaded:File){
        aria-current={item.id===workspaceId?'page':undefined}
       >
        <span className={`rail-check-state is-${item.status}`} aria-hidden="true"/>
-       <span className="rail-check-copy"><strong>{title}</strong><small>{secondary}</small></span>
+       <span className="rail-check-copy"><strong>{title}</strong>{secondary&&<small>{secondary}</small>}</span>
       </button>
       <button className="rail-check-delete icon-control" type="button" aria-label={`Delete check ${index+1}: ${title}`} title={`Delete ${title}`} onClick={()=>onDeleteWorkspace(item.id)}><SealUiIcon name="delete"/></button>
      </div>;
@@ -1624,12 +1625,13 @@ async function upload(uploaded:File){
     </div>
     <div className="workspace-drawer-list" aria-label="Open checks">
      {workspaces.map((item,index)=>{
-      const title=item.title||`Check ${index+1}`;
-      const statusLabel=item.status==='verifying'?'Checking sources':item.status==='reading'?'Reading':item.status==='done'?'Checked':item.status==='error'?'Needs attention':'New';
+      const rawTitle=cleanDisplayText(item.title||'');
+      const title=!rawTitle||/^new check(?: \d+)?$/i.test(rawTitle)?(workspaces.length===1?'New check':`Check ${index+1}`):rawTitle;
+      const statusLabel=item.status==='verifying'?'Checking sources':item.status==='reading'?'Reading':item.status==='done'?'Checked':item.status==='error'?'Needs attention':'';
       return <div className={`workspace-drawer-row ${item.id===workspaceId?'is-current':''}`} key={item.id}>
        <button className="workspace-drawer-select" type="button" aria-current={item.id===workspaceId?'page':undefined} onClick={()=>{onSelectWorkspace(item.id);setWorkspaceDrawerOpen(false)}}>
         <span className={`rail-check-state is-${item.status}`} aria-hidden="true"/>
-        <span className="workspace-drawer-copy"><strong>{title}</strong><small>{item.preview||[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · ')}</small></span>
+        <span className="workspace-drawer-copy"><strong>{title}</strong>{(item.preview||[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · '))&&<small>{item.preview||[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · ')}</small>}</span>
        </button>
        <div className="workspace-drawer-row-actions">
         {item.status!=='idle'&&<span className={`workspace-drawer-status is-${item.status}`} aria-label={statusLabel}/>}
