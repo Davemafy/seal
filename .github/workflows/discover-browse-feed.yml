@@ -1,0 +1,54 @@
+name: Discover Browse source feed
+
+on:
+  push:
+    branches: [cloudflare-preview]
+    paths:
+      - 'lib/browse-source-registry.ts'
+      - 'scripts/discover-browse-feed.ts'
+      - '.github/workflows/discover-browse-feed.yml'
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: seal-browse-discovery
+  cancel-in-progress: true
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      GROQ_BASE_URL: https://api.groq.com/openai/v1
+      GROQ_MODEL: openai/gpt-oss-20b
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: cloudflare-preview
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install PDF text tools
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+      - name: Discover and gate official sources
+        run: node --import tsx scripts/discover-browse-feed.ts
+      - name: Commit verified feed updates
+        run: |
+          git config user.name "seal-feed-worker"
+          git config user.email "actions@users.noreply.github.com"
+          git fetch origin cloudflare-preview
+          git rebase origin/cloudflare-preview
+          git add lib/browse-discovered.generated.json
+          if git diff --cached --quiet; then
+            echo "No verified Browse feed changes."
+            exit 0
+          fi
+          git commit -m "Refresh verified Browse feed"
+          git push origin HEAD:cloudflare-preview

@@ -1,3 +1,5 @@
+import discoveredFeed from './browse-discovered.generated.json';
+
 export type BrowseCategory=
  |'jury-duty-payment-demand'
  |'fake-summons-arrest-threat'
@@ -27,9 +29,11 @@ export type BrowseCase={
  excerpt:string;
  runText?:string;
  preview:{type:'pdf'|'image';url:string;alt:string};
+ sourcePublishedAt?:string;
+ discoveredAt?:string;
 };
 
-export const browseCases:BrowseCase[]=[
+export const curatedBrowseCases:BrowseCase[]=[
  {
   id:'india-supreme-court-fake-website-advisory',category:'official-scam-guidance',section:'court-message-scams',
   title:'Supreme Court warning about fake court websites',language:'English',ocrLanguage:'eng',jurisdiction:'India',country:'India',issuer:'Supreme Court of India',
@@ -111,6 +115,21 @@ export const browseCases:BrowseCase[]=[
   runText:'UNITED STATES DISTRICT COURT — DISTRICT OF CONNECTICUT\n450 Main Street, Hartford, CT 06103\nJURY SUMMONS\nJuror No.: 02-0140\nREPORTING DATES: March 28(Tue.), May 3(Wed.) & May 4(Thu.), 2017\nPHONE TO CALL: Status Check Only: Call 1-866-388-2430 after 5:30 PM.',
   preview:{type:'pdf',url:'https://coop.ctd.uscourts.gov/sites/default/files/Sample%20Jury%20Summons%20Form.pdf',alt:'District of Connecticut official sample jury summons PDF'}
  }
+];
+
+const discoveredBrowseCases=(discoveredFeed as BrowseCase[]).filter(item=>Boolean(
+ item
+ &&item.id?.startsWith('feed-')
+ &&item.sourceUrl?.startsWith('https://')
+ &&item.preview?.url?.startsWith('https://')
+ &&item.title
+ &&item.issuer
+));
+
+const curatedUrls=new Set(curatedBrowseCases.map(item=>item.sourceUrl));
+export const browseCases:BrowseCase[]=[
+ ...curatedBrowseCases,
+ ...discoveredBrowseCases.filter(item=>!curatedUrls.has(item.sourceUrl))
 ];
 
 export function getBrowseCase(id:string|undefined){return browseCases.find(item=>item.id===id)}
