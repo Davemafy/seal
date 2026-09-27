@@ -1898,6 +1898,15 @@ async function upload(uploaded:File){
      <details className="technical-record" open={technicalOpen} onToggle={event=>setTechnicalOpen(event.currentTarget.open)}>
       <summary><span>Technical record</span><DesignChevron/></summary>
       <p>Extractor: {extractionMode} · {resolverSummary}</p>
+      {!!verification.lanes?.length&&<div className="verification-lanes">
+       {verification.lanes.map(lane=><div className="verification-lane" key={lane.id}>
+        <span className={'verification-lane-state is-'+lane.status} aria-hidden="true"/>
+        <div>
+         <strong>{lane.label}</strong>
+         <small>{lane.summary}{typeof lane.duration_ms==='number'?' · '+lane.duration_ms+' ms':''}</small>
+        </div>
+       </div>)}
+      </div>}
       {technicalEvidence.map((evidence,index)=><p key={evidence.url||index}>{evidence.title} · {evidence.source_mode} · {evidence.checked_at} · <a href={evidence.url} target="_blank" rel="noopener noreferrer">Original source</a></p>)}
      </details>
 
