@@ -25,6 +25,7 @@
     "pdfjs-dist": "^6.3.289",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "sonner": "^2.0.8",
     "tesseract.js": "^7.0.0",
     "three": "^0.180.0",
     "zod": "^4.6.5",
