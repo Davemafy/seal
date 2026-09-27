@@ -967,13 +967,13 @@ async function upload(uploaded:File){
   </aside>
   <header className="seal-nav mobile-only-nav">
    <a href="/" className="mobile-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></a>
-   {!text
+   {!verification
     ?<a href="/browse" className="mobile-nav-action">Browse</a>
     :<button className="mobile-nav-action mobile-nav-button" type="button" onClick={clear}>New check</button>}
   </header>
 
-  {!text?
-   <section className="entry-shell">
+  {!verification?
+   <section className={`entry-shell ${busy?'is-processing':''}`}>
    <div className="entry-copy">
      <h1>Check a court message</h1>
      <p>See what it asks you to do, what the court can confirm, and where to check next.</p>
@@ -987,7 +987,24 @@ async function upload(uploaded:File){
         onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
         onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
         <span className="upload-group">
-         <span className="upload-copy">{busy&&<img className="upload-busy-mark" src="/brand/seal-mark-black.svg" alt=""/>}{busy&&<span className="upload-process-label">ON THIS DEVICE</span>}<strong>{busy?(status==='Reading text from the image'?'Reading image':status==='Reading text from the PDF'?'Reading PDF':status):'Upload a notice or screenshot'}</strong><small>{busy?(status==='Reading text from the image'?'Reading the words in your image. Nothing has been sent yet.':status==='Reading text from the PDF'?'Reading the text layer in this PDF. Nothing has been sent yet.':'Preparing the file locally.'):'Drop here or browse files · PDF, PNG, or JPG · up to 16 MB'}</small></span>
+         <span className="upload-copy">
+          {busy&&<img className="upload-busy-mark" src="/brand/seal-mark-black.svg" alt=""/>}
+          {busy&&<span className="upload-process-label">{status==='Checking independent sources'?'PUBLIC SOURCE CHECK':status==='Reading requested actions'?'MESSAGE STRUCTURE':'ON THIS DEVICE'}</span>}
+          <strong>{busy?(
+           status==='Reading text from the image'?'Reading image':
+           status==='Reading text from the PDF'?'Reading PDF':
+           status==='Reading requested actions'?'Finding the requested action':
+           status==='Checking independent sources'?'Checking public sources':
+           status
+          ):'Upload a notice or screenshot'}</strong>
+          <small>{busy?(
+           status==='Reading text from the image'?'Reading the words in your image. Nothing has been sent yet.':
+           status==='Reading text from the PDF'?'Reading the text layer in this PDF. Nothing has been sent yet.':
+           status==='Reading requested actions'?'The document is read. SEAL is structuring what it asks you to do.':
+           status==='Checking independent sources'?'Comparing supported details with independent public sources.':
+           'Preparing the file locally.'
+          ):'Drop here or browse files · PDF, PNG, or JPG · up to 16 MB'}</small>
+         </span>
          {!busy&&<span className="upload-browse">Browse files</span>}
         </span>
         
@@ -1060,7 +1077,7 @@ async function upload(uploaded:File){
     </header>
 
     {file?.kind==='pdf'&&<StoryPdfPage url={file.preview} preloadOnly onReady={()=>setStoryArtifactReady(true)}/>}
-    {file?.sample&&<div className="source-failure sample-warning" role="status">This document is marked SAMPLE. It is an example form, not a summons to act on. Claim checks below do not authenticate an individual notice.</div>}
+    {file?.sample&&<div className="source-failure sample-warning" role="status"><strong>SAMPLE DOCUMENT</strong><span>Example form only — not a summons to act on.</span></div>}
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
 
     {verification&&ready&&storyOpen&&<div className={`story-overlay ${storyClosing?'is-closing':''}`} role="dialog" aria-modal="true" aria-label="SEAL verification review">
