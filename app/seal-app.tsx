@@ -1015,8 +1015,10 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   if(!hydrated||localeInitialized.current)return;
   localeInitialized.current=true;
   const browserLocale=typeof navigator!=='undefined'?(navigator.languages?.[0]||navigator.language||'en'):'en';
-  setDisplayLocale(displayLocaleFor(browserLocale));
-  setOcrLanguage(ocrLanguageForLocale(browserLocale));
+  let preferred=displayLocaleFor(browserLocale);
+  try{preferred=displayLocaleFor(window.localStorage.getItem(DISPLAY_LOCALE_KEY)||browserLocale)}catch{}
+  setDisplayLocale(preferred);
+  setOcrLanguage(ocrLanguageForLocale(preferred));
  },[hydrated]);
 
  useEffect(()=>{
@@ -1224,6 +1226,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   setTranslatedResult({});
   setResultTranslationState('idle');
   setDisplayLocale(locale);
+  try{window.localStorage.setItem(DISPLAY_LOCALE_KEY,locale)}catch{}
   setLanguageMenuOpen(false);
  }
 
@@ -2292,6 +2295,7 @@ async function upload(uploaded:File){
 
 const WORKSPACE_LIST_KEY='seal:workspace-list:v1';
 const ONBOARDING_KEY='seal:onboarding:v1';
+const DISPLAY_LOCALE_KEY='seal:display-locale:v1';
 
 export default function SealApp({initialDemo=false,initialText='',initialRun=false}:{initialDemo?:boolean;initialText?:string;initialRun?:boolean}){
  const [workspaces,setWorkspaces]=useState<WorkspaceMeta[]>([{id:'primary',title:'New check',status:'idle'}]);
