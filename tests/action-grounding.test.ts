@@ -1,6 +1,6 @@
 import {describe,expect,it} from 'vitest';
 import {emptyExtraction} from '../lib/types';
-import {claimsFromExtraction,groundedModelActions} from '../lib/extract';
+import {claimsFromExtraction,groundedModelActions,sanitizeStructuredExtraction,fallbackExtract} from '../lib/extract';
 
 const action=(exact_quote:string,kind:'pay'|'contact'|'navigate'|'disclose'|'appear',confidence=90)=>({
  exact_quote,kind,verb:kind==='contact'?'call':kind==='navigate'?'scan':kind==='disclose'?'provide':kind==='appear'?'appear':'pay',
@@ -45,5 +45,22 @@ describe('model action grounding',()=>{
   const text='District Court\nPay the fine now.';
   expect(claimsFromExtraction(emptyExtraction(),text).some(claim=>claim.action?.kind==='pay')).toBe(true);
   expect(claimsFromExtraction({...emptyExtraction(),requested_actions:[]},text).some(claim=>claim.action)).toBe(false);
+ });
+
+ it('preserves grounded non-US court details and exact model actions',()=>{
+  const text='High Court of Lagos State\nCase: LD-2026-481\nPlease pay ₦15,000 at payments.judiciary.gov.ng or call +234 803 555 0100.';
+  const extracted={...emptyExtraction(),court_name:'High Court of Lagos State',requested_actions:[action('Please pay ₦15,000 at payments.judiciary.gov.ng or call +234 803 555 0100.','pay')]};
+  expect(sanitizeStructuredExtraction(extracted,text).court_name).toBe('High Court of Lagos State');
+  expect(claimsFromExtraction(extracted,text).find(c=>c.action?.kind==='pay')?.exact_source_text).toContain('₦15,000');
+  const fallback=fallbackExtract(text);
+  expect(fallback.phone_numbers).toContain('+234 803 555 0100');
+  expect(fallback.urls).toContain('payments.judiciary.gov.ng');
+ });
+
+ it('keeps a grounded non-English court and action in pasted text',()=>{
+  const text='Juzgado de Primera Instancia de Madrid\nPreséntese ante el juzgado el 12 de octubre.';
+  const extracted={...emptyExtraction(),court_name:'Juzgado de Primera Instancia de Madrid',requested_actions:[action('Preséntese ante el juzgado el 12 de octubre.','appear')]};
+  expect(sanitizeStructuredExtraction(extracted,text).court_name).toBe('Juzgado de Primera Instancia de Madrid');
+  expect(groundedModelActions(extracted,text)[0]?.source_text).toBe('Preséntese ante el juzgado el 12 de octubre.');
  });
 });

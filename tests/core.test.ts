@@ -296,4 +296,11 @@ describe('public-source intelligence layer',()=>{
   expect(v.signals||[]).toHaveLength(0);
   expect(v.results.every(r=>r.verdict==='COULD_NOT_VERIFY')).toBe(true);
  });
+ it('does not apply a US traffic warning to an unsupported country',async()=>{
+  const text='HIGH COURT OF LAGOS STATE\nCase No: LA-26-48192\nParking violation. Appear at the court hearing or pay the fine by scanning the QR code.';
+  const e=fallbackExtract(text),claims=claimsFromExtraction(e,text);
+  const v=await verifyClaims(claims,e.court_name,'SNAPSHOT','',text);
+  expect(v.signals?.some(s=>s.id==='traffic-qr-warning')).toBe(false);
+  expect(v.results.every(r=>r.verdict==='COULD_NOT_VERIFY')).toBe(true);
+ });
 });

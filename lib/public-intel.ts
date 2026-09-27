@@ -66,6 +66,7 @@ const vaStatutes:Record<string,{evidence:Evidence;topic:'behavioral-health-parki
 const normalize=(value:string)=>value.replace(/\s+/g,' ').trim();
 const sectionFrom=(value:string)=>value.match(/46\.2-\d+(?:\.\d+)?(?::\d+)?/i)?.[0]||'';
 const isVirginia=(text:string)=>/\b(?:commonwealth of virginia|virginia court|district court of virginia|richmond,?\s*va|va\.?\s*code|virginia code)\b/i.test(text);
+const isUsContext=(text:string)=>/\b(?:united states|u\.?s\.?\s+(?:district|federal|court)|commonwealth of virginia|state of (?:maryland|virginia|texas|florida|california|connecticut)|virginia court|richmond,?\s*va|dallas,?\s*texas|miami-?dade|baltimore,?\s*maryland|va\.?\s*code|virginia code)\b/i.test(text);
 const hasTrafficSubject=(text:string)=>/\b(?:traffic|parking|toll|vehicle|citation)\b/i.test(text);
 const hasTollSubject=(text:string)=>/\b(?:electronic toll|toll violation|toll evasion|unpaid toll|failure to pay[^\n]{0,50}toll)\b/i.test(text);
 const hasRequested=(claims:Claim[],kind:string)=>claims.some(c=>c.action?.kind===kind);
@@ -127,7 +128,7 @@ export function analyzePublicIntelligence(text:string,claims:Claim[],results:Res
   &&(hasScan(claims,compact)||rawScan)
   &&(claims.some(c=>c.type==='docket')||rawCase)
   &&(hasRequested(claims,'appear')||rawAppear);
- if(trafficPattern){
+ if(trafficPattern&&isUsContext(compact)){
   signals.push({
    id:'traffic-qr-warning',
    kind:'OFFICIAL_WARNING',

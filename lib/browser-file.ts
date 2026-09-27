@@ -98,12 +98,12 @@ type OcrCandidate={result:OcrResult;lines:RecognizedLine[];quality:number};
 const COURT_CUES=/\b(?:court|district|traffic|jury|summons|judge|case|notice|hearing|violation)\b/gi;
 const ACTION_CUES=/\b(?:payment|pay|remit|appear|scan|qr|call|visit|provide|submit|deadline)\b/gi;
 const CASE_CUE=/\b(?:case|docket)\s*(?:no\.?|number|#)?\s*[:#-]?\s*[A-Z0-9]{1,6}(?:\s*[-–]\s*[A-Z0-9]{1,10}){1,5}\b/i;
-const PHONE_CUE=/(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}/;
-const URL_CUE=/(?:https?:\/\/)?(?:[a-z0-9-]+\.)+(?:gov|com|org|edu|net|mil|us|ca|io|uk|co|info|int)\b/i;
+const PHONE_CUE=/(?:\+?\d{1,3}[\s.-]?)?(?:\(\d{2,4}\)|\d{2,4})[\s.-]\d{3,4}[\s.-]\d{4}/;
+const URL_CUE=/(?:https?:\/\/)?(?:[a-zA-Z0-9-]+\.)+[a-z]{2,24}\b/;
 
 function readableRatio(text:string){
  const compact=text.replace(/\s/g,'');if(!compact)return 0;
- const readable=(compact.match(/[A-Za-z0-9.,:;()/#$%&@'’"!?+\-–—]/g)||[]).length;
+ const readable=(compact.match(/[\p{L}\p{M}\p{N}.,:;()/#$₦₹£€%&@'’"!?+\-–—]/gu)||[]).length;
  return readable/compact.length;
 }
 function garbageRatio(text:string){

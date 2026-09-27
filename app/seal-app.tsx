@@ -68,8 +68,8 @@ function claimTextUseful(claim:Claim){
  const value=cleanDisplayText(claim.action?.source_text||claim.exact_source_text||claim.value||'');
  if(value.length<4)return false;
  const compact=value.replace(/\s/g,'');
- const letters=(compact.match(/[a-z]/gi)||[]).length;
- const garbage=(compact.match(/[^a-z0-9.,:;()/#$%&@'’"!?+\-–—]/gi)||[]).length;
+ const letters=(compact.match(/\p{L}/gu)||[]).length;
+ const garbage=(compact.match(/[^\p{L}\p{M}\p{N}.,:;()/#$₦₹£€%&@'’"!?+\-–—]/gu)||[]).length;
  return letters>=3&&garbage<=Math.max(2,Math.floor(compact.length*.08));
 }
 function claimReliable(claim:Claim){
@@ -805,7 +805,8 @@ async function upload(uploaded:File){
     ?extractedClaims.map(claim=>({...claim,verification_eligible:true}))
     :extractedClaims;
    const reliableAction=found.some(claim=>Boolean(claim.action)&&claimReliable(claim));
-   const courtRelated=/\b(?:court|jury|summons|hearing|case|docket|judge|tribunal|magistrate|citation|parking violation)\b/i.test(sourceText);
+   const courtRelated=/\b(?:court|jury|summons|hearing|case|docket|judge|tribunal|magistrate|citation|parking violation|juzgado|gericht|tribunale|mahakama|mahkama|pengadilan|cour)\b|न्यायालय|अदालत/iu.test(sourceText)
+    ||Boolean(extraction.court_name&&sourceText.toLocaleLowerCase().includes(extraction.court_name.toLocaleLowerCase()));
    if(!sourceCurated&&(!courtRelated||!reliableAction))throw new Error(!courtRelated
     ?'This does not look like a court message SEAL can check. Try a court notice, text, or email.'
     :'We couldn’t reliably read the important instructions in this document. Try a clearer image or paste the message text.');
@@ -1269,7 +1270,7 @@ async function upload(uploaded:File){
       {messageDetails.length>0||scheduleQuote||noPaymentQuote?<dl className="message-detail-list">{messageDetails.map(claim=><div key={claim.id}><dt>{claim.type==='location'?'Location named':claim.label}</dt><dd>{cleanDisplayText(claim.value)}</dd></div>)}{scheduleQuote&&<div><dt>Schedule stated</dt><dd>{cleanDisplayText(scheduleQuote)}</dd></div>}{noPaymentQuote&&<div><dt>Payment statement</dt><dd>{cleanDisplayText(noPaymentQuote)}</dd></div>}</dl>:<p>No court or case details could be read reliably.</p>}
       <p>These are details printed in the message, not facts confirmed by a court. SEAL cannot establish whether the case exists or who sent it.</p>
       <p>If you need to respond, give the court name and case number above to a clerk reached through an official court site. Do not use payment or contact details supplied in the message until the court confirms them.</p>
-      {/\b(?:united states district court|u\.?s\.? district court|federal court)\b/i.test(text)&&<a href="https://www.uscourts.gov/federal-court-finder/find" target="_blank" rel="noopener noreferrer">Find the court through the U.S. Courts directory →</a>}
+      {/\b(?:united states district court|u\.?s\.? district court)\b/i.test(text)&&<a href="https://www.uscourts.gov/federal-court-finder/find" target="_blank" rel="noopener noreferrer">Find the court through the U.S. Courts directory →</a>}
      </div>}
      {verification?.safe_action&&<div className="safe-route" id="next-step">
       <div>

@@ -1,8 +1,8 @@
 import {emptyExtraction,type Extraction,type Claim,type Token,type ActionNode,type ClaimType} from './types';
 
-const PHONE=/(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}/;
-const URL=/(?:https?:\/\/)?(?:[a-z0-9-]+\.)+(?:gov|com|org|edu|net|mil|us|ca|io|uk|co|info|int)\b(?:\/[\w./?=&%-]*)?/i;
-const MONEY=/(?:\$\s*\d+(?:[,.]\d{3})*(?:\.\d{2})?|\b\d+(?:[,.]\d{3})*(?:\.\d{2})?\s*(?:usd|dollars?)\b)/i;
+const PHONE=/(?:\+?\d{1,3}[\s.-]?)?(?:\(\d{2,4}\)|\d{2,4})[\s.-]\d{3,4}[\s.-]\d{4}/;
+const URL=/(?:https?:\/\/)?(?:[a-zA-Z0-9-]+\.)+[a-z]{2,24}\b(?:\/[\w./?=&%-]*)?/;
+const MONEY=/(?:[$₦₹£€]\s*\d+(?:[,.]\d{3})*(?:\.\d{2})?|\b(?:USD|NGN|INR|GBP|EUR|CAD|AUD)\s*\d+(?:[,.]\d{3})*(?:\.\d{2})?|\b\d+(?:[,.]\d{3})*(?:\.\d{2})?\s*(?:USD|NGN|INR|GBP|EUR|CAD|AUD|dollars?)\b)/i;
 const ACTION_VERBS=/\b(pay|remit|submit|transfer|settle|clear(?:ed)?|call|contact|phone|text|open|visit|click|scan|use|check|reply|respond|provide|share|enter|send|disclose|file|sign|complete|return|appear|report|attend)\b/i;
 const FIELD_CONFIDENCE=80;
 
@@ -15,14 +15,15 @@ function courtLineScore(line:string){
  return score;
 }
 
+const COURT_WORD=/(?:\b(?:court|tribunal|juzgado|gericht|tribunale|mahakama|mahkama|pengadilan)\b|\bcour\b|न्यायालय|अदालत)/iu;
 function plausibleCourtName(value:string){
- if(!/\bcourt\b/i.test(value))return false;
+ if(!COURT_WORD.test(value))return false;
  const compact=value.replace(/\s/g,'');
- const letters=(compact.match(/[a-z]/gi)||[]).length;
- const digits=(compact.match(/\d/g)||[]).length;
- const symbols=(compact.match(/[^a-z0-9,.'’&()\-–—]/gi)||[]).length;
+ const letters=(compact.match(/\p{L}/gu)||[]).length;
+ const digits=(compact.match(/\p{N}/gu)||[]).length;
+ const symbols=(compact.match(/[^\p{L}\p{M}\p{N},.'’&()\-–—]/gu)||[]).length;
  const alphaRatio=letters/Math.max(1,compact.length);
- const startsClean=/^[a-z0-9]/i.test(value.trim());
+ const startsClean=/^[\p{L}\p{N}]/u.test(value.trim());
  return letters>=8&&digits<=1&&symbols<=1&&alphaRatio>=.7&&startsClean;
 }
 
@@ -189,8 +190,8 @@ export function groundedModelActions(extraction:Extraction,text:string):ActionNo
   }
   if(/^(?:phone to call|telephone|contact information|jury service contact)\s*:?(?:\s+only)?$/i.test(source))continue;
   const compact=source.replace(/\s/g,'');
-  if((compact.match(/[a-z]/gi)||[]).length<5)continue;
-  if((compact.match(/[^a-z0-9.,:;()/#$%&@'’"!?+\-–—]/gi)||[]).length>Math.max(2,Math.floor(compact.length*.08)))continue;
+  if((compact.match(/\p{L}/gu)||[]).length<5)continue;
+  if((compact.match(/[^\p{L}\p{M}\p{N}.,:;()/#$₦₹£€%&@'’"!?+\-–—]/gu)||[]).length>Math.max(2,Math.floor(compact.length*.08)))continue;
   const target=candidate.target_value.trim();
   const targetGrounded=target&&source.toLowerCase().includes(target.toLowerCase());
   const deadline=candidate.deadline.trim();
@@ -206,7 +207,7 @@ export function groundedModelActions(extraction:Extraction,text:string):ActionNo
 export function sanitizeStructuredExtraction(extraction:Extraction,text:string):Extraction{
  const next:Extraction={...extraction,payment_demand:{...extraction.payment_demand},phone_numbers:[...extraction.phone_numbers],emails:[...extraction.emails],urls:[...extraction.urls],information_requests:[...extraction.information_requests],threats:[...extraction.threats],uncertain_fields:[...extraction.uncertain_fields]};
  const recoveredCourt=extractCourtName(text.split(/\n/).map(s=>s.trim()).filter(Boolean));
- if(next.court_name&&!plausibleCourtName(next.court_name))next.court_name=recoveredCourt;
+ if(next.court_name&&(!plausibleCourtName(next.court_name)||!text.toLocaleLowerCase().includes(next.court_name.toLocaleLowerCase())))next.court_name=recoveredCourt;
  else if(next.court_name&&genericCourtName(next.court_name)&&recoveredCourt.length>next.court_name.length)next.court_name=recoveredCourt;
  else if(!next.court_name&&recoveredCourt)next.court_name=recoveredCourt;
  const value=next.juror_or_reference_number.trim();
@@ -234,7 +235,7 @@ export function fallbackExtract(text:string):Extraction {
  e.case_or_docket_number=caseLine.match(/\b(?:case|docket)\s*(?:number|no\.?|#)?\s*[:#-]?\s*([A-Z0-9]{1,6}(?:\s*[-–]\s*[A-Z0-9]{1,10}){1,5})\b/i)?.[1]?.replace(/\s*[-–]\s*/g,'-')||'';
  e.phone_numbers=[...new Set(text.match(new RegExp(PHONE.source,'g'))||[])];
  e.emails=[...new Set(text.match(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi)||[])];
- e.urls=[...new Set(text.match(new RegExp(URL.source,'gi'))||[])].filter(s=>!e.emails.some(email=>email.includes(s)));
+ e.urls=[...new Set(text.match(new RegExp(URL.source,'g'))||[])].filter(s=>!e.emails.some(email=>email.includes(s)));
  e.reporting_date=lines.find(s=>/report(?:ing)?\s+date\s*:/i.test(s))?.replace(/^.*?report(?:ing)?\s+date\s*:\s*/i,'')||'';
  const actions=extractActionGraph(text),pay=actions.find(a=>a.kind==='pay');
  if(pay){
