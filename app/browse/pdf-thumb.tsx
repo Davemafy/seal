@@ -14,6 +14,7 @@ function Skeleton(){
 export default function PdfThumb({id,alt,priority=false}:{id:string;alt:string;priority?:boolean}){
  const host=useRef<HTMLDivElement>(null);
  const canvas=useRef<HTMLCanvasElement>(null);
+ const [staticState,setStaticState]=useState<'loading'|'ready'|'failed'>('loading');
  const [failed,setFailed]=useState(false);
  const [ready,setReady]=useState(false);
  const [visible,setVisible]=useState(priority);
@@ -33,7 +34,7 @@ export default function PdfThumb({id,alt,priority=false}:{id:string;alt:string;p
  },[priority]);
 
  useEffect(()=>{
-  if(!visible)return;
+  if(!visible||staticState!=='failed')return;
   let cancelled=false;
   let task:{destroy:()=>Promise<void>}|undefined;
   let renderTask:{promise:Promise<void>;cancel?:()=>void}|undefined;
@@ -81,11 +82,23 @@ export default function PdfThumb({id,alt,priority=false}:{id:string;alt:string;p
    try{renderTask?.cancel?.()}catch{}
    void task?.destroy();
   };
- },[id,visible]);
+ },[id,visible,staticState]);
 
- return <div className={`pdf-thumb ${ready?'is-ready':''} ${failed?'has-failed':''}`} ref={host}>
-  {!ready&&!failed&&<Skeleton/>}
-  <canvas ref={canvas} role="img" aria-label={alt}/>
-  {failed&&<div className="pdf-thumb-fallback"><span>Preview unavailable</span><small>The original source is still available.</small></div>}
+ const displayReady=staticState==='ready'||ready;
+ const displayFailed=staticState==='failed'&&failed;
+
+ return <div className={`pdf-thumb ${displayReady?'is-ready':''} ${displayFailed?'has-failed':''}`} ref={host}>
+  {!displayReady&&!displayFailed&&<Skeleton/>}
+  <img
+   className="case-source-static"
+   src={`/browse-assets/${id}.jpg`}
+   alt={alt}
+   loading={priority?'eager':'lazy'}
+   fetchPriority={priority?'high':'auto'}
+   onLoad={()=>setStaticState('ready')}
+   onError={()=>setStaticState('failed')}
+  />
+  {staticState==='failed'&&<canvas ref={canvas} role="img" aria-label={alt}/>}
+  {displayFailed&&<div className="pdf-thumb-fallback"><span>Preview unavailable</span><small>Open the official source to inspect the original.</small></div>}
  </div>;
 }

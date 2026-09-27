@@ -12,7 +12,9 @@ function Skeleton(){
  </div>;
 }
 
-export default function ImageThumb({id,alt}:{id:string;alt:string}){
+export default function ImageThumb({id,alt,sourceUrl,priority=false}:{id:string;alt:string;sourceUrl:string;priority?:boolean}){
+ const proxy=`/api/browse-asset?id=${encodeURIComponent(id)}`;
+ const [src,setSrc]=useState(sourceUrl);
  const [ready,setReady]=useState(false);
  const [failed,setFailed]=useState(false);
 
@@ -20,11 +22,15 @@ export default function ImageThumb({id,alt}:{id:string;alt:string}){
   {!ready&&!failed&&<Skeleton/>}
   <img
    className="case-source-image"
-   src={`/api/browse-asset?id=${encodeURIComponent(id)}`}
+   src={src}
    alt={alt}
-   loading="lazy"
+   loading={priority?'eager':'lazy'}
+   fetchPriority={priority?'high':'auto'}
    onLoad={()=>setReady(true)}
-   onError={()=>setFailed(true)}
+   onError={()=>{
+    if(src!==proxy){setReady(false);setSrc(proxy);return}
+    setFailed(true);
+   }}
   />
   {failed&&<div className="pdf-thumb-fallback"><span>Preview unavailable</span><small>The original source is still available.</small></div>}
  </div>;

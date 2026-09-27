@@ -1,0 +1,50 @@
+name: Sync Browse source assets
+
+on:
+  push:
+    branches: [cloudflare-preview]
+    paths:
+      - 'lib/browse-cases.ts'
+      - 'scripts/sync-browse-assets.ts'
+      - '.github/workflows/sync-browse-assets.yml'
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: seal-browse-source-assets
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: cloudflare-preview
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install PDF renderer
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+      - name: Refresh official-source thumbnails
+        run: node --import tsx scripts/sync-browse-assets.ts
+      - name: Commit changed source snapshots
+        run: |
+          git config user.name "seal-source-sync"
+          git config user.email "actions@users.noreply.github.com"
+          git fetch origin cloudflare-preview
+          git rebase origin/cloudflare-preview
+          git add public/browse-assets
+          if git diff --cached --quiet; then
+            echo "No source snapshots changed."
+            exit 0
+          fi
+          git commit -m "Refresh Browse source snapshots"
+          git push origin HEAD:cloudflare-preview

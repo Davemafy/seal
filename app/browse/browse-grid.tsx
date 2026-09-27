@@ -16,11 +16,11 @@ const filters:{id:BrowseFilter;label:string}[]=[
 ];
 
 function CaseMedia({item,priority=false}:{item:BrowseCase;priority?:boolean}){
- return <div className={`case-visual ${item.preview.type==='image'?'is-image':'is-pdf'}`}>
+ return <a className={`case-visual ${item.preview.type==='image'?'is-image':'is-pdf'}`} href={item.sourceUrl} target="_blank" rel="noopener noreferrer" aria-label={`Open original source for ${item.title}`}>
   {item.preview.type==='pdf'
    ?<PdfThumb id={item.id} alt={item.preview.alt} priority={priority}/>
-   :<ImageThumb id={item.id} alt={item.preview.alt}/>}
- </div>;
+   :<ImageThumb id={item.id} alt={item.preview.alt} sourceUrl={item.preview.url} priority={priority}/>}
+ </a>;
 }
 
 function matchesFilter(item:BrowseCase,filter:BrowseFilter){
@@ -58,7 +58,7 @@ export default function BrowseGrid({items}:{items:BrowseCase[]}){
      <p className="case-source">Source: {item.sourceTitle}</p>
      <div className="case-actions">
       <Link className="case-run-action" href={`/?case=${item.id}`}>Run in SEAL</Link>
-      <a className="case-source-action" href={item.sourceUrl} target="_blank" rel="noopener noreferrer">Open original <span aria-hidden="true">↗</span></a>
+      <a className="case-source-action" href={item.sourceUrl} target="_blank" rel="noopener noreferrer">Open original</a>
      </div>
     </div>
    </article>)}
