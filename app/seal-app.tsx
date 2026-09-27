@@ -1778,8 +1778,6 @@ async function upload(uploaded:File){
        </svg>
        <span>{reviewCountdown}</span>
       </div>
-      <strong>Verification review</strong>
-      <small>Starts automatically</small>
      </div>
     </div>,document.body)}
 
