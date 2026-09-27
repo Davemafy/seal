@@ -350,7 +350,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const storySourceCopy=storySignal?.summary||storyEvidence?.excerpt||storyResult?.explanation||'SEAL could not establish this detail from a supported source.';
  const storySourceDisplay=cinematicExcerpt(storySourceCopy);
  const storyVerdict=storySignal?.id==='nh-toll-process'
-  ?'New Hampshire publishes a different collection process.'
+  ?'New Hampshire publishes a specific collection process.'
   :storySignal?.id.startsWith('curated-')
    ?'The issuing authority published this example as a scam.'
    :storySignal?.id==='traffic-qr-warning'
@@ -443,8 +443,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const nhProcessSignal=verification?.signals?.find(signal=>signal.id==='nh-toll-process');
  const decision=nhProcessSignal
   ?{
-   title:'New Hampshire publishes a different process for this payment demand.',
-   summary:'The notice asks for full payment of tolls, fines, fees, and court costs. New Hampshire law describes transaction-specific toll notices and a defined enforcement path; Judicial Branch materials separately describe court judgment collection.'
+   title:'Compare this payment demand with New Hampshire’s official process.',
+   summary:'The notice asks for full payment of tolls, fines, fees, and court costs. New Hampshire law describes transaction-specific toll notices and a defined enforcement path; Judicial Branch materials separately describe court judgment collection. SEAL has not verified this notice or the amount owed.'
   }
   :unsupportedWithoutIndependentFinding
    ?{
