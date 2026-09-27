@@ -66,7 +66,7 @@ You must appear at the court registry on October 14, 2026.
 Call +91 11 5555 0199 to confirm your attendance.`);
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await expect(page.getByRole('heading',{name:'SEAL couldn’t independently verify this court yet.'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'This message needs a direct court check.'})).toBeVisible();
  await expect(page.getByText('This court is not in SEAL’s direct-check network yet.')).toBeVisible();
  const route=page.getByRole('link',{name:'Search India eCourts'});
  await expect(route).toBeVisible();
@@ -85,8 +85,10 @@ FINAL COURT-ORDERED MANDATORY COLLECTION NOTICE
 Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administrative fees, court costs, and enforcement surcharges.`);
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await expect(page.locator('#review-summary').getByRole('heading',{name:'Compare this payment demand with New Hampshire’s official process.'})).toBeVisible();
- await expect(page.locator('#review-summary').getByText(/SEAL has not verified this notice or the amount owed/i)).toBeVisible();
+ await expect(page.locator('#review-summary').getByRole('heading',{name:'Check the toll or case outside this notice'})).toBeVisible();
+ await expect(page.getByText('Official process',{exact:true})).toBeVisible();
+ await expect(page.getByText('New Hampshire publishes a specific process for toll and court collections')).toBeVisible();
+ await expect(page.getByText(/These sources can inform the check, but they cannot confirm who sent the message/i)).toBeVisible();
  await expect(page.getByRole('link',{name:'Open public source'})).toHaveAttribute('href','https://www.gc.nh.gov/rsa/html/xx/236/236-mrg.htm');
  await expect(page.getByRole('link',{name:'Open NH E-ZPass'})).toHaveAttribute('href','https://www.ezpassnh.com/');
  await expect(page.getByText('1-855-212-1234',{exact:true})).toBeVisible();
@@ -116,7 +118,7 @@ FINAL COURT-ORDERED MANDATORY COLLECTION NOTICE
 Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administrative fees, court costs, and enforcement surcharges.`);
  await active.getByRole('button',{name:'Check this message'}).click();
  await expect(active.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await expect(active.getByRole('heading',{name:'Compare this payment demand with New Hampshire’s official process.'})).toBeVisible();
+ await expect(active.getByRole('heading',{name:'Check the toll or case outside this notice'})).toBeVisible();
 
  const checks=active.locator('.rail-check-list .rail-check');
  await expect(checks).toHaveCount(2);
@@ -128,7 +130,7 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
 
  await active.locator('.rail-check-list .rail-check').nth(1).click();
  active=page.locator('.seal-workspace-instance:not([hidden])');
- await expect(active.getByRole('heading',{name:'Compare this payment demand with New Hampshire’s official process.'})).toBeVisible();
+ await expect(active.getByRole('heading',{name:'Check the toll or case outside this notice'})).toBeVisible();
  assertNoRuntimeErrors();
 });
 
