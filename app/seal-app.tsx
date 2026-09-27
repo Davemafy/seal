@@ -392,8 +392,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    })
   :[];
  const directCourtUnavailable=verification?.resolver_id==='unsupported';
+ const curatedAuthorityMatch=Boolean(storySignal?.id.startsWith('curated-')&&verification?.safe_action?.evidence?.length);
  const officialDirectory=useMemo(()=>officialCourtDirectoryFor(text),[text]);
- const directCheckSummary=directCourtUnavailable?'SEAL did not classify the sender, case, or payment request as genuine or fraudulent.':'';
+ const directCheckSummary=directCourtUnavailable&&!curatedAuthorityMatch?'SEAL did not classify the sender, case, or payment request as genuine or fraudulent.':'';
  const decisionRelationship=storySignal?.id.startsWith('curated-')
   ?'The issuing authority published this artifact as a scam example.'
   :storySignal?.kind==='SOURCE_CONFLICT'
@@ -433,7 +434,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   &&!(verification?.signals?.length)
   &&directEvidenceFindings.length===0
  );
- const decision=directCourtUnavailable
+ const decision=unsupportedWithoutIndependentFinding
   ?{
    title:'SEAL couldn’t independently verify this court yet.',
    summary:groundedActions.length
@@ -442,9 +443,11 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   }
   :decisionCopy(verification,decisionClaim);
  const groundedDecision=Boolean((decisionClaim&&claimReliable(decisionClaim))||groundedActions.length);
- const independentState=directCourtUnavailable
-  ?'Direct court check unavailable'
-  :decisionResult?.verdict==='MATCH'
+ const independentState=curatedAuthorityMatch
+  ?'Issuing authority match'
+  :directCourtUnavailable
+   ?'Direct court check unavailable'
+   :decisionResult?.verdict==='MATCH'
    ?'Independent match found'
    :decisionResult?.verdict==='MISMATCH'
     ?'Independent conflict found'
