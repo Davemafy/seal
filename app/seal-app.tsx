@@ -1958,17 +1958,19 @@ async function upload(uploaded:File){
         <p className="decision-summary">{translatedResult.decisionSummary||humanDecisionSummary}</p>
         {displayLocale!=='en'&&resultTranslationState==='translated'&&<p className="translation-note">{ui('translatedNote')}</p>}
         {displayLocale!=='en'&&resultTranslationState==='unavailable'&&<p className="translation-note is-unavailable" role="status">{ui('translationUnavailable')}</p>}
+         </div>
 
-        {primaryRoute&&<div className="decision-primary-route" data-testid="primary-next-step">
-         <span>{ui('nextStep')}</span>
-         <a href={primaryRoute.url} target="_blank" rel="noopener noreferrer">{primaryRoute.label}</a>
-         <small>Opens an independently sourced official service.</small>
-        </div>}
+         <div className="decision-summary-side">
+          {primaryRoute&&<div className="decision-primary-route" data-testid="primary-next-step">
+           <span>{ui('nextStep')}</span>
+           <a href={primaryRoute.url} target="_blank" rel="noopener noreferrer">{primaryRoute.label}</a>
+           <small>Opens an independently sourced official service.</small>
+          </div>}
 
-        {riskSummary&&!file?.sample&&<div className="decision-at-a-glance" data-testid="two-risk-result">
-         <div><span>This message</span><strong>{instructionStatus}</strong></div>
-         <div><span>The case</span><strong>{matterStatus}</strong></div>
-        </div>}
+          {riskSummary&&!file?.sample&&<div className="decision-at-a-glance" data-testid="two-risk-result">
+           <div><span>This message</span><strong>{instructionStatus}</strong></div>
+           <div><span>The case</span><strong>{matterStatus}</strong></div>
+          </div>}
          </div>
 
          <aside className="decision-visual" aria-label="Check snapshot">
