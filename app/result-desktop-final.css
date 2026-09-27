@@ -914,3 +914,87 @@
   line-height:20px!important
  }
 }
+
+
+/* Result tab shelf + metadata scale — align with Browse interaction language. */
+@media(min-width:901px){
+ .result-chapters{
+  width:max-content!important;
+  max-width:100%!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:4px!important;
+  margin:14px 0 0!important;
+  padding:4px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  border:0!important;
+  border-radius:11px!important;
+  background:#f1f1ee!important;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.035)!important;
+  scrollbar-width:none!important
+ }
+ .result-chapters::-webkit-scrollbar{
+  display:none!important
+ }
+ .result-chapters a{
+  position:relative!important;
+  flex:0 0 auto!important;
+  min-height:36px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:7px 12px!important;
+  border-radius:8px!important;
+  color:#666661!important;
+  background:transparent!important;
+  font-size:13.5px!important;
+  line-height:20px!important;
+  font-weight:560!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+  transition:background .14s ease,color .14s ease,box-shadow .14s ease!important
+ }
+ .result-chapters a:hover{
+  color:#111!important;
+  background:rgba(255,255,255,.62)!important
+ }
+ .result-chapters a.is-current{
+  color:#111!important;
+  background:#fff!important;
+  font-weight:650!important;
+  box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.035)!important
+ }
+ .result-chapters a::after,
+ .result-chapters a.is-current::after{
+  display:none!important;
+  content:none!important
+ }
+
+ .result-masthead-title,
+ .check-object-meta,
+ .result-slide-summary .decision-status,
+ .result-slide-summary .decision-primary-route>span,
+ .result-slide-summary .decision-primary-route>small,
+ .result-slide-summary .decision-at-a-glance span,
+ .result-slide-summary .decision-details>summary,
+ .result-slide-original small,
+ .result-slide-evidence small,
+ .result-slide-resolve small,
+ .evidence-source-meta,
+ .evidence-source-note,
+ .record-subheading>small,
+ .check-record-details dt,
+ .check-record-details dd{
+  font-size:13px!important;
+  line-height:19px!important
+ }
+
+ .result-slide-summary .decision-primary-route>a,
+ .safe-route a,
+ .official-directory-route a,
+ .unsupported-next-step a{
+  font-size:14px!important;
+  line-height:20px!important
+ }
+}
