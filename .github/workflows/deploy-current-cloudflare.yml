@@ -60,3 +60,5 @@ jobs:
           done
           echo "Live Worker did not become healthy within 2 minutes."
           exit 1
+
+# Deploy marker: Base-system mobile result repair 2026-09-27
