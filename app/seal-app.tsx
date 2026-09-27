@@ -1818,6 +1818,35 @@ async function upload(uploaded:File){
    <div className="entry-copy">
      <h1>{ui('checkCourtMessage')}</h1>
      <p>{ui('entrySummary')}</p>
+     <div className="entry-motion" aria-hidden="true">
+      <svg viewBox="0 0 320 320" role="presentation">
+       <g className="entry-motion-petals">
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(0.00 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(16.36 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(32.73 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(49.09 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(65.45 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(81.82 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(98.18 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(114.55 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(130.91 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(147.27 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(163.64 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(180.00 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(196.36 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(212.73 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(229.09 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(245.45 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(261.82 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(278.18 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(294.55 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(310.91 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(327.27 160 160)"/>
+        <rect className="entry-motion-petal" x="154" y="34" width="12" height="112" rx="6" transform="rotate(343.64 160 160)"/>
+       </g>
+       <circle className="entry-motion-core" cx="160" cy="160" r="31"/>
+      </svg>
+     </div>
     </div>
 
     <div ref={processingIntakeRef} className={`intake ${pasteMode?'is-paste-mode':'is-upload-mode'} ${busy?'is-processing-intake':''}`}>
