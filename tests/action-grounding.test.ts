@@ -1,6 +1,8 @@
 import {describe,expect,it} from 'vitest';
 import {emptyExtraction} from '../lib/types';
 import {claimsFromExtraction,groundedModelActions,sanitizeStructuredExtraction,fallbackExtract} from '../lib/extract';
+import {browseCases} from '../lib/browse-cases';
+import {ocrLanguages} from '../lib/browser-file';
 
 const action=(exact_quote:string,kind:'pay'|'contact'|'navigate'|'disclose'|'appear',confidence=90)=>({
  exact_quote,kind,verb:kind==='contact'?'call':kind==='navigate'?'scan':kind==='disclose'?'provide':kind==='appear'?'appear':'pay',
@@ -62,5 +64,20 @@ describe('model action grounding',()=>{
   const extracted={...emptyExtraction(),court_name:'Juzgado de Primera Instancia de Madrid',requested_actions:[action('Preséntese ante el juzgado el 12 de octubre.','appear')]};
   expect(sanitizeStructuredExtraction(extracted,text).court_name).toBe('Juzgado de Primera Instancia de Madrid');
   expect(groundedModelActions(extracted,text)[0]?.source_text).toBe('Preséntese ante el juzgado el 12 de octubre.');
+ });
+
+ it('grounds Portuguese action text without translating or inventing an amount',()=>{
+  const text='Tribunal de Justiça do Distrito Federal\nCompareça à audiência na data indicada. Não há pagamento solicitado.';
+  const extraction={...emptyExtraction(),court_name:'Tribunal de Justiça do Distrito Federal',requested_actions:[action('Compareça à audiência na data indicada.','appear')]};
+  const claims=claimsFromExtraction(sanitizeStructuredExtraction(extraction,text),text);
+  expect(claims.find(c=>c.action)?.action?.source_text).toBe('Compareça à audiência na data indicada.');
+  expect(claims.some(c=>c.type==='payment')).toBe(false);
+ });
+
+ it('labels international Browse sources separately from runnable court artifacts',()=>{
+  expect(new Set(browseCases.filter(c=>c.preview.type==='source').map(c=>c.jurisdiction))).toEqual(new Set(['Lagos, Nigeria','Distrito Federal, Brasil','España','France']));
+  expect(browseCases.find(c=>c.id==='brazil-judicial-notification-form')?.preview.type).toBe('pdf');
+  expect(browseCases.filter(c=>c.preview.type==='source').every(c=>!c.runText)).toBe(true);
+  expect(ocrLanguages).toMatchObject({spa:'Español',por:'Português',fra:'Français'});
  });
 });

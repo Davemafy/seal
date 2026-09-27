@@ -14,6 +14,7 @@ export type BrowseCase={
  section:BrowseSection;
  featured?:boolean;
  title:string;
+ language?:string;
  jurisdiction:string;
  issuer:string;
  sourceTitle:string;
@@ -22,10 +23,50 @@ export type BrowseCase={
  visualNote:string;
  excerpt:string;
  runText:string;
- preview:{type:'pdf'|'image';url:string;alt:string};
+ preview:{type:'pdf'|'image'|'source';url:string;alt:string};
 };
 
 export const browseCases:BrowseCase[]=[
+ {
+  id:'brazil-judicial-notification-form',category:'legitimate-court-notice',section:'legitimate-reference',
+  title:'Formulário de notificação judicial',language:'Português',jurisdiction:'Brasil · cooperação internacional',issuer:'Tribunal de Justiça de São Paulo',
+  sourceTitle:'TJSP — Formulários A e B de carta rogatória',sourceUrl:'https://www.tjsp.jus.br/Download/Corregedoria/CartasRogatorias/Documentos/FormularioMexicoPanamaColombia.pdf',
+  classification:'Official blank court form',visualNote:'Court-hosted Portuguese forms include a notice to the recipient and spaces for a response and hearing details. The fields are blank; this does not summon a named person.',
+  excerpt:'Formulário B apresenta as informações essenciais para o destinatário de uma comunicação judicial.',runText:'',
+  preview:{type:'pdf',url:'https://www.tjsp.jus.br/Download/Corregedoria/CartasRogatorias/Documentos/FormularioMexicoPanamaColombia.pdf',alt:'Portuguese judicial notification form hosted by the São Paulo court'}
+ },
+ {
+  id:'nigeria-lagos-court-forms',category:'legitimate-court-notice',section:'legitimate-reference',
+  title:'Court forms and summons references',language:'English',jurisdiction:'Lagos, Nigeria',issuer:'Lagos State Judiciary',
+  sourceTitle:'Lagos State Judiciary — Court Forms',sourceUrl:'https://jis.lagosjudiciary.gov.ng/CourtForms.aspx',
+  classification:'Official court forms index',visualNote:'Published court forms include an originating summons and an appearance to warning or citation. These are form references, not a person’s actual notice.',
+  excerpt:'A court-published collection of forms showing the kinds of summons and responses used by the Lagos judiciary.',runText:'',
+  preview:{type:'source',url:'https://jis.lagosjudiciary.gov.ng/CourtForms.aspx',alt:'Official Lagos State Judiciary court forms index'}
+ },
+ {
+  id:'brazil-false-judicial-contact',category:'court-payment-fee',section:'court-message-scams',
+  title:'Falso contato judicial e pedido de pagamento',language:'Português',jurisdiction:'Distrito Federal, Brasil',issuer:'TJDFT',
+  sourceTitle:'TJDFT — Golpe do falso contato judicial',sourceUrl:'https://www.tjdft.jus.br/institucional/imprensa/noticias/2026/setembro/golpe-do-falso-contato-judicial-tjdft-alerta-para-nova-forma-de-fraude',
+  classification:'Official court scam warning',visualNote:'The court warns about impersonators using real case details and urgent payment or transfer demands. This is an official warning, not a reproduced victim message.',
+  excerpt:'O tribunal descreve contatos por WhatsApp, e-mail, chamada ou vídeo que pressionam por pagamentos ligados a processos.',runText:'',
+  preview:{type:'source',url:'https://www.tjdft.jus.br/institucional/imprensa/noticias/2026/setembro/golpe-do-falso-contato-judicial-tjdft-alerta-para-nova-forma-de-fraude',alt:'TJDFT warning about false judicial contacts in Portuguese'}
+ },
+ {
+  id:'spain-hearing-alerts',category:'legitimate-court-notice',section:'legitimate-reference',
+  title:'Avisos de señalamientos judiciales',language:'Español',jurisdiction:'España',issuer:'Ministerio de Justicia',
+  sourceTitle:'Sede Judicial Electrónica — avisos de señalamientos',sourceUrl:'https://sedewaf.justicia.es/web/guest/-/nuevas-funcionalidades-de-la-sede-judicial-electronica-del-territorio-ministerio',
+  classification:'Official notification guidance',visualNote:'The ministry explains that participants can receive hearing alerts by SMS or email through the judicial portal in supported locations. A notification alone does not prove any individual case.',
+  excerpt:'La sede judicial describe los avisos de señalamientos y la consulta de documentos en el área privada.',runText:'',
+  preview:{type:'source',url:'https://sedewaf.justicia.es/web/guest/-/nuevas-funcionalidades-de-la-sede-judicial-electronica-del-territorio-ministerio',alt:'Spanish Ministry of Justice guidance on hearing alerts'}
+ },
+ {
+  id:'france-court-reminders',category:'legitimate-court-notice',section:'legitimate-reference',
+  title:'Rappels de convocation par SMS',language:'Français',jurisdiction:'France',issuer:'Ministère de la Justice',
+  sourceTitle:'Justice.fr — fonctionnement de l’espace personnel',sourceUrl:'https://www.justice.fr/contact/espace-perso',
+  classification:'Official notification guidance',visualNote:'The justice portal describes email updates and SMS reminders before a judicial appointment. This is service guidance, not a copy of a summons.',
+  excerpt:'Le service explique les mises à jour des dossiers et les rappels automatiques avant un rendez-vous judiciaire.',runText:'',
+  preview:{type:'source',url:'https://www.justice.fr/contact/espace-perso',alt:'French justice portal guidance on court appointment reminders'}
+ },
  {
   id:'dallas-traffic-qr-scam',
   category:'court-payment-fee',

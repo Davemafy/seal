@@ -6,7 +6,7 @@ import PDFPreview from './pdf-preview';
 import StoryPdfPage from './story-pdf-page';
 import {fixtures,type FixtureKey} from '@/lib/fixtures';
 import {fallbackExtract,claimsFromExtraction,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '@/lib/extract';
-import {readInBrowser,warmOcr,type BrowserDocument} from '@/lib/browser-file';
+import {readInBrowser,warmOcr,ocrLanguages,type OcrLanguage,type BrowserDocument} from '@/lib/browser-file';
 import {clearOrphanedResultArtifacts,clearResultSession,persistResultSession,restoreResultSession} from '@/lib/result-session';
 import type {Claim,Extraction,Result,Verification} from '@/lib/types';
 import './workspace.css';
@@ -150,6 +150,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const [busy,setBusy]=useState(false);
  const [dragging,setDragging]=useState(false);
  const [pasteMode,setPasteMode]=useState(false);
+ const [ocrLanguage,setOcrLanguage]=useState<OcrLanguage>('eng');
  const [revealed,setRevealed]=useState(0);
  const [selected,setSelected]=useState('');
  const [hovered,setHovered]=useState('');
@@ -638,7 +639,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      const sourceFile=new File([blob],`${caseId}.${extension}`,{type});
      sourceBlobRef.current=sourceFile;
      setStatus('Opening the source document');
-     const doc=await readInBrowser(sourceFile,next=>setStatus(next));
+     const doc=await readInBrowser(sourceFile,next=>setStatus(next),ocrLanguage);
      const analysisText=seededText||doc.text;
      if(!analysisText.trim())throw new Error('Case text unavailable');
      setFile(doc);
@@ -794,7 +795,7 @@ async function upload(uploaded:File){
   sourceBlobRef.current=uploaded;
   const uploadId=runId.current;setBusy(true);setStatus('Preparing your file');
   try{
-   const doc=await readInBrowser(uploaded,next=>{if(runId.current===uploadId)setStatus(next)});
+   const doc=await readInBrowser(uploaded,next=>{if(runId.current===uploadId)setStatus(next)},ocrLanguage);
    if(runId.current!==uploadId){URL.revokeObjectURL(doc.preview);return}
    setFile(doc);setText(doc.text);
    if(!doc.text.trim()&&!doc.uncertain)setError('We couldn’t read enough from this file. Try a clearer image or paste the message.');
@@ -846,7 +847,7 @@ async function upload(uploaded:File){
     ?extractedClaims.map(claim=>({...claim,verification_eligible:true}))
     :extractedClaims;
    const reliableAction=found.some(claim=>Boolean(claim.action)&&claimReliable(claim));
-   const courtRelated=/\b(?:court|jury|summons|hearing|case|docket|judge|tribunal|magistrate|citation|parking violation|juzgado|gericht|tribunale|mahakama|mahkama|pengadilan|cour)\b|न्यायालय|अदालत/iu.test(sourceText)
+   const courtRelated=/\b(?:court|jury|summons|hearing|case|docket|judge|tribunal|magistrate|citation|parking violation|juzgado|gericht|tribunale|mahakama|mahkama|mahkeme|pengadilan|cour|llys)\b|न्यायालय|अदालत|محكمة|المحكمة|法院|裁判所|법원|\bсуд\b/iu.test(sourceText)
     ||Boolean(extraction.court_name&&sourceText.toLocaleLowerCase().includes(extraction.court_name.toLocaleLowerCase()));
    if(!sourceCurated&&(!courtRelated||!reliableAction))throw new Error(!courtRelated
     ?'This does not look like a court message SEAL can check. Try a court notice, text, or email.'
@@ -981,7 +982,7 @@ async function upload(uploaded:File){
     <div className={`intake ${pasteMode?'is-paste-mode':'is-upload-mode'}`}>
      {!pasteMode?
       <>
-       <button className={`upload-row ${dragging?'is-dragging':''} ${busy?'is-busy':''}`} type="button" disabled={busy||!hydrated} onPointerDown={()=>{void warmOcr()}} onClick={()=>{filePickerArmed.current=true;input.current?.click()}}
+       <button className={`upload-row ${dragging?'is-dragging':''} ${busy?'is-busy':''}`} type="button" disabled={busy||!hydrated} onPointerDown={()=>{void warmOcr(ocrLanguage)}} onClick={()=>{filePickerArmed.current=true;input.current?.click()}}
         onDragOver={event=>{if(event.dataTransfer.types.includes('Files')){event.preventDefault();setDragging(true)}}}
         onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
         onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
@@ -991,6 +992,7 @@ async function upload(uploaded:File){
         </span>
         
        </button>
+       <label className="ocr-language-control"><span>Image language</span><select value={ocrLanguage} disabled={busy} onChange={event=>setOcrLanguage(event.target.value as OcrLanguage)}>{Object.entries(ocrLanguages).map(([code,label])=><option key={code} value={code}>{label}</option>)}</select></label>
        <button className="paste-mode-switch" type="button" onClick={()=>setPasteMode(true)}>Paste text instead <span aria-hidden="true">→</span></button>
        <p className="privacy-note">Original file stays on this device. Extracted text may be sent for checking.</p>
       </>

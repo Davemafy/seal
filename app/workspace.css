@@ -58,6 +58,8 @@
 .upload-plus{display:none}
 .upload-browse{min-height:42px;display:inline-flex;align-items:center;justify-content:center;margin-top:17px;padding:11px 16px;border-radius:8px;background:var(--tertiary);font-size:14px;font-weight:500;line-height:20px;white-space:nowrap}
 .upload-row:hover .upload-browse{background:#dedede}
+.ocr-language-control{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:16px;color:#555;font-size:14px;line-height:20px}
+.ocr-language-control select{min-height:42px;max-width:58%;padding:8px 34px 8px 12px;border:1px solid #d8d8d8;border-radius:8px;background:#fff;color:#111;font:inherit}
 .paste-mode-switch{width:max-content;display:inline-flex;align-items:center;gap:6px;margin-top:15px;border:0;padding:0;background:transparent;color:#000;font-size:14px;font-weight:500;line-height:20px;cursor:pointer}
 .paste-mode-switch:hover{text-decoration:underline;text-underline-offset:4px}
 .paste-mode-switch span{font-size:15px;line-height:20px}

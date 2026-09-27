@@ -4,6 +4,7 @@ export async function GET(req:Request){
  const id=new URL(req.url).searchParams.get('id')||'';
  const item=getBrowseCase(id);
  if(!item)return new Response('Not found',{status:404});
+ if(item.preview.type==='source')return new Response('Source page has no document asset',{status:404});
  try{
   const response=await fetch(item.preview.url,{
    redirect:'follow',

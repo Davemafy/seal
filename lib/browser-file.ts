@@ -11,18 +11,26 @@ export function ocrScaleForSize(width:number,height:number){
  return Math.min(3.5,desired,pixelCap);
 }
 
+export const ocrLanguages={eng:'English',spa:'Español',por:'Português',fra:'Français',deu:'Deutsch',hin:'हिन्दी',ara:'العربية'} as const;
+export type OcrLanguage=keyof typeof ocrLanguages;
 let ocrWorkerPromise:Promise<Awaited<ReturnType<typeof import('tesseract.js')['createWorker']>>>|null=null;
+let ocrWorkerLanguage:OcrLanguage='eng';
 
-export function warmOcr(){
+export async function warmOcr(language:OcrLanguage='eng'){
+ if(ocrWorkerPromise&&ocrWorkerLanguage!==language){
+  const previous=ocrWorkerPromise;ocrWorkerPromise=null;
+  try{await (await previous).terminate()}catch{}
+ }
  if(!ocrWorkerPromise){
+  ocrWorkerLanguage=language;
   ocrWorkerPromise=import('tesseract.js')
-   .then(({createWorker})=>createWorker('eng'))
+   .then(({createWorker})=>createWorker(language))
    .catch(error=>{ocrWorkerPromise=null;throw error});
  }
  return ocrWorkerPromise;
 }
 
-export async function readInBrowser(file:File,onStatus:(status:string)=>void=()=>{}):Promise<BrowserDocument>{
+export async function readInBrowser(file:File,onStatus:(status:string)=>void=()=>{},language:OcrLanguage='eng'):Promise<BrowserDocument>{
  if(file.size>16_000_000)throw new Error('Maximum file size is 16 MB.');
  if(!['application/pdf','image/jpeg','image/png'].includes(file.type))throw new Error('Choose a PDF, JPG, or PNG.');
  const preview=URL.createObjectURL(file);
@@ -46,12 +54,12 @@ export async function readInBrowser(file:File,onStatus:(status:string)=>void=()=
   const text=pages.join('\n');if(text.trim().length>20)return {text,tokens,preview,kind:'pdf',uncertain:false,sample,unreadableFields:[]};
   onStatus('Scanning the first page');
   const page=await doc.getPage(1);const viewport=page.getViewport({scale:2});const canvas=document.createElement('canvas');canvas.width=viewport.width;canvas.height=viewport.height;await page.render({canvas,canvasContext:canvas.getContext('2d')!,viewport}).promise;
-  const recognized=await ocr(canvas);return {...recognized,preview,kind:'pdf',sample};
+  const recognized=await ocr(canvas,language);return {...recognized,preview,kind:'pdf',sample};
  }
  onStatus('Preparing the image');
  const image=new Image();image.src=preview;await image.decode();
  onStatus('Reading text from the image');
- return {...await ocr(normalizeForOcr(image)),preview,kind:'image',sample:false};
+ return {...await ocr(normalizeForOcr(image),language),preview,kind:'image',sample:false};
 }
 
 function normalizeForOcr(image:HTMLImageElement){
@@ -95,8 +103,8 @@ type OcrResult=Omit<BrowserDocument,'preview'|'kind'|'sample'>;
 type RecognizedLine={text:string;tokens:Token[];page:number;x:number;y:number;confidence:number};
 type OcrCandidate={result:OcrResult;lines:RecognizedLine[];quality:number};
 
-const COURT_CUES=/\b(?:court|district|traffic|jury|summons|judge|case|notice|hearing|violation)\b/gi;
-const ACTION_CUES=/\b(?:payment|pay|remit|appear|scan|qr|call|visit|provide|submit|deadline)\b/gi;
+const COURT_CUES=/\b(?:court|district|traffic|jury|summons|judge|case|notice|hearing|violation|tribunal|juzgado|audiencia|juízo|intimação|convocation|audience|gericht|ladung)\b|न्यायालय|अदालत|محكمة|المحكمة/giu;
+const ACTION_CUES=/\b(?:payment|pay|remit|appear|scan|qr|call|visit|provide|submit|deadline|pagar|comparecer|presentarse|prazo|compareça|pagamento|paiement|payer|présenter|répondre|antworten|zahlen)\b|भुगतान|حضور/giu;
 const CASE_CUE=/\b(?:case|docket)\s*(?:no\.?|number|#)?\s*[:#-]?\s*[A-Z0-9]{1,6}(?:\s*[-–]\s*[A-Z0-9]{1,10}){1,5}\b/i;
 const PHONE_CUE=/(?:\+?\d{1,3}[\s.-]?)?(?:\(\d{2,4}\)|\d{2,4})[\s.-]\d{3,4}[\s.-]\d{4}/;
 const URL_CUE=/(?:https?:\/\/)?(?:[a-zA-Z0-9-]+\.)+[a-z]{2,24}\b/;
@@ -108,7 +116,7 @@ function readableRatio(text:string){
 }
 function garbageRatio(text:string){
  const compact=text.replace(/\s/g,'');if(!compact)return 1;
- return (compact.match(/[^A-Za-z0-9.,:;()/#$%&@'’"!?+\-–—]/g)||[]).length/compact.length;
+ return (compact.match(/[^\p{L}\p{M}\p{N}.,:;()/#$₦₹£€%&@'’"!?+\-–—]/gu)||[]).length/compact.length;
 }
 function structuredCueCount(text:string){
  let n=0;
@@ -253,8 +261,8 @@ async function recognize(worker:Awaited<ReturnType<typeof import('tesseract.js')
  return {result,lines,quality:scoreOcr(result)};
 }
 
-async function ocr(image:HTMLImageElement|HTMLCanvasElement):Promise<OcrResult>{
- const worker=await warmOcr();
+async function ocr(image:HTMLImageElement|HTMLCanvasElement,language:OcrLanguage):Promise<OcrResult>{
+ const worker=await warmOcr(language);
  try{
   const first=await recognize(worker,image);
   if(!shouldRetryOcr(first))return first.result;

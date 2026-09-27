@@ -8,13 +8,17 @@ function reliabilityScore(item:BrowseCase){
  if(item.featured&&item.classification==='Confirmed scam example')return 100;
  if(item.classification==='Confirmed scam example')return 90;
  if(item.classification==='Legitimate sample/form')return 80;
+ if(item.classification==='Official blank court form')return 75;
+ if(item.preview.type==='source')return 65;
  if(item.classification==='Official court scam warning')return 40;
  return 10;
 }
 
 function CaseMedia({item}:{item:BrowseCase}){
- return <div className={`case-visual ${item.preview.type==='image'?'is-image':'is-pdf'}`}>
-  {item.preview.type==='pdf'
+ return <div className={`case-visual ${item.preview.type==='source'?'is-source':item.preview.type==='image'?'is-image':'is-pdf'}`}>
+  {item.preview.type==='source'
+   ?<div className="case-source-preview"><span>OFFICIAL SOURCE · {item.language||'English'}</span><p>{item.excerpt}</p><small>{item.issuer}</small></div>
+   :item.preview.type==='pdf'
    ?<PdfThumb id={item.id} alt={item.preview.alt}/>
    :<ImageThumb id={item.id} alt={item.preview.alt}/>}
  </div>;
@@ -41,16 +45,17 @@ export default function Browse(){
   <section className="browse-shell">
    <header className="browse-intro">
     <h1>Browse real cases</h1>
-    <p>Actual court documents, published scam notices, and source-backed examples.</p>
+    <p>Published court artifacts and official guidance from several countries. Source pages are labeled separately from documents you can run.</p>
    </header>
 
    <div className="case-archive">
     {rankedCases.map(item=><article className="case-card" key={item.id}>
      <CaseMedia item={item}/>
      <div className="case-copy">
-      <p className="case-kicker">{item.jurisdiction}</p>
+      <p className="case-kicker">{item.jurisdiction}{item.language?` · ${item.language}`:''}</p>
       <h2>{item.title}</h2>
       <p className="case-source">Source: {item.sourceTitle}</p>
+      <p className="case-classification">{item.classification}</p>
       <p className="case-note">{item.visualNote}</p>
       <div className="case-actions">
        <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer">Open source</a>

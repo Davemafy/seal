@@ -15,7 +15,7 @@ function courtLineScore(line:string){
  return score;
 }
 
-const COURT_WORD=/(?:\b(?:court|tribunal|juzgado|gericht|tribunale|mahakama|mahkama|pengadilan)\b|\bcour\b|न्यायालय|अदालत)/iu;
+const COURT_WORD=/(?:\b(?:court|tribunal|juzgado|gericht|tribunale|mahakama|mahkama|mahkeme|pengadilan|llys)\b|\bcour\b|न्यायालय|अदालत|محكمة|المحكمة|法院|裁判所|법원|\bсуд\b)/iu;
 function plausibleCourtName(value:string){
  if(!COURT_WORD.test(value))return false;
  const compact=value.replace(/\s/g,'');
@@ -24,7 +24,7 @@ function plausibleCourtName(value:string){
  const symbols=(compact.match(/[^\p{L}\p{M}\p{N},.'’&()\-–—]/gu)||[]).length;
  const alphaRatio=letters/Math.max(1,compact.length);
  const startsClean=/^[\p{L}\p{N}]/u.test(value.trim());
- return letters>=8&&digits<=1&&symbols<=1&&alphaRatio>=.7&&startsClean;
+ return letters>=(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(value)?4:8)&&digits<=1&&symbols<=1&&alphaRatio>=.7&&startsClean;
 }
 
 function genericCourtName(value:string){
