@@ -74,9 +74,11 @@ const formatStoryTime=(seconds:number)=>{
  return `${Math.floor(whole/60)}:${String(whole%60).padStart(2,'0')}`;
 };
 
-function DesignChevron({direction='down'}:{direction?:'down'|'right'|'left'|'up'}){
- return <svg className={`design-chevron is-${direction}`} viewBox="0 0 14 14" aria-hidden="true" focusable="false">
-  <path d="M3.5 5.25 7 8.75l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+function SealGuideIcon({direction='down'}:{direction?:'down'|'right'|'left'|'up'}){
+ return <svg className={`seal-guide-icon is-${direction}`} viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+  <path d="M2.5 5.95c0-.72.3-1.3.9-1.77L5.78 2.2h5.76c.52 0 .94.42.94.94v1.48l-2.42 2.3H3.9c-.79 0-1.4-.36-1.4-.97Z" fill="currentColor"/>
+  <path d="M3.9 8.58h6.06l2.52 2.27-2.27 2.45H2.5v-2.08c0-.65.27-1.2.8-1.64l.6-.5Z" fill="currentColor"/>
+  <path d="M3.9 6.92h6.16L8.58 8.58H3.9c-.8 0-1.4-.34-1.4-.94 0 .52.65.94 1.4.94Z" fill="currentColor" opacity=".32"/>
  </svg>;
 }
 
@@ -1442,7 +1444,7 @@ async function upload(uploaded:File){
    <div className="mobile-nav-tools">
     <div className="mobile-language-menu">
      <button type="button" className="mobile-language-trigger" aria-label={ui('displayLanguage')} aria-haspopup="listbox" aria-expanded={languageMenuOpen} onClick={()=>setLanguageMenuOpen(open=>!open)}>
-      <span>{displayLocale.toUpperCase()}</span><DesignChevron/>
+      <span>{displayLocale.toUpperCase()}</span><SealGuideIcon/>
      </button>
      {languageMenuOpen&&<div className="mobile-language-popover" role="listbox" aria-label={ui('displayLanguage')}>
       <div className="mobile-language-title">{ui('displayLanguage')}</div>
@@ -1534,13 +1536,13 @@ async function upload(uploaded:File){
        </button>
        {!busy&&<>
         <label className="ocr-language-control"><span>{ui('imageLanguage')}</span><select value={ocrLanguage} onChange={event=>setOcrLanguage(event.target.value as OcrLanguage)}>{Object.entries(ocrLanguages).map(([code,label])=><option key={code} value={code}>{label}</option>)}</select></label>
-        <button className="paste-mode-switch" type="button" onClick={()=>setPasteMode(true)}>{ui('pasteInstead')} <DesignChevron direction="right"/></button>
+        <button className="paste-mode-switch" type="button" onClick={()=>setPasteMode(true)}>{ui('pasteInstead')} <SealGuideIcon direction="right"/></button>
         <p className="privacy-note">{ui('privacyNote')}</p>
        </>}
       </>
       :
       <div className="paste-mode-panel">
-       <button className="paste-mode-switch paste-mode-back" type="button" onClick={()=>setPasteMode(false)}><DesignChevron direction="left"/> {ui('uploadInstead')}</button>
+       <button className="paste-mode-switch paste-mode-back" type="button" onClick={()=>setPasteMode(false)}><SealGuideIcon direction="left"/> {ui('uploadInstead')}</button>
        <label className="paste-field">
         <span className="field-label">{ui('messageText')}</span>
         <textarea autoFocus aria-label="Paste the court message" value={draft} onChange={event=>setDraft(event.target.value)} placeholder={ui('messagePlaceholder')}/>
@@ -1567,7 +1569,7 @@ async function upload(uploaded:File){
        <p className="result-origin">{[
         file?(file.kind==='pdf'?'PDF':'Image'):'Text',
         documentLanguage?.label,
-        displayLocale!=='en'?'→ '+DISPLAY_LANGUAGES[displayLocale]:''
+        displayLocale!=='en'?'Display '+DISPLAY_LANGUAGES[displayLocale]:''
        ].filter(Boolean).join(' · ')}</p>
       </div>
      </div>
@@ -1754,7 +1756,7 @@ async function upload(uploaded:File){
         </nav>
 
         <details className="decision-details">
-         <summary><span>Why this result</span><DesignChevron/></summary>
+         <summary><span>Why this result</span><SealGuideIcon/></summary>
          <div className="decision-details-body">
           {riskSummary&&<div className="decision-risks">
            <div className="decision-risk-row"><span>Message instructions</span><div><strong>{translatedResult.riskInstructionsTitle||riskSummary.instructions.title}</strong><small>{translatedResult.riskInstructionsDetail||riskSummary.instructions.detail}</small></div></div>
@@ -1920,7 +1922,7 @@ async function upload(uploaded:File){
       <div className="journey-content"><div className="obligation-list">{obligations.map(item=><div className="obligation-row" key={item.id}><div><strong>{cleanDisplayText(item.text)}</strong>{item.deadline&&<small>Time/date stated: {item.deadline}</small>}</div><span className={item.status==='MISMATCH'?'is-conflict':item.status==='MATCH'?'is-match':''}>{item.statusLabel}</span></div>)}</div><p className="journey-note">Dates and instructions here come from the message unless a row explicitly says it matches a public source.</p></div>
      </div>}
      <details className="journey-details" data-testid="plain-language-explanation">
-      <summary><span>Explain this notice</span><small>Plain language + translation</small><DesignChevron/></summary>
+      <summary><span>Explain this notice</span><small>Plain language + translation</small><SealGuideIcon/></summary>
       <div className="journey-details-body">
        <div className="explanation-controls"><small>Explanation follows Display language: {DISPLAY_LANGUAGES[displayLocale]} · detected document language: {documentLanguage?.label||'Unknown'}{documentLanguage?.confidence==='low'?' · low confidence':''}</small></div>
        {displayedExplanation&&<div className="plain-explanation" aria-live="polite"><h3>{displayedExplanation.title}</h3><p>{displayedExplanation.summary}</p></div>}
@@ -1928,7 +1930,7 @@ async function upload(uploaded:File){
       </div>
      </details>
      <details className="journey-details" data-testid="resolution-help">
-      <summary><span>Get help resolving this</span><small>Court, recovery, and legal-aid paths</small><DesignChevron/></summary>
+      <summary><span>Get help resolving this</span><small>Court, recovery, and legal-aid paths</small><SealGuideIcon/></summary>
       <div className="journey-details-body support-paths">
        <div className="support-path"><strong>{translatedResult.supportHaventTitle||'I haven’t acted yet'}</strong><p>{translatedResult.supportHaventCopy||'Use the independently sourced court route above before calling, paying, scanning, replying, or appearing because of this message.'}</p></div>
        <div className="support-path"><strong>{translatedResult.supportPaidTitle||'I already paid'}</strong><p>{translatedResult.supportPaidCopy||'Contact your bank or payment provider through its official app, card, or website and report the transaction immediately.'}</p>{justiceSupport?.recovery&&<a className="journey-link" href={justiceSupport.recovery.url} target="_blank" rel="noopener noreferrer">{justiceSupport.recovery.label}</a>}</div>
@@ -2009,7 +2011,7 @@ async function upload(uploaded:File){
          <div className="source-timestamp">{evidence.source_mode==='LIVE'?'Live official source':'Source snapshot'} · {new Date(evidence.checked_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'})}</div>
         </div>)}
         {currentResult.evidence.length>1&&currentResult.explanation!=='Official sources currently disagree.'&&<details className="additional-sources">
-         <summary><span>{currentResult.evidence.length-1} more source excerpt{currentResult.evidence.length>2?'s':''}</span><DesignChevron/></summary>
+         <summary><span>{currentResult.evidence.length-1} more source excerpt{currentResult.evidence.length>2?'s':''}</span><SealGuideIcon/></summary>
          {currentResult.evidence.slice(1).map((evidence,index)=><div key={index}>
           <div>{evidence.title}</div>
           <blockquote>{evidence.excerpt}</blockquote>
@@ -2023,7 +2025,7 @@ async function upload(uploaded:File){
      </div>
 
      <details className="technical-record" open={technicalOpen} onToggle={event=>setTechnicalOpen(event.currentTarget.open)}>
-      <summary><span>Technical record</span><DesignChevron/></summary>
+      <summary><span>Technical record</span><SealGuideIcon/></summary>
       <p>Extractor: {extractionMode} · {resolverSummary}</p>
       {!!verification.lanes?.length&&<div className="verification-lanes">
        {verification.lanes.map(lane=><div className="verification-lane" key={lane.id}>
