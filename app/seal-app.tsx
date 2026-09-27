@@ -527,36 +527,44 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
       :directCourtUnavailable
        ?'We could read the message, but we could not confirm the court or case from an independent source yet.'
        :decision.summary;
- const resultStatusLabel=curatedAuthorityMatch
-  ?'Official warning found'
-  :decisionRelationshipConflict
-   ?'Something does not line up'
-   :directCourtUnavailable
-    ?'We could not confirm this notice'
-    :verification?.results.some(result=>result.verdict==='MATCH')
-     ?'Some details check out'
-     :'Check finished';
- const instructionStatus=curatedAuthorityMatch
-  ?'Do not use this route'
-  :verification?.results.some(result=>result.verdict==='MISMATCH'&&claims.find(claim=>claim.id===result.claim_id)?.action)
-   ?'Does not match the source'
-   :verification?.results.some(result=>result.verdict==='MATCH'&&claims.find(claim=>claim.id===result.claim_id)?.action)
-    ?'Some details match'
+ const resultStatusLabel=file?.sample
+  ?'Example document'
+  :curatedAuthorityMatch
+   ?'Official warning found'
+   :decisionRelationshipConflict
+    ?'Something does not line up'
+    :directCourtUnavailable
+     ?'We could not confirm this notice'
+     :verification?.results.some(result=>result.verdict==='MATCH')
+      ?'Some details check out'
+      :'Check finished';
+ const instructionStatus=file?.sample
+  ?'Example only'
+  :curatedAuthorityMatch
+   ?'Do not use this route'
+   :verification?.results.some(result=>result.verdict==='MISMATCH'&&claims.find(claim=>claim.id===result.claim_id)?.action)
+    ?'Does not match the source'
+    :verification?.results.some(result=>result.verdict==='MATCH'&&claims.find(claim=>claim.id===result.claim_id)?.action)
+     ?'Some details match'
+     :'Not confirmed';
+ const matterStatus=file?.sample
+  ?'No action needed'
+  :caseReality?.status==='FOUND'
+   ?'Case found'
+   :caseReality?.status==='CONFLICT'
+    ?'Does not match the source'
     :'Not confirmed';
- const matterStatus=caseReality?.status==='FOUND'
-  ?'Case found'
-  :caseReality?.status==='CONFLICT'
-   ?'Does not match the source'
-   :'Not confirmed';
- const primaryRoute=verification?.safe_action?.primary_url
-  ?{url:verification.safe_action.primary_url,label:translatedResult.safePrimary||verification.safe_action.primary_label}
-  :verification?.contact?.website
-   ?{url:verification.contact.website,label:'Open official court website'}
-   :officialLookup
-    ?{url:officialLookup.url,label:officialLookup.label}
-    :officialDirectory
-     ?{url:officialDirectory.url,label:officialDirectory.label}
-     :null;
+ const primaryRoute=file?.sample
+  ?null
+  :verification?.safe_action?.primary_url
+   ?{url:verification.safe_action.primary_url,label:translatedResult.safePrimary||verification.safe_action.primary_label}
+   :verification?.contact?.website
+    ?{url:verification.contact.website,label:'Open official court website'}
+    :officialLookup
+     ?{url:officialLookup.url,label:officialLookup.label}
+     :officialDirectory
+      ?{url:officialDirectory.url,label:officialDirectory.label}
+      :null;
  const resultTranslationSource=useMemo(()=>{
   if(!verification)return {};
   const strings:Record<string,string>={
@@ -636,6 +644,11 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   :'';
 
  const checkObjectTitle=caseReality?.court&&caseReality.court!=='Court not identified'?cleanDisplayText(caseReality.court):'Court message';
+ const checkObjectDisplayTitle=checkObjectTitle
+  .replace(/^UNITED STATES DISTRICT COURT\s*/i,'U.S. District Court · ')
+  .replace(/\s{2,}/g,' ')
+  .replace(/·\s*·/g,'·')
+  .replace(/·\s*$/,'');
  const checkObjectReference=caseReality?.reference||'';
  const checkSourceCount=technicalEvidence.length;
  const latestCheckTimestamp=technicalEvidence.reduce((latest,evidence)=>{
@@ -1445,7 +1458,7 @@ async function upload(uploaded:File){
    <div className="rail-group-label">{ui('checks')}</div>
    <button className="rail-item rail-new-check" type="button" onClick={onNewWorkspace}>{ui('newCheck')}</button>
    <div className="rail-check-list" aria-label="Open checks">
-    {workspaces.map((item,index)=><button
+    {workspaces.filter(item=>item.status!=='idle'||item.id===workspaceId).map((item,index)=><button
      type="button"
      className={`rail-check ${item.id===workspaceId?'is-current':''}`}
      key={item.id}
@@ -1458,12 +1471,17 @@ async function upload(uploaded:File){
    </div>
    <Link className="rail-item rail-browse" href="/browse">{ui('browse')}</Link>
    <div className="rail-spacer"/>
-   <label className="rail-language">
+   <div className="rail-language">
     <span>{ui('displayLanguage')}</span>
-    <select value={displayLocale} onChange={event=>changeDisplayLanguage(event.target.value as DisplayLocale)} aria-label={ui('displayLanguage')}>
-     {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><option key={code} value={code}>{label}</option>)}
-    </select>
-   </label>
+    <div className="rail-language-menu">
+     <button type="button" className="rail-language-trigger" aria-label={ui('displayLanguage')} aria-haspopup="listbox" aria-expanded={languageMenuOpen} onClick={()=>setLanguageMenuOpen(open=>!open)}>
+      <span>{DISPLAY_LANGUAGES[displayLocale]}</span><SealGuideIcon/>
+     </button>
+     {languageMenuOpen&&<div className="rail-language-popover" role="listbox" aria-label={ui('displayLanguage')}>
+      {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><button type="button" role="option" aria-selected={code===displayLocale} className={code===displayLocale?'is-selected':''} key={code} onClick={()=>changeDisplayLanguage(code as DisplayLocale)}><span>{label}</span><small>{code.toUpperCase()}</small></button>)}
+     </div>}
+    </div>
+   </div>
    <div className="rail-foot"><strong>{ui('publicSourcesOnly')}</strong><span>{ui('publicSourcesNote')}</span></div>
   </aside>
   <header className="seal-nav mobile-only-nav">
@@ -1570,21 +1588,15 @@ async function upload(uploaded:File){
      <div className="result-masthead-row">
       <div className="check-object-identity">
        <p className="result-masthead-title">{ui('resultTitle')}</p>
-       <h1>{checkObjectTitle}</h1>
+       <h1>{checkObjectDisplayTitle}</h1>
        <div className="check-object-meta">
-        {checkObjectReference&&<span className="meta-reference">Case/reference {checkObjectReference}</span>}
         <span className="meta-status">{resultStatusLabel}</span>
         {documentLanguage?.label&&<span className="meta-language" data-testid="document-language">{documentLanguage.label}</span>}
         {jurisdiction&&<span className="meta-jurisdiction" data-testid="document-jurisdiction">{jurisdiction}</span>}
-        {displayLocale!=='en'&&<span className="meta-display-language" data-testid="display-language">Viewing in {DISPLAY_LANGUAGES[displayLocale]}</span>}
-        {checkDateLabel&&<span className="meta-date">Checked {checkDateLabel}</span>}
-        <span className="meta-sources">{checkSourceCount?checkSourceCount+' public source'+(checkSourceCount===1?'':'s'):'No independent source attached'}</span>
        </div>
       </div>
       <div className="check-object-actions" aria-label="Check actions">
        <button type="button" onClick={()=>run('LIVE')} disabled={busy}>Check again</button>
-       <button type="button" onClick={saveHandoff}>Save record</button>
-       <button type="button" onClick={onNewWorkspace}>{ui('newCheck')}</button>
       </div>
      </div>
 
@@ -1596,7 +1608,6 @@ async function upload(uploaded:File){
      </nav>}
     </header>
 
-    {file?.sample&&<div className="source-failure sample-warning" role="status"><strong>Sample document</strong><span>Example form only — not a summons to act on.</span></div>}
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
 
     {verification&&ready&&storyOpen&&<div className={`story-overlay ${storyClosing?'is-closing':''}`} data-testid="evidence-review" role="dialog" aria-modal="true" aria-label="SEAL verification review">
@@ -1740,8 +1751,7 @@ async function upload(uploaded:File){
        </div>
        :
        <div className="decision">
-        <div className="decision-overview">
-         <div className="decision-copy">
+
         <p className="decision-status" data-testid="result-status">{resultStatusLabel}</p>
         <h1>{translatedResult.decisionTitle||(file?.sample?'This is a sample form.':conciseDecisionTitle)}</h1>
         <p className="decision-summary">{translatedResult.decisionSummary||humanDecisionSummary}</p>
@@ -1754,35 +1764,10 @@ async function upload(uploaded:File){
          <small>Opens an independently sourced official service.</small>
         </div>}
 
-        {riskSummary&&<div className="decision-at-a-glance" data-testid="two-risk-result">
+        {riskSummary&&!file?.sample&&<div className="decision-at-a-glance" data-testid="two-risk-result">
          <div><span>This message</span><strong>{instructionStatus}</strong></div>
          <div><span>The case</span><strong>{matterStatus}</strong></div>
         </div>}
-         </div>
-
-         <aside className="decision-visual" aria-label="Check snapshot">
-          <div className="decision-artifact">
-           {file?.kind==='image'
-            ?<img src={file.preview} alt="Original message preview"/>
-            :file?.kind==='pdf'
-             ?<StoryPdfPage url={file.preview}/>
-             :<div className="decision-text-thumb"><span>Original message</span><p>{cleanDisplayText(text.slice(0,360))}</p></div>}
-          </div>
-          <div className="decision-artifact-caption">
-           <strong>{file?.sample?'Sample document':'Original message'}</strong>
-           <span>{file?.kind==='pdf'?'PDF':file?.kind==='image'?'Image':'Text'}</span>
-          </div>
-          <div className="decision-source-brief">
-           <span>Independent check</span>
-           <strong>{checkSourceCount?checkSourceCount+' public source'+(checkSourceCount===1?'':'s'):'No public source attached'}</strong>
-           {storyEvidence&&<small>{storyEvidence.title}</small>}
-          </div>
-          {reviewWorthWatching&&!storyOpen&&<button ref={replayButton} type="button" className="decision-review-player" data-testid="play-evidence-review" onClick={replayStory}>
-           <span className="decision-review-play" aria-hidden="true"><DesignPlayIcon/></span>
-           <span><strong>{ui('seeHowChecked')}</strong><small>{ui('evidenceReviewHint')}</small></span>
-          </button>}
-         </aside>
-        </div>
 
         <details className="decision-details">
          <summary><span>Why this result</span><SealGuideIcon/></summary>
@@ -1807,6 +1792,10 @@ async function upload(uploaded:File){
            {directCheckSummary&&!storySignal&&<small className="decision-direct-check">{directCheckSummary}</small>}
           </div>
 
+          {reviewWorthWatching&&!storyOpen&&<button ref={replayButton} type="button" className="decision-review-player" data-testid="play-evidence-review" onClick={replayStory}>
+           <span className="decision-review-play" aria-hidden="true"><DesignPlayIcon/></span>
+           <span><strong>{ui('seeHowChecked')}</strong><small>{ui('evidenceReviewHint')}</small></span>
+          </button>}
          </div>
         </details>
        </div>}

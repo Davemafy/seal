@@ -206,6 +206,26 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  assertNoRuntimeErrors();
 });
 
+test('sample result stays quiet and action-free',async({page})=>{
+ test.setTimeout(90000);
+ const assertNoRuntimeErrors=guardRuntime(page);
+ await page.setViewportSize({width:1214,height:642});
+ await page.goto('/');
+ await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
+ await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
+ await expect(page.getByTestId('result-status')).toHaveText('Example document');
+ await expect(page.getByTestId('primary-next-step')).toHaveCount(0);
+ await expect(page.getByTestId('two-risk-result')).toHaveCount(0);
+ await expect(page.locator('.sample-warning')).toHaveCount(0);
+ await expect(page.locator('.decision-visual')).toHaveCount(0);
+ await expect(page.locator('.check-object-actions button')).toHaveCount(1);
+ await expect(page.locator('.check-object-actions button')).toHaveText('Check again');
+ await expect(page.locator('.rail-language select')).toHaveCount(0);
+ await expect(page.locator('.check-object-identity h1')).toContainText('U.S. District Court');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth)).toBeLessThanOrEqual(1);
+ assertNoRuntimeErrors();
+});
+
 test('desktop result stays contained to one carousel stage instead of a long report',async({page})=>{
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
