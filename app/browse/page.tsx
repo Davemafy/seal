@@ -15,10 +15,10 @@ function reliabilityScore(item:BrowseCase){
  return 10;
 }
 
-function CaseMedia({item}:{item:BrowseCase}){
+function CaseMedia({item,priority=false}:{item:BrowseCase;priority?:boolean}){
  return <div className={`case-visual ${item.preview.type==='image'?'is-image':'is-pdf'}`}>
   {item.preview.type==='pdf'
-   ?<PdfThumb id={item.id} alt={item.preview.alt}/>
+   ?<PdfThumb id={item.id} alt={item.preview.alt} priority={priority}/>
    :<ImageThumb id={item.id} alt={item.preview.alt}/>}
  </div>;
 }
@@ -48,8 +48,8 @@ export default function Browse(){
    </header>
 
    <div className="case-archive">
-    {rankedCases.map(item=><article className="case-card" key={item.id}>
-     <CaseMedia item={item}/>
+    {rankedCases.map((item,index)=><article className="case-card" key={item.id}>
+     <CaseMedia item={item} priority={index<2}/>
      <div className="case-copy">
       <p className="case-kicker">{item.jurisdiction}{item.language?` · ${item.language}`:''}</p>
       <h2>{item.title}</h2>
