@@ -1818,116 +1818,13 @@ async function upload(uploaded:File){
    <div className="entry-copy">
      <h1>{ui('checkCourtMessage')}</h1>
      <p>{ui('entrySummary')}</p>
-     <div className="entry-motion" aria-hidden="true">
-      <svg viewBox="0 0 320 320" role="presentation">
-       <defs>
-        <linearGradient id="entryGlassBlade" x1="0" y1="0" x2="0.22" y2="1">
-         <stop offset="0%" stopColor="#111" stopOpacity=".16"/>
-         <stop offset="42%" stopColor="#111" stopOpacity=".52"/>
-         <stop offset="100%" stopColor="#050505" stopOpacity=".92"/>
-        </linearGradient>
-        <radialGradient id="entryMotionGlow" cx="50%" cy="48%" r="58%">
-         <stop offset="0%" stopColor="#fff" stopOpacity="0"/>
-         <stop offset="72%" stopColor="#111" stopOpacity=".018"/>
-         <stop offset="100%" stopColor="#111" stopOpacity=".07"/>
-        </radialGradient>
-        <filter id="entryMotionDepth" x="-20%" y="-20%" width="140%" height="140%">
-         <feDropShadow dx="0" dy="6" stdDeviation="7" floodColor="#000" floodOpacity=".055"/>
-        </filter>
-        <clipPath id="entryMotionClip">
-         <circle cx="160" cy="160" r="122"/>
-        </clipPath>
-       </defs>
-       <circle className="entry-motion-field" cx="160" cy="160" r="126" fill="url(#entryMotionGlow)"/>
-       <circle className="entry-motion-orbit-ring" cx="160" cy="160" r="112"/>
-       <g className="entry-motion-rotor" clipPath="url(#entryMotionClip)" filter="url(#entryMotionDepth)">
-        <g className="entry-motion-blade-wrap is-deep" transform="rotate(0 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap " transform="rotate(18 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap " transform="rotate(36 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap is-soft" transform="rotate(54 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap " transform="rotate(72 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap is-deep" transform="rotate(90 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap is-soft" transform="rotate(108 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap " transform="rotate(126 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap " transform="rotate(144 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap is-soft" transform="rotate(162 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap is-deep" transform="rotate(180 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap " transform="rotate(198 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap is-soft" transform="rotate(216 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap " transform="rotate(234 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap " transform="rotate(252 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap is-deep" transform="rotate(270 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap " transform="rotate(288 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap " transform="rotate(306 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap is-soft" transform="rotate(324 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-        <g className="entry-motion-blade-wrap " transform="rotate(342 160 160)">
-         <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
-         <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
-        </g>
-       </g>
-       <circle className="entry-motion-aperture-ring" cx="160" cy="160" r="40"/>
-       <circle className="entry-motion-aperture" cx="160" cy="160" r="34"/>
-       <circle className="entry-motion-aperture-glint" cx="153" cy="151" r="7"/>
-      </svg>
-     </div>
+
     </div>
+
+    {!busy&&<div className="entry-intake-heading">
+     <span>What did you receive?</span>
+     <small>Upload the message or paste it exactly as you received it.</small>
+    </div>}
 
     <div ref={processingIntakeRef} className={`intake ${pasteMode?'is-paste-mode':'is-upload-mode'} ${busy?'is-processing-intake':''}`}>
      {!pasteMode?
@@ -1996,6 +1893,22 @@ async function upload(uploaded:File){
 
      {error&&<div role="alert" className="inspection-error">{error}</div>}
     </div>
+
+    {!busy&&<aside className="entry-context-rail" aria-label="What SEAL can help check">
+     <span>Questions this can help answer</span>
+     <div className="entry-context-item">
+      <strong>Is this payment request consistent with court guidance?</strong>
+      <small>Checks the action the message asks you to take.</small>
+     </div>
+     <div className="entry-context-item">
+      <strong>Can this court or process be confirmed independently?</strong>
+      <small>Uses public court and agency sources where available.</small>
+     </div>
+     <div className="entry-context-item">
+      <strong>Where should I verify this safely?</strong>
+      <small>Points to an independently sourced official route.</small>
+     </div>
+    </aside>}
 
    </section>
    :
