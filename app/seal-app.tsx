@@ -1131,28 +1131,25 @@ async function upload(uploaded:File){
             key={`text-${index}`}
             style={{left:`${region.x*100}%`,top:`${region.y*100}%`,width:`${region.width*100}%`,height:`${Math.max(region.height,.008)*100}%`}}
            />)}
-           {processingStage>=2&&processingClaimRegions.map((region,index)=><span
+           {processingStage>=2&&processingClaimRegions.map(region=><span
             className="process-claim-region"
             key={region.id}
-            data-index={String(index+1).padStart(2,'0')}
             style={{left:`${region.x*100}%`,top:`${region.y*100}%`,width:`${region.width*100}%`,height:`${Math.max(region.height,.012)*100}%`}}
            />)}
-           <span className="process-page-index" aria-hidden="true">01</span>
           </span>
           <span className="upload-process-body">
-           <span className="process-kicker"><span>SEAL ANALYSIS</span><b>{String(processingStage+1).padStart(2,'0')} / 03</b></span>
            <strong>{processingTitle}</strong>
            <span className="process-flow" aria-hidden="true">
-            <span className={`process-node ${processingStage===0?'is-current':processingStage>0?'is-complete':''}`}><i/><small>DOCUMENT</small></span>
+            <span className={`process-node ${processingStage===0?'is-current':processingStage>0?'is-complete':''}`}><i/><small>Read</small></span>
             <span className={`process-link ${processingStage>=1?'is-complete':''}`}><i/></span>
-            <span className={`process-node ${processingStage===1?'is-current':processingStage>1?'is-complete':''}`}><i/><small>ACTION</small></span>
+            <span className={`process-node ${processingStage===1?'is-current':processingStage>1?'is-complete':''}`}><i/><small>Ground</small></span>
             <span className={`process-link ${processingStage>=2?'is-complete':''}`}><i/></span>
-            <span className={`process-node ${processingStage===2?'is-current':''}`}><i/><small>SOURCES</small></span>
+            <span className={`process-node ${processingStage===2?'is-current':''}`}><i/><small>Verify</small></span>
            </span>
            <span className="process-readout">
-            {processingStage===0?<><b>LOCAL OCR</b><i/><span>layout + text</span></>:
-             processingStage===1?<><b>{processingRegionCount||'—'} REGIONS</b><i/><span>source-grounded extraction</span></>:
-             <><b>{processingActionCount||claims.length||'—'} ACTION{processingActionCount===1?'':'S'}</b><i/><span>independent resolution</span></>}
+            {processingStage===0?<span>Reading on this device</span>:
+             processingStage===1?<span>{processingRegionCount?processingRegionCount+' text regions mapped':'Text regions mapped'}</span>:
+             <span>{processingActionCount?processingActionCount+' grounded action'+(processingActionCount===1?'':'s'):'Grounded details ready'}</span>}
            </span>
            {uploadPreview?.name&&<span className="upload-file-name" title={uploadPreview.name}>{uploadPreview.name}</span>}
           </span>
@@ -1169,7 +1166,7 @@ async function upload(uploaded:File){
         <label className="ocr-language-control"><span>Image language</span><select value={ocrLanguage} onChange={event=>setOcrLanguage(event.target.value as OcrLanguage)}>{Object.entries(ocrLanguages).map(([code,label])=><option key={code} value={code}>{label}</option>)}</select></label>
         <button className="paste-mode-switch" type="button" onClick={()=>setPasteMode(true)}>Paste text instead <DesignChevron direction="right"/></button>
         <p className="privacy-note">Original file stays on this device. Extracted text may be sent for checking.</p>
-       </>:<p className="processing-footnote"><span>LOCAL FILE</span><span>Keep this tab open</span></p>}
+       </>:<p className="processing-footnote"><i aria-hidden="true"/><span>File stays on this device</span></p>}
       </>
       :
       <div className="paste-mode-panel">
