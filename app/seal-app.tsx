@@ -1694,9 +1694,9 @@ async function upload(uploaded:File){
    </aside>
   </div>
 
-  {!hydrated&&workspaces.find(item=>item.id===workspaceId)?.status==='done'?
+  {!hydrated?
    <section className="workspace-restore-shell" aria-live="polite">
-    <span>Restoring this check…</span>
+    <span>Opening check…</span>
    </section>
    :!verification?
    <section className={`entry-shell ${busy?'is-processing':''}`} data-testid="entry-shell">
