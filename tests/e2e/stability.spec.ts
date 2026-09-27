@@ -76,6 +76,23 @@ Call +91 11 5555 0199 to confirm your attendance.`);
  assertNoRuntimeErrors();
 });
 
+test('New Hampshire toll demand shows process evidence without inventing a verdict',async({page})=>{
+ const assertNoRuntimeErrors=guardRuntime(page);
+ await page.goto('/');
+ await page.getByRole('button',{name:/Paste text instead/i}).click();
+ await page.getByLabel('Paste the court message').fill(`STATE OF NEW HAMPSHIRE
+FINAL COURT-ORDERED MANDATORY COLLECTION NOTICE
+Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administrative fees, court costs, and enforcement surcharges.`);
+ await page.getByRole('button',{name:'Check this message'}).click();
+ await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
+ await expect(page.locator('#review-summary').getByRole('heading',{name:'Compare this payment demand with New Hampshire’s official process.'})).toBeVisible();
+ await expect(page.locator('#review-summary').getByText(/SEAL has not verified this notice or the amount owed/i)).toBeVisible();
+ await expect(page.getByRole('link',{name:'Open public source'})).toHaveAttribute('href','https://www.gc.nh.gov/rsa/html/xx/236/236-mrg.htm');
+ await expect(page.getByRole('link',{name:'Open NH E-ZPass'})).toHaveAttribute('href','https://www.ezpassnh.com/');
+ await expect(page.getByText('1-855-212-1234',{exact:true})).toBeVisible();
+ assertNoRuntimeErrors();
+});
+
 test('mobile SEAL brand returns a result to the clean entry state',async({page})=>{
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
