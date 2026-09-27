@@ -30,7 +30,7 @@ type SealWorkspaceProps={
  initialText?:string;
  initialRun?:boolean;
  workspaceId:string;
- active:boolean;
+ workspaceActive:boolean;
  workspaces:WorkspaceMeta[];
  onNewWorkspace:()=>void;
  onSelectWorkspace:(id:string)=>void;
@@ -237,7 +237,7 @@ function decisionCopy(verification:Verification|null,claim?:Claim){
  };
 }
 
-function SealWorkspace({initialDemo=false,initialText='',initialRun=false,workspaceId,active,workspaces,onNewWorkspace,onSelectWorkspace,onDeleteWorkspace,onWorkspaceMeta}:SealWorkspaceProps){
+function SealWorkspace({initialDemo=false,initialText='',initialRun=false,workspaceId,workspaceActive,workspaces,onNewWorkspace,onSelectWorkspace,onDeleteWorkspace,onWorkspaceMeta}:SealWorkspaceProps){
  const [hydrated,setHydrated]=useState(false);
  const [text,setText]=useState(initialText||(initialDemo?fixtures['action-message-demo'].text:''));
  const [draft,setDraft]=useState('');
@@ -316,14 +316,14 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  },[verification,workspaceId]);
 
  useLayoutEffect(()=>{
-  if(!active||!verification)return;
+  if(!workspaceActive||!verification)return;
   const frame=window.requestAnimationFrame(()=>{
    const carousel=resultCarouselRef.current;
    if(carousel)carousel.scrollTo({top:0,left:0,behavior:'auto'});
    setActiveResultSection('summary');
   });
   return()=>window.cancelAnimationFrame(frame);
- },[active,verification]);
+ },[workspaceActive,verification]);
  const [reviewOffer,setReviewOffer]=useState<'idle'|'counting'|'skipped'|'watching'|'completed'>('idle');
  const [reviewCountdown,setReviewCountdown]=useState(3);
  const [reviewOfferPaused,setReviewOfferPaused]=useState(false);
@@ -2457,7 +2457,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
       initialText={index===0?initialText:''}
       initialRun={index===0?initialRun:false}
       workspaceId={workspace.id}
-      active
+      workspaceActive
       workspaces={workspaces}
       onNewWorkspace={createWorkspace}
       onSelectWorkspace={selectWorkspace}
