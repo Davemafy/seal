@@ -580,14 +580,32 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  await page.waitForTimeout(760);
  await expect(leaving).toBeHidden();
 
+ const previousActiveId=await active.getAttribute('data-workspace-id');
+ await page.getByRole('button',{name:'New check'}).click();
+ const secondLeaving=page.locator('.seal-workspace-instance.is-leaving');
+ await expect(secondLeaving,'the immediately previous check should remain visible on repeated new-check transitions').toBeVisible();
+ const outgoingId=await secondLeaving.getAttribute('data-workspace-id');
+ expect(outgoingId).toBe(previousActiveId);
+ active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
+ await expect(active).toHaveClass(/is-entering-forward/);
+ await page.waitForTimeout(760);
+
  await page.getByRole('button',{name:'Open checks',exact:true}).click();
  let drawer=page.getByRole('dialog',{name:'Checks'});
  await expect(drawer).toBeVisible();
- await expect(drawer.locator('.workspace-drawer-row')).toHaveCount(2);
+ await expect(drawer.locator('.workspace-drawer-row')).toHaveCount(3);
  const drawerCopyWidth=await drawer.locator('.workspace-drawer-copy').first().evaluate(node=>node.getBoundingClientRect().width);
  expect(drawerCopyWidth,'workspace row copy must not collapse to a single character').toBeGreaterThan(120);
- await expect(drawer.getByRole('button',{name:/Delete check 2:/})).toBeVisible();
+ await expect(drawer.getByRole('button',{name:/Delete check 3:/})).toBeVisible();
 
+ await drawer.getByRole('button',{name:/Delete check 3:/}).click();
+ await expect(page.getByRole('dialog',{name:'Checks',includeHidden:true})).not.toBeVisible();
+ active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
+ await expect(active.getByTestId('entry-shell')).toBeVisible();
+
+ await page.getByRole('button',{name:'Open checks',exact:true}).click();
+ drawer=page.getByRole('dialog',{name:'Checks'});
+ await expect(drawer.locator('.workspace-drawer-row')).toHaveCount(2);
  await drawer.getByRole('button',{name:/Delete check 2:/}).click();
  await expect(page.getByRole('dialog',{name:'Checks',includeHidden:true})).not.toBeVisible();
  active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
