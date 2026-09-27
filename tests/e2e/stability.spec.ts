@@ -50,7 +50,7 @@ Call 1-866-388-2430 after 5:30 PM for the status of your jury service.`);
   throw error;
  });
  await expect(page.getByRole('heading',{name:'Your message'})).toBeVisible();
- await expect(page.getByText('Call 1-866-388-2430 after 5:30 PM')).toBeVisible();
+ await expect(page.locator('.pasted-message')).toContainText('Call 1-866-388-2430 after 5:30 PM');
  await expect(page.locator('.inspection-error')).toHaveCount(0);
  expect(extractRequests,'clear pasted actions should not depend on the optional model extractor').toBe(0);
  assertNoRuntimeErrors();
