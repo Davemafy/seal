@@ -57,6 +57,7 @@ const compactTitle=(value:string,source:BrowseDiscoverySource)=>{
   .replace(/\s+(?:FOR IMMEDIATE RELEASE).*$/i,'')
   .trim();
  if(/^UNITED STATES DISTRICT COURT$/i.test(title))title='Jury and court-related scam warning';
+ if(title)title=title.charAt(0).toUpperCase()+title.slice(1);
  const words=title.split(' ');
  if(title.length>96){
   let clipped='';
@@ -88,7 +89,7 @@ function publishedDateFromHtml(html:string){
   if(!Number.isNaN(parsed.valueOf()))return parsed.toISOString();
  }
  const text=normalize($('body').text());
- const match=text.match(/FOR IMMEDIATE RELEASE\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(20\d{2})/i);
+ const match=text.match(/FOR IMMEDIATE RELEASE\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(20\d{2})/i);
  if(match){
   const parsed=new Date(`${match[1]} ${match[2]}, ${match[3]}`);
   if(!Number.isNaN(parsed.valueOf()))return parsed.toISOString();
@@ -259,6 +260,7 @@ const seenRun=new Set<string>();
 try{
  for(const source of browseDiscoverySources){
   let links:[string,string][]=[];
+  let acceptedForSource=0;
   try{links=await discoverFromSource(source)}
   catch(error){
    console.error(`SOURCE_FAILED ${source.id}: ${error instanceof Error?error.message:String(error)}`);
@@ -319,6 +321,8 @@ try{
     discoveredAt:now
    });
    console.log(`PUBLISH ${source.id}: ${url}`);
+   acceptedForSource++;
+   if(acceptedForSource>=2)break;
   }
  }
 }finally{
