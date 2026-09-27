@@ -1402,7 +1402,6 @@ async function upload(uploaded:File){
  const processingTitle=processingStage===2?'Checking public sources':processingStage===1?'Reading what the message asks':'Reading your document';
  const processingTextRegionsVisible=useMemo(()=>file?.tokens?processingTextRegions(file.tokens):[],[file]);
  const processingRegionCount=processingTextRegionsVisible.length;
- const processingActionCount=claims.filter(claim=>Boolean(claim.action)&&claimReliable(claim)).length;
 
  const renderTextLines=(lines:string[])=><div className="message-lines">{lines.map((line,index)=>{
   const claim=claims.find(candidate=>candidate.exact_source_text===line||line.includes(candidate.value));
@@ -1509,19 +1508,12 @@ async function upload(uploaded:File){
           <span className="upload-process-body">
            <span className="upload-process-kicker">Check in progress</span>
            <strong>{processingTitle}</strong>
-           <span className="process-stage-list" aria-label="Check progress">
-            <span className={`process-stage-row ${processingStage===0?'is-current':'is-done'}`}>
-             <span><b>Read document</b><small>{processingStage>0?(processingRegionCount?`${processingRegionCount} text regions recovered`:'Text recovered'):'Reading on this device'}</small></span>
-             <em>{processingStage>0?'Done':'Now'}</em>
-            </span>
-            <span className={`process-stage-row ${processingStage===1?'is-current':processingStage>1?'is-done':'is-next'}`}>
-             <span><b>Find requested actions</b><small>{processingStage>1?(processingActionCount?`${processingActionCount} action${processingActionCount===1?'':'s'} grounded`:'No clear action yet'):'Keep wording tied to the message'}</small></span>
-             <em>{processingStage>1?'Done':processingStage===1?'Now':'Next'}</em>
-            </span>
-            <span className={`process-stage-row ${processingStage===2?'is-current':'is-next'}`}>
-             <span><b>Check public sources</b><small>Independent court and agency sources</small></span>
-             <em>{processingStage===2?'Now':'Next'}</em>
-            </span>
+           <span className="process-context">
+            {processingStage===0
+             ?'Reading locally from the selected file.'
+             :processingStage===1
+              ?(processingRegionCount?`${processingRegionCount} text regions recovered. Identifying the instructions that matter.`:'Identifying the instructions that matter.')
+              :'Comparing the recovered instructions with independent court and agency sources.'}
            </span>
            {uploadPreview?.name&&<span className="upload-file-name" title={uploadPreview.name}>{uploadPreview.name}</span>}
            <span className="process-device-note"><span>Original stays on this device</span><small>Extracted text may be sent for checking</small></span>

@@ -2981,3 +2981,15 @@
  .journey-details{margin-top:20px}
  .handoff-pack blockquote{padding:12px!important}
 }
+
+
+/* Processing should read like software doing work, not an agent storyboard. */
+.process-context{
+ display:block;
+ max-width:430px;
+ margin-top:10px;
+ color:#666;
+ font-size:11.5px;
+ line-height:18px
+}
+.upload-process-body>strong{display:block;margin-top:3px}
