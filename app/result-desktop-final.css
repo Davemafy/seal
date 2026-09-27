@@ -1576,3 +1576,144 @@
  from{opacity:.28;transform:scale(.78)}
  to{opacity:1;transform:scale(1)}
 }
+
+
+/* Result rhythm reset — compact, but never compressed. */
+@media(min-width:901px){
+ .review-shell{
+  padding-top:16px!important;
+  padding-bottom:20px!important
+ }
+
+ /* Masthead rhythm: 4 / 8 / 16. */
+ .result-masthead-row{
+  padding-top:0!important;
+  padding-bottom:0!important
+ }
+ .result-masthead-title{
+  margin:0 0 4px!important
+ }
+ .check-object-identity h1{
+  margin:0!important
+ }
+ .check-object-meta{
+  margin-top:8px!important
+ }
+ .result-chapters{
+  margin-top:16px!important;
+  padding:4px!important
+ }
+ .result-chapters a{
+  min-height:38px!important;
+  padding:8px 13px!important
+ }
+
+ /* Tabs need a real pause before the page content starts. */
+ .result-slide-summary{
+  padding-top:28px!important;
+  padding-bottom:32px!important
+ }
+ .result-slide-summary .decision-status{
+  margin:0 0 8px!important
+ }
+ .result-slide-summary .decision-summary{
+  margin-top:14px!important
+ }
+ .translation-note{
+  max-width:650px!important;
+  margin-top:12px!important;
+  margin-bottom:0!important;
+  line-height:21px!important
+ }
+
+ .result-slide-summary .decision-overview{
+  row-gap:24px!important
+ }
+ .decision-summary-side{
+  padding:16px!important
+ }
+ .result-slide-summary .decision-primary-route>span{
+  margin-bottom:8px!important
+ }
+ .result-slide-summary .decision-primary-route>small{
+  margin-top:8px!important
+ }
+ .result-slide-summary .decision-at-a-glance{
+  margin-top:12px!important
+ }
+
+ /* Disclosure belongs to the decision, but should not touch it. */
+ .result-slide-summary .decision-details{
+  width:min(100%,760px)!important;
+  max-width:760px!important;
+  margin-top:24px!important
+ }
+ .result-slide-summary .decision-details>summary{
+  min-height:48px!important;
+  padding-inline:16px!important
+ }
+
+ /* Each result section starts on a deliberate beat. */
+ .result-slide-original,
+ .result-slide-evidence,
+ .result-slide-resolve{
+  padding-top:32px!important;
+  padding-bottom:36px!important
+ }
+ .result-slide-original::before,
+ .result-slide-evidence::before,
+ .result-slide-resolve::before{
+  margin-bottom:24px!important
+ }
+
+ .document-heading{
+  margin-bottom:12px!important
+ }
+ .document-paper{
+  margin-top:0!important
+ }
+
+ .result-slide-evidence .source-resolution{
+  margin-top:0!important
+ }
+ .result-slide-evidence .section-heading{
+  margin-bottom:16px!important
+ }
+ .result-slide-evidence .source-signal{
+  padding:16px 0!important
+ }
+ .result-slide-evidence .resolution-disclaimer{
+  margin-top:16px!important
+ }
+ .result-slide-evidence .record-disclosure{
+  margin-top:24px!important
+ }
+
+ .result-slide-resolve .user-actions-heading{
+  margin-bottom:24px!important
+ }
+ .journey-block,
+ .journey-details,
+ .safe-route{
+  margin-top:20px!important
+ }
+}
+
+@media(min-width:901px) and (max-width:1180px){
+ .review-shell{
+  padding-top:14px!important
+ }
+ .result-chapters{
+  margin-top:14px!important
+ }
+ .result-slide-summary{
+  padding-top:24px!important;
+  padding-bottom:28px!important
+ }
+ .result-slide-original,
+ .result-slide-evidence,
+ .result-slide-resolve{
+  padding-top:28px!important;
+  padding-bottom:32px!important
+ }
+}
