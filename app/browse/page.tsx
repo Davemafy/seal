@@ -1,30 +1,24 @@
 /* eslint-disable @next/next/no-img-element -- Small local SVG brand marks do not need Next Image optimization. */
 import Link from 'next/link';
-import {browseCases,type BrowseCase} from '@/lib/browse-cases';
-import PdfThumb from './pdf-thumb';
-import ImageThumb from './image-thumb';
+import {browseCases} from '@/lib/browse-cases';
+import BrowseGrid from './browse-grid';
 import '../workspace.css';
 import './browse.css';
 
-function reliabilityScore(item:BrowseCase){
- if(item.featured&&item.classification==='Confirmed scam example')return 100;
- if(item.classification==='Confirmed scam example')return 90;
- if(item.classification==='Legitimate sample/form')return 80;
- if(item.classification==='Official blank court form')return 75;
- if(item.classification==='Published judicial notice')return 70;
- return 10;
-}
-
-function CaseMedia({item,priority=false}:{item:BrowseCase;priority?:boolean}){
- return <div className={`case-visual ${item.preview.type==='image'?'is-image':'is-pdf'}`}>
-  {item.preview.type==='pdf'
-   ?<PdfThumb id={item.id} alt={item.preview.alt} priority={priority}/>
-   :<ImageThumb id={item.id} alt={item.preview.alt}/>}
- </div>;
-}
+const visualOrder=[
+ 'maryland-court-text-scam',
+ 'spain-public-judicial-notice',
+ 'connecticut-sample-jury-summons',
+ 'brazil-parana-citation-notice',
+ 'dallas-traffic-qr-scam',
+ 'france-court-convocation-form',
+];
 
 export default function Browse(){
- const rankedCases=[...browseCases].sort((a,b)=>reliabilityScore(b)-reliabilityScore(a));
+ const order=new Map(visualOrder.map((id,index)=>[id,index]));
+ const rankedCases=[...browseCases].sort((a,b)=>(order.get(a.id)??99)-(order.get(b.id)??99));
+ const countryCount=new Set(browseCases.map(item=>item.country)).size;
+ const languageCount=new Set(browseCases.map(item=>item.language||'English')).size;
 
  return <main className="seal-app browse-page">
   <aside className="workspace-rail" aria-label="Workspace">
@@ -43,26 +37,17 @@ export default function Browse(){
 
   <section className="browse-shell">
    <header className="browse-intro">
+    <p className="browse-eyebrow">PUBLIC SOURCE LIBRARY</p>
     <h1>Browse real cases</h1>
-    <p>Published court documents and images from several countries. Open every original; verified runnable examples can also be opened in SEAL. Blank forms and historical notices are labeled.</p>
+    <p className="browse-deck">Published court documents and scam examples from official sources. Open every original; examples that can be checked end to end are marked as runnable.</p>
+    <div className="browse-proof" aria-label="Browse collection coverage">
+     <span><strong>{browseCases.length}</strong> source documents</span>
+     <span><strong>{countryCount}</strong> countries</span>
+     <span><strong>{languageCount}</strong> languages</span>
+    </div>
    </header>
 
-   <div className="case-archive">
-    {rankedCases.map((item,index)=><article className="case-card" key={item.id}>
-     <CaseMedia item={item} priority={index<2}/>
-     <div className="case-copy">
-      <p className="case-kicker">{item.jurisdiction}{item.language?` · ${item.language}`:''}</p>
-      <h2>{item.title}</h2>
-      <p className="case-source">Source: {item.sourceTitle}</p>
-      <p className="case-classification">{item.classification}</p>
-      <p className="case-note">{item.visualNote}</p>
-      <div className="case-actions">
-       <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer">Open source</a>
-       {item.runText&&<a href={`/?case=${item.id}`}>Run in SEAL</a>}
-      </div>
-     </div>
-    </article>)}
-   </div>
+   <BrowseGrid items={rankedCases}/>
   </section>
  </main>;
 }

@@ -17,6 +17,7 @@ export type BrowseCase={
  language?:string;
  ocrLanguage?:'eng'|'spa'|'por'|'fra';
  jurisdiction:string;
+ country:string;
  issuer:string;
  sourceTitle:string;
  sourceUrl:string;
@@ -30,7 +31,7 @@ export type BrowseCase={
 export const browseCases:BrowseCase[]=[
  {
   id:'brazil-parana-citation-notice',category:'legitimate-court-notice',section:'legitimate-reference',
-  title:'Public citation notice with response period',language:'Português',ocrLanguage:'por',jurisdiction:'Paraná, Brasil',issuer:'Tribunal de Justiça do Paraná',
+  title:'Public citation notice with response period',language:'Português',ocrLanguage:'por',jurisdiction:'Paraná, Brasil',country:'Brazil',issuer:'Tribunal de Justiça do Paraná',
   sourceTitle:'TJPR — Edital de citação (April 2026)',sourceUrl:'https://portal.tjpr.jus.br/pesquisa_athos/anexo/7156272',
   classification:'Published judicial notice',visualNote:'An actual one-page court citation published in 2026. It says the named recipient may file a response within 15 working days after the notice period; this archived example is not a current instruction to you.',
   excerpt:'O destinatário pode oferecer contestação em 15 dias úteis após o prazo do edital.',
@@ -38,7 +39,7 @@ export const browseCases:BrowseCase[]=[
  },
  {
   id:'spain-public-judicial-notice',category:'legitimate-court-notice',section:'legitimate-reference',
-  title:'Public notice to interested parties',language:'Español',ocrLanguage:'spa',jurisdiction:'Jaén, España',issuer:'Boletín Oficial del Estado',
+  title:'Public notice to interested parties',language:'Español',ocrLanguage:'spa',jurisdiction:'Jaén, España',country:'Spain',issuer:'Boletín Oficial del Estado',
   sourceTitle:'BOE — Anuncio 24801 (21 July 2026)',sourceUrl:'https://www.boe.es/boe/dias/2026/07/21/pdfs/BOE-B-2026-24801.pdf',
   classification:'Published judicial notice',visualNote:'A real public notice referring interested parties to a Jaén court within nine days of publication. The stated period has passed; it is not a current instruction to you.',
   excerpt:'Los interesados podrán comparecer ante el Juzgado de lo Contencioso-Administrativo nº 1 de Jaén en el plazo indicado.',
@@ -46,7 +47,7 @@ export const browseCases:BrowseCase[]=[
  },
  {
   id:'france-court-convocation-form',category:'legitimate-court-notice',section:'legitimate-reference',
-  title:'Court appointment application form',language:'Français',ocrLanguage:'fra',jurisdiction:'Paris, France',issuer:'Tribunal judiciaire de Paris',
+  title:'Court appointment application form',language:'Français',ocrLanguage:'fra',jurisdiction:'Paris, France',country:'France',issuer:'Tribunal judiciaire de Paris',
   sourceTitle:'Tribunal judiciaire de Paris — Formulaire de demande de convocation',sourceUrl:'https://www.tribunal-de-paris.justice.fr/sites/default/files/2021-10/liste%2021-11%20al1%20version%20Octobre%202021.pdf',
   classification:'Official blank court form',visualNote:'The Paris court asks applicants to assemble a file and submit this two-page form with supporting documents. It is an application, not a summons.',
   excerpt:'Vous devez constituer un dossier par personne et adresser le formulaire au tribunal avec les pièces demandées.',
@@ -59,6 +60,7 @@ export const browseCases:BrowseCase[]=[
   featured:true,
   title:'Traffic default notice with QR payment',
   jurisdiction:'Dallas, Texas',
+  country:'United States',
   issuer:'City of Dallas',
   sourceTitle:'City of Dallas — SCAM Notice',
   sourceUrl:'https://dallascityhall.com/departments/courtdetentionservices/DCH%20Documents/4-1-26%20-%20SCAM%20Notice.pdf',
@@ -74,6 +76,7 @@ export const browseCases:BrowseCase[]=[
   section:'court-message-scams',
   title:'Court text with a fake hearing and payment route',
   jurisdiction:'Maryland',
+  country:'United States',
   issuer:'Maryland Judiciary',
   sourceTitle:'Maryland Judiciary — District Court text scam alert',
   sourceUrl:'https://www.mdcourts.gov/media/news/2026/pr20260306',
@@ -89,6 +92,7 @@ export const browseCases:BrowseCase[]=[
   section:'legitimate-reference',
   title:'Sample federal jury summons',
   jurisdiction:'District of Connecticut',
+  country:'United States',
   issuer:'U.S. District Court',
   sourceTitle:'Sample Jury Summons Form',
   sourceUrl:'https://coop.ctd.uscourts.gov/sites/default/files/Sample%20Jury%20Summons%20Form.pdf',
