@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+ <style>
+  .seal-fill{fill:#0B0B0B}
+  .seal-fold{fill:#6F6F6F}
+  @media (prefers-color-scheme:dark){
+   .seal-fill{fill:#FFFFFF}
+   .seal-fold{fill:#A8A8A8}
+  }
+ </style>
+ <path class="seal-fill" d="M14 36.5c0-4.5 1.9-8.1 5.5-10.9L35.5 13H77c3.9 0 7 3.1 7 7v9.5L67 46H24c-5.6 0-10-3.9-10-9.5Z"/>
+ <path class="seal-fill" d="M24 54h42.5L84 70.5 67.5 87H14V72.3c0-4.4 1.8-8 5.5-10.8L24 54Z"/>
+ <path class="seal-fold" d="M24 46h43L59 54H24c-5.7 0-10-2.9-10-7.5 0 4.2 4.5 7.5 10 7.5Z"/>
+</svg>
