@@ -1,6 +1,6 @@
 # Architecture
 
-Browser binary → PDF.js text items or Tesseract word boxes → extracted text → optional Groq schema extraction on server → atomic claim objects → allowlisted server resolvers → three-state verdicts → source highlights and evidence.
+Browser binary to PDF.js text items or Tesseract word boxes to extracted text to optional Groq schema extraction on server to atomic claim objects to allowlisted server resolvers to three-state verdicts to source highlights and evidence.
 
 The binary is never uploaded. The text is transient in the request and no server persistence is configured. Groq cannot issue a verdict. Source provenance includes URL, title, excerpt, check timestamp, and LIVE or SNAPSHOT mode. Snapshot mode is only for deterministic recording; live fetching uses fixed Riverside paths with 8-second timeouts, manual redirect validation and Cheerio text parsing. Uploaded links are never fetched.
 
