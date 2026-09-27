@@ -82,9 +82,14 @@ const formatStoryTime=(seconds:number)=>{
 
 function SealGuideIcon({direction='down'}:{direction?:'down'|'right'|'left'|'up'}){
  return <svg className={`seal-guide-icon is-${direction}`} viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-  <path d="M2.5 5.95c0-.72.3-1.3.9-1.77L5.78 2.2h5.76c.52 0 .94.42.94.94v1.48l-2.42 2.3H3.9c-.79 0-1.4-.36-1.4-.97Z" fill="currentColor"/>
-  <path d="M3.9 8.58h6.06l2.52 2.27-2.27 2.45H2.5v-2.08c0-.65.27-1.2.8-1.64l.6-.5Z" fill="currentColor"/>
-  <path d="M3.9 6.92h6.16L8.58 8.58H3.9c-.8 0-1.4-.34-1.4-.94 0 .52.65.94 1.4.94Z" fill="currentColor" opacity=".32"/>
+  <path
+   d="m5.75 3.5 4.5 4.5-4.5 4.5"
+   fill="none"
+   stroke="currentColor"
+   strokeWidth="1.55"
+   strokeLinecap="round"
+   strokeLinejoin="round"
+  />
  </svg>;
 }
 
