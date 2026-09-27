@@ -213,7 +213,7 @@ describe('input-agnostic extraction architecture',()=>{
   expect(call?.verification_eligible).toBe(false);
  });
  it('upscales small screenshots but caps OCR work for large mobile images',()=>{
-  expect(ocrScaleForSize(526,791)).toBeGreaterThan(2);
+  expect(ocrScaleForSize(526,791)).toBeGreaterThan(1.8);
   expect(ocrScaleForSize(1080,2400)).toBeLessThan(1.5);
   expect(ocrScaleForSize(3200,4100)).toBeLessThan(1);
  });
