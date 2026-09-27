@@ -36,12 +36,12 @@ export const browseCases:BrowseCase[]=[
   preview:{type:'pdf',url:'https://www.tjsp.jus.br/Download/Corregedoria/CartasRogatorias/Documentos/FormularioMexicoPanamaColombia.pdf',alt:'Portuguese judicial notification form hosted by the São Paulo court'}
  },
  {
-  id:'nigeria-lagos-court-forms',category:'legitimate-court-notice',section:'legitimate-reference',
-  title:'Court forms and summons references',language:'English',jurisdiction:'Lagos, Nigeria',issuer:'Lagos State Judiciary',
-  sourceTitle:'Lagos State Judiciary — Court Forms',sourceUrl:'https://jis.lagosjudiciary.gov.ng/CourtForms.aspx',
-  classification:'Official court forms index',visualNote:'Published court forms include an originating summons and an appearance to warning or citation. These are form references, not a person’s actual notice.',
-  excerpt:'A court-published collection of forms showing the kinds of summons and responses used by the Lagos judiciary.',runText:'',
-  preview:{type:'source',url:'https://jis.lagosjudiciary.gov.ng/CourtForms.aspx',alt:'Official Lagos State Judiciary court forms index'}
+  id:'nigeria-lagos-court-search',category:'legitimate-court-notice',section:'legitimate-reference',
+  title:'High Court reference verification',language:'English',jurisdiction:'Lagos, Nigeria',issuer:'Lagos State Judiciary',
+  sourceTitle:'Lagos State Judiciary — Verification, High Court',sourceUrl:'https://lagosjudiciary.gov.ng/search',
+  classification:'Official verification portal',visualNote:'The judiciary provides a reference-number lookup. A result can help check the reference; it does not establish that a message or sender is genuine.',
+  excerpt:'The Lagos State Judiciary publishes a High Court verification page with a reference-number search.',runText:'',
+  preview:{type:'source',url:'https://lagosjudiciary.gov.ng/search',alt:'Lagos State Judiciary High Court reference verification'}
  },
  {
   id:'brazil-false-judicial-contact',category:'court-payment-fee',section:'court-message-scams',

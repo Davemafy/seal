@@ -1330,6 +1330,7 @@ async function upload(uploaded:File){
       {messageDetails.length>0||scheduleQuote||noPaymentQuote?<dl className="message-detail-list">{messageDetails.map(claim=><div key={claim.id}><dt>{claim.type==='location'?'Location named':claim.label}</dt><dd>{cleanDisplayText(claim.value)}</dd></div>)}{scheduleQuote&&<div><dt>Schedule stated</dt><dd>{cleanDisplayText(scheduleQuote)}</dd></div>}{noPaymentQuote&&<div><dt>Payment statement</dt><dd>{cleanDisplayText(noPaymentQuote)}</dd></div>}</dl>:<p>No court or case details could be read reliably.</p>}
       <p>These are details printed in the message, not facts confirmed by a court. SEAL cannot establish whether the case exists or who sent it.</p>
       <p>If you need to respond, give the court name and case number above to a clerk reached through an official court site. Do not use payment or contact details supplied in the message until the court confirms them.</p>
+      {/\b(?:high court of lagos state|lagos state judiciary)\b/i.test(text)&&<a href="https://lagosjudiciary.gov.ng/search" target="_blank" rel="noopener noreferrer">Check a High Court reference on the Lagos Judiciary site →</a>}
       {/\b(?:united states district court|u\.?s\.? district court)\b/i.test(text)&&<a href="https://www.uscourts.gov/federal-court-finder/find" target="_blank" rel="noopener noreferrer">Find the court through the U.S. Courts directory →</a>}
      </div>}
      {verification?.safe_action&&<div className="safe-route" id="next-step">
