@@ -722,14 +722,20 @@ test('1208 desktop keeps sidebar visually substantial and canvas restrained',asy
   const heading=shell.querySelector<HTMLElement>('.entry-copy h1')!;
   const intake=shell.querySelector<HTMLElement>('.intake')!;
   const row=rail.querySelector<HTMLElement>('.rail-check-row')!;
+  const copy=rail.querySelector<HTMLElement>('.rail-check-copy')!;
   const title=rail.querySelector<HTMLElement>('.rail-check-copy strong')!;
+  const footer=document.querySelector<HTMLElement>('.seal-footer')!;
   return {
    railWidth:rail.getBoundingClientRect().width,
    shellWidth:shell.getBoundingClientRect().width,
    intakeWidth:intake.getBoundingClientRect().width,
    headingSize:Number.parseFloat(getComputedStyle(heading).fontSize),
    rowHeight:row.getBoundingClientRect().height,
+   railCopyWidth:copy.getBoundingClientRect().width,
    railTitleSize:Number.parseFloat(getComputedStyle(title).fontSize),
+   footerTop:footer.getBoundingClientRect().top,
+   footerBottom:footer.getBoundingClientRect().bottom,
+   viewport:window.innerHeight,
    overflow:document.documentElement.scrollWidth-window.innerWidth
   };
  });
@@ -739,7 +745,10 @@ test('1208 desktop keeps sidebar visually substantial and canvas restrained',asy
  expect(metrics.intakeWidth).toBeLessThanOrEqual(520);
  expect(metrics.headingSize).toBeLessThanOrEqual(45);
  expect(metrics.rowHeight).toBeGreaterThanOrEqual(54);
+ expect(metrics.railCopyWidth,'desktop check labels must not collapse to one character').toBeGreaterThan(130);
  expect(metrics.railTitleSize).toBeGreaterThanOrEqual(12);
+ expect(metrics.footerTop,'footer should sit near the viewport bottom, not start halfway down the page').toBeGreaterThan(metrics.viewport-100);
+ expect(metrics.footerBottom).toBeLessThanOrEqual(metrics.viewport+1);
  expect(metrics.overflow).toBeLessThanOrEqual(1);
  assertNoRuntimeErrors();
 });
