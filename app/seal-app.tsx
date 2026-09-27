@@ -6,7 +6,6 @@ import {gsap} from 'gsap';
 import {Toaster,toast} from 'sonner';
 import {createPortal} from 'react-dom';
 import Link from 'next/link';
-import {useRouter} from 'next/navigation';
 import PDFPreview from './pdf-preview';
 import StoryPdfPage from './story-pdf-page';
 import {fixtures} from '@/lib/fixtures';
@@ -2318,9 +2317,16 @@ const WORKSPACE_LIST_KEY='seal:workspace-list:v1';
 const ONBOARDING_KEY='seal:onboarding:v1';
 const DISPLAY_LOCALE_KEY='seal:display-locale:v1';
 const checkRoute=(id:string)=>`/check/${encodeURIComponent(id.replace(/^check-/,''))}`;
+const workspaceIdFromPath=(pathname:string)=>{
+ const match=pathname.match(/^\/check\/([^/?#]+)/);
+ if(!match)return '';
+ try{
+  const slug=decodeURIComponent(match[1]);
+  return slug.startsWith('check-')?slug:`check-${slug}`;
+ }catch{return ''}
+};
 
 export default function SealApp({initialDemo=false,initialText='',initialRun=false,initialWorkspaceId}:{initialDemo?:boolean;initialText?:string;initialRun?:boolean;initialWorkspaceId?:string}){
- const router=useRouter();
  const [workspaces,setWorkspaces]=useState<WorkspaceMeta[]>([{id:initialWorkspaceId||'primary',title:'New check',status:'idle'}]);
  const [activeWorkspace,setActiveWorkspace]=useState(initialWorkspaceId||'primary');
  const [registryReady,setRegistryReady]=useState(false);
@@ -2355,6 +2361,19 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   if(!registryReady)return;
   try{window.sessionStorage.setItem(WORKSPACE_LIST_KEY,JSON.stringify({active:activeWorkspace,items:workspaces}))}catch{}
  },[registryReady,activeWorkspace,workspaces]);
+
+ useEffect(()=>{
+  if(!registryReady)return;
+  const onPopState=()=>{
+   const routedId=workspaceIdFromPath(window.location.pathname);
+   if(!routedId)return;
+   setWorkspaces(items=>items.some(item=>item.id===routedId)?items:[...items,{id:routedId,title:'New check',status:'idle'}].slice(-8));
+   setActiveWorkspace(routedId);
+   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
+  };
+  window.addEventListener('popstate',onPopState);
+  return()=>window.removeEventListener('popstate',onPopState);
+ },[registryReady]);
 
  useEffect(()=>{
   if(!registryReady||!initialWorkspaceId)return;
@@ -2418,14 +2437,15 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    return [...items,{id,title,status:'idle' as WorkspaceRunStatus}].slice(-8);
   });
   setActiveWorkspace(id);
-  router.push(checkRoute(id));
+  window.history.pushState({workspaceId:id},'',checkRoute(id));
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
- },[router]);
+ },[]);
 
  const selectWorkspace=useCallback((id:string)=>{
+  if(id===activeWorkspace)return;
   animateWorkspaceTo(id);
-  router.push(checkRoute(id));
- },[animateWorkspaceTo,router]);
+  window.history.pushState({workspaceId:id},'',checkRoute(id));
+ },[activeWorkspace,animateWorkspaceTo]);
 
  const deleteWorkspace=useCallback((id:string)=>{
   const index=workspaces.findIndex(item=>item.id===id);
@@ -2436,18 +2456,18 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    const replacementId=`check-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
    setWorkspaces([{id:replacementId,title:'New check',status:'idle'}]);
    setActiveWorkspace(replacementId);
-   router.replace(checkRoute(replacementId));
+   window.history.replaceState({workspaceId:replacementId},'',checkRoute(replacementId));
   }else{
    setWorkspaces(remaining);
    if(activeWorkspace===id){
     const next=remaining[Math.min(index,remaining.length-1)];
     setActiveWorkspace(next.id);
-    router.replace(checkRoute(next.id));
+    window.history.replaceState({workspaceId:next.id},'',checkRoute(next.id));
    }
   }
   toast.success('Check removed');
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
- },[workspaces,activeWorkspace,router]);
+ },[workspaces,activeWorkspace]);
 
  return <>
   {onboardingOpen&&<div className="first-run-layer" data-testid="first-run-onboarding">
