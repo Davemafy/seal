@@ -43,10 +43,15 @@ describe('model action grounding',()=>{
   expect(groundedModelActions(extraction,text)[0].source_text).toBe('Please pay\n the fine by Friday.');
  });
 
- it('uses deterministic actions only when the model path is unavailable',()=>{
+ it('recovers grounded deterministic actions when the model omits them',()=>{
   const text='District Court\nPay the fine now.';
   expect(claimsFromExtraction(emptyExtraction(),text).some(claim=>claim.action?.kind==='pay')).toBe(true);
-  expect(claimsFromExtraction({...emptyExtraction(),requested_actions:[]},text).some(claim=>claim.action)).toBe(false);
+  expect(claimsFromExtraction({...emptyExtraction(),requested_actions:[]},text).some(claim=>claim.action?.kind==='pay')).toBe(true);
+ });
+ it('does not duplicate a deterministic action already returned by the model',()=>{
+  const text='District Court\nPay the fine now.';
+  const extraction={...emptyExtraction(),requested_actions:[action('Pay the fine now.','pay')]};
+  expect(claimsFromExtraction(extraction,text).filter(claim=>claim.action?.kind==='pay')).toHaveLength(1);
  });
 
  it('preserves grounded non-US court details and exact model actions',()=>{
