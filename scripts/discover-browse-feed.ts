@@ -90,12 +90,20 @@ function publishedDateFromHtml(html:string){
   if(!Number.isNaN(parsed.valueOf()))return parsed.toISOString();
  }
  const text=normalize($('body').text());
- const match=text.match(/FOR IMMEDIATE RELEASE\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(20\d{2})/i);
- if(match){
-  const parsed=new Date(`${match[1]} ${match[2]}, ${match[3]}`);
+ const immediate=text.match(/FOR IMMEDIATE RELEASE\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(20\d{2})/i);
+ const generic=immediate||text.match(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(20\d{2})\b/i);
+ if(generic){
+  const parsed=new Date(`${generic[1]} ${generic[2]}, ${generic[3]}`);
   if(!Number.isNaN(parsed.valueOf()))return parsed.toISOString();
  }
  return undefined;
+}
+
+function publishedDateFromUrl(url:string){
+ const match=url.match(/(?:pr)?(20\d{2})(0[1-9]|1[0-2])([0-2]\d|3[01])(?:\D|$)/i);
+ if(!match)return undefined;
+ const parsed=new Date(`${match[1]}-${match[2]}-${match[3]}T00:00:00.000Z`);
+ return Number.isNaN(parsed.valueOf())?undefined:parsed.toISOString();
 }
 
 async function verifyImage(url:string,source:BrowseDiscoverySource){
@@ -176,7 +184,7 @@ async function readCandidate(url:string,source:BrowseDiscoverySource,contextTitl
   title,
   text,
   preview:{type:'image',url:image.url,alt:image.alt},
-  publishedAt:publishedDateFromHtml(html)
+  publishedAt:publishedDateFromHtml(html)||publishedDateFromUrl(url)
  };
 }
 
@@ -261,6 +269,12 @@ try{
  for(const source of browseDiscoverySources){
   let links:[string,string][]=[];
   let acceptedForSource=0;
+  const existingIssuerTimes=existingGenerated
+   .filter(item=>item.issuer===source.issuer)
+   .map(item=>Date.parse(item.sourcePublishedAt||item.discoveredAt||''))
+   .filter(value=>Number.isFinite(value))
+   .sort((a,b)=>b-a);
+  const issuerCutoff=existingIssuerTimes.length>=2?existingIssuerTimes[1]:0;
   try{links=await discoverFromSource(source)}
   catch(error){
    console.error(`SOURCE_FAILED ${source.id}: ${error instanceof Error?error.message:String(error)}`);
@@ -278,6 +292,11 @@ try{
     continue;
    }
    if(!candidate)continue;
+   const candidateTime=Date.parse(candidate.publishedAt||'');
+   if(issuerCutoff&&Number.isFinite(candidateTime)&&candidateTime<=issuerCutoff){
+    console.log(`SKIP_OLDER ${source.id}: ${url}`);
+    continue;
+   }
 
    let curated:z.infer<typeof curatorSchema>|undefined;
    curatorAttempts++;
