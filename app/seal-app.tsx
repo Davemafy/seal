@@ -30,6 +30,7 @@ type SealWorkspaceProps={
  workspaces:WorkspaceMeta[];
  onNewWorkspace:()=>void;
  onSelectWorkspace:(id:string)=>void;
+ onDeleteWorkspace:(id:string)=>void;
  onWorkspaceMeta:(id:string,patch:Partial<WorkspaceMeta>)=>void;
 };
 
@@ -89,7 +90,7 @@ function DesignPlayIcon(){
  </svg>;
 }
 
-type SealUiIconName='add'|'browse'|'globe'|'refresh'|'copy'|'message'|'download'|'list';
+type SealUiIconName='add'|'browse'|'globe'|'refresh'|'copy'|'message'|'download'|'list'|'sidebar'|'delete'|'close';
 
 function SealUiIcon({name}:{name:SealUiIconName}){
  const common={fill:'none',stroke:'currentColor',strokeWidth:1.7,strokeLinecap:'round' as const,strokeLinejoin:'round' as const};
@@ -102,6 +103,9 @@ function SealUiIcon({name}:{name:SealUiIconName}){
   {name==='message'&&<><path {...common} d="M5.1 5.25h13.8a1.85 1.85 0 0 1 1.85 1.85v8.15a1.85 1.85 0 0 1-1.85 1.85H10l-4.75 3v-3H5.1a1.85 1.85 0 0 1-1.85-1.85V7.1A1.85 1.85 0 0 1 5.1 5.25Z"/><path {...common} d="M8 9.25h8M8 13h5.25"/></>}
   {name==='download'&&<><path {...common} d="M12 4.5v10.25"/><path {...common} d="m8.3 11.4 3.7 3.7 3.7-3.7"/><path {...common} d="M5 18.75h14"/></>}
   {name==='list'&&<><path {...common} d="M9 6.5h10M9 12h10M9 17.5h10"/><circle cx="5" cy="6.5" r="1" fill="currentColor"/><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="5" cy="17.5" r="1" fill="currentColor"/></>}
+  {name==='sidebar'&&<><rect {...common} x="4" y="4.5" width="16" height="15" rx="2"/><path {...common} d="M9 4.5v15M12.5 9h4M12.5 13h4"/></>}
+  {name==='delete'&&<><path {...common} d="M5.5 7.25h13M9 7.25V5.5h6v1.75M7.5 7.25l.65 11h7.7l.65-11M10 10.5v4.75M14 10.5v4.75"/></>}
+  {name==='close'&&<><path {...common} d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></>}
  </svg>;
 }
 
@@ -229,7 +233,7 @@ function decisionCopy(verification:Verification|null,claim?:Claim){
  };
 }
 
-function SealWorkspace({initialDemo=false,initialText='',initialRun=false,workspaceId,workspaces,onNewWorkspace,onSelectWorkspace,onWorkspaceMeta}:SealWorkspaceProps){
+function SealWorkspace({initialDemo=false,initialText='',initialRun=false,workspaceId,workspaces,onNewWorkspace,onSelectWorkspace,onDeleteWorkspace,onWorkspaceMeta}:SealWorkspaceProps){
  const [hydrated,setHydrated]=useState(false);
  const [text,setText]=useState(initialText||(initialDemo?fixtures['action-message-demo'].text:''));
  const [draft,setDraft]=useState('');
@@ -247,6 +251,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [ocrLanguage,setOcrLanguage]=useState<OcrLanguage>('eng');
  const [displayLocale,setDisplayLocale]=useState<DisplayLocale>('en');
  const [languageMenuOpen,setLanguageMenuOpen]=useState(false);
+ const [workspaceDrawerOpen,setWorkspaceDrawerOpen]=useState(false);
  const [translatedResult,setTranslatedResult]=useState<Record<string,string>>({});
  const [resultTranslationState,setResultTranslationState]=useState<'idle'|'translated'|'unavailable'>('idle');
  const [documentLanguage,setDocumentLanguage]=useState<DetectedDocumentLanguage|null>(null);
@@ -317,6 +322,23 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const anchors=useRef<Record<string,HTMLElement|null>>({});
  const runId=useRef(0);
  const ui=(key:UiCopyKey)=>uiCopy(displayLocale,key);
+
+ useEffect(()=>()=> {
+  activeReadRef.current?.abort();
+  activeRequestRef.current?.abort();
+  storyTimelineRef.current?.kill();
+  if(storyCloseTimer.current)window.clearTimeout(storyCloseTimer.current);
+  if(uploadPreviewRef.current)URL.revokeObjectURL(uploadPreviewRef.current);
+ },[]);
+
+ useEffect(()=>{
+  if(!workspaceDrawerOpen)return;
+  const previous=document.body.style.overflow;
+  document.body.style.overflow='hidden';
+  const onKey=(event:KeyboardEvent)=>{if(event.key==='Escape')setWorkspaceDrawerOpen(false)};
+  window.addEventListener('keydown',onKey);
+  return()=>{document.body.style.overflow=previous;window.removeEventListener('keydown',onKey)};
+ },[workspaceDrawerOpen]);
 
  const handleStoryArtifactReady=useCallback(()=>{
   setStoryArtifactReady(true);
@@ -1482,16 +1504,22 @@ async function upload(uploaded:File){
     <Link className="icon-control rail-icon-control" href="/browse" aria-label={ui('browse')} title={ui('browse')} data-tooltip={ui('browse')}><SealUiIcon name="browse"/></Link>
    </div>
    <div className="rail-check-list" aria-label="Open checks">
-    {workspaces.filter(item=>item.status!=='idle'||item.id===workspaceId).map((item,index)=><button
-     type="button"
-     className={`rail-check ${item.id===workspaceId?'is-current':''}`}
-     key={item.id}
-     onClick={()=>onSelectWorkspace(item.id)}
-     aria-current={item.id===workspaceId?'page':undefined}
-    >
-     <span className={`rail-check-state is-${item.status}`} aria-hidden="true"/>
-     <span className="rail-check-copy"><strong>{item.title||`Check ${index+1}`}</strong><small>{[item.jurisdiction||item.language,item.status==='verifying'?'Checking sources':item.status==='reading'?'Reading':item.status==='done'?'Checked':item.status==='error'?'Needs attention':'New'].filter(Boolean).join(' · ')}</small></span>
-    </button>)}
+    {workspaces.filter(item=>item.status!=='idle'||item.id===workspaceId).map((item,index)=>{
+     const title=item.title||`Check ${index+1}`;
+     const statusLabel=item.status==='verifying'?'Checking sources':item.status==='reading'?'Reading':item.status==='done'?'Checked':item.status==='error'?'Needs attention':'New';
+     return <div className={`rail-check-row ${item.id===workspaceId?'is-current':''}`} key={item.id}>
+      <button
+       type="button"
+       className={`rail-check ${item.id===workspaceId?'is-current':''}`}
+       onClick={()=>onSelectWorkspace(item.id)}
+       aria-current={item.id===workspaceId?'page':undefined}
+      >
+       <span className={`rail-check-state is-${item.status}`} aria-hidden="true"/>
+       <span className="rail-check-copy"><strong>{title}</strong><small>{[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · ')}</small></span>
+      </button>
+      <button className="rail-check-delete icon-control" type="button" aria-label={`Delete ${title}`} title={`Delete ${title}`} onClick={()=>onDeleteWorkspace(item.id)}><SealUiIcon name="delete"/></button>
+     </div>;
+    })}
    </div>
    <div className="rail-spacer"/>
    <div className="rail-language">
@@ -1506,35 +1534,50 @@ async function upload(uploaded:File){
    </div>
   </aside>
   <header className="seal-nav mobile-only-nav">
-   <Link href="/" className="mobile-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></Link>
+   <Link href="/" className="mobile-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/></Link>
    <div className="mobile-nav-tools">
     <div className="mobile-language-menu">
-     <button type="button" className="mobile-language-trigger" aria-label={ui('displayLanguage')} aria-haspopup="listbox" aria-expanded={languageMenuOpen} onClick={()=>setLanguageMenuOpen(open=>!open)}>
-      <span>{displayLocale.toUpperCase()}</span><SealGuideIcon/>
+     <button type="button" className="icon-control mobile-language-trigger" aria-label={ui('displayLanguage')} title={ui('displayLanguage')} aria-haspopup="listbox" aria-expanded={languageMenuOpen} onClick={()=>{setWorkspaceDrawerOpen(false);setLanguageMenuOpen(open=>!open)}}>
+      <SealUiIcon name="globe"/><span>{displayLocale.toUpperCase()}</span>
      </button>
      {languageMenuOpen&&<div className="mobile-language-popover" role="listbox" aria-label={ui('displayLanguage')}>
       <div className="mobile-language-title">{ui('displayLanguage')}</div>
       {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><button type="button" role="option" aria-selected={code===displayLocale} className={code===displayLocale?'is-selected':''} key={code} onClick={()=>changeDisplayLanguage(code as DisplayLocale)}><span>{label}</span><small>{code.toUpperCase()}</small></button>)}
      </div>}
     </div>
-   {!verification&&!busy&&workspaces.length===1
-    ?<Link href="/browse" className="icon-control mobile-nav-icon" aria-label={ui('browse')} title={ui('browse')}><SealUiIcon name="browse"/></Link>
-    :<button className="icon-control mobile-nav-icon" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} onClick={onNewWorkspace}><SealUiIcon name="add"/></button>}
+    <button className="icon-control mobile-nav-icon mobile-workspace-trigger" type="button" aria-label="Open checks" title="Open checks" aria-haspopup="dialog" aria-expanded={workspaceDrawerOpen} onClick={()=>{setLanguageMenuOpen(false);setWorkspaceDrawerOpen(true)}}><SealUiIcon name="sidebar"/></button>
+    <button className="icon-control mobile-nav-icon" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} onClick={()=>{setWorkspaceDrawerOpen(false);onNewWorkspace()}}><SealUiIcon name="add"/></button>
    </div>
   </header>
-  {workspaces.length>1&&<nav className="mobile-check-strip" aria-label="Open checks">
-   {workspaces.map((item,index)=><button
-    type="button"
-    className={`mobile-check-pill ${item.id===workspaceId?'is-current':''}`}
-    key={item.id}
-    onClick={()=>onSelectWorkspace(item.id)}
-    aria-label={item.title||`Check ${index+1}`}
-    title={item.title||`Check ${index+1}`}
-   >
-    <span className={`mobile-check-state is-${item.status}`} aria-hidden="true"/>
-    <span className="mobile-check-number">{index+1}</span>
-   </button>)}
-  </nav>}
+
+  {workspaceDrawerOpen&&<div className="workspace-drawer-layer" data-testid="workspace-drawer-layer">
+   <button className="workspace-drawer-backdrop" type="button" aria-label="Close checks" onClick={()=>setWorkspaceDrawerOpen(false)}/>
+   <aside className="workspace-drawer" role="dialog" aria-modal="true" aria-label="Checks">
+    <div className="workspace-drawer-head">
+     <strong>Checks</strong>
+     <div className="workspace-drawer-head-actions">
+      <button className="icon-control drawer-icon-button" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} onClick={()=>{setWorkspaceDrawerOpen(false);onNewWorkspace()}}><SealUiIcon name="add"/></button>
+      <button className="icon-control drawer-icon-button" type="button" aria-label="Close checks" title="Close checks" onClick={()=>setWorkspaceDrawerOpen(false)}><SealUiIcon name="close"/></button>
+     </div>
+    </div>
+    <div className="workspace-drawer-list" aria-label="Open checks">
+     {workspaces.map((item,index)=>{
+      const title=item.title||`Check ${index+1}`;
+      const statusLabel=item.status==='verifying'?'Checking sources':item.status==='reading'?'Reading':item.status==='done'?'Checked':item.status==='error'?'Needs attention':'New';
+      return <div className={`workspace-drawer-row ${item.id===workspaceId?'is-current':''}`} key={item.id}>
+       <button className="workspace-drawer-select" type="button" aria-current={item.id===workspaceId?'page':undefined} onClick={()=>{onSelectWorkspace(item.id);setWorkspaceDrawerOpen(false)}}>
+        <span className={`rail-check-state is-${item.status}`} aria-hidden="true"/>
+        <span className="workspace-drawer-copy"><strong>{title}</strong><small>{[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · ')}</small></span>
+       </button>
+       <button className="icon-control workspace-drawer-delete" type="button" aria-label={`Delete ${title}`} title={`Delete ${title}`} onClick={()=>{if(item.id===workspaceId)setWorkspaceDrawerOpen(false);onDeleteWorkspace(item.id)}}><SealUiIcon name="delete"/></button>
+      </div>;
+     })}
+    </div>
+    <div className="workspace-drawer-foot">
+     <Link className="workspace-drawer-browse" href="/browse" onClick={()=>setWorkspaceDrawerOpen(false)}><SealUiIcon name="browse"/><span>{ui('browse')}</span></Link>
+    </div>
+   </aside>
+  </div>}
 
   {!verification?
    <section className={`entry-shell ${busy?'is-processing':''}`} data-testid="entry-shell">
@@ -2187,6 +2230,23 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
  },[]);
 
+ const deleteWorkspace=useCallback((id:string)=>{
+  const index=workspaces.findIndex(item=>item.id===id);
+  if(index<0)return;
+  clearResultSession(id);
+  const remaining=workspaces.filter(item=>item.id!==id);
+  if(!remaining.length){
+   const replacementId=`check-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
+   setWorkspaces([{id:replacementId,title:'New check',status:'idle'}]);
+   setActiveWorkspace(replacementId);
+  }else{
+   setWorkspaces(remaining);
+   if(activeWorkspace===id)setActiveWorkspace(remaining[Math.min(index,remaining.length-1)].id);
+  }
+  toast.success('Check removed');
+  window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
+ },[workspaces,activeWorkspace]);
+
  return <>
   <div className="seal-workspace-stack">
    {workspaces.map((workspace,index)=><div
@@ -2203,6 +2263,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      workspaces={workspaces}
      onNewWorkspace={createWorkspace}
      onSelectWorkspace={setActiveWorkspace}
+     onDeleteWorkspace={deleteWorkspace}
      onWorkspaceMeta={updateWorkspace}
     />
    </div>)}
