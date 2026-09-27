@@ -3441,3 +3441,32 @@
  .workspace-drawer-delete{flex:0 0 auto!important}
  .workspace-drawer-foot{background:#fff!important}
 }
+
+
+/* Drawer layout hardening: flex prevents copy-column collapse. */
+@media(max-width:900px){
+ .workspace-drawer-row{
+  display:flex!important;
+  align-items:center!important;
+  width:100%!important;
+ }
+ .workspace-drawer-select{
+  flex:1 1 auto!important;
+  width:auto!important;
+  min-width:0!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+ }
+ .workspace-drawer-select>.rail-check-state{
+  flex:0 0 6px!important;
+ }
+ .workspace-drawer-copy{
+  flex:1 1 0!important;
+  width:auto!important;
+  min-width:0!important;
+ }
+ .workspace-drawer-row-actions{
+  flex:0 0 auto!important;
+ }
+}
