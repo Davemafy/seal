@@ -2317,7 +2317,7 @@ async function upload(uploaded:File){
 const WORKSPACE_LIST_KEY='seal:workspace-list:v1';
 const ONBOARDING_KEY='seal:onboarding:v1';
 const DISPLAY_LOCALE_KEY='seal:display-locale:v1';
-const checkRoute=(id:string)=>`/check/${encodeURIComponent(id)}`;
+const checkRoute=(id:string)=>`/check/${encodeURIComponent(id.replace(/^check-/,''))}`;
 
 export default function SealApp({initialDemo=false,initialText='',initialRun=false,initialWorkspaceId}:{initialDemo?:boolean;initialText?:string;initialRun?:boolean;initialWorkspaceId?:string}){
  const router=useRouter();
