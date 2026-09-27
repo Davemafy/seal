@@ -1312,6 +1312,7 @@ async function upload(uploaded:File){
 
    setClaims(found);
    setStatus('Checking independent sources');
+   onWorkspaceMeta(workspaceId,{status:'verifying',language:detectedLanguage?.label,jurisdiction:routedJurisdiction});
 
    const verifiable=found.filter(claim=>claim.verification_eligible!==false);
    // Low-confidence action claims may still drive the narrative, but they never
