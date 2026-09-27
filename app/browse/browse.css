@@ -1057,3 +1057,77 @@
   line-height:18px!important
  }
 }
+
+
+/* Browse vertical efficiency — keep hierarchy, reclaim viewport height. */
+@media(min-width:901px){
+ .browse-shell{
+  padding-top:28px!important;
+  padding-bottom:54px!important
+ }
+ .browse-eyebrow{
+  margin-bottom:7px!important
+ }
+ .browse-deck{
+  margin-top:8px!important
+ }
+ .browse-scope{
+  margin-top:5px!important
+ }
+ .case-filter-row{
+  margin-top:20px!important
+ }
+ .case-library-head{
+  margin-top:9px!important;
+  margin-bottom:12px!important
+ }
+ .case-feature{
+  min-height:286px!important;
+  padding:16px!important
+ }
+ .case-feature .case-visual{
+  min-height:248px!important
+ }
+ .case-feature-copy{
+  padding-top:10px!important;
+  padding-bottom:10px!important
+ }
+ .case-feature-label{
+  margin-bottom:10px!important
+ }
+ .case-feature .case-note{
+  margin-top:10px!important
+ }
+ .case-feature .case-source{
+  margin-top:6px!important
+ }
+ .case-feature .case-actions{
+  margin-top:12px!important
+ }
+ .case-library-grid{
+  margin-top:14px!important;
+  gap:14px!important
+ }
+ .case-library-card{
+  padding:13px!important
+ }
+}
+
+@media(max-width:900px){
+ .browse-shell{
+  padding-top:20px!important;
+  padding-bottom:40px!important
+ }
+ .case-filter-row{
+  margin-top:16px!important
+ }
+ .case-feature{
+  gap:14px!important
+ }
+ .case-feature .case-visual{
+  height:220px!important
+ }
+ .case-library-grid{
+  margin-top:10px!important
+ }
+}
