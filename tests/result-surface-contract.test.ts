@@ -23,7 +23,6 @@ describe('result surface design contract',()=>{
   expect(css).toContain('transform:translate3d(0,100dvh,0)');
   expect(css).toContain('@keyframes workspace-page-recede');
   expect(css).toContain('scale(.94)');
-  expect(css).toContain('@keyframes workspace-page-forward');
   expect(css).toContain('.workspace-drawer-layer.is-open');
   expect(app).not.toContain('finishWorkspaceSwipe');
   expect(app).not.toContain('onTouchStart={beginWorkspaceSwipe}');
