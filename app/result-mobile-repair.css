@@ -444,3 +444,196 @@
  .story-timeline{height:30px!important}
  .story-chapter-buttons button{width:18px!important;height:30px!important}
 }
+
+
+/* Mobile result alignment lock — one 20px content grid. */
+@media(max-width:599px){
+ .seal-app:has(.review-shell)>.review-shell{
+  padding-top:14px!important
+ }
+
+ /* One left/right edge for header, tabs and every result page. */
+ .seal-app .review-shell .result-masthead{
+  padding-inline:20px!important
+ }
+ .seal-app .result-masthead-row{
+  padding:0 0 12px!important
+ }
+ .seal-app .result-masthead-title{
+  margin-bottom:5px!important;
+  font-size:11px!important;
+  line-height:16px!important
+ }
+ .seal-app .check-object-identity h1{
+  max-width:300px!important;
+  font-size:20px!important;
+  line-height:25px!important;
+  letter-spacing:-.012em!important
+ }
+ .seal-app .check-object-meta{
+  margin-top:5px!important;
+  font-size:11.5px!important;
+  line-height:17px!important
+ }
+
+ /* Tabs read as navigation, not four floating labels. */
+ .seal-app .result-chapters{
+  width:100%!important;
+  display:flex!important;
+  align-items:flex-end!important;
+  gap:28px!important;
+  margin:10px 0 0!important;
+  padding:0!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  border-bottom:1px solid #e7e7e3!important;
+  scrollbar-width:none!important
+ }
+ .seal-app .result-chapters::-webkit-scrollbar{display:none!important}
+ .seal-app .result-chapters a{
+  flex:0 0 auto!important;
+  min-width:0!important;
+  padding:10px 0 11px!important;
+  color:#777!important;
+  font-size:12.5px!important;
+  line-height:18px!important;
+  font-weight:560!important;
+  text-align:left!important
+ }
+ .seal-app .result-chapters a.is-current{color:#111!important}
+ .seal-app .result-chapters a.is-current::after{
+  left:0!important;
+  right:0!important;
+  height:3px!important;
+  border-radius:3px 3px 0 0!important
+ }
+
+ .seal-app .result-slide-summary,
+ .seal-app .result-slide-evidence,
+ .seal-app .result-slide-resolve{
+  padding-left:20px!important;
+  padding-right:20px!important
+ }
+ .seal-app .result-slide-original{
+  padding-left:20px!important;
+  padding-right:20px!important
+ }
+
+ .seal-app .result-slide-summary{
+  padding-top:30px!important;
+  padding-bottom:42px!important
+ }
+ .seal-app .result-slide-summary .decision,
+ .seal-app .result-slide-summary .decision-overview,
+ .seal-app .result-slide-summary .decision-copy{
+  width:100%!important;
+  max-width:none!important
+ }
+ .seal-app .result-slide-summary .decision-status{
+  margin:0 0 8px!important;
+  font-size:12.5px!important;
+  line-height:18px!important
+ }
+ .seal-app .result-slide-summary .decision-copy>h1{
+  max-width:320px!important;
+  font-size:26px!important;
+  line-height:32px!important;
+  letter-spacing:-.018em!important
+ }
+ .seal-app .result-slide-summary .decision-summary{
+  max-width:326px!important;
+  margin-top:12px!important;
+  font-size:14px!important;
+  line-height:21px!important
+ }
+
+ /* Keep the action attached to the explanation instead of floating below it. */
+ .decision-summary-side{
+  width:100%!important;
+  padding-top:0!important
+ }
+ .seal-app .result-slide-summary .decision-primary-route{
+  width:100%!important;
+  max-width:326px!important;
+  gap:6px!important;
+  margin-top:24px!important;
+  padding:0!important;
+  border:0!important
+ }
+ .seal-app .result-slide-summary .decision-primary-route>span{
+  font-size:11.5px!important;
+  line-height:17px!important
+ }
+ .seal-app .result-slide-summary .decision-primary-route>a{
+  width:max-content!important;
+  max-width:100%!important;
+  min-height:44px!important;
+  padding:11px 15px!important;
+  border-radius:8px!important;
+  font-size:14.5px!important;
+  line-height:20px!important;
+  font-weight:600!important
+ }
+ .seal-app .result-slide-summary .decision-primary-route>small{
+  max-width:300px!important;
+  margin-top:1px!important;
+  font-size:11px!important;
+  line-height:17px!important
+ }
+
+ /* Verification facts become one aligned block instead of two loose labels. */
+ .seal-app .result-slide-summary .decision-at-a-glance{
+  width:100%!important;
+  max-width:326px!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:20px!important;
+  margin-top:22px!important;
+  padding-top:16px!important;
+  border-top:1px solid #e7e7e3!important
+ }
+ .seal-app .result-slide-summary .decision-at-a-glance>div{
+  padding:0!important;
+  border:0!important
+ }
+ .seal-app .result-slide-summary .decision-at-a-glance span{
+  margin-bottom:3px!important;
+  font-size:11px!important;
+  line-height:16px!important
+ }
+ .seal-app .result-slide-summary .decision-at-a-glance strong{
+  font-size:13.5px!important;
+  line-height:19px!important;
+  font-weight:600!important
+ }
+
+ .seal-app .result-slide-summary .decision-details{
+  width:100%!important;
+  max-width:326px!important;
+  margin-top:22px!important;
+  padding:0!important;
+  border-top:1px solid #e7e7e3!important;
+  border-bottom:1px solid #e7e7e3!important
+ }
+ .seal-app .result-slide-summary .decision-details>summary{
+  width:100%!important;
+  min-height:46px!important;
+  justify-content:space-between!important;
+  padding:0!important;
+  font-size:12px!important;
+  line-height:18px!important
+ }
+
+ /* Other result pages share the same content edge too. */
+ .seal-app .result-slide-original{padding-top:22px!important}
+ .seal-app .result-slide-evidence{padding-top:28px!important}
+ .seal-app .result-slide-resolve{padding-top:28px!important}
+}
+
+@media(max-width:360px){
+ .seal-app .result-chapters{gap:22px!important}
+ .seal-app .result-slide-summary .decision-copy>h1{
+  max-width:300px!important;
+  font-size:25px!important;
+  line-height:31px!important
+ }
+}
