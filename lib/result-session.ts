@@ -30,6 +30,7 @@ export type StoredResultSession={
 
 export type RestoredResultSession=StoredResultSession&{
  browserFile:BrowserDocument|null;
+ sourceBlob:Blob|null;
 };
 
 function hasBrowser(){
@@ -207,9 +208,11 @@ export async function restoreResultSession():Promise<RestoredResultSession|null>
   }
 
   let browserFile:BrowserDocument|null=null;
+  let sourceBlob:Blob|null=null;
   if(parsed.file&&parsed.blobKey){
    const blob=await getBlob(parsed.blobKey);
    if(blob){
+    sourceBlob=blob;
     browserFile={
      text:parsed.text,
      tokens:[],
@@ -223,7 +226,7 @@ export async function restoreResultSession():Promise<RestoredResultSession|null>
    }
   }
 
-  return {...parsed,browserFile};
+  return {...parsed,browserFile,sourceBlob};
  }catch{
   window.sessionStorage.removeItem(SESSION_KEY);
   await clearArtifactStore().catch(()=>{});
