@@ -679,7 +679,7 @@ test('entry layout stays inside the viewport across desktop compression',async({
 });
 
 
-test('desktop entry keeps sidebar and canvas in proportion',async({page})=>{
+test('desktop entry keeps compact sidebar and canvas in proportion',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:1440,height:900});
  await page.goto('/');
@@ -699,19 +699,20 @@ test('desktop entry keeps sidebar and canvas in proportion',async({page})=>{
    overflow:document.documentElement.scrollWidth-window.innerWidth
   };
  });
- expect(metrics.railWidth).toBeGreaterThanOrEqual(265);
- expect(metrics.railWidth).toBeLessThanOrEqual(280);
+ expect(metrics.railWidth).toBeGreaterThanOrEqual(232);
+ expect(metrics.railWidth).toBeLessThanOrEqual(240);
  expect(metrics.shellWidth).toBeLessThanOrEqual(902);
  expect(metrics.intakeWidth).toBeLessThanOrEqual(472);
  expect(metrics.headingSize).toBeLessThanOrEqual(41);
  expect(metrics.headingSize).toBeGreaterThanOrEqual(39);
- expect(metrics.railTitleSize).toBeGreaterThanOrEqual(17);
+ expect(metrics.railTitleSize).toBeGreaterThanOrEqual(14);
+ expect(metrics.railTitleSize).toBeLessThanOrEqual(16);
  expect(metrics.overflow).toBeLessThanOrEqual(1);
  assertNoRuntimeErrors();
 });
 
 
-test('1208 desktop keeps sidebar visually substantial and canvas restrained',async({page})=>{
+test('1208 desktop keeps sidebar compact and canvas restrained',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:1208,height:664});
  await page.goto('/');
@@ -744,9 +745,11 @@ test('1208 desktop keeps sidebar visually substantial and canvas restrained',asy
  expect(metrics.shellWidth).toBeLessThanOrEqual(982);
  expect(metrics.intakeWidth).toBeLessThanOrEqual(520);
  expect(metrics.headingSize).toBeLessThanOrEqual(45);
- expect(metrics.rowHeight).toBeGreaterThanOrEqual(54);
+ expect(metrics.rowHeight).toBeGreaterThanOrEqual(46);
+ expect(metrics.rowHeight).toBeLessThanOrEqual(52);
  expect(metrics.railCopyWidth,'desktop check labels must not collapse to one character').toBeGreaterThan(130);
- expect(metrics.railTitleSize).toBeGreaterThanOrEqual(12);
+ expect(metrics.railTitleSize).toBeGreaterThanOrEqual(10);
+ expect(metrics.railTitleSize).toBeLessThanOrEqual(12);
  expect(metrics.footerTop,'footer should sit near the viewport bottom, not start halfway down the page').toBeGreaterThan(metrics.viewport-100);
  expect(metrics.footerBottom).toBeLessThanOrEqual(metrics.viewport+1);
  expect(metrics.overflow).toBeLessThanOrEqual(1);
