@@ -2,9 +2,11 @@
 
 **Before you call, click, pay, or reply.**
 
-SEAL is an independent court-message checker designed for court messages from any country. A person can upload a screenshot/image, paste message text, or upload a PDF. SEAL separates the **action the message asks them to take** from surrounding official-looking details, then checks only the atomic claims that current independent official sources can establish.
+SEAL is an independent court-message checker designed to accept court communications from any country without treating the uploaded message as proof. A person can upload a screenshot/image, paste message text, or upload a PDF. SEAL separates the **action the message asks them to take** from surrounding official-looking details, then checks only the atomic claims that current independent official sources can establish.
 
 Understanding a readable message is the broad path. Direct court verification currently has a smaller, explicitly routed source set. When a court is outside that network, SEAL keeps the result at **COULD_NOT_VERIFY** and can offer an independently opened official court directory for clearly identified jurisdictions such as India, France, Spain, Brazil, Nigeria, and U.S. federal courts. Those directory links are navigation aids, not verification evidence, and never change a verdict. The Browse archive includes court documents and official guidance from multiple countries; guidance pages are identified as such and are never passed off as individual notices.
+
+Checks are isolated workspaces: multiple verifications can remain open at once, and one check can continue while another is being reviewed. Document language, user display language, and legal jurisdiction are treated as separate concerns. SEAL can translate its explanation while preserving original source wording.
 
 The primary product question is:
 
@@ -110,7 +112,7 @@ Research rationale and the action-first kill test are in [docs/ACTION_FLOW_DECIS
 
 SEAL does not determine authenticity, legal validity, enforceability, admissibility, or whether a particular person actually owes or must do anything. It does not validate demand or real-world uptake. If a real personal scam screenshot is unavailable, synthetic or official public examples are clearly labeled as such.
 
-Image OCR currently offers English, Spanish, Portuguese, French, German, Hindi, and Arabic language choices; PDFs with a text layer and pasted text can preserve additional scripts. These are extraction options, not measured accuracy guarantees. New direct court checks require reviewed sources and claim-specific comparison rules for the issuing court. The absence of a resolver must never prevent SEAL from describing readable instructions or turn a foreign court into a U.S. warning.
+Image OCR supports English, Spanish, Portuguese, French, German, Italian, Dutch, Turkish, Russian, Hindi, Arabic, Simplified/Traditional Chinese, Japanese, and Korean models. Weak OCR can trigger script recovery instead of assuming the browser language is correct; PDFs with a text layer and pasted text preserve their original scripts. These are extraction options, not measured accuracy guarantees. New direct court checks require reviewed sources and claim-specific comparison rules for the issuing court. The absence of a resolver must never prevent SEAL from describing readable instructions or turn a foreign court into a U.S. warning.
 
 ## Prior art and related work
 
