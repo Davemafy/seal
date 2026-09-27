@@ -45,6 +45,9 @@ describe('result surface design contract',()=>{
   expect(app).toContain("label:'Find instructions'");
   expect(app).toContain("label:'Check public sources'");
   expect(css).toContain('never fake percentage progress');
+  expect(css).toContain('Result grid repair: shell must occupy the content rows');
+  expect(css).toContain('grid-row:1 / 3!important');
+  expect(css).toContain('flex:1 1 auto!important');
   expect(mobileCss).toContain('.result-slide-summary .decision-visual{display:none!important}');
   expect(mobileCss).toContain('.result-slide-evidence .evidence-review-entry');
   expect(mobileCss).toContain('Tabs behave as real sibling pages');
