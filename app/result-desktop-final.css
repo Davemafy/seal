@@ -1462,3 +1462,83 @@
   margin:0!important
  }
 }
+
+
+/* Result vertical efficiency — maximize above-fold decision content. */
+@media(min-width:901px){
+ .review-shell{
+  padding-top:10px!important;
+  padding-bottom:14px!important
+ }
+ .result-masthead-row{
+  padding-top:2px!important;
+  padding-bottom:4px!important
+ }
+ .result-masthead-title{
+  margin-bottom:1px!important
+ }
+ .check-object-meta{
+  margin-top:4px!important
+ }
+ .result-chapters{
+  margin-top:8px!important;
+  padding:3px!important
+ }
+ .result-chapters a{
+  min-height:36px!important;
+  padding-top:7px!important;
+  padding-bottom:7px!important
+ }
+
+ .result-slide-summary{
+  padding-top:18px!important;
+  padding-bottom:24px!important
+ }
+ .result-slide-summary .decision-status{
+  margin-bottom:6px!important
+ }
+ .result-slide-summary .decision-summary{
+  margin-top:10px!important
+ }
+ .decision-summary-side{
+  padding:14px!important
+ }
+ .result-slide-summary .decision-primary-route>span{
+  margin-bottom:6px!important
+ }
+ .result-slide-summary .decision-primary-route>small{
+  margin-top:6px!important
+ }
+ .result-slide-summary .decision-at-a-glance{
+  margin-top:10px!important
+ }
+ .result-slide-summary .decision-at-a-glance>div{
+  padding:9px 10px!important
+ }
+ .result-slide-summary .decision-details{
+  margin-top:16px!important
+ }
+ .result-slide-summary .decision-details>summary{
+  min-height:44px!important
+ }
+
+ .result-slide-original,
+ .result-slide-evidence,
+ .result-slide-resolve{
+  padding-top:20px!important;
+  padding-bottom:28px!important
+ }
+ .check-metadata-section{
+  margin-top:22px!important;
+  padding-top:12px!important
+ }
+}
+
+@media(min-width:901px) and (max-width:1180px){
+ .review-shell{
+  padding-top:8px!important
+ }
+ .result-slide-summary{
+  padding-top:16px!important
+ }
+}
