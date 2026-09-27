@@ -14,6 +14,7 @@ import {officialCourtDirectoryFor} from '@/lib/official-directories';
 import {detectDocumentContext,type DetectedDocumentLanguage} from '@/lib/document-context';
 import {justiceSupportFor} from '@/lib/justice-support';
 import {buildCaseReality,buildHandoffSummary,buildObligationMap,buildPlainLanguageSummary,buildRiskSummary} from '@/lib/user-guidance';
+import {DISPLAY_LANGUAGES,displayLocaleFor,uiCopy,type DisplayLocale,type UiCopyKey} from '@/lib/ui-locales';
 import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
 import './workspace.css';
 
@@ -31,31 +32,6 @@ type SealWorkspaceProps={
  onWorkspaceMeta:(id:string,patch:Partial<WorkspaceMeta>)=>void;
 };
 
-const DISPLAY_LANGUAGES={
- en:'English',zh:'中文',es:'Español',pt:'Português',fr:'Français',de:'Deutsch',it:'Italiano',
- hi:'हिन्दी',ar:'العربية',ja:'日本語',ko:'한국어',ru:'Русский',tr:'Türkçe',nl:'Nederlands'
-} as const;
-type DisplayLocale=keyof typeof DISPLAY_LANGUAGES;
-const displayLocaleFor=(locale:string):DisplayLocale=>{
- const base=(locale||'en').toLowerCase().split('-')[0] as DisplayLocale;
- return base in DISPLAY_LANGUAGES?base:'en';
-};
-const UI_COPY={
- checks:'Checks',newCheck:'New check',browse:'Browse',browseCases:'Browse real cases',
- displayLanguage:'Display language',
- checkCourtMessage:'Check a court message',
- entrySummary:'See what it asks you to do, what independent public sources can confirm, and where to check next.',
- upload:'Upload a notice or screenshot',
- uploadHint:'Drop here or browse files · PDF, PNG, or JPG · up to 16 MB',
- imageLanguage:'Image language',pasteInstead:'Paste text instead',
- resultTitle:'Check result',result:'Result',original:'Original',nextStep:'Next step',checkedDetails:'Checked details',
- messageAsks:'The message asks',fromMessage:'From the message',publicSourcesSay:'What public sources say',
- openPublicSource:'Open public source',seeHowChecked:'See how SEAL checked it',
- evidenceReviewHint:'17 sec · notice → public source → next step',
- independentEvidence:'Independent evidence',sources:'Sources',officialProcess:'Official process',officialDirectory:'Official directory',sourceConflict:'Source conflict',knownPattern:'Known pattern',officialWarning:'Official warning',officialSourceMatch:'Official source match',officialSourceConflict:'Official source conflict',sourceEvidence:'Source evidence',independentCheck:'Independent check',
- translatedNote:'Translated for your display language. Source quotations remain in their original wording.'
-} as const;
-type UiCopyKey=keyof typeof UI_COPY;
 
 const verdictLabel=(value:Result['verdict'])=>value==='MATCH'?'Matches':value==='MISMATCH'?'Conflicts':'Could not verify';
 const stateWord=verdictLabel;
@@ -252,7 +228,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [pasteMode,setPasteMode]=useState(false);
  const [ocrLanguage,setOcrLanguage]=useState<OcrLanguage>('eng');
  const [displayLocale,setDisplayLocale]=useState<DisplayLocale>('en');
- const [translatedUi,setTranslatedUi]=useState<Record<string,string>>({});
+ const [languageMenuOpen,setLanguageMenuOpen]=useState(false);
  const [translatedResult,setTranslatedResult]=useState<Record<string,string>>({});
  const [documentLanguage,setDocumentLanguage]=useState<DetectedDocumentLanguage|null>(null);
  const [jurisdiction,setJurisdiction]=useState('');
@@ -308,7 +284,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const input=useRef<HTMLInputElement>(null);
  const anchors=useRef<Record<string,HTMLElement|null>>({});
  const runId=useRef(0);
- const ui=(key:UiCopyKey)=>translatedUi[key]||UI_COPY[key];
+ const ui=(key:UiCopyKey)=>uiCopy(displayLocale,key);
 
  const handleStoryArtifactReady=useCallback(()=>{
   setStoryArtifactReady(true);
@@ -864,20 +840,6 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  },[hydrated]);
 
  useEffect(()=>{
-  if(!hydrated||displayLocale==='en')return;
-  const controller=new AbortController();
-  void fetch('/api/translate',{
-   method:'POST',headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({locale:displayLocale,strings:UI_COPY}),signal:controller.signal
-  }).then(async response=>{
-   if(!response.ok)return;
-   const payload=await response.json() as {strings?:Record<string,string>};
-   if(payload.strings)setTranslatedUi(payload.strings);
-  }).catch(()=>{});
-  return()=>controller.abort();
- },[hydrated,displayLocale]);
-
- useEffect(()=>{
   if(!hydrated||busy||verification)return;
   const timer=window.setTimeout(()=>{
    void warmOcr(ocrLanguage).catch(()=>{});
@@ -1056,9 +1018,9 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  function replayStory(){startStory()}
 
  function changeDisplayLanguage(locale:DisplayLocale){
-  setTranslatedUi({});
   setTranslatedResult({});
   setDisplayLocale(locale);
+  setLanguageMenuOpen(false);
  }
 
  async function copyHandoff(){
@@ -1357,14 +1319,20 @@ async function upload(uploaded:File){
      {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><option key={code} value={code}>{label}</option>)}
     </select>
    </label>
-   <div className="rail-foot"><strong>Public sources only</strong><span>Every item links back to the issuing court or agency.</span></div>
+   <div className="rail-foot"><strong>{ui('publicSourcesOnly')}</strong><span>{ui('publicSourcesNote')}</span></div>
   </aside>
   <header className="seal-nav mobile-only-nav">
    <Link href="/" className="mobile-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></Link>
    <div className="mobile-nav-tools">
-    <select className="mobile-language-select" value={displayLocale} onChange={event=>changeDisplayLanguage(event.target.value as DisplayLocale)} aria-label={ui('displayLanguage')}>
-     {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><option key={code} value={code}>{label}</option>)}
-    </select>
+    <div className="mobile-language-menu">
+     <button type="button" className="mobile-language-trigger" aria-label={ui('displayLanguage')} aria-haspopup="listbox" aria-expanded={languageMenuOpen} onClick={()=>setLanguageMenuOpen(open=>!open)}>
+      <span>{displayLocale.toUpperCase()}</span><DesignChevron/>
+     </button>
+     {languageMenuOpen&&<div className="mobile-language-popover" role="listbox" aria-label={ui('displayLanguage')}>
+      <div className="mobile-language-title">{ui('displayLanguage')}</div>
+      {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><button type="button" role="option" aria-selected={code===displayLocale} className={code===displayLocale?'is-selected':''} key={code} onClick={()=>changeDisplayLanguage(code as DisplayLocale)}><span>{label}</span><small>{code.toUpperCase()}</small></button>)}
+     </div>}
+    </div>
    {!verification&&!busy&&workspaces.length===1
     ?<Link href="/browse" className="mobile-nav-action">{ui('browse')}</Link>
     :<button className="mobile-nav-action mobile-nav-button" type="button" onClick={onNewWorkspace}>{ui('newCheck')}</button>}
@@ -1445,26 +1413,26 @@ async function upload(uploaded:File){
            <strong>{ui('upload')}</strong>
            <small>{ui('uploadHint')}</small>
           </span>
-          <span className="upload-browse">Browse files</span>
+          <span className="upload-browse">{ui('browseFiles')}</span>
          </span>}
        </button>
        {!busy&&<>
         <label className="ocr-language-control"><span>{ui('imageLanguage')}</span><select value={ocrLanguage} onChange={event=>setOcrLanguage(event.target.value as OcrLanguage)}>{Object.entries(ocrLanguages).map(([code,label])=><option key={code} value={code}>{label}</option>)}</select></label>
         <button className="paste-mode-switch" type="button" onClick={()=>setPasteMode(true)}>{ui('pasteInstead')} <DesignChevron direction="right"/></button>
-        <p className="privacy-note">Original file stays on this device. Extracted text may be sent for checking.</p>
+        <p className="privacy-note">{ui('privacyNote')}</p>
        </>}
       </>
       :
       <div className="paste-mode-panel">
-       <button className="paste-mode-switch paste-mode-back" type="button" onClick={()=>setPasteMode(false)}><DesignChevron direction="left"/> Upload a file instead</button>
+       <button className="paste-mode-switch paste-mode-back" type="button" onClick={()=>setPasteMode(false)}><DesignChevron direction="left"/> {ui('uploadInstead')}</button>
        <label className="paste-field">
-        <span className="field-label">Message text</span>
-        <textarea autoFocus aria-label="Paste the court message" value={draft} onChange={event=>setDraft(event.target.value)} placeholder="Paste the message exactly as you received it"/>
+        <span className="field-label">{ui('messageText')}</span>
+        <textarea autoFocus aria-label="Paste the court message" value={draft} onChange={event=>setDraft(event.target.value)} placeholder={ui('messagePlaceholder')}/>
        </label>
        <div className="intake-actions">
-        <button className="check-message" type="button" disabled={!draft.trim()||!hydrated} onClick={submitPaste}>Check this message</button>
+        <button className="check-message" type="button" disabled={!draft.trim()||!hydrated} onClick={submitPaste}>{ui('checkMessage')}</button>
        </div>
-       <p className="privacy-note">Original file stays on this device. Extracted text may be sent for checking.</p>
+       <p className="privacy-note">{ui('privacyNote')}</p>
       </div>}
 
      {error&&<div role="alert" className="inspection-error">{error}</div>}
