@@ -6,6 +6,7 @@ import {gsap} from 'gsap';
 import {Toaster,toast} from 'sonner';
 import {createPortal} from 'react-dom';
 import Link from 'next/link';
+import {useRouter} from 'next/navigation';
 import PDFPreview from './pdf-preview';
 import StoryPdfPage from './story-pdf-page';
 import {fixtures} from '@/lib/fixtures';
@@ -2316,10 +2317,12 @@ async function upload(uploaded:File){
 const WORKSPACE_LIST_KEY='seal:workspace-list:v1';
 const ONBOARDING_KEY='seal:onboarding:v1';
 const DISPLAY_LOCALE_KEY='seal:display-locale:v1';
+const checkRoute=(id:string)=>`/check/${encodeURIComponent(id)}`;
 
-export default function SealApp({initialDemo=false,initialText='',initialRun=false}:{initialDemo?:boolean;initialText?:string;initialRun?:boolean}){
- const [workspaces,setWorkspaces]=useState<WorkspaceMeta[]>([{id:'primary',title:'New check',status:'idle'}]);
- const [activeWorkspace,setActiveWorkspace]=useState('primary');
+export default function SealApp({initialDemo=false,initialText='',initialRun=false,initialWorkspaceId}:{initialDemo?:boolean;initialText?:string;initialRun?:boolean;initialWorkspaceId?:string}){
+ const router=useRouter();
+ const [workspaces,setWorkspaces]=useState<WorkspaceMeta[]>([{id:initialWorkspaceId||'primary',title:'New check',status:'idle'}]);
+ const [activeWorkspace,setActiveWorkspace]=useState(initialWorkspaceId||'primary');
  const [registryReady,setRegistryReady]=useState(false);
  const [onboardingOpen,setOnboardingOpen]=useState(false);
 
@@ -2329,22 +2332,35 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
     const raw=window.sessionStorage.getItem(WORKSPACE_LIST_KEY);
     if(raw){
      const parsed=JSON.parse(raw) as {active?:string;items?:WorkspaceMeta[]};
-     const items=Array.isArray(parsed.items)?parsed.items.filter(item=>item&&typeof item.id==='string').slice(0,8):[];
+     let items=Array.isArray(parsed.items)?parsed.items.filter(item=>item&&typeof item.id==='string').slice(0,8):[];
+     if(initialWorkspaceId&&!items.some(item=>item.id===initialWorkspaceId)){
+      items=[...items,{id:initialWorkspaceId,title:'New check',status:'idle'}].slice(-8);
+     }
      if(items.length){
       setWorkspaces(items.map(item=>({...item,status:item.status==='reading'||item.status==='verifying'?'idle':item.status})));
-      setActiveWorkspace(items.some(item=>item.id===parsed.active)?parsed.active!:items[0].id);
+      const requested=initialWorkspaceId&&items.some(item=>item.id===initialWorkspaceId)?initialWorkspaceId:undefined;
+      setActiveWorkspace(requested||(items.some(item=>item.id===parsed.active)?parsed.active!:items[0].id));
      }
+    }else if(initialWorkspaceId){
+     setWorkspaces([{id:initialWorkspaceId,title:'New check',status:'idle'}]);
+     setActiveWorkspace(initialWorkspaceId);
     }
    }catch{}
    setRegistryReady(true);
   },0);
   return()=>window.clearTimeout(timer);
- },[]);
+ },[initialWorkspaceId]);
 
  useEffect(()=>{
   if(!registryReady)return;
   try{window.sessionStorage.setItem(WORKSPACE_LIST_KEY,JSON.stringify({active:activeWorkspace,items:workspaces}))}catch{}
  },[registryReady,activeWorkspace,workspaces]);
+
+ useEffect(()=>{
+  if(!registryReady||!initialWorkspaceId)return;
+  setWorkspaces(items=>items.some(item=>item.id===initialWorkspaceId)?items:[...items,{id:initialWorkspaceId,title:'New check',status:'idle'}].slice(-8));
+  setActiveWorkspace(initialWorkspaceId);
+ },[registryReady,initialWorkspaceId]);
 
  useEffect(()=>{
   if(!registryReady||initialDemo||initialText||initialRun)return;
@@ -2402,12 +2418,14 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    return [...items,{id,title,status:'idle' as WorkspaceRunStatus}].slice(-8);
   });
   setActiveWorkspace(id);
+  router.push(checkRoute(id));
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
- },[]);
+ },[router]);
 
  const selectWorkspace=useCallback((id:string)=>{
   animateWorkspaceTo(id);
- },[animateWorkspaceTo]);
+  router.push(checkRoute(id));
+ },[animateWorkspaceTo,router]);
 
  const deleteWorkspace=useCallback((id:string)=>{
   const index=workspaces.findIndex(item=>item.id===id);
@@ -2418,16 +2436,18 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    const replacementId=`check-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
    setWorkspaces([{id:replacementId,title:'New check',status:'idle'}]);
    setActiveWorkspace(replacementId);
+   router.replace(checkRoute(replacementId));
   }else{
    setWorkspaces(remaining);
    if(activeWorkspace===id){
     const next=remaining[Math.min(index,remaining.length-1)];
     setActiveWorkspace(next.id);
+    router.replace(checkRoute(next.id));
    }
   }
   toast.success('Check removed');
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
- },[workspaces,activeWorkspace]);
+ },[workspaces,activeWorkspace,router]);
 
  return <>
   {onboardingOpen&&<div className="first-run-layer" data-testid="first-run-onboarding">
