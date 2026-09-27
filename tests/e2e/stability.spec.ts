@@ -705,8 +705,8 @@ test('desktop entry keeps compact sidebar and canvas in proportion',async({page}
  expect(metrics.intakeWidth).toBeLessThanOrEqual(472);
  expect(metrics.headingSize).toBeLessThanOrEqual(41);
  expect(metrics.headingSize).toBeGreaterThanOrEqual(39);
- expect(metrics.railTitleSize).toBeGreaterThanOrEqual(14);
- expect(metrics.railTitleSize).toBeLessThanOrEqual(16);
+ expect(metrics.railTitleSize).toBeGreaterThanOrEqual(17);
+ expect(metrics.railTitleSize).toBeLessThanOrEqual(19);
  expect(metrics.overflow).toBeLessThanOrEqual(1);
  assertNoRuntimeErrors();
 });
@@ -748,8 +748,8 @@ test('1208 desktop keeps sidebar compact and canvas restrained',async({page})=>{
  expect(metrics.rowHeight).toBeGreaterThanOrEqual(46);
  expect(metrics.rowHeight).toBeLessThanOrEqual(52);
  expect(metrics.railCopyWidth,'desktop check labels must not collapse to one character').toBeGreaterThan(130);
- expect(metrics.railTitleSize).toBeGreaterThanOrEqual(10);
- expect(metrics.railTitleSize).toBeLessThanOrEqual(12);
+ expect(metrics.railTitleSize).toBeGreaterThanOrEqual(12);
+ expect(metrics.railTitleSize).toBeLessThanOrEqual(13);
  expect(metrics.footerTop,'footer should sit near the viewport bottom, not start halfway down the page').toBeGreaterThan(metrics.viewport-100);
  expect(metrics.footerBottom).toBeLessThanOrEqual(metrics.viewport+1);
  expect(metrics.overflow).toBeLessThanOrEqual(1);
