@@ -581,7 +581,7 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  await expect(drawer.getByRole('button',{name:/Delete check 2:/})).toBeVisible();
 
  await drawer.getByRole('button',{name:/Delete check 2:/}).click();
- await expect(page.getByRole('dialog',{name:'Checks',hidden:true})).not.toBeVisible();
+ await expect(page.getByRole('dialog',{name:'Checks',includeHidden:true})).not.toBeVisible();
  active=page.locator('.seal-workspace-instance:not([hidden])');
  await expect(active.getByTestId('entry-shell')).toBeVisible();
 
@@ -589,7 +589,7 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  drawer=page.getByRole('dialog',{name:'Checks'});
  await expect(drawer.locator('.workspace-drawer-row')).toHaveCount(1);
  await drawer.getByRole('button',{name:/Delete check 1:/}).click();
- await expect(page.getByRole('dialog',{name:'Checks',hidden:true})).not.toBeVisible();
+ await expect(page.getByRole('dialog',{name:'Checks',includeHidden:true})).not.toBeVisible();
  active=page.locator('.seal-workspace-instance:not([hidden])');
  await expect(active.getByTestId('entry-shell')).toBeVisible();
 
