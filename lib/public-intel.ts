@@ -154,7 +154,7 @@ export function analyzePublicIntelligence(text:string,claims:Claim[],results:Res
  if(nhTollDemand){
   signals.push({
    id:'nh-toll-process',
-   kind:'OFFICIAL_WARNING',
+   kind:'OFFICIAL_PROCESS',
    title:'New Hampshire publishes a different process for toll and court collections',
    summary:'State toll rules describe E-ZPass/vendor payment requests with transaction details and staged notices. Judicial Branch materials describe judgment collection through filed motions, service, hearings, and court orders.',
    evidence:[official.nhTollRules,official.nhCourtCollection]

@@ -1,8 +1,9 @@
 import type {Claim,Verification} from './types';
 import type {BrowserDocument} from './browser-file';
 
-const SESSION_KEY='seal:completed-check:v2';
+const LEGACY_SESSION_KEY='seal:completed-check:v2';
 const LEGACY_KEYS=['seal:completed-check:v1'] as const;
+const sessionKey=(workspaceId:string)=>`seal:completed-check:v3:${workspaceId||'primary'}`;
 const DB_NAME='seal-local-session';
 const STORE_NAME='artifacts';
 const MAX_SESSION_AGE=6*60*60*1000;
@@ -147,18 +148,19 @@ function removeLegacySessionKeys(){
  for(const key of LEGACY_KEYS)window.sessionStorage.removeItem(key);
 }
 
-export async function clearOrphanedResultArtifacts(){
+export async function clearOrphanedResultArtifacts(workspaceId='primary'){
  if(!hasBrowser())return;
  removeLegacySessionKeys();
- if(window.sessionStorage.getItem(SESSION_KEY))return;
- await clearArtifactStore();
+ if(window.sessionStorage.getItem(sessionKey(workspaceId)))return;
 }
 
-export function clearResultSession(){
+export function clearResultSession(workspaceId='primary'){
  if(typeof window==='undefined')return;
  removeLegacySessionKeys();
- const raw=window.sessionStorage.getItem(SESSION_KEY);
- window.sessionStorage.removeItem(SESSION_KEY);
+ const key=sessionKey(workspaceId);
+ const raw=window.sessionStorage.getItem(key);
+ window.sessionStorage.removeItem(key);
+ if(workspaceId==='primary')window.sessionStorage.removeItem(LEGACY_SESSION_KEY);
  if(!raw)return;
  try{
   const parsed=JSON.parse(raw) as unknown;
@@ -171,11 +173,13 @@ export function clearResultSession(){
 
 export async function persistResultSession(
  data:Omit<StoredResultSession,'version'|'savedAt'|'blobKey'>,
- blob:Blob|null
+ blob:Blob|null,
+ workspaceId='primary'
 ){
  if(!hasBrowser())return;
  removeLegacySessionKeys();
- const previousRaw=window.sessionStorage.getItem(SESSION_KEY);
+ const key=sessionKey(workspaceId);
+ const previousRaw=window.sessionStorage.getItem(key);
  let previousBlobKey='';
  try{
   const parsed=JSON.parse(previousRaw||'null') as unknown;
@@ -186,23 +190,25 @@ export async function persistResultSession(
  try{
   if(blob&&blobKey)await putBlob(blobKey,blob);
   const stored:StoredResultSession={...data,version:2,savedAt:Date.now(),blobKey};
-  window.sessionStorage.setItem(SESSION_KEY,JSON.stringify(stored));
+  window.sessionStorage.setItem(key,JSON.stringify(stored));
   if(previousBlobKey&&previousBlobKey!==blobKey)void deleteBlob(previousBlobKey).catch(()=>{});
  }catch{
   if(blobKey)void deleteBlob(blobKey).catch(()=>{});
  }
 }
 
-export async function restoreResultSession():Promise<RestoredResultSession|null>{
+export async function restoreResultSession(workspaceId='primary'):Promise<RestoredResultSession|null>{
  if(!hasBrowser())return null;
  removeLegacySessionKeys();
- const raw=window.sessionStorage.getItem(SESSION_KEY);
+ const key=sessionKey(workspaceId);
+ const raw=window.sessionStorage.getItem(key)
+  ||(workspaceId==='primary'?window.sessionStorage.getItem(LEGACY_SESSION_KEY):null);
  if(!raw)return null;
 
  try{
   const parsed=JSON.parse(raw) as unknown;
   if(!validStoredSession(parsed)){
-   window.sessionStorage.removeItem(SESSION_KEY);
+   window.sessionStorage.removeItem(key);
    await clearArtifactStore().catch(()=>{});
    return null;
   }
@@ -228,7 +234,7 @@ export async function restoreResultSession():Promise<RestoredResultSession|null>
 
   return {...parsed,browserFile,sourceBlob};
  }catch{
-  window.sessionStorage.removeItem(SESSION_KEY);
+  window.sessionStorage.removeItem(key);
   await clearArtifactStore().catch(()=>{});
   return null;
  }

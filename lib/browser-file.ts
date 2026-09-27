@@ -18,8 +18,43 @@ export function ocrScaleForSize(width:number,height:number){
  return Math.min(3,desired,pixelCap);
 }
 
-export const ocrLanguages={eng:'English',spa:'Español',por:'Português',fra:'Français',deu:'Deutsch',hin:'हिन्दी',ara:'العربية'} as const;
+export const ocrLanguages={
+ eng:'English',
+ spa:'Español',
+ por:'Português',
+ fra:'Français',
+ deu:'Deutsch',
+ ita:'Italiano',
+ nld:'Nederlands',
+ tur:'Türkçe',
+ rus:'Русский',
+ hin:'हिन्दी',
+ ara:'العربية',
+ chi_sim:'中文（简体）',
+ chi_tra:'繁體中文',
+ jpn:'日本語',
+ kor:'한국어'
+} as const;
 export type OcrLanguage=keyof typeof ocrLanguages;
+
+export function ocrLanguageForLocale(locale:string):OcrLanguage{
+ const normalized=(locale||'').toLowerCase();
+ if(normalized.startsWith('zh-hant')||normalized.includes('-tw')||normalized.includes('-hk')||normalized.includes('-mo'))return 'chi_tra';
+ if(normalized.startsWith('zh'))return 'chi_sim';
+ if(normalized.startsWith('ja'))return 'jpn';
+ if(normalized.startsWith('ko'))return 'kor';
+ if(normalized.startsWith('ru')||normalized.startsWith('uk')||normalized.startsWith('bg'))return 'rus';
+ if(normalized.startsWith('ar')||normalized.startsWith('fa')||normalized.startsWith('ur'))return 'ara';
+ if(normalized.startsWith('hi')||normalized.startsWith('mr')||normalized.startsWith('ne'))return 'hin';
+ if(normalized.startsWith('es'))return 'spa';
+ if(normalized.startsWith('pt'))return 'por';
+ if(normalized.startsWith('fr'))return 'fra';
+ if(normalized.startsWith('de'))return 'deu';
+ if(normalized.startsWith('it'))return 'ita';
+ if(normalized.startsWith('nl'))return 'nld';
+ if(normalized.startsWith('tr'))return 'tur';
+ return 'eng';
+}
 let ocrWorkerPromise:Promise<Awaited<ReturnType<typeof import('tesseract.js')['createWorker']>>>|null=null;
 let ocrWorkerLanguage:OcrLanguage='eng';
 
