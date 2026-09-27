@@ -230,6 +230,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [displayLocale,setDisplayLocale]=useState<DisplayLocale>('en');
  const [languageMenuOpen,setLanguageMenuOpen]=useState(false);
  const [translatedResult,setTranslatedResult]=useState<Record<string,string>>({});
+ const [resultTranslationState,setResultTranslationState]=useState<'idle'|'translated'|'unavailable'>('idle');
  const [documentLanguage,setDocumentLanguage]=useState<DetectedDocumentLanguage|null>(null);
  const [jurisdiction,setJurisdiction]=useState('');
  const [workspaceTitle,setWorkspaceTitle]=useState('New check');
@@ -529,10 +530,12 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    method:'POST',headers:{'Content-Type':'application/json'},
    body:JSON.stringify({locale:displayLocale,strings:resultTranslationSource}),signal:controller.signal
   }).then(async response=>{
-   if(!response.ok)return;
-   const payload=await response.json() as {strings?:Record<string,string>};
-   if(payload.strings)setTranslatedResult(payload.strings);
-  }).catch(()=>{});
+   if(!response.ok){setResultTranslationState('unavailable');return}
+   const payload=await response.json() as {strings?:Record<string,string>;mode?:string};
+   if(payload.mode!=='TRANSLATED'||!payload.strings){setResultTranslationState('unavailable');return}
+   setTranslatedResult(payload.strings);
+   setResultTranslationState('translated');
+  }).catch(()=>{if(!controller.signal.aborted)setResultTranslationState('unavailable')});
   return()=>controller.abort();
  },[verification,displayLocale,resultTranslationSource]);
 
@@ -1019,6 +1022,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
 
  function changeDisplayLanguage(locale:DisplayLocale){
   setTranslatedResult({});
+  setResultTranslationState('idle');
   setDisplayLocale(locale);
   setLanguageMenuOpen(false);
  }
@@ -1039,6 +1043,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   if(uploadPreviewRef.current){URL.revokeObjectURL(uploadPreviewRef.current);uploadPreviewRef.current=null}
   setUploadPreview(null);
   setTranslatedResult({});
+  setResultTranslationState('idle');
   setDocumentLanguage(null);
   setJurisdiction('');
   setWorkspaceTitle('New check');
@@ -1618,7 +1623,8 @@ async function upload(uploaded:File){
        <div className="decision">
         <h1>{translatedResult.decisionTitle||(file?.sample?'This is a sample form.':decision.title)}</h1>
         <p className="decision-summary">{translatedResult.decisionSummary||(file?.sample?'Some printed details match official court pages, but this example form is not a summons to act on. The matches do not authenticate any notice you received.':decision.summary)}</p>
-        {displayLocale!=='en'&&Object.keys(translatedResult).length>0&&<p className="translation-note">{ui('translatedNote')}</p>}
+        {displayLocale!=='en'&&resultTranslationState==='translated'&&<p className="translation-note">{ui('translatedNote')}</p>}
+        {displayLocale!=='en'&&resultTranslationState==='unavailable'&&<p className="translation-note is-unavailable" role="status">{ui('translationUnavailable')}</p>}
 
         {riskSummary&&<div className="decision-risks" data-testid="two-risk-result">
          <div className="decision-risk-row"><span>Message instructions</span><div><strong>{translatedResult.riskInstructionsTitle||riskSummary.instructions.title}</strong><small>{translatedResult.riskInstructionsDetail||riskSummary.instructions.detail}</small></div></div>
@@ -1629,7 +1635,7 @@ async function upload(uploaded:File){
          <span>{ui('messageAsks')}</span>
          <ul className="message-action-list">{groundedActions.map(claim=><li key={claim.id}>{cleanDisplayText(claim.action?.source_text||claim.exact_source_text||claim.value)}</li>)}</ul>
         </div>:decisionClaim&&<div className="decision-claim">
-         <span>From the message</span>
+         <span>{ui('fromMessage')}</span>
          <p>{decisionClaimDisplay||cleanDisplayText(decisionClaim.value)}</p>
         </div>}
 
