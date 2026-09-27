@@ -43,12 +43,12 @@ jobs:
         run: |
           git config user.name "seal-feed-worker"
           git config user.email "actions@users.noreply.github.com"
-          git fetch origin cloudflare-preview
-          git rebase origin/cloudflare-preview
           git add lib/browse-discovered.generated.json
           if git diff --cached --quiet; then
             echo "No verified Browse feed changes."
             exit 0
           fi
           git commit -m "Refresh verified Browse feed"
+          git fetch origin cloudflare-preview
+          git rebase origin/cloudflare-preview
           git push origin HEAD:cloudflare-preview
