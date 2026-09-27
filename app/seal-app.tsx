@@ -1568,7 +1568,6 @@ async function upload(uploaded:File){
     <span className="mobile-nav-divider" aria-hidden="true"/>
     <button className="icon-control mobile-nav-icon mobile-workspace-trigger" type="button" aria-label={`Open checks, ${workspaces.length} open`} title="Open checks" aria-haspopup="dialog" aria-expanded={workspaceDrawerOpen} onClick={()=>{setLanguageMenuOpen(false);setWorkspaceDrawerOpen(true)}}>
      <SealUiIcon name="workspaces"/>
-     {workspaceActive&&workspaces.length>1&&<span className="mobile-workspace-count" aria-hidden="true">{workspaces.length}</span>}
     </button>
     <button className="icon-control mobile-nav-icon mobile-new-check" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} onClick={()=>{setWorkspaceDrawerOpen(false);onNewWorkspace()}}><SealUiIcon name="add"/></button>
    </div>
