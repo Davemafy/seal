@@ -558,3 +558,39 @@ test('curated Dallas example preserves its source-backed resolution',async({page
  await expect(page.getByTestId('play-evidence-review')).toBeVisible();
  assertNoRuntimeErrors();
 });
+
+
+test('mobile workspace drawer replaces the numbered strip and can delete checks',async({page})=>{
+ test.setTimeout(90000);
+ const assertNoRuntimeErrors=guardRuntime(page);
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+
+ await expect(page.locator('.mobile-check-strip')).toHaveCount(0);
+ await page.getByRole('button',{name:'New check'}).click();
+ await expect(page.getByTestId('entry-shell')).toBeVisible();
+
+ await page.getByRole('button',{name:'Open checks'}).click();
+ let drawer=page.getByRole('dialog',{name:'Checks'});
+ await expect(drawer).toBeVisible();
+ await expect(drawer.locator('.workspace-drawer-row')).toHaveCount(2);
+ await expect(drawer.getByRole('button',{name:'Delete New check 2'})).toBeVisible();
+
+ await drawer.getByRole('button',{name:'Delete New check 2'}).click();
+ await expect(page.getByRole('dialog',{name:'Checks'})).toHaveCount(0);
+ await expect(page.getByTestId('entry-shell')).toBeVisible();
+
+ await page.getByRole('button',{name:'Open checks'}).click();
+ drawer=page.getByRole('dialog',{name:'Checks'});
+ await expect(drawer.locator('.workspace-drawer-row')).toHaveCount(1);
+ await drawer.getByRole('button',{name:'Delete New check'}).click();
+ await expect(page.getByRole('dialog',{name:'Checks'})).toHaveCount(0);
+ await expect(page.getByTestId('entry-shell')).toBeVisible();
+
+ await page.getByRole('button',{name:'Open checks'}).click();
+ drawer=page.getByRole('dialog',{name:'Checks'});
+ await expect(drawer.locator('.workspace-drawer-row')).toHaveCount(1);
+ await expect(drawer.getByText('New check',{exact:true})).toBeVisible();
+ await expect(page.locator('.mobile-check-strip')).toHaveCount(0);
+ assertNoRuntimeErrors();
+});
