@@ -1,7 +1,35 @@
 import {describe,it,expect,vi} from 'vitest';import {fallbackExtract,claimsFromExtraction,extractActionGraph,extractAuthorityCitations,locatePhrase,recoverLabeledJurorNumber,recoverLabeledReportingDate,sanitizeStructuredExtraction} from '../lib/extract';import {ocrScaleForSize,ocrLanguageForScript} from '../lib/browser-file';import {extractionSchema,type Token} from '../lib/types';import {verdict,verifyClaims,phoneDigits,domain,address,FederalCourtListenerResolver} from '../lib/resolver';import {fixtures} from '../lib/fixtures';
 import {readFileSync} from 'node:fs';
 import {officialCourtDirectoryFor} from '../lib/official-directories';
+import {groundJurisdictionInference} from '../lib/jurisdiction-inference';
 const claims=(key:keyof typeof fixtures)=>{const t=fixtures[key].text,e=fallbackExtract(t);return {t,e,c:claimsFromExtraction(e,t)}};
+describe('grounded jurisdiction inference',()=>{
+ it('accepts a high-confidence inference only when its evidence is in the notice',()=>{
+  const text='Tribunal judiciaire de Paris\nRépublique française\nVous devez comparaître le 14 octobre.';
+  expect(groundJurisdictionInference(text,{
+   jurisdiction:'France',
+   countryCode:'FR',
+   evidenceQuote:'Tribunal judiciaire de Paris',
+   confidence:92
+  })?.jurisdiction).toBe('France');
+ });
+ it('rejects unsupported or weak jurisdiction guesses',()=>{
+  const text='Central District Court\nYou must appear on October 14.';
+  expect(groundJurisdictionInference(text,{
+   jurisdiction:'United States',
+   countryCode:'US',
+   evidenceQuote:'United States District Court',
+   confidence:94
+  })).toBeNull();
+  expect(groundJurisdictionInference(text,{
+   jurisdiction:'United States',
+   countryCode:'US',
+   evidenceQuote:'Central District Court',
+   confidence:52
+  })).toBeNull();
+ });
+});
+
 describe('OCR script recovery',()=>{
  it('maps non-Latin scripts to an OCR model without guessing Latin language',()=>{
   expect(ocrLanguageForScript('Arabic')).toBe('ara');
