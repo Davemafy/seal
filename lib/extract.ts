@@ -383,7 +383,12 @@ export function claimsFromExtraction(e:Extraction,text:string,tokens:Token[]=[])
   }
  }
 
- const selectedActions=e.requested_actions?groundedModelActions(e,text):extractActionGraph(text,tokens);
+ const modelActions=e.requested_actions?groundedModelActions(e,text):[];
+ const deterministicActions=extractActionGraph(text,tokens);
+ const selectedActions=[...modelActions];
+ for(const candidate of deterministicActions){
+  if(!selectedActions.some(existing=>similarActions(existing,candidate)))selectedActions.push(candidate);
+ }
  const consumedPhones=new Set<string>(),consumedUrls=new Set<string>();
  for(const action of selectedActions){
   const type=claimTypeForAction(action),label=labelForAction(action);
