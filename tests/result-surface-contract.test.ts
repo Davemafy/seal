@@ -7,6 +7,8 @@ describe('result surface design contract',()=>{
   const css=readFileSync('app/workspace.css','utf8');
   const mobileCss=readFileSync('app/result-mobile-repair.css','utf8');
   expect(app).toContain('className="decision-overview"');
+  expect(app).toContain('result-slide result-slide-summary');
+  expect(app).toContain('result-slide result-slide-original');
   expect(app).toContain('className="decision-visual"');
   expect(app).toContain('className="decision-artifact"');
   expect(app).toContain('aria-label="Check snapshot"');
