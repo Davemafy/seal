@@ -1,7 +1,19 @@
-import {describe,it,expect,vi} from 'vitest';import {fallbackExtract,claimsFromExtraction,extractActionGraph,extractAuthorityCitations,locatePhrase,recoverLabeledJurorNumber,recoverLabeledReportingDate,sanitizeStructuredExtraction} from '../lib/extract';import {ocrScaleForSize} from '../lib/browser-file';import {extractionSchema,type Token} from '../lib/types';import {verdict,verifyClaims,phoneDigits,domain,address,FederalCourtListenerResolver} from '../lib/resolver';import {fixtures} from '../lib/fixtures';
+import {describe,it,expect,vi} from 'vitest';import {fallbackExtract,claimsFromExtraction,extractActionGraph,extractAuthorityCitations,locatePhrase,recoverLabeledJurorNumber,recoverLabeledReportingDate,sanitizeStructuredExtraction} from '../lib/extract';import {ocrScaleForSize,ocrLanguageForScript} from '../lib/browser-file';import {extractionSchema,type Token} from '../lib/types';import {verdict,verifyClaims,phoneDigits,domain,address,FederalCourtListenerResolver} from '../lib/resolver';import {fixtures} from '../lib/fixtures';
 import {readFileSync} from 'node:fs';
 import {officialCourtDirectoryFor} from '../lib/official-directories';
 const claims=(key:keyof typeof fixtures)=>{const t=fixtures[key].text,e=fallbackExtract(t);return {t,e,c:claimsFromExtraction(e,t)}};
+describe('OCR script recovery',()=>{
+ it('maps non-Latin scripts to an OCR model without guessing Latin language',()=>{
+  expect(ocrLanguageForScript('Arabic')).toBe('ara');
+  expect(ocrLanguageForScript('Devanagari')).toBe('hin');
+  expect(ocrLanguageForScript('Cyrillic')).toBe('rus');
+  expect(ocrLanguageForScript('Japanese')).toBe('jpn');
+  expect(ocrLanguageForScript('Hangul')).toBe('kor');
+  expect(ocrLanguageForScript('Han')).toBe('chi_sim');
+  expect(ocrLanguageForScript('Latin','fra')).toBe('fra');
+ });
+});
+
 describe('independent court directory routing',()=>{
  it('routes clearly identified India court text to official eCourts',()=>{
   const route=officialCourtDirectoryFor('DISTRICT COURT — NEW DELHI, INDIA\nYou must appear on October 14.');

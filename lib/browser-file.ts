@@ -55,6 +55,18 @@ export function ocrLanguageForLocale(locale:string):OcrLanguage{
  if(normalized.startsWith('tr'))return 'tur';
  return 'eng';
 }
+
+export function ocrLanguageForScript(script:string|null|undefined,fallback:OcrLanguage='eng'):OcrLanguage{
+ const normalized=(script||'').toLowerCase();
+ if(/arab/.test(normalized))return 'ara';
+ if(/devanagari/.test(normalized))return 'hin';
+ if(/cyril/.test(normalized))return 'rus';
+ if(/japanese|hiragana|katakana/.test(normalized))return 'jpn';
+ if(/korean|hangul/.test(normalized))return 'kor';
+ if(/han|chinese/.test(normalized))return fallback==='chi_tra'?'chi_tra':'chi_sim';
+ return fallback;
+}
+
 let ocrWorkerPromise:Promise<Awaited<ReturnType<typeof import('tesseract.js')['createWorker']>>>|null=null;
 let ocrWorkerLanguage:OcrLanguage='eng';
 
@@ -358,6 +370,26 @@ async function recognize(worker:Awaited<ReturnType<typeof import('tesseract.js')
  return {result,lines,quality:scoreOcr(result)};
 }
 
+async function detectScriptLanguage(image:HTMLImageElement|HTMLCanvasElement,fallback:OcrLanguage,signal?:AbortSignal):Promise<OcrLanguage>{
+ throwIfAborted(signal);
+ const {createWorker}=await import('tesseract.js');
+ const detector=await createWorker('eng',1,{legacyCore:true,legacyLang:true});
+ const abort=()=>{void detector.terminate().catch(()=>{})};
+ signal?.addEventListener('abort',abort,{once:true});
+ try{
+  throwIfAborted(signal);
+  const detected=await detector.detect(image);
+  throwIfAborted(signal);
+  const confidence=Number(detected.data.script_confidence||0);
+  if(confidence<3)return fallback;
+  return ocrLanguageForScript(detected.data.script,fallback);
+ }catch{
+  return fallback;
+ }finally{
+  signal?.removeEventListener('abort',abort);
+  try{await detector.terminate()}catch{}
+ }
+}
 async function ocr(image:HTMLImageElement|HTMLCanvasElement,language:OcrLanguage,signal?:AbortSignal):Promise<OcrResult>{
  throwIfAborted(signal);
  const worker=await warmOcr(language);
@@ -368,6 +400,37 @@ async function ocr(image:HTMLImageElement|HTMLCanvasElement,language:OcrLanguage
   const first=await recognize(worker,image);
   throwIfAborted(signal);
   if(!shouldRetryOcr(first))return first.result;
+
+  // Do not tax the fast path. Only a weak first pass earns script detection.
+  // This recovers cross-script uploads without making ordinary uploads wait on OSD.
+  const detectedLanguage=await detectScriptLanguage(image,language,signal);
+  if(detectedLanguage!==language){
+   const {createWorker}=await import('tesseract.js');
+   const alternateWorker=await createWorker(detectedLanguage);
+   const abortAlternate=()=>{void alternateWorker.terminate().catch(()=>{})};
+   signal?.addEventListener('abort',abortAlternate,{once:true});
+   try{
+    const alternateFirst=await recognize(alternateWorker,image);
+    throwIfAborted(signal);
+    if(!shouldRetryOcr(alternateFirst)){
+     return alternateFirst.quality>=first.quality?alternateFirst.result:first.result;
+    }
+    const alternateVariant=binaryVariant(image);
+    try{
+     const alternateSecond=await recognize(alternateWorker,alternateVariant);
+     const alternateBest=alternateSecond.quality>alternateFirst.quality?alternateSecond:alternateFirst;
+     const alternateOther=alternateBest===alternateFirst?alternateSecond:alternateFirst;
+     const alternateMerged=mergeCandidates(alternateBest,alternateOther);
+     return alternateBest.quality>=first.quality?alternateMerged:first.result;
+    }finally{
+     alternateVariant.width=1;alternateVariant.height=1;
+    }
+   }finally{
+    signal?.removeEventListener('abort',abortAlternate);
+    try{await alternateWorker.terminate()}catch{}
+   }
+  }
+
   const variant=binaryVariant(image);
   try{
    const second=await recognize(worker,variant);
