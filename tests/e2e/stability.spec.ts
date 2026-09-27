@@ -103,6 +103,33 @@ Call +91 11 5555 0199 to confirm your attendance.`);
  assertNoRuntimeErrors();
 });
 
+test('mobile result puts status and official next action above supporting detail',async({page})=>{
+ test.setTimeout(90000);
+ const assertNoRuntimeErrors=guardRuntime(page);
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.getByRole('button',{name:/Paste text instead/i}).click();
+ await page.getByLabel('Paste the court message').fill(`STATE OF NEW HAMPSHIRE
+FINAL COURT-ORDERED MANDATORY COLLECTION NOTICE
+Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administrative fees, court costs, and enforcement surcharges.`);
+ await page.getByRole('button',{name:'Check this message'}).click();
+ await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
+ await expect(page.getByTestId('result-status')).toHaveText('Not independently verified');
+ await expect(page.getByRole('heading',{level:1,name:'Verify before you pay.'})).toBeVisible();
+ const primary=page.getByTestId('primary-next-step');
+ await expect(primary).toBeVisible();
+ await expect(primary.getByRole('link')).toBeVisible();
+ const box=await primary.boundingBox();
+ expect(box,'primary next step should be visible without hunting through the report').not.toBeNull();
+ expect((box?.y||0)+(box?.height||0)).toBeLessThan(844);
+ await expect(page.locator('.decision-details')).not.toHaveAttribute('open','');
+ await expect(page.locator('.result-chapters')).toBeHidden();
+ await expect(page.locator('.result-origin')).not.toContainText(/Street|Avenue|Road|Boulevard/i);
+ const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
+ expect(overflow).toBeLessThanOrEqual(1);
+ assertNoRuntimeErrors();
+});
+
 test('New Hampshire toll demand shows process evidence without inventing a verdict',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.goto('/');
@@ -112,7 +139,7 @@ FINAL COURT-ORDERED MANDATORY COLLECTION NOTICE
 Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administrative fees, court costs, and enforcement surcharges.`);
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await expect(page.locator('#review-summary').getByRole('heading',{name:'Check the toll or case outside this notice'})).toBeVisible();
+ await expect(page.locator('#review-summary').getByRole('heading',{name:'Verify before you pay.'})).toBeVisible();
  await expect(page.getByText('Official process',{exact:true})).toBeVisible();
  await expect(page.getByText('New Hampshire publishes a specific process for toll and court collections')).toBeVisible();
  await expect(page.getByText(/These sources can inform the check, but they cannot confirm who sent the message/i)).toBeVisible();
@@ -157,7 +184,7 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
 
  await expect.poll(()=>verifyCount,{timeout:15000}).toBe(2);
  await expect(active.getByTestId('result-shell')).toBeVisible({timeout:30000});
- await expect(active.getByRole('heading',{level:1,name:'Check the toll or case outside this notice'})).toBeVisible();
+ await expect(active.getByRole('heading',{level:1,name:'Verify before you pay.'})).toBeVisible();
 
  releaseFirst();
  const checks=active.locator('.rail-check-list .rail-check');
@@ -169,7 +196,7 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
 
  await active.locator('.rail-check-list .rail-check').nth(1).click();
  active=page.locator('.seal-workspace-instance:not([hidden])');
- await expect(active.getByRole('heading',{level:1,name:'Check the toll or case outside this notice'})).toBeVisible();
+ await expect(active.getByRole('heading',{level:1,name:'Verify before you pay.'})).toBeVisible();
  assertNoRuntimeErrors();
 });
 
@@ -196,7 +223,7 @@ FINAL COURT-ORDERED MANDATORY COLLECTION NOTICE
 Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administrative fees, court costs, and enforcement surcharges.`);
  await active.getByRole('button',{name:'Check this message'}).click();
  await expect(active.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await expect(active.locator('[id^="review-summary"]').getByRole('heading',{level:1,name:'Check the toll or case outside this notice'})).toBeVisible();
+ await expect(active.locator('[id^="review-summary"]').getByRole('heading',{level:1,name:'Verify before you pay.'})).toBeVisible();
 
  const checks=active.locator('.rail-check-list .rail-check');
  await expect(checks).toHaveCount(2);
@@ -208,7 +235,7 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
 
  await active.locator('.rail-check-list .rail-check').nth(1).click();
  active=page.locator('.seal-workspace-instance:not([hidden])');
- await expect(active.locator('[id^="review-summary"]').getByRole('heading',{level:1,name:'Check the toll or case outside this notice'})).toBeVisible();
+ await expect(active.locator('[id^="review-summary"]').getByRole('heading',{level:1,name:'Verify before you pay.'})).toBeVisible();
  assertNoRuntimeErrors();
 });
 
