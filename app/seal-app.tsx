@@ -2193,7 +2193,7 @@ const WORKSPACE_LIST_KEY='seal:workspace-list:v1';
 export default function SealApp({initialDemo=false,initialText='',initialRun=false}:{initialDemo?:boolean;initialText?:string;initialRun?:boolean}){
  const [workspaces,setWorkspaces]=useState<WorkspaceMeta[]>([{id:'primary',title:'New check',status:'idle'}]);
  const [activeWorkspace,setActiveWorkspace]=useState('primary');
- const [workspaceMotion,setWorkspaceMotion]=useState<{id:string;direction:'forward'|'backward'}|null>(null);
+ const [workspaceMotion,setWorkspaceMotion]=useState<{id:string;fromId?:string;direction:'forward'|'backward'}|null>(null);
  const workspaceMotionTimer=useRef<number|undefined>(undefined);
  const [registryReady,setRegistryReady]=useState(false);
 
@@ -2225,9 +2225,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const animateWorkspaceTo=useCallback((id:string,direction:'forward'|'backward')=>{
   if(id===activeWorkspace)return;
   if(workspaceMotionTimer.current)window.clearTimeout(workspaceMotionTimer.current);
-  setWorkspaceMotion({id,direction});
+  setWorkspaceMotion({id,fromId:activeWorkspace,direction});
   setActiveWorkspace(id);
-  workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),360);
+  workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),520);
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
  },[activeWorkspace]);
 
@@ -2253,9 +2253,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    return [...items,{id,title,status:'idle' as WorkspaceRunStatus}].slice(-8);
   });
   if(workspaceMotionTimer.current)window.clearTimeout(workspaceMotionTimer.current);
-  setWorkspaceMotion({id,direction:'forward'});
+  setWorkspaceMotion({id,fromId:activeWorkspace,direction:'forward'});
   setActiveWorkspace(id);
-  workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),360);
+  workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),520);
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
  },[]);
 
@@ -2281,7 +2281,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
     if(workspaceMotionTimer.current)window.clearTimeout(workspaceMotionTimer.current);
     setWorkspaceMotion({id:next.id,direction:index>=remaining.length?'backward':'forward'});
     setActiveWorkspace(next.id);
-    workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),360);
+    workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),520);
    }
   }
   toast.success('Check removed');
@@ -2290,12 +2290,16 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
 
  return <>
   <div className="seal-workspace-stack">
-   {workspaces.map((workspace,index)=><div
-    className={`seal-workspace-instance ${workspaceMotion?.id===workspace.id?`is-entering-${workspaceMotion.direction}`:''}`}
-    key={workspace.id}
-    hidden={workspace.id!==activeWorkspace}
-    aria-hidden={workspace.id!==activeWorkspace}
-   >
+   {workspaces.map((workspace,index)=>{
+    const entering=workspaceMotion?.id===workspace.id;
+    const leaving=workspaceMotion?.fromId===workspace.id&&workspace.id!==activeWorkspace;
+    const visible=workspace.id===activeWorkspace||leaving;
+    return <div
+     className={`seal-workspace-instance ${entering?`is-entering-${workspaceMotion.direction}`:''} ${leaving?'is-leaving':''}`}
+     key={workspace.id}
+     hidden={!visible}
+     aria-hidden={workspace.id!==activeWorkspace}
+    >
     <SealWorkspace
      initialDemo={index===0?initialDemo:false}
      initialText={index===0?initialText:''}
@@ -2307,7 +2311,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      onDeleteWorkspace={deleteWorkspace}
      onWorkspaceMeta={updateWorkspace}
     />
-   </div>)}
+   </div>;
+   })}
   </div>
   <Toaster
    position="bottom-center"
