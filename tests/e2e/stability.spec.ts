@@ -290,13 +290,13 @@ Call 1-866-388-2430 after 5:30 PM for the status of your jury service.`);
  await page.getByRole('button',{name:'Check this message'}).click();
 
  await expect.poll(()=>verifyCount,{timeout:15000}).toBe(1);
- let active=page.locator('.seal-workspace-instance:not([hidden])');
+ let active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
  const firstCheck=active.locator('.rail-check-list .rail-check').first();
  await expect(firstCheck.locator('.rail-check-state')).toHaveClass(/is-verifying/);
  await expect(firstCheck.locator('.rail-check-copy small')).toContainText('Checking sources');
 
  await active.locator('.rail-new-check').click();
- active=page.locator('.seal-workspace-instance:not([hidden])');
+ active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
  await expect(active.getByTestId('entry-shell')).toBeVisible();
  await active.getByRole('button',{name:/Paste text instead/i}).click();
  await active.getByLabel('Paste the court message').fill(`STATE OF NEW HAMPSHIRE
@@ -314,12 +314,12 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  const names=await checks.locator('.rail-check-copy strong').allTextContents();
  expect(new Set(names).size,'blank parallel checks should not be indistinguishable in the workspace rail').toBe(names.length);
  await checks.nth(0).click();
- active=page.locator('.seal-workspace-instance:not([hidden])');
+ active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
  await expect(active.getByTestId('result-shell')).toBeVisible({timeout:30000});
  await expect(active.locator('.pasted-message')).toContainText('1-866-388-2430');
 
  await active.locator('.rail-check-list .rail-check').nth(1).click();
- active=page.locator('.seal-workspace-instance:not([hidden])');
+ active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
  await expect(active.getByRole('heading',{level:1,name:'Check it independently before you pay.'})).toBeVisible();
  assertNoRuntimeErrors();
 });
@@ -334,12 +334,12 @@ test('parallel checks keep completed results isolated and switch cleanly',async(
 JURY STATUS CHECK
 Call 1-866-388-2430 after 5:30 PM for the status of your jury service.`);
  await page.getByRole('button',{name:'Check this message'}).click();
- let active=page.locator('.seal-workspace-instance:not([hidden])');
+ let active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
  await expect(active.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(active.locator('.pasted-message')).toContainText('1-866-388-2430');
 
  await active.locator('.rail-new-check').click();
- active=page.locator('.seal-workspace-instance:not([hidden])');
+ active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
  await expect(active.getByTestId('entry-shell')).toBeVisible();
  await active.getByRole('button',{name:/Paste text instead/i}).click();
  await active.getByLabel('Paste the court message').fill(`STATE OF NEW HAMPSHIRE
@@ -352,13 +352,13 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  const checks=active.locator('.rail-check-list .rail-check');
  await expect(checks).toHaveCount(2);
  await checks.nth(0).click();
- active=page.locator('.seal-workspace-instance:not([hidden])');
+ active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
  await expect(active.locator('.pasted-message')).toContainText('1-866-388-2430');
  await active.locator('.result-chapters').getByRole('link',{name:'Original'}).click();
  await expect(active.locator('#original-message')).toBeVisible();
 
  await active.locator('.rail-check-list .rail-check').nth(1).click();
- active=page.locator('.seal-workspace-instance:not([hidden])');
+ active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
  await expect(active.locator('[id^="review-summary"]').getByRole('heading',{level:1,name:'Check it independently before you pay.'})).toBeVisible();
  assertNoRuntimeErrors();
 });
@@ -568,9 +568,13 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
 
  await expect(page.locator('.mobile-check-strip')).toHaveCount(0);
  await page.getByRole('button',{name:'New check'}).click();
- let active=page.locator('.seal-workspace-instance:not([hidden])');
- await expect(active,'new check should enter with page motion').toHaveClass(/is-entering-forward/);
+ const leaving=page.locator('.seal-workspace-instance.is-leaving');
+ await expect(leaving,'old check should remain visible while fading out').toBeVisible();
+ let active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
+ await expect(active,'new check should rise from the bottom').toHaveClass(/is-entering-forward/);
  await expect(active.getByTestId('entry-shell')).toBeVisible();
+ await page.waitForTimeout(560);
+ await expect(leaving).toBeHidden();
 
  await page.getByRole('button',{name:'Open checks',exact:true}).click();
  let drawer=page.getByRole('dialog',{name:'Checks'});
@@ -582,7 +586,7 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
 
  await drawer.getByRole('button',{name:/Delete check 2:/}).click();
  await expect(page.getByRole('dialog',{name:'Checks',includeHidden:true})).not.toBeVisible();
- active=page.locator('.seal-workspace-instance:not([hidden])');
+ active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
  await expect(active.getByTestId('entry-shell')).toBeVisible();
 
  await page.getByRole('button',{name:'Open checks',exact:true}).click();
@@ -590,7 +594,7 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  await expect(drawer.locator('.workspace-drawer-row')).toHaveCount(1);
  await drawer.getByRole('button',{name:/Delete check 1:/}).click();
  await expect(page.getByRole('dialog',{name:'Checks',includeHidden:true})).not.toBeVisible();
- active=page.locator('.seal-workspace-instance:not([hidden])');
+ active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
  await expect(active.getByTestId('entry-shell')).toBeVisible();
 
  await page.getByRole('button',{name:'Open checks',exact:true}).click();
