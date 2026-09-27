@@ -2494,21 +2494,21 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    </section>
   </div>}
   <div className={`seal-workspace-stack ${workspaces.length>1?'has-multiple':''}`} data-workspace-count={workspaces.length}>
-   {registryReady&&(()=>{
-    const workspace=workspaces.find(item=>item.id===activeWorkspace)||workspaces[0];
-    const index=Math.max(0,workspaces.findIndex(item=>item.id===workspace.id));
+   {registryReady&&workspaces.map((workspace,index)=>{
+    const active=workspace.id===activeWorkspace;
     return <div
-     className="seal-workspace-instance is-active"
+     className={`seal-workspace-instance ${active?'is-active':''}`}
      data-workspace-id={workspace.id}
      key={workspace.id}
-     aria-hidden="false"
+     aria-hidden={active?'false':'true'}
+     hidden={!active}
     >
      <SealWorkspace
       initialDemo={index===0?initialDemo:false}
       initialText={index===0?initialText:''}
       initialRun={index===0?initialRun:false}
       workspaceId={workspace.id}
-      workspaceActive
+      workspaceActive={active}
       workspaces={workspaces}
       onNewWorkspace={createWorkspace}
       onSelectWorkspace={selectWorkspace}
@@ -2516,7 +2516,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
       onWorkspaceMeta={updateWorkspace}
      />
     </div>;
-   })()}
+   })}
   </div>
   <Toaster
    position="bottom-center"
