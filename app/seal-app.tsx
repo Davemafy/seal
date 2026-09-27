@@ -1140,11 +1140,11 @@ async function upload(uploaded:File){
           <span className="upload-process-body">
            <strong>{processingTitle}</strong>
            <span className="process-flow" aria-hidden="true">
-            <span className={`process-node ${processingStage===0?'is-current':processingStage>0?'is-complete':''}`}><i><span/></i><small>Read</small></span>
+            <span className={`process-node ${processingStage===0?'is-current':processingStage>0?'is-complete':''}`}><i><img src="/brand/seal-mark-black.svg" alt=""/></i><small>Read</small></span>
             <span className={`process-link ${processingStage>=1?'is-complete':''}`}><i/></span>
-            <span className={`process-node ${processingStage===1?'is-current':processingStage>1?'is-complete':''}`}><i><span/></i><small>Ground</small></span>
+            <span className={`process-node ${processingStage===1?'is-current':processingStage>1?'is-complete':''}`}><i><img src="/brand/seal-mark-black.svg" alt=""/></i><small>Ground</small></span>
             <span className={`process-link ${processingStage>=2?'is-complete':''}`}><i/></span>
-            <span className={`process-node ${processingStage===2?'is-current':''}`}><i><span/></i><small>Verify</small></span>
+            <span className={`process-node ${processingStage===2?'is-current':''}`}><i><img src="/brand/seal-mark-black.svg" alt=""/></i><small>Verify</small></span>
            </span>
            <span className="process-readout">
             <span className="process-readout-main">
@@ -1159,7 +1159,7 @@ async function upload(uploaded:File){
             </span>
            </span>
            {uploadPreview?.name&&<span className="upload-file-name" title={uploadPreview.name}>{uploadPreview.name}</span>}
-           <span className="process-device-note"><i aria-hidden="true"><b/><b/></i><span>Original stays on this device</span></span>
+           <span className="process-device-note"><span>Original stays on this device</span><small>Extracted text may be sent for checking</small></span>
           </span>
          </span>
          :<span className="upload-group">
