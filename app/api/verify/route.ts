@@ -13,9 +13,14 @@ const request=z.object({
  curated_case_id:z.string().max(120).optional()
 });
 
-function enrichCuratedCase(verification:Verification,caseId:string|undefined):Verification{
+function normalized(value:string){
+ return value.normalize('NFKC').replace(/\s+/g,' ').trim();
+}
+
+function enrichCuratedCase(verification:Verification,caseId:string|undefined,text:string):Verification{
  const item=caseId?getBrowseCase(caseId):undefined;
- if(!item||item.classification!=='Confirmed scam example')return verification;
+ const trustedTranscript=item?.runText?normalized(item.runText):'';
+ if(!item||item.classification!=='Confirmed scam example'||!trustedTranscript||normalized(text)!==trustedTranscript)return verification;
 
  const evidence:Evidence={
   title:item.sourceTitle,
@@ -54,7 +59,7 @@ export async function POST(req:Request){
  try{
   const data=request.parse(await req.json());
   const verification=await verifyClaims(data.claims,data.court_name,data.mode,data.jurisdiction_hint,data.text||'');
-  return NextResponse.json(enrichCuratedCase(verification,data.curated_case_id));
+  return NextResponse.json(enrichCuratedCase(verification,data.curated_case_id,data.text||''));
  }catch{
   return NextResponse.json({error:'Could not verify this request.'},{status:400});
  }
