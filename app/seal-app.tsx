@@ -1101,6 +1101,18 @@ async function upload(uploaded:File){
   activeRequestRef.current?.abort();
   const controller=new AbortController();
   activeRequestRef.current=controller;
+  const contextPromise=!sourceContext.jurisdiction&&!sourceIsDemo
+   ?fetch('/api/context',{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({text:sourceText}),
+     signal:controller.signal
+    }).then(async response=>{
+     if(!response.ok)return null;
+     const payload=await response.json() as {context?:{jurisdiction:string;countryCode:string;evidenceQuote:string;confidence:number}|null};
+     return payload.context||null;
+    }).catch(()=>null)
+   :Promise.resolve(null);
   const requestTimeout=window.setTimeout(()=>controller.abort(),30000);
   const id=++runId.current;
   storyTimelineRef.current?.kill();
@@ -1153,7 +1165,17 @@ async function upload(uploaded:File){
    if(runId.current!==id)return;
    setExtractionMode(extractor);
    const routedDirectory=officialCourtDirectoryFor([sourceText,extraction.court_name,extraction.court_location].filter(Boolean).join('\n'))||sourceContext.officialDirectory;
-   const routedJurisdiction=routedDirectory?.jurisdiction||sourceContext.jurisdiction||cleanDisplayText(extraction.court_location);
+   let inferredContext:null|{jurisdiction:string;countryCode:string;evidenceQuote:string;confidence:number}=null;
+   if(!routedDirectory&&!sourceContext.jurisdiction){
+    inferredContext=await Promise.race([
+     contextPromise,
+     new Promise<null>(resolve=>window.setTimeout(()=>resolve(null),900))
+    ]);
+   }
+   const routedJurisdiction=routedDirectory?.jurisdiction
+    ||sourceContext.jurisdiction
+    ||inferredContext?.jurisdiction
+    ||cleanDisplayText(extraction.court_location);
    if(routedJurisdiction)setJurisdiction(routedJurisdiction);
    if(extraction.court_name)setWorkspaceTitle(cleanDisplayText(extraction.court_name));
 
