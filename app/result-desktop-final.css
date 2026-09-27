@@ -998,3 +998,184 @@
   line-height:20px!important
  }
 }
+
+
+/* Result composition reset — one aligned screen, no report fragments. */
+@media(min-width:901px){
+ .seal-app:has(.review-shell)>.seal-footer{
+  display:none!important
+ }
+
+ .review-shell{
+  padding:18px 34px 22px!important
+ }
+ .result-masthead{
+  width:min(100%,1120px)!important;
+  max-width:1120px!important;
+  padding:0!important
+ }
+ .result-masthead-row{
+  min-height:0!important;
+  padding:0 14px 8px 0!important
+ }
+ .result-masthead-title{
+  margin:0 0 4px!important
+ }
+ .check-object-meta{
+  margin-top:4px!important
+ }
+
+ .result-chapters{
+  margin-top:12px!important
+ }
+
+ .result-carousel{
+  width:min(100%,1120px)!important;
+  max-width:1120px!important
+ }
+ .result-slide-summary{
+  padding:28px 0 34px!important
+ }
+ .result-slide-summary .decision{
+  width:100%!important;
+  max-width:1040px!important
+ }
+ .result-slide-summary .decision-overview{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 320px!important;
+  gap:56px!important;
+  align-items:start!important
+ }
+ .result-slide-summary .decision-copy{
+  max-width:640px!important
+ }
+ .result-slide-summary .decision-status{
+  margin:0 0 8px!important
+ }
+ .result-slide-summary .decision h1{
+  max-width:620px!important;
+  font-size:43px!important;
+  line-height:48px!important;
+  letter-spacing:-.032em!important
+ }
+ .result-slide-summary .decision-summary{
+  max-width:610px!important;
+  margin-top:14px!important;
+  font-size:17px!important;
+  line-height:25px!important
+ }
+
+ /* One cohesive action/status surface instead of three ruled fragments. */
+ .decision-summary-side{
+  min-width:0!important;
+  align-self:start!important;
+  padding:18px!important;
+  border:1px solid #e6e6e1!important;
+  border-radius:12px!important;
+  background:#f6f6f3!important
+ }
+ .result-slide-summary .decision-primary-route{
+  max-width:none!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important
+ }
+ .result-slide-summary .decision-primary-route>span{
+  display:block!important;
+  margin:0 0 8px!important;
+  color:#676762!important;
+  font-size:13px!important;
+  line-height:19px!important;
+  font-weight:620!important
+ }
+ .result-slide-summary .decision-primary-route>a{
+  width:100%!important;
+  min-height:44px!important;
+  padding:11px 14px!important;
+  border-radius:8px!important;
+  font-size:14px!important;
+  line-height:20px!important
+ }
+ .result-slide-summary .decision-primary-route>small{
+  display:block!important;
+  max-width:none!important;
+  margin-top:8px!important;
+  color:#777772!important;
+  font-size:13px!important;
+  line-height:19px!important
+ }
+
+ .result-slide-summary .decision-at-a-glance{
+  width:100%!important;
+  max-width:none!important;
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:8px!important;
+  margin:16px 0 0!important;
+  padding:0!important;
+  border:0!important
+ }
+ .result-slide-summary .decision-at-a-glance>div{
+  min-width:0!important;
+  padding:12px!important;
+  border:1px solid #e2e2dd!important;
+  border-radius:8px!important;
+  background:#fff!important
+ }
+ .result-slide-summary .decision-at-a-glance span{
+  display:block!important;
+  margin:0 0 4px!important;
+  color:#777772!important;
+  font-size:12.5px!important;
+  line-height:18px!important
+ }
+ .result-slide-summary .decision-at-a-glance strong{
+  display:block!important;
+  margin:0!important;
+  font-size:14px!important;
+  line-height:20px!important
+ }
+
+ /* Continuation is a compact product control, not another horizontal rule. */
+ .result-slide-summary .decision-details{
+  width:100%!important;
+  max-width:1040px!important;
+  margin:26px 0 0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:10px!important;
+  background:#f6f6f3!important;
+  overflow:hidden!important
+ }
+ .result-slide-summary .decision-details>summary{
+  min-height:48px!important;
+  padding:0 14px!important;
+  border:0!important;
+  font-size:13.5px!important;
+  line-height:20px!important
+ }
+ .result-slide-summary .decision-details[open]>.decision-details-body{
+  padding:4px 14px 18px!important
+ }
+}
+
+@media(min-width:901px) and (max-width:1180px){
+ .result-slide-summary{
+  padding:24px 0 30px!important
+ }
+ .result-slide-summary .decision-overview{
+  grid-template-columns:minmax(0,1fr) 286px!important;
+  gap:36px!important
+ }
+ .result-slide-summary .decision h1{
+  font-size:38px!important;
+  line-height:43px!important
+ }
+ .result-slide-summary .decision-summary{
+  font-size:15.5px!important;
+  line-height:23px!important
+ }
+ .decision-summary-side{
+  padding:15px!important
+ }
+}
