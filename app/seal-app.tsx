@@ -243,10 +243,11 @@ function decisionCopy(verification:Verification|null,claim?:Claim){
 }
 
 const PROCESSING_WAIT_NOTES=[
- 'A matching court name or seal does not prove who sent a message.',
- 'SEAL checks the action you are being asked to take separately from official-looking details.',
- 'If a detail cannot be confirmed independently, SEAL leaves it unconfirmed.',
- 'Official next steps are sourced independently from the message you uploaded.'
+ 'A real court name, seal, or address can be copied into a fake message.',
+ 'A matching phone number or website still does not prove who sent the message.',
+ 'SEAL checks what the message asks you to do separately from how official it looks.',
+ 'When a detail cannot be confirmed independently, SEAL leaves it unconfirmed.',
+ 'The safest next step comes from an independently sourced court or agency page.'
 ] as const;
 
 function SealWorkspace({initialDemo=false,initialText='',initialRun=false,workspaceId,workspaceActive,workspaces,onNewWorkspace,onSelectWorkspace,onDeleteWorkspace,onWorkspaceMeta}:SealWorkspaceProps){
@@ -1751,6 +1752,7 @@ async function upload(uploaded:File){
             ?<img src={uploadPreview.url} alt="Selected court message"/>
             :<span className="upload-pdf-preview" aria-hidden="true"><b>PDF</b><i/></span>}
            <span className="processing-scanner" aria-hidden="true"><i/></span>
+           <span className="processing-scan-label" aria-hidden="true"><i/>Scanning</span>
           </span>
           <span className="upload-process-body">
            <strong>{processingTitle}</strong>
@@ -1765,7 +1767,7 @@ async function upload(uploaded:File){
             })}
            </span>
            <span className="process-wait-note" aria-live="polite">
-            <small>While we check</small>
+            <small>Quick fact</small>
             <span key={processingTipIndex}>{PROCESSING_WAIT_NOTES[processingTipIndex]}</span>
            </span>
            {processingFileName&&<span className="upload-file-name" title={processingFileName}>{processingFileName}</span>}
