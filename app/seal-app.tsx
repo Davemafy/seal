@@ -244,7 +244,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const evidenceBackedClaim=verification?claims.find(claim=>Boolean(resultById.get(claim.id)?.evidence?.length)):undefined;
  const storyClaim=decisionClaim||evidenceBackedClaim;
  const storyResult=storyClaim?resultById.get(storyClaim.id):undefined;
- const storyEvidence=storySignal?.evidence?.[0]||storyResult?.evidence?.[0];
+ const storyEvidence=storySignal?.evidence?.[0]||storyResult?.evidence?.[0]||verification?.safe_action?.evidence?.[0];
  const storyClaimHeading=storySignal?.id==='traffic-qr-warning'&&storyClaim?.action
   ?actionSummaryWord(storyClaim)
   :storyClaim?.action
@@ -337,13 +337,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  );
  const reviewWorthWatching=Boolean(
   verification
-  &&storyClaim
   &&storyHasIndependentEvidence
-  &&(
-   claimReliable(storyClaim)
-   ||Boolean(storyResult?.evidence?.length)
-   ||Boolean(curatedSignal?.evidence?.length)
-  )
+  &&(storyClaim||storySignal||storyEvidence)
  );
  const decision=decisionCopy(verification,decisionClaim);
  const technicalEvidence=useMemo(()=>{
@@ -879,16 +874,24 @@ async function upload(uploaded:File){
    let extractor='DETERMINISTIC';
 
    if(!sourceIsDemo){
-    let response:Response;
-    try{response=await fetch('/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:sourceText}),signal:controller.signal});}
-    catch{
+    const extractController=new AbortController();
+    const cancelExtract=()=>extractController.abort();
+    controller.signal.addEventListener('abort',cancelExtract,{once:true});
+    const extractTimeout=window.setTimeout(()=>extractController.abort(),12000);
+    try{
+     const response=await fetch('/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:sourceText}),signal:extractController.signal});
+     if(response.ok){
+      const data=await response.json();
+      extraction=data.extraction;
+      extractor=data.mode||'DETERMINISTIC';
+     }else extractor='DETERMINISTIC_FALLBACK';
+    }catch{
      if(controller.signal.aborted)throw new DOMException('Check cancelled.','AbortError');
-     throw new Error('We couldn’t reach the instruction reader. Please try again in a moment.');
+     extractor='DETERMINISTIC_FALLBACK';
+    }finally{
+     window.clearTimeout(extractTimeout);
+     controller.signal.removeEventListener('abort',cancelExtract);
     }
-    if(!response.ok)throw new Error('We couldn’t reliably read the important instructions right now. Please try again in a moment.');
-    const data=await response.json();
-    extraction=data.extraction;
-    extractor=data.mode||'DETERMINISTIC';
    }
 
    if(sourceFile?.kind==='pdf'){
