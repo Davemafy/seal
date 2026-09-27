@@ -25,7 +25,7 @@ export function buildRiskSummary(claims:Claim[],verification:Verification):RiskS
  let instructions:RiskSummary['instructions'];
  if(curated)instructions={title:'Do not use the flagged route in this message.',detail:verification.safe_action?.summary||'The issuing authority published this exact example as a scam artifact.'};
  else if(actionConflicts.length)instructions={title:'Some requested actions conflict with public sources.',detail:String(actionConflicts.length)+' instruction'+(actionConflicts.length===1?'':'s')+' should not be relied on through this message. Use an independently opened court source instead.'};
- else if(hasProcessGuidance)instructions={title:'Verify the instructions before acting.',detail:verification.safe_action?.summary||'Public sources describe an official process, but they do not authenticate this message.'};
+ else if(hasProcessGuidance)instructions={title:'These instructions remain unverified.',detail:verification.safe_action?.summary||'Public sources describe an official process, but they do not authenticate this message.'};
  else if(actionMatches.length)instructions={title:'Some instructions match public information.',detail:'A matching detail does not confirm who sent the message. Use an independently sourced court channel before acting.'};
  else instructions={title:'Treat the instructions as unverified.',detail:'SEAL did not find enough independent evidence to authenticate the sender or the requested action.'};
 
