@@ -29,7 +29,7 @@ const cleanDisplayText=(value:string)=>value
  .replace(/\s+,/g,',')
  .replace(/,\s*,+/g,', ')
  .replace(/\s+/g,' ')
- .replace(/^(?:[·|:;,.\-–—]\s*)+|(?:\s*[·|:;,.\-–—])+$/g,'')
+ .replace(/^(?:[~≈·|:;,.\-–—]\s*)+|(?:\s*[~≈·|:;,.\-–—])+$/g,'')
  .trim();
 
 const cinematicExcerpt=(value:string,max=220)=>{
@@ -393,7 +393,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   :[];
  const directCourtUnavailable=verification?.resolver_id==='unsupported';
  const officialDirectory=useMemo(()=>officialCourtDirectoryFor(text),[text]);
- const directCheckSummary=directCourtUnavailable?'SEAL does not yet have a reviewed direct check for this court.':'';
+ const directCheckSummary=directCourtUnavailable?'SEAL did not classify the sender, case, or payment request as genuine or fraudulent.':'';
  const decisionRelationship=storySignal?.id.startsWith('curated-')
   ?'The issuing authority published this artifact as a scam example.'
   :storySignal?.kind==='SOURCE_CONFLICT'
@@ -407,8 +407,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      :decisionResult?.verdict==='MISMATCH'
       ?'This detail conflicts with the independent source.'
       :directCourtUnavailable
-       ?'No direct court source is available for this message.'
-       :'No supported court source.';
+       ?'No reviewed direct court source was available in this check.'
+       :'Independent source evidence was not sufficient to verify this detail.';
  const decisionRelationshipConflict=storySignal?.kind==='SOURCE_CONFLICT'||(!storySignal&&decisionResult?.verdict==='MISMATCH');
  const current=claims.find(claim=>claim.id===selected)||claims[0];
  const currentResult=current&&resultById.get(current.id);
@@ -433,14 +433,24 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   &&!(verification?.signals?.length)
   &&directEvidenceFindings.length===0
  );
- const decision=unsupportedWithoutIndependentFinding
+ const decision=directCourtUnavailable
   ?{
    title:'SEAL couldn’t independently verify this court yet.',
    summary:groundedActions.length
-    ?'We could still read what the message asks you to do. Nothing below confirms the sender or case.'
-    :'SEAL could read parts of the message, but it cannot confirm the sender or case with this court.'
+    ?'SEAL found the instruction below in the original message. It did not confirm the sender, case, or payment request with a reviewed court source.'
+    :'SEAL could read parts of the message, but it did not confirm the sender or case with a reviewed court source.'
   }
   :decisionCopy(verification,decisionClaim);
+ const groundedDecision=Boolean((decisionClaim&&claimReliable(decisionClaim))||groundedActions.length);
+ const independentState=directCourtUnavailable
+  ?'Direct court check unavailable'
+  :decisionResult?.verdict==='MATCH'
+   ?'Independent match found'
+   :decisionResult?.verdict==='MISMATCH'
+    ?'Independent conflict found'
+    :storySignal
+     ?'Independent evidence found'
+     :'Could not verify';
  const technicalEvidence=useMemo(()=>{
   if(!verification)return [];
   const all=[
@@ -1272,12 +1282,15 @@ async function upload(uploaded:File){
     onDrop={event=>{if(event.dataTransfer.files.length){event.preventDefault();skipReviewOffer();upload(event.dataTransfer.files[0])}}}>
     <header className="result-masthead" id="result-top">
      <div className="result-masthead-row">
-      <h1>Your message</h1>
+      <div>
+       <h1>Verification report</h1>
+       <p className="result-origin">{file?(file.kind==='pdf'?'PDF · document text extracted locally':'Image · text extracted locally'):'Pasted text'}</p>
+      </div>
      </div>
 
      {verification&&<nav className="result-chapters" aria-label="Result sections">
       <a href="#review-summary" className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={event=>jumpToResultSection(event,'summary','#review-summary')}>Summary</a>
-      <a href="#original-message" className={activeResultSection==='message'?'is-current':''} aria-current={activeResultSection==='message'?'location':undefined} onClick={event=>jumpToResultSection(event,'message','#original-message')}>Message</a>
+      <a href="#original-message" className={activeResultSection==='message'?'is-current':''} aria-current={activeResultSection==='message'?'location':undefined} onClick={event=>jumpToResultSection(event,'message','#original-message')}>Original</a>
       <a href={verification.safe_action||verification.contact||decisionClaim?.action?'#next-step':'#source-checks'} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={event=>jumpToResultSection(event,'next',verification.safe_action||verification.contact||decisionClaim?.action?'#next-step':'#source-checks')}>Next step</a>
       {!directCourtUnavailable&&<a href="#checked-details" className={activeResultSection==='checked'?'is-current':''} aria-current={activeResultSection==='checked'?'location':undefined} onClick={event=>jumpToResultSection(event,'checked','#checked-details')}>Checked details</a>}
      </nav>}
@@ -1437,8 +1450,14 @@ async function upload(uploaded:File){
         <h1>{file?.sample?'This is a sample form.':decision.title}</h1>
         <p className="decision-summary">{file?.sample?'Some printed details match official court pages, but this example form is not a summons to act on. The matches do not authenticate any notice you received.':decision.summary}</p>
 
+        <div className="verification-ledger" aria-label="Verification scope">
+         <div><span>Original</span><strong>{file?(file.kind==='pdf'?'PDF received':'Image received'):'Pasted text received'}</strong></div>
+         <div><span>Grounding</span><strong>{groundedDecision?'Located in the original':'No grounded instruction found'}</strong></div>
+         <div><span>Independent source</span><strong>{independentState}</strong></div>
+        </div>
+
         {directCourtUnavailable&&groundedActions.length>0?<div className="decision-claim">
-         <span>In the message</span>
+         <span>Grounded instruction</span>
          <ul className="message-action-list">{groundedActions.map(claim=><li key={claim.id}>{cleanDisplayText(claim.action?.source_text||claim.exact_source_text||claim.value)}</li>)}</ul>
         </div>:decisionClaim&&<div className="decision-claim">
          <span>From the message</span>
@@ -1446,7 +1465,7 @@ async function upload(uploaded:File){
         </div>}
 
         <div className={`decision-evidence decision-relationship-block ${decisionRelationshipConflict?'is-conflict':''}`}>
-         <span>Independent check</span>
+         <span>Independent source result</span>
          <strong>{decisionRelationship}</strong>
          {directCheckSummary&&<small className="decision-direct-check">{directCheckSummary}</small>}
         </div>

@@ -2020,3 +2020,66 @@
  .entry-shell.is-processing .entry-copy{transition:none}
  .process-scan-beam{display:none}
 }
+
+
+/* Verification report credibility pass */
+.result-origin{margin:3px 0 0;color:#777;font-size:11px;line-height:17px}
+.verification-ledger{
+ margin-top:24px;
+ border-top:1px solid var(--line);
+ border-bottom:1px solid var(--line)
+}
+.verification-ledger>div{
+ display:grid;
+ grid-template-columns:132px minmax(0,1fr);
+ gap:18px;
+ align-items:baseline;
+ padding:10px 0
+}
+.verification-ledger>div+div{border-top:1px solid #ededed}
+.verification-ledger span{color:#777;font-size:11px;line-height:17px}
+.verification-ledger strong{color:#1f1f1f;font-size:12px;line-height:18px;font-weight:560}
+.decision-claim{margin-top:22px;padding-top:0}
+.decision-claim>span,.decision-evidence>span{color:#777;font-size:11px;line-height:17px}
+.message-action-list li{
+ position:relative;
+ max-width:540px;
+ padding-left:14px;
+ color:#171717;
+ font-size:16px;
+ line-height:24px;
+ font-weight:520
+}
+.message-action-list li::before{
+ content:"";
+ position:absolute;
+ left:0;
+ top:3px;
+ bottom:3px;
+ width:2px;
+ background:#111
+}
+.decision-evidence{margin-top:20px;padding-top:0}
+.decision-relationship-block strong{max-width:540px;font-size:14px;line-height:21px;font-weight:560}
+.decision-direct-check{max-width:540px;margin-top:5px;font-size:11px;line-height:17px}
+@media(max-width:599px){
+ .result-masthead{margin-bottom:16px}
+ .result-masthead-row{min-height:50px}
+ .result-masthead h1{font-size:25px;line-height:31px}
+ .result-origin{margin-top:2px;font-size:10px;line-height:15px}
+ .result-chapters{margin-top:7px}
+ .review-hero{gap:24px;padding-top:4px}
+ .decision h1,.precheck h1{max-width:540px;font-size:27px;line-height:33px;letter-spacing:-.014em}
+ .decision-summary,.precheck>p{margin-top:9px;color:#555;font-size:13.5px;line-height:20px}
+ .verification-ledger{margin-top:20px}
+ .verification-ledger>div{grid-template-columns:102px minmax(0,1fr);gap:12px;padding:8px 0}
+ .verification-ledger span{font-size:10px;line-height:15px}
+ .verification-ledger strong{font-size:11px;line-height:16px}
+ .decision-claim{margin-top:19px}
+ .message-action-list{gap:9px}
+ .message-action-list li{padding-left:12px;font-size:15px;line-height:22px;font-weight:520}
+ .decision-evidence{margin-top:17px}
+ .decision-relationship-block strong{font-size:14px;line-height:20px}
+ .decision-direct-check{font-size:10.5px;line-height:16px}
+ .document-heading{padding-top:2px}
+}

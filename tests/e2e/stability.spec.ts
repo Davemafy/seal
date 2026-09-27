@@ -49,7 +49,7 @@ Call 1-866-388-2430 after 5:30 PM for the status of your jury service.`);
   console.log('PASTE_BODY',await page.locator('body').innerText());
   throw error;
  });
- await expect(page.getByRole('heading',{name:'Your message'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Verification report'})).toBeVisible();
  await expect(page.locator('.pasted-message')).toContainText('Call 1-866-388-2430 after 5:30 PM');
  await expect(page.locator('.inspection-error')).toHaveCount(0);
  expect(extractRequests,'clear pasted actions should not depend on the optional model extractor').toBe(0);
@@ -123,7 +123,7 @@ test('official sample survives result review, refresh, and replay',async({page})
  await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
 
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await expect(page.getByRole('heading',{name:'Your message'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Verification report'})).toBeVisible();
  await expect(page.getByText('This is a sample form.')).toBeVisible();
  await expect(page.getByTestId('play-evidence-review')).toBeVisible();
 
