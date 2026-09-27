@@ -4,6 +4,7 @@
 import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import {gsap} from 'gsap';
 import {Toaster,toast} from 'sonner';
+import {createPortal} from 'react-dom';
 import Link from 'next/link';
 import PDFPreview from './pdf-preview';
 import StoryPdfPage from './story-pdf-page';
@@ -1718,7 +1719,7 @@ async function upload(uploaded:File){
 
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
 
-    {verification&&ready&&storyOpen&&<div className={`story-overlay ${storyClosing?'is-closing':''}`} data-testid="evidence-review" role="dialog" aria-modal="true" aria-label="SEAL verification review">
+    {verification&&ready&&storyOpen&&createPortal(<div className={`story-overlay ${storyClosing?'is-closing':''}`} data-testid="evidence-review" role="dialog" aria-modal="true" aria-label="SEAL verification review">
      <div ref={storyPlayerRef} className={`story-player ${storyPlaying?'is-playing':'is-paused'} ${storyFocusBox?'has-story-focus':'no-story-focus'}`}>
       <div className="story-topbar">
        <span className="story-brand"><img src="/brand/seal-mark-white.svg" alt=""/><span>SEAL</span></span>
@@ -1834,7 +1835,7 @@ async function upload(uploaded:File){
        </span>
       </div>
      </div>
-    </div>}
+    </div>,document.body)}
 
     <div ref={resultCarouselRef} className="result-carousel" data-testid="result-carousel" onScroll={syncResultCarousel}>
      <div className="review-hero">
