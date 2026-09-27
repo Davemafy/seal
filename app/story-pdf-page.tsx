@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- The cinematic preview is a temporary blob URL generated in-browser. */
 'use client';
 
 import {useEffect,useRef,useState} from 'react';
