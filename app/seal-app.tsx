@@ -15,6 +15,18 @@ import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
 import './workspace.css';
 
 type Mode='SNAPSHOT'|'LIVE';
+type WorkspaceRunStatus='idle'|'reading'|'verifying'|'done'|'error';
+type WorkspaceMeta={id:string;title:string;status:WorkspaceRunStatus};
+type SealWorkspaceProps={
+ initialDemo?:boolean;
+ initialText?:string;
+ initialRun?:boolean;
+ workspaceId:string;
+ workspaces:WorkspaceMeta[];
+ onNewWorkspace:()=>void;
+ onSelectWorkspace:(id:string)=>void;
+ onWorkspaceMeta:(id:string,patch:Partial<WorkspaceMeta>)=>void;
+};
 
 const verdictLabel=(value:Result['verdict'])=>value==='MATCH'?'Matches':value==='MISMATCH'?'Conflicts':'Could not verify';
 const stateWord=verdictLabel;
@@ -193,7 +205,7 @@ function decisionCopy(verification:Verification|null,claim?:Claim){
  };
 }
 
-export default function SealApp({initialDemo=false,initialText='',initialRun=false}:{initialDemo?:boolean;initialText?:string;initialRun?:boolean}){
+function SealWorkspace({initialDemo=false,initialText='',initialRun=false,workspaceId,workspaces,onNewWorkspace,onSelectWorkspace,onWorkspaceMeta}:SealWorkspaceProps){
  const [hydrated,setHydrated]=useState(false);
  const [fixture,setFixture]=useState<FixtureKey>('action-message-demo');
  const [text,setText]=useState(initialText||(initialDemo?fixtures['action-message-demo'].text:''));
@@ -210,6 +222,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const [dragging,setDragging]=useState(false);
  const [pasteMode,setPasteMode]=useState(false);
  const [ocrLanguage,setOcrLanguage]=useState<OcrLanguage>('eng');
+ const [workspaceTitle,setWorkspaceTitle]=useState('New check');
  const [revealed,setRevealed]=useState(0);
  const [selected,setSelected]=useState('');
  const [hovered,setHovered]=useState('');
@@ -717,7 +730,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    const freshBrowseHandoff=Boolean(caseId&&navigation?.type!=='reload'&&navigation?.type!=='back_forward');
 
    if(!freshBrowseHandoff){
-    const restored=await restoreResultSession();
+    const restored=await restoreResultSession(workspaceId);
     if(cancelled){
      if(restored?.browserFile)URL.revokeObjectURL(restored.browserFile.preview);
      return;
@@ -928,7 +941,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  function replayStory(){startStory()}
 
  function clear(){
-  clearResultSession();
+  clearResultSession(workspaceId);
   activeReadRef.current?.abort();
   activeReadRef.current=null;
   activeRequestRef.current?.abort();
@@ -951,6 +964,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  function submitPaste(){const value=draft.trim();if(!value)return;clear();setText(value);void run('SNAPSHOT',{text:value,file:null})}
 
 async function upload(uploaded:File){
+  setWorkspaceTitle(uploaded.name.replace(/\.[^.]+$/,'')||'New check');
   const origin=processingIntakeRef.current?.getBoundingClientRect();
   uploadOriginRectRef.current=origin?{left:origin.left,top:origin.top,width:origin.width,height:origin.height}:null;
   clear();
@@ -1037,6 +1051,7 @@ async function upload(uploaded:File){
 
    if(runId.current!==id)return;
    setExtractionMode(extractor);
+   if(extraction.court_name)setWorkspaceTitle(cleanDisplayText(extraction.court_name));
 
    // Curated cases use a source-checked transcript for analysis. OCR tokens from
    // the pictured artifact may help display it, but must not invent new claims.
@@ -1107,7 +1122,7 @@ async function upload(uploaded:File){
      ocrConfidence:sourceFile.ocrConfidence,
      unreadableFields:sourceFile.unreadableFields
     }:undefined
-   },sourceFile?sourceBlobRef.current:null);
+   },sourceFile?sourceBlobRef.current:null,workspaceId);
   }catch(e){
    const aborted=e instanceof DOMException&&e.name==='AbortError';
    if(!aborted&&runId.current===id)setError(e instanceof Error?e.message:'The source check could not finish.');
@@ -1138,7 +1153,14 @@ async function upload(uploaded:File){
   return()=>window.removeEventListener('keydown',onKey);
  },[verification,claims,selected,select]);
 
- const processingStage=status==='Checking independent sources'?2:status==='Reading requested actions'?1:0;
+ useEffect(()=>{
+  const courtTitle=claims.find(claim=>claim.type==='court'&&claimReliable(claim))?.value;
+  const title=cleanDisplayText(courtTitle||workspaceTitle||'New check');
+  const state:WorkspaceRunStatus=error?'error':verification?'done':busy?(status==='Checking independent sources'?'verifying':'reading'):'idle';
+  onWorkspaceMeta(workspaceId,{title,status:state});
+ },[workspaceId,workspaceTitle,claims,error,verification,busy,status,onWorkspaceMeta]);
+
+  const processingStage=status==='Checking independent sources'?2:status==='Reading requested actions'?1:0;
  const processingTitle=processingStage===2?'Resolve against public sources':processingStage===1?'Ground the requested action':'Map the document';
  const processingTextRegionsVisible=useMemo(()=>file?.tokens?processingTextRegions(file.tokens):[],[file]);
  const processingClaimRegions=useMemo(()=>claims
@@ -1176,18 +1198,41 @@ async function upload(uploaded:File){
  return <main className="seal-app" data-testid="seal-app">
   <aside className="workspace-rail" aria-label="Workspace">
    <Link href="/" className="rail-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
-   <div className="rail-group-label">WORKSPACE</div>
-   <button className="rail-item is-current" type="button" onClick={clear}>Check a message</button>
-   <Link className="rail-item" href="/browse">Browse real cases</Link>
+   <div className="rail-group-label">CHECKS</div>
+   <button className="rail-item rail-new-check" type="button" onClick={onNewWorkspace}><span>＋</span> New check</button>
+   <div className="rail-check-list" aria-label="Open checks">
+    {workspaces.map((item,index)=><button
+     type="button"
+     className={`rail-check ${item.id===workspaceId?'is-current':''}`}
+     key={item.id}
+     onClick={()=>onSelectWorkspace(item.id)}
+     aria-current={item.id===workspaceId?'page':undefined}
+    >
+     <span className={`rail-check-state is-${item.status}`} aria-hidden="true"/>
+     <span className="rail-check-copy"><strong>{item.title||`Check ${index+1}`}</strong><small>{item.status==='verifying'?'Checking sources':item.status==='reading'?'Reading':item.status==='done'?'Ready':item.status==='error'?'Needs attention':'New'}</small></span>
+    </button>)}
+   </div>
+   <Link className="rail-item rail-browse" href="/browse">Browse real cases</Link>
    <div className="rail-spacer"/>
    <div className="rail-foot"><strong>Public sources only</strong><span>Every item links back to the issuing court or agency.</span></div>
   </aside>
   <header className="seal-nav mobile-only-nav">
    <Link href="/" className="mobile-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></Link>
-   {!verification
+   {!verification&&!busy&&workspaces.length===1
     ?<Link href="/browse" className="mobile-nav-action">Browse</Link>
-    :<button className="mobile-nav-action mobile-nav-button" type="button" onClick={clear}>New check</button>}
+    :<button className="mobile-nav-action mobile-nav-button" type="button" onClick={onNewWorkspace}>New check</button>}
   </header>
+  {workspaces.length>1&&<nav className="mobile-check-strip" aria-label="Open checks">
+   {workspaces.map((item,index)=><button
+    type="button"
+    className={`mobile-check-pill ${item.id===workspaceId?'is-current':''}`}
+    key={item.id}
+    onClick={()=>onSelectWorkspace(item.id)}
+   >
+    <span className={`mobile-check-state is-${item.status}`} aria-hidden="true"/>
+    <span>{item.title||`Check ${index+1}`}</span>
+   </button>)}
+  </nav>}
 
   {!verification?
    <section className={`entry-shell ${busy?'is-processing':''}`} data-testid="entry-shell">
@@ -1690,4 +1735,67 @@ async function upload(uploaded:File){
    <span>SEAL is not affiliated with any court.</span>
   </footer>
  </main>;
+}
+
+const WORKSPACE_LIST_KEY='seal:workspace-list:v1';
+
+export default function SealApp({initialDemo=false,initialText='',initialRun=false}:{initialDemo?:boolean;initialText?:string;initialRun?:boolean}){
+ const [workspaces,setWorkspaces]=useState<WorkspaceMeta[]>([{id:'primary',title:'New check',status:'idle'}]);
+ const [activeWorkspace,setActiveWorkspace]=useState('primary');
+ const [registryReady,setRegistryReady]=useState(false);
+
+ useEffect(()=>{
+  try{
+   const raw=window.sessionStorage.getItem(WORKSPACE_LIST_KEY);
+   if(raw){
+    const parsed=JSON.parse(raw) as {active?:string;items?:WorkspaceMeta[]};
+    const items=Array.isArray(parsed.items)?parsed.items.filter(item=>item&&typeof item.id==='string').slice(0,8):[];
+    if(items.length){
+     setWorkspaces(items.map(item=>({...item,status:item.status==='reading'||item.status==='verifying'?'idle':item.status})));
+     setActiveWorkspace(items.some(item=>item.id===parsed.active)?parsed.active!:items[0].id);
+    }
+   }
+  }catch{}
+  setRegistryReady(true);
+ },[]);
+
+ useEffect(()=>{
+  if(!registryReady)return;
+  try{window.sessionStorage.setItem(WORKSPACE_LIST_KEY,JSON.stringify({active:activeWorkspace,items:workspaces}))}catch{}
+ },[registryReady,activeWorkspace,workspaces]);
+
+ const updateWorkspace=useCallback((id:string,patch:Partial<WorkspaceMeta>)=>{
+  setWorkspaces(items=>items.map(item=>{
+   if(item.id!==id)return item;
+   const next={...item,...patch};
+   return next.title===item.title&&next.status===item.status?item:next;
+  }));
+ },[]);
+
+ const createWorkspace=useCallback(()=>{
+  const id=`check-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
+  setWorkspaces(items=>[...items,{id,title:'New check',status:'idle'}].slice(-8));
+  setActiveWorkspace(id);
+  window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
+ },[]);
+
+ return <div className="seal-workspace-stack">
+  {workspaces.map((workspace,index)=><div
+   className="seal-workspace-instance"
+   key={workspace.id}
+   hidden={workspace.id!==activeWorkspace}
+   aria-hidden={workspace.id!==activeWorkspace}
+  >
+   <SealWorkspace
+    initialDemo={index===0?initialDemo:false}
+    initialText={index===0?initialText:''}
+    initialRun={index===0?initialRun:false}
+    workspaceId={workspace.id}
+    workspaces={workspaces}
+    onNewWorkspace={createWorkspace}
+    onSelectWorkspace={setActiveWorkspace}
+    onWorkspaceMeta={updateWorkspace}
+   />
+  </div>)}
+ </div>;
 }
