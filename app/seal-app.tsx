@@ -242,6 +242,13 @@ function decisionCopy(verification:Verification|null,claim?:Claim){
  };
 }
 
+const PROCESSING_WAIT_NOTES=[
+ 'A matching court name or seal does not prove who sent a message.',
+ 'SEAL checks the action you are being asked to take separately from official-looking details.',
+ 'If a detail cannot be confirmed independently, SEAL leaves it unconfirmed.',
+ 'Official next steps are sourced independently from the message you uploaded.'
+] as const;
+
 function SealWorkspace({initialDemo=false,initialText='',initialRun=false,workspaceId,workspaceActive,workspaces,onNewWorkspace,onSelectWorkspace,onDeleteWorkspace,onWorkspaceMeta}:SealWorkspaceProps){
  const [hydrated,setHydrated]=useState(false);
  const [text,setText]=useState(initialText||(initialDemo?fixtures['action-message-demo'].text:''));
@@ -255,6 +262,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [status,setStatus]=useState('');
  const [error,setError]=useState('');
  const [busy,setBusy]=useState(false);
+ const [processingTipIndex,setProcessingTipIndex]=useState(0);
  const [dragging,setDragging]=useState(false);
  const [pasteMode,setPasteMode]=useState(false);
  const [ocrLanguage,setOcrLanguage]=useState<OcrLanguage>('eng');
@@ -273,6 +281,14 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [activeResultSection,setActiveResultSection]=useState<'summary'|'message'|'evidence'|'next'>('summary');
  const [technicalOpen,setTechnicalOpen]=useState(false);
  const [,setHandoffCopied]=useState(false);
+
+ useEffect(()=>{
+  if(!busy)return;
+  const timer=window.setInterval(()=>{
+   setProcessingTipIndex(index=>(index+1)%PROCESSING_WAIT_NOTES.length);
+  },3200);
+  return()=>window.clearInterval(timer);
+ },[busy]);
  const [,setQuestionCopied]=useState(false);
  const workspaceRootRef=useRef<HTMLElement>(null);
  const resultCarouselRef=useRef<HTMLDivElement>(null);
@@ -1734,6 +1750,7 @@ async function upload(uploaded:File){
            {uploadPreview?.kind==='image'
             ?<img src={uploadPreview.url} alt="Selected court message"/>
             :<span className="upload-pdf-preview" aria-hidden="true"><b>PDF</b><i/></span>}
+           <span className="processing-scanner" aria-hidden="true"><i/></span>
           </span>
           <span className="upload-process-body">
            <strong>{processingTitle}</strong>
@@ -1746,6 +1763,10 @@ async function upload(uploaded:File){
               <em>{state==='done'?'Done':state==='current'?'Now':''}</em>
              </span>;
             })}
+           </span>
+           <span className="process-wait-note" aria-live="polite">
+            <small>While we check</small>
+            <span key={processingTipIndex}>{PROCESSING_WAIT_NOTES[processingTipIndex]}</span>
            </span>
            {processingFileName&&<span className="upload-file-name" title={processingFileName}>{processingFileName}</span>}
            <span className="process-device-note"><span>Original stays on this device</span><small>Extracted text may be sent for checking</small></span>
