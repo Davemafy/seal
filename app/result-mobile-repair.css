@@ -842,3 +842,20 @@
   padding-bottom:24px!important
  }
 }
+
+
+/* Mobile translation transition polish. */
+@media(max-width:900px){
+ .result-carousel{position:relative!important}
+ .result-translation-pending{
+  position:absolute!important;z-index:80!important;inset:0!important;min-height:220px!important;
+  display:flex!important;align-items:flex-start!important;gap:9px!important;padding:20px 0!important;
+  background:#fff!important;color:#555550!important
+ }
+ .result-translation-pending strong{font-size:13.5px!important;line-height:19px!important;font-weight:600!important}
+ .translation-pulse{
+  width:8px!important;height:8px!important;margin-top:5px!important;border-radius:50%!important;background:#111!important;
+  animation:seal-translation-pulse 1s ease-in-out infinite alternate!important
+ }
+ .result-slide-evidence .source-resolution{display:block!important;width:100%!important}
+}
