@@ -525,17 +525,17 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
      ?'Some details check out'
      :'Check finished';
  const instructionStatus=curatedAuthorityMatch
-  ?'Do not use the flagged route'
+  ?'Do not use this route'
   :verification?.results.some(result=>result.verdict==='MISMATCH'&&claims.find(claim=>claim.id===result.claim_id)?.action)
-   ?'Conflict found'
+   ?'Does not match the source'
    :verification?.results.some(result=>result.verdict==='MATCH'&&claims.find(claim=>claim.id===result.claim_id)?.action)
     ?'Some details match'
-    :'Not independently verified';
+    :'Not confirmed';
  const matterStatus=caseReality?.status==='FOUND'
-  ?'Case reference found'
+  ?'Case found'
   :caseReality?.status==='CONFLICT'
-   ?'Case reference conflicts'
-   :'Case not independently confirmed';
+   ?'Does not match the source'
+   :'Not confirmed';
  const primaryRoute=verification?.safe_action?.primary_url
   ?{url:verification.safe_action.primary_url,label:translatedResult.safePrimary||verification.safe_action.primary_label}
   :verification?.contact?.website
@@ -1829,7 +1829,7 @@ async function upload(uploaded:File){
 
     {ready&&<div id={sectionId('full-evidence')} className="full-evidence-anchor" aria-hidden="true"/>}
 
-    {ready&&verification&&<section className="source-resolution result-screen result-screen-evidence" id={sectionId('source-checks')} aria-label="Independent evidence">
+    {ready&&verification&&<section className="source-resolution result-screen result-screen-evidence" id={sectionId('source-checks')} aria-label="What SEAL found">
      <div className="section-heading evidence-heading">
       <h2>{ui('independentEvidence')}</h2>
      </div>
@@ -1904,7 +1904,7 @@ async function upload(uploaded:File){
      <p className="resolution-disclaimer">{curatedSignal?'This finding is about this published example only. It does not label other messages.':'These sources help with the check, but they still cannot tell us who sent the message.'}</p>
     </section>}
 
-    {ready&&verification&&caseReality&&<section className="user-actions result-screen result-screen-resolve" id={sectionId('user-actions')} aria-label="Resolve this safely">
+    {ready&&verification&&caseReality&&<section className="user-actions result-screen result-screen-resolve" id={sectionId('user-actions')} aria-label="What to do next">
      <div className="user-actions-heading"><span>NEXT</span><h2>What to do next</h2><p>Keep the message, but use a court site or support service you opened yourself for anything you do next.</p></div>
      <div className="journey-block case-reality-block" data-testid="case-reality-check">
       <div className="journey-label">The case</div>
