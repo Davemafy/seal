@@ -1831,13 +1831,16 @@ async function upload(uploaded:File){
          <stop offset="72%" stopColor="#111" stopOpacity=".018"/>
          <stop offset="100%" stopColor="#111" stopOpacity=".07"/>
         </radialGradient>
-        <filter id="entryMotionDepth" x="-35%" y="-35%" width="170%" height="170%">
-         <feDropShadow dx="0" dy="10" stdDeviation="12" floodColor="#000" floodOpacity=".08"/>
+        <filter id="entryMotionDepth" x="-20%" y="-20%" width="140%" height="140%">
+         <feDropShadow dx="0" dy="6" stdDeviation="7" floodColor="#000" floodOpacity=".055"/>
         </filter>
+        <clipPath id="entryMotionClip">
+         <circle cx="160" cy="160" r="122"/>
+        </clipPath>
        </defs>
        <circle className="entry-motion-field" cx="160" cy="160" r="126" fill="url(#entryMotionGlow)"/>
        <circle className="entry-motion-orbit-ring" cx="160" cy="160" r="112"/>
-       <g className="entry-motion-rotor" filter="url(#entryMotionDepth)">
+       <g className="entry-motion-rotor" clipPath="url(#entryMotionClip)" filter="url(#entryMotionDepth)">
         <g className="entry-motion-blade-wrap is-deep" transform="rotate(0 160 160)">
          <path className="entry-motion-blade" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33C165 25 157 23 151 28C144 34 143 48 146 65C149 82 152 99 154 114C156 127 157 136 160 141Z"/>
          <path className="entry-motion-blade-edge" d="M160 141C166 132 171 111 174 87C177 64 175 45 169 33"/>
