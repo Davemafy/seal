@@ -337,8 +337,12 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const reviewWorthWatching=Boolean(
   verification
   &&storyClaim
-  &&claimReliable(storyClaim)
   &&storyHasIndependentEvidence
+  &&(
+   claimReliable(storyClaim)
+   ||Boolean(storyResult?.evidence?.length)
+   ||Boolean(curatedSignal?.evidence?.length)
+  )
  );
  const decision=decisionCopy(verification,decisionClaim);
  const technicalEvidence=useMemo(()=>{
