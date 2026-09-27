@@ -1751,8 +1751,7 @@ async function upload(uploaded:File){
        </div>
        :
        <div className="decision">
-        <div className="decision-overview">
-         <div className="decision-copy">
+
         <p className="decision-status" data-testid="result-status">{resultStatusLabel}</p>
         <h1>{translatedResult.decisionTitle||(file?.sample?'This is a sample form.':conciseDecisionTitle)}</h1>
         <p className="decision-summary">{translatedResult.decisionSummary||humanDecisionSummary}</p>
@@ -1769,31 +1768,6 @@ async function upload(uploaded:File){
          <div><span>This message</span><strong>{instructionStatus}</strong></div>
          <div><span>The case</span><strong>{matterStatus}</strong></div>
         </div>}
-         </div>
-
-         <aside className="decision-visual" aria-label="Check snapshot">
-          <div className="decision-artifact">
-           {file?.kind==='image'
-            ?<img src={file.preview} alt="Original message preview"/>
-            :file?.kind==='pdf'
-             ?<StoryPdfPage url={file.preview}/>
-             :<div className="decision-text-thumb"><span>Original message</span><p>{cleanDisplayText(text.slice(0,360))}</p></div>}
-          </div>
-          <div className="decision-artifact-caption">
-           <strong>{file?.sample?'Sample document':'Original message'}</strong>
-           <span>{file?.kind==='pdf'?'PDF':file?.kind==='image'?'Image':'Text'}</span>
-          </div>
-          <div className="decision-source-brief">
-           <span>Independent check</span>
-           <strong>{checkSourceCount?checkSourceCount+' public source'+(checkSourceCount===1?'':'s'):'No public source attached'}</strong>
-           {storyEvidence&&<small>{storyEvidence.title}</small>}
-          </div>
-          {reviewWorthWatching&&!storyOpen&&<button ref={replayButton} type="button" className="decision-review-player" data-testid="play-evidence-review" onClick={replayStory}>
-           <span className="decision-review-play" aria-hidden="true"><DesignPlayIcon/></span>
-           <span><strong>{ui('seeHowChecked')}</strong><small>{ui('evidenceReviewHint')}</small></span>
-          </button>}
-         </aside>
-        </div>
 
         <details className="decision-details">
          <summary><span>Why this result</span><SealGuideIcon/></summary>
@@ -1818,6 +1792,10 @@ async function upload(uploaded:File){
            {directCheckSummary&&!storySignal&&<small className="decision-direct-check">{directCheckSummary}</small>}
           </div>
 
+          {reviewWorthWatching&&!storyOpen&&<button ref={replayButton} type="button" className="decision-review-player" data-testid="play-evidence-review" onClick={replayStory}>
+           <span className="decision-review-play" aria-hidden="true"><DesignPlayIcon/></span>
+           <span><strong>{ui('seeHowChecked')}</strong><small>{ui('evidenceReviewHint')}</small></span>
+          </button>}
          </div>
         </details>
        </div>}
