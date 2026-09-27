@@ -8,7 +8,7 @@ import PDFPreview from './pdf-preview';
 import StoryPdfPage from './story-pdf-page';
 import {fixtures,type FixtureKey} from '@/lib/fixtures';
 import {fallbackExtract,claimsFromExtraction,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '@/lib/extract';
-import {readInBrowser,ocrLanguages,type OcrLanguage,type BrowserDocument} from '@/lib/browser-file';
+import {readInBrowser,warmOcr,ocrLanguages,type OcrLanguage,type BrowserDocument} from '@/lib/browser-file';
 import {clearOrphanedResultArtifacts,clearResultSession,persistResultSession,restoreResultSession} from '@/lib/result-session';
 import {officialCourtDirectoryFor} from '@/lib/official-directories';
 import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
@@ -250,6 +250,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const sourceBlobRef=useRef<Blob|null>(null);
  const uploadPreviewRef=useRef<string|null>(null);
  const processingIntakeRef=useRef<HTMLDivElement>(null);
+ const uploadOriginRectRef=useRef<{left:number;top:number;width:number;height:number}|null>(null);
  const activeReadRef=useRef<AbortController|null>(null);
  const activeRequestRef=useRef<AbortController|null>(null);
  const input=useRef<HTMLInputElement>(null);
@@ -267,20 +268,37 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   if(!busy||!uploadPreview?.url||!processingIntakeRef.current)return;
   const root=processingIntakeRef.current;
   const media=window.matchMedia('(prefers-reduced-motion: reduce)');
-  if(media.matches)return;
+  if(media.matches){uploadOriginRectRef.current=null;return}
+
+  const current=root.getBoundingClientRect();
+  const origin=uploadOriginRectRef.current;
+  uploadOriginRectRef.current=null;
 
   const context=gsap.context(()=>{
-   gsap.fromTo(root,
-    {opacity:.72,y:10,scale:.988},
-    {opacity:1,y:0,scale:1,duration:.34,ease:'power3.out',clearProps:'opacity,transform'}
+   const timeline=gsap.timeline({defaults:{ease:'power3.out'}});
+   if(origin&&current.width>0&&current.height>0){
+    timeline.fromTo(root,{
+     x:origin.left-current.left,
+     y:origin.top-current.top,
+     scaleX:origin.width/current.width,
+     scaleY:origin.height/current.height,
+     transformOrigin:'50% 0%'
+    },{
+     x:0,y:0,scaleX:1,scaleY:1,duration:.46,clearProps:'transform'
+    },0);
+   }else{
+    timeline.fromTo(root,{opacity:.8,y:6},{opacity:1,y:0,duration:.3,clearProps:'opacity,transform'},0);
+   }
+
+   timeline.fromTo('.upload-process-media',
+    {opacity:0,scale:.94},
+    {opacity:1,scale:1,duration:.34,clearProps:'opacity,transform'},
+    .06
    );
-   gsap.fromTo('.upload-process-media',
-    {opacity:.35,y:14,scale:.93},
-    {opacity:1,y:0,scale:1,duration:.4,ease:'power3.out',clearProps:'opacity,transform'}
-   );
-   gsap.fromTo('.upload-process-body',
-    {opacity:0,x:14},
-    {opacity:1,x:0,duration:.32,delay:.08,ease:'power3.out',clearProps:'opacity,transform'}
+   timeline.fromTo('.upload-process-body',
+    {opacity:0,x:12},
+    {opacity:1,x:0,duration:.3,clearProps:'opacity,transform'},
+    .12
    );
   },root);
 
@@ -719,6 +737,14 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  },[]);
 
  useEffect(()=>{
+  if(!hydrated||busy||verification)return;
+  const timer=window.setTimeout(()=>{
+   void warmOcr(ocrLanguage).catch(()=>{});
+  },350);
+  return()=>window.clearTimeout(timer);
+ },[hydrated,busy,verification,ocrLanguage]);
+
+ useEffect(()=>{
   if(!hydrated||initialRunStarted.current)return;
   if(initialRun&&initialText){
    initialRunStarted.current=true;
@@ -912,6 +938,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  function submitPaste(){const value=draft.trim();if(!value)return;clear();setText(value);void run('SNAPSHOT',{text:value,file:null})}
 
 async function upload(uploaded:File){
+  const origin=processingIntakeRef.current?.getBoundingClientRect();
+  uploadOriginRectRef.current=origin?{left:origin.left,top:origin.top,width:origin.width,height:origin.height}:null;
   clear();
   const selectedPreview=URL.createObjectURL(uploaded);
   uploadPreviewRef.current=selectedPreview;

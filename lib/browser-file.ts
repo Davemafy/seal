@@ -5,9 +5,15 @@ export type BrowserDocument={text:string;tokens:Token[];preview:string;kind:'ima
 
 export function ocrScaleForSize(width:number,height:number){
  if(!width||!height)return 1;
- const desired=Math.max(1500/width,1900/height);
- const memory=(typeof navigator!=='undefined'?(navigator as Navigator&{deviceMemory?:number}).deviceMemory:undefined);
- const maxPixels=memory&&memory<=4?2_000_000:3_000_000;
+ const nav=typeof navigator!=='undefined'?(navigator as Navigator&{deviceMemory?:number}):undefined;
+ const memory=nav?.deviceMemory;
+ const cores=nav?.hardwareConcurrency;
+ const coarse=typeof window!=='undefined'&&typeof window.matchMedia==='function'&&window.matchMedia('(pointer:coarse)').matches;
+ const constrained=Boolean((memory&&memory<=4)||(cores&&cores<=4)||coarse);
+ const targetWidth=constrained?1350:1500;
+ const targetHeight=constrained?1750:1900;
+ const desired=Math.max(targetWidth/width,targetHeight/height);
+ const maxPixels=constrained?1_650_000:2_600_000;
  const pixelCap=Math.sqrt(maxPixels/(width*height));
  return Math.min(3,desired,pixelCap);
 }
@@ -192,13 +198,26 @@ function scoreOcr(result:OcrResult){
   -Math.min(35,garbage*160);
 }
 function shouldRetryOcr(candidate:OcrCandidate){
- const {courts,actions,structured}=cueCounts(candidate.result.text);
- return (candidate.result.ocrConfidence||0)<82
-  ||readableRatio(candidate.result.text)<.88
-  ||candidate.result.text.length<280
-  ||courts<3
-  ||actions<2
-  ||structured<2;
+ const text=candidate.result.text;
+ const {courts,actions,structured}=cueCounts(text);
+ const confidence=candidate.result.ocrConfidence||0;
+ const readable=readableRatio(text);
+
+ // A second full-page OCR pass is expensive on phones. If the first pass is
+ // already readable and contains enough court/action structure to ground a
+ // check, keep it instead of chasing cosmetic OCR improvements.
+ const usableActionPass=text.length>=150
+  &&readable>=.74
+  &&confidence>=45
+  &&courts>=1
+  &&(actions>=1||structured>=2);
+ if(usableActionPass)return false;
+
+ return confidence<58
+  ||readable<.7
+  ||text.length<120
+  ||courts<1
+  ||(actions<1&&structured<2);
 }
 
 function cueKinds(text:string){
