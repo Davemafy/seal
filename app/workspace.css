@@ -3829,6 +3829,7 @@
 .record-layout,.source-signals,.safe-route{min-width:0}
 
 @media(min-width:901px) and (max-width:1319px){
+ .seal-footer{padding-inline:36px}
  .entry-shell{
   padding-inline:36px;
   grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);
@@ -3884,6 +3885,7 @@
 }
 
 @media(min-width:901px) and (max-width:1080px){
+ .seal-footer{padding-inline:30px}
  .entry-shell{
   padding-inline:30px;
   grid-template-columns:minmax(0,.78fr) minmax(0,1.22fr);
