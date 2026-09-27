@@ -2869,3 +2869,42 @@
   margin-top:auto
  }
 }
+
+
+/* Product object hardening: evidence inspects; resolution acts. */
+.resolve-primary{
+ width:min(100%,980px);
+ margin:0 auto 26px;
+ padding-bottom:26px;
+ border-bottom:1px solid var(--line)
+}
+.result-slide-resolve .resolve-primary .safe-route,
+.result-slide-resolve .resolve-primary .unsupported-next-step{margin:0}
+.result-slide-resolve .resolve-primary .unsupported-next-step{
+ padding-top:0;
+ border-top:0
+}
+.record-subheading{
+ min-height:36px;
+ display:flex;
+ align-items:baseline;
+ justify-content:space-between;
+ gap:16px
+}
+.record-subheading>span{
+ color:#222;
+ font-size:12px;
+ line-height:18px;
+ font-weight:600
+}
+.record-subheading>small{
+ color:#858585;
+ font-size:10px;
+ line-height:15px
+}
+.check-record-details dl{margin-top:2px}
+@media(max-width:599px){
+ .resolve-primary{margin-bottom:22px;padding-bottom:22px}
+ .record-subheading{display:grid;gap:1px}
+ .record-subheading>small{font-size:9.5px}
+}

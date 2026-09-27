@@ -182,6 +182,8 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  await expect(page.getByText('Official process',{exact:true})).toBeVisible();
  await expect(page.getByText('New Hampshire publishes a specific process for toll and court collections')).toBeVisible();
  await expect(page.getByText(/These sources help with the check, but they still cannot tell us who sent the message/i)).toBeVisible();
+ await expect(page.locator('[data-result-section="evidence"] .safe-route')).toHaveCount(0);
+ await expect(page.locator('[data-result-section="next"] .safe-route')).toHaveCount(1);
  await page.locator('.decision-details').locator('summary').click();
  await expect(page.locator('.decision-details').getByRole('link',{name:'Open public source'})).toHaveAttribute('href','https://www.gc.nh.gov/rsa/html/xx/236/236-mrg.htm');
  await expect(page.getByTestId('primary-next-step').getByRole('link',{name:'Open NH E-ZPass'})).toHaveAttribute('href','https://www.ezpassnh.com/');

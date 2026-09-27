@@ -6,7 +6,7 @@ import {gsap} from 'gsap';
 import Link from 'next/link';
 import PDFPreview from './pdf-preview';
 import StoryPdfPage from './story-pdf-page';
-import {fixtures,type FixtureKey} from '@/lib/fixtures';
+import {fixtures} from '@/lib/fixtures';
 import {fallbackExtract,claimsFromExtraction,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '@/lib/extract';
 import {readInBrowser,warmOcr,ocrLanguages,ocrLanguageForLocale,type OcrLanguage,type BrowserDocument} from '@/lib/browser-file';
 import {clearOrphanedResultArtifacts,clearResultSession,persistResultSession,restoreResultSession} from '@/lib/result-session';
@@ -214,7 +214,6 @@ function decisionCopy(verification:Verification|null,claim?:Claim){
 
 function SealWorkspace({initialDemo=false,initialText='',initialRun=false,workspaceId,workspaces,onNewWorkspace,onSelectWorkspace,onWorkspaceMeta}:SealWorkspaceProps){
  const [hydrated,setHydrated]=useState(false);
- const [fixture,setFixture]=useState<FixtureKey>('action-message-demo');
  const [text,setText]=useState(initialText||(initialDemo?fixtures['action-message-demo'].text:''));
  const [draft,setDraft]=useState('');
  const [file,setFile]=useState<BrowserDocument|null>(null);
@@ -1168,7 +1167,6 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setActiveResultSection('summary');setTechnicalOpen(false);setHandoffCopied(false);setQuestionCopied(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryArtifactReady(true);setStoryStartPending(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);
  }
 
- function chooseFixture(key:FixtureKey){clear();setFixture(key);setText(fixtures[key].text);void run('SNAPSHOT',{text:fixtures[key].text,file:null})}
  function submitPaste(){const value=draft.trim();if(!value)return;clear();setText(value);void run('SNAPSHOT',{text:value,file:null})}
 
 async function upload(uploaded:File){
@@ -1441,7 +1439,7 @@ async function upload(uploaded:File){
      aria-current={item.id===workspaceId?'page':undefined}
     >
      <span className={`rail-check-state is-${item.status}`} aria-hidden="true"/>
-     <span className="rail-check-copy"><strong>{item.title||`Check ${index+1}`}</strong><small>{item.status==='verifying'?'Checking sources':item.status==='reading'?'Reading':item.status==='done'?'Ready':item.status==='error'?'Needs attention':'New'}</small></span>
+     <span className="rail-check-copy"><strong>{item.title||`Check ${index+1}`}</strong><small>{[item.jurisdiction||item.language,item.status==='verifying'?'Checking sources':item.status==='reading'?'Reading':item.status==='done'?'Checked':item.status==='error'?'Needs attention':'New'].filter(Boolean).join(' · ')}</small></span>
     </button>)}
    </div>
    <Link className="rail-item rail-browse" href="/browse">{ui('browse')}</Link>
@@ -1874,40 +1872,14 @@ async function upload(uploaded:File){
        </article>
       </div>}
 
-     {verification&&!verification.safe_action&&decisionClaim?.action&&!verification.contact&&<div className="unsupported-next-step" id={sectionId('next-step')}>
-      <span>What to do next</span>
-      <h2>Check this with the court directly.</h2>
-      {messageDetails.length>0||scheduleQuote||noPaymentQuote?<dl className="message-detail-list">{messageDetails.map(claim=><div key={claim.id}><dt>{claim.type==='location'?'Location named':claim.label}</dt><dd>{cleanDisplayText(claim.value)}</dd></div>)}{scheduleQuote&&<div><dt>Schedule stated</dt><dd>{cleanDisplayText(scheduleQuote)}</dd></div>}{noPaymentQuote&&<div><dt>Payment statement</dt><dd>{cleanDisplayText(noPaymentQuote)}</dd></div>}</dl>:<p>No court or case details could be read reliably.</p>}
-      <p>Those details come from the message itself. They do not confirm that the case exists or that the sender is connected to the court.</p>
-      <p>Do not use a payment link, QR code, phone number, or reply address from the message until you reach the court independently.</p>
-      {officialDirectory&&<div className="official-directory-route">
-       <span>Start here</span>
-       <a href={officialDirectory.url} target="_blank" rel="noopener noreferrer">{officialDirectory.label}</a>
-       <p>{officialDirectory.note}</p>
-      </div>}
-     </div>}
-     {verification?.safe_action&&<div className="safe-route" id={sectionId('next-step')}>
-      <div>
-       <h2>{translatedResult.safeTitle||verification.safe_action.title}</h2>
-       <p>{translatedResult.safeSummary||verification.safe_action.summary}</p>
-      </div>
-      <div>
-       <ol className="safe-steps">{verification.safe_action.steps.map((step,index)=><li key={index}>{translatedResult[`safeStep${index}`]||step}</li>)}</ol>
-       <div className="safe-route-actions">
-        {verification.contact?.website&&<a className="safe-primary" href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open official court website</a>}
-        {verification.safe_action.primary_url&&verification.safe_action.primary_url!==verification.contact?.website&&<a className="safe-source-link" href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>}
-       </div>
-      </div>
-     </div>}
-
      <p className="resolution-disclaimer">{curatedSignal?'This finding is about this published example only. It does not label other messages.':'These sources help with the check, but they still cannot tell us who sent the message.'}</p>
     </section>}
-     <details className="record-disclosure">
-      <summary><span>Checked details</span><small>Field-by-field evidence and technical record</small><SealGuideIcon/></summary>
+     <details className="record-disclosure" aria-label="Evidence record">
+      <summary><span>Evidence record</span><small>Claims, source provenance, and technical details</small><SealGuideIcon/></summary>
       <div className="record-disclosure-body">
-       {ready&&verification&&<section className="check-metadata-section" aria-label="Check details">
-     <details className="check-record-details" data-testid="check-details">
-      <summary><span>Check details</span><SealGuideIcon/></summary>
+       {ready&&verification&&<section className="check-metadata-section" aria-label="Check context">
+     <div className="check-record-details" data-testid="check-details">
+      <div className="record-subheading"><span>Check context</span><small>Provenance for this result</small></div>
       <dl>
        <div><dt>Input</dt><dd>{checkInputLabel}</dd></div>
        <div><dt>Document language</dt><dd>{documentLanguage?.label||'Not resolved'}</dd></div>
@@ -1917,7 +1889,7 @@ async function upload(uploaded:File){
        {checkDateLabel&&<div><dt>Checked</dt><dd>{checkDateLabel}</dd></div>}
       </dl>
       <p>Original files stay in this browser. Source quotations remain attached to the check so the result can be inspected later.</p>
-     </details>
+     </div>
     </section>}
        {ready&&!directCourtUnavailable&&<section className="record-section" id={sectionId('checked-details')}>
      <div className="section-heading record-heading">
@@ -1996,6 +1968,34 @@ async function upload(uploaded:File){
     </section>
 
     <section className="result-slide result-slide-resolve" data-result-section="next" aria-label="Resolve panel">
+     {ready&&verification&&<div className="resolve-primary" data-testid="resolve-primary">
+     {verification&&!verification.safe_action&&decisionClaim?.action&&!verification.contact&&<div className="unsupported-next-step" id={sectionId('next-step')}>
+      <span>What to do next</span>
+      <h2>Check this with the court directly.</h2>
+      {messageDetails.length>0||scheduleQuote||noPaymentQuote?<dl className="message-detail-list">{messageDetails.map(claim=><div key={claim.id}><dt>{claim.type==='location'?'Location named':claim.label}</dt><dd>{cleanDisplayText(claim.value)}</dd></div>)}{scheduleQuote&&<div><dt>Schedule stated</dt><dd>{cleanDisplayText(scheduleQuote)}</dd></div>}{noPaymentQuote&&<div><dt>Payment statement</dt><dd>{cleanDisplayText(noPaymentQuote)}</dd></div>}</dl>:<p>No court or case details could be read reliably.</p>}
+      <p>Those details come from the message itself. They do not confirm that the case exists or that the sender is connected to the court.</p>
+      <p>Do not use a payment link, QR code, phone number, or reply address from the message until you reach the court independently.</p>
+      {officialDirectory&&<div className="official-directory-route">
+       <span>Start here</span>
+       <a href={officialDirectory.url} target="_blank" rel="noopener noreferrer">{officialDirectory.label}</a>
+       <p>{officialDirectory.note}</p>
+      </div>}
+     </div>}
+     {verification?.safe_action&&<div className="safe-route" id={sectionId('next-step')}>
+      <div>
+       <h2>{translatedResult.safeTitle||verification.safe_action.title}</h2>
+       <p>{translatedResult.safeSummary||verification.safe_action.summary}</p>
+      </div>
+      <div>
+       <ol className="safe-steps">{verification.safe_action.steps.map((step,index)=><li key={index}>{translatedResult[`safeStep${index}`]||step}</li>)}</ol>
+       <div className="safe-route-actions">
+        {verification.contact?.website&&<a className="safe-primary" href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open official court website</a>}
+        {verification.safe_action.primary_url&&verification.safe_action.primary_url!==verification.contact?.website&&<a className="safe-source-link" href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>}
+       </div>
+      </div>
+     </div>}
+
+     </div>}
      {ready&&verification&&caseReality&&<section className="user-actions" id={sectionId('user-actions')} aria-label="What to do next">
      <div className="user-actions-heading"><span>NEXT</span><h2>What to do next</h2><p>Keep the message, but use a court site or support service you opened yourself for anything you do next.</p></div>
      <div className="journey-block case-reality-block" data-testid="case-reality-check">
