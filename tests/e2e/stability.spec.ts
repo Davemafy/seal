@@ -68,7 +68,7 @@ Call +91 11 5555 0199 to confirm your attendance.`);
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.getByRole('heading',{name:'This message needs a direct court check.'})).toBeVisible();
  await expect(page.getByText('This court is not in SEAL’s direct-check network yet.')).toBeVisible();
- const route=page.getByRole('link',{name:'Search India eCourts'});
+ const route=page.getByTestId('case-reality-check').getByRole('link',{name:'Search India eCourts'});
  await expect(route).toBeVisible();
  await expect(route).toHaveAttribute('href','https://services.ecourts.gov.in/ecourtindia_v6/');
  await expect(page.getByText('Matches',{exact:true})).toHaveCount(0);
@@ -118,7 +118,7 @@ FINAL COURT-ORDERED MANDATORY COLLECTION NOTICE
 Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administrative fees, court costs, and enforcement surcharges.`);
  await active.getByRole('button',{name:'Check this message'}).click();
  await expect(active.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await expect(active.getByRole('heading',{name:'Check the toll or case outside this notice'})).toBeVisible();
+ await expect(active.locator('[id^="review-summary"]').getByRole('heading',{level:1,name:'Check the toll or case outside this notice'})).toBeVisible();
 
  const checks=active.locator('.rail-check-list .rail-check');
  await expect(checks).toHaveCount(2);
@@ -130,7 +130,7 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
 
  await active.locator('.rail-check-list .rail-check').nth(1).click();
  active=page.locator('.seal-workspace-instance:not([hidden])');
- await expect(active.getByRole('heading',{name:'Check the toll or case outside this notice'})).toBeVisible();
+ await expect(active.locator('[id^="review-summary"]').getByRole('heading',{level:1,name:'Check the toll or case outside this notice'})).toBeVisible();
  assertNoRuntimeErrors();
 });
 
@@ -307,7 +307,7 @@ test('curated Dallas example preserves its source-backed resolution',async({page
  await page.goto('/?case=dallas-traffic-qr-scam');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:60000});
  await expect(page.locator('#review-summary').getByRole('heading',{name:'Do not scan or pay from this message'})).toBeVisible();
- await expect(page.locator('#review-summary').getByText(/City of Dallas published this exact example as a scam/i)).toBeVisible();
+ await expect(page.locator('#review-summary .decision-summary')).toContainText(/City of Dallas published this exact example as a scam/i);
  await expect(page.getByRole('link',{name:/View the City of Dallas source/i})).toBeVisible();
  await expect(page.getByTestId('play-evidence-review')).toBeVisible();
  assertNoRuntimeErrors();
