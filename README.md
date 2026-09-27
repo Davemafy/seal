@@ -1,119 +1,268 @@
 # SEAL
 
-**Before you call, click, pay, or reply.**
+**Check the message before you act on it.**
 
-SEAL is an independent court-message checker designed to accept court communications from any country without treating the uploaded message as proof. A person can upload a screenshot/image, paste message text, or upload a PDF. SEAL separates the **action the message asks them to take** from surrounding official-looking details, then checks only the atomic claims that current independent official sources can establish.
+SEAL checks court messages against public sources.
 
-Understanding a readable message is the broad path. Direct court verification currently has a smaller, explicitly routed source set. When a court is outside that network, SEAL keeps the result at **COULD_NOT_VERIFY** and can offer an independently opened official court directory for clearly identified jurisdictions such as India, France, Spain, Brazil, Nigeria, and U.S. federal courts. Those directory links are navigation aids, not verification evidence, and never change a verdict. The Browse archive includes court documents and official guidance from multiple countries; guidance pages are identified as such and are never passed off as individual notices.
+Upload a screenshot, image, PDF, or paste the message. SEAL identifies the details that could change what you do next, checks those details against evidence outside the message, and shows what is confirmed, what conflicts, and what still cannot be verified.
 
-Checks are isolated workspaces: multiple verifications can remain open at once, and one check can continue while another is being reviewed. Document language, user display language, and legal jurisdiction are treated as separate concerns. SEAL can translate its explanation while preserving original source wording.
+**Live product:** https://seal-verify.vercel.app
 
-The primary product question is:
+## Why SEAL
 
-> What is this message asking me to do, what can an independent official source establish, and how can I contact the court safely?
+An official-looking message can contain a real court name, a familiar logo, and a valid address while still giving you a phone number, payment instruction, or link you should not trust.
 
-A matching court name, address, public phone number, or website does **not** authenticate a message or an individual summons. SEAL is not affiliated with any court.
+SEAL does not ask whether the whole document "looks real."
 
-## Primary supported workflow
+It asks a narrower question:
 
-The first complete action-first path is a jury-duty impersonation message claiming to involve the **U.S. District Court for the District of Connecticut**. SEAL can independently check covered action claims such as:
+> **What is this message asking me to do, and what can I independently verify before I do it?**
 
-- a jury-duty payment demand using a payment app, cryptocurrency, gift cards, or wire transfer when current official guidance directly contradicts that request;
-- a message-supplied URL when official guidance says not to use the URL supplied by the caller/message;
-- a callback instruction in a payment/threat context when official guidance tells the recipient to contact the agency using an independently known-correct number;
-- a request for sensitive personal information through calls, texts, or emails when the applicable official guidance directly covers that channel.
+That distinction drives the product.
 
-It then gives the recipient a **separately sourced court contact**. For the District of Connecticut flow, the safe-contact override is the jury-office number published on the court's own site rather than any number printed in the suspicious message.
+A matching court name, address, public phone number, or website does not authenticate a message or an individual summons. SEAL is not affiliated with any court.
 
-Existing Riverside Superior Court coverage remains as regression coverage, including the known official-source conflict over the Desert Region jury number.
+## How it works
 
-## Three verdicts
+1. **Read the message**  
+   Recover text from a PDF, screenshot, image, or pasted message.
 
-- **MATCH** — an official source positively confirms the exact atomic claim.
-- **MISMATCH** — a saved official source directly contradicts the exact atomic claim or requested action.
-- **COULD_NOT_VERIFY** — the available sources cannot establish the claim, the field is unreadable, the jurisdiction is unsupported, a live source failed, the data is private, or official sources materially disagree.
+2. **Find the claims that matter**  
+   Identify details such as the court, phone number, URL, reporting date, payment request, or requested action.
 
-MISMATCH is intentionally hard to produce. Suspicion, absence from a database, an unfamiliar phone number, or an OCR guess is never enough.
+3. **Check outside evidence**  
+   Compare those claims with independent public sources. The uploaded message is never allowed to prove itself.
 
-When official sources materially disagree, SEAL returns **COULD_NOT_VERIFY** with “Official sources currently disagree.” Both source excerpts and checked timestamps remain visible. Riverside's 760-342-6264 / 951-342-6264 conflict is preserved as a regression fixture.
+4. **Show the result**  
+   Every checked claim ends in one of three states:
+   - **MATCH** when an independent source supports it
+   - **MISMATCH** when an independent source directly contradicts it
+   - **COULD_NOT_VERIFY** when the available evidence is not strong enough
 
-## Screenshot and image handling
+5. **Give the user a safe next step**  
+   When possible, SEAL provides contact information sourced separately from the suspicious message.
 
-The original uploaded binary stays in the browser. PDF text is read with PDF.js; images and scanned PDFs use Tesseract.js in the client.
+The review experience keeps the original message, the extracted claim, the evidence, and the next step distinct so the user can inspect the comparison rather than accept a black-box score.
 
-OCR confidence is **field-scoped**, not a whole-page kill switch. A low-confidence field is withheld from verification and displayed as:
+## The verification rule
 
-> We couldn’t read this field confidently.
+For every extracted claim (c), SEAL produces exactly one result:
 
-Readable fields elsewhere on the same image remain available. The dense Connecticut PNG regression is generated from the checked-in public sample PDF at roughly 3,200 px width. Its low-confidence phone must abstain while independently readable fields survive. This does not prove accuracy on real personal summonses or camera photos.
+[
+V(c) \in
+\{
+\text{MATCH},
+\text{MISMATCH},
+\text{COULD\_NOT\_VERIFY}
+\}
+]
 
-Extracted text can be sent to the SEAL server and, when configured, to Groq for claim structuring. The original image/PDF is not silently sent to an external model. SEAL has no user account or document database.
+A decisive result requires evidence:
+
+[
+V(c) \in
+\{
+\text{MATCH},
+\text{MISMATCH}
+\}
+\Rightarrow
+|E(c)| \geq 1
+]
+
+A mismatch also requires direct contradiction:
+
+[
+V(c)=\text{MISMATCH}
+\Rightarrow
+E(c)\text{ directly contradicts }c
+]
+
+Otherwise:
+
+[
+V(c)=\text{COULD\_NOT\_VERIFY}
+]
+
+**No evidence, no verdict.**
+
+That rule is enforced in the resolver itself.
+
+A failed search is not treated as proof of fraud. An OCR guess is not promoted into a claim. If official sources materially disagree, SEAL keeps the result unresolved and preserves the conflicting evidence.
+
+## What makes SEAL different
+
+SEAL is not a document summarizer and it is not an authenticity classifier.
+
+It keeps three things separate:
+
+**what the message says**
+
+**what an independent source says**
+
+**what can actually be concluded from the comparison**
+
+One message can therefore contain a confirmed court name, a mismatched payment instruction, and an unverified reporting date at the same time.
+
+No single confidence score hides those differences.
+
+## Primary reviewed verification flow
+
+The first fully reviewed action-first workflow covers a jury-duty impersonation message claiming to involve the **U.S. District Court for the District of Connecticut**.
+
+SEAL can independently check covered action-sensitive claims including:
+
+- suspicious jury-duty payment methods
+- message-supplied URLs
+- callback instructions in payment or threat contexts
+- sensitive-information requests through covered channels
+- selected court contact details
+
+The safe-contact route is sourced separately from the message.
+
+Existing Riverside Superior Court coverage remains in the regression suite, including a known case where official sources disagree about the Desert Region jury number. That disagreement intentionally produces **COULD_NOT_VERIFY**, not a forced answer.
+
+For courts outside the reviewed direct-check network, SEAL can still describe readable instructions and, for clearly identified jurisdictions, provide an independently opened official court directory as a navigation aid. A directory handoff never changes the verdict by itself.
+
+## Document handling
+
+The original uploaded binary stays in the browser.
+
+PDF text is read with PDF.js. Images and scanned PDFs use Tesseract.js client-side.
+
+OCR confidence is field-scoped rather than a whole-page pass or fail. If SEAL cannot confidently recover one field, it withholds that field from verification and shows:
+
+> **We couldn't read this field confidently.**
+
+Other readable fields can continue through the pipeline.
+
+Extracted text can be sent to the SEAL server and, when configured, to Groq for structured claim extraction. The original image or PDF is not silently sent to an external model.
+
+SEAL currently has no user account or document database.
+
+## Engineering
+
+SEAL is built with React and TypeScript.
+
+The verification system separates document understanding from evidence resolution:
+
+```text
+Document
+  |
+  v
+Text extraction
+  |
+  v
+Structured claims
+  |
+  v
+Claim-specific resolver
+  |
+  v
+Independent evidence
+  |
+  v
+MATCH / MISMATCH / COULD_NOT_VERIFY
+  |
+  v
+Evidence + safe next step
+```
+
+The comparison rules are claim-specific.
+
+A phone number is only contradicted when the message clearly presents it as the relevant official number and comparable official information exists.
+
+A URL is only contradicted when it is presented as the official route and outside evidence establishes another one.
+
+An exact docket match can support a claim, but no docket result remains an absence of evidence rather than proof that the message is false.
+
+Conflicting official sources remain unresolved.
+
+Document language, display language, and jurisdiction are treated as separate concerns. SEAL can translate its explanation while preserving original source wording. Multiple checks can remain open as isolated workspaces so one investigation does not overwrite another.
+
+## Benchmark
+
+The current 15-case engineering benchmark covers:
+
+- the primary jury-message flow
+- an unmodified public Connecticut court PDF
+- a controlled single-field phone alteration
+- Riverside phone and portal alterations
+- a nonexistent private identifier
+- an unsupported jurisdiction
+- degraded OCR
+- prompt injection
+- a generic paper fee request
+- official-source disagreement
+
+Current fixture-set results:
+
+| Metric | Result |
+| --- | ---: |
+| MISMATCH precision | **1.00** |
+| False MISMATCH count | **0** |
+| COULD_NOT_VERIFY rate | **0.456** |
+| Full-flow success | **0.933** |
+| Field extraction accuracy | **0.933 to 1.00** |
+
+These are engineering-fixture measurements, not estimates of real-world accuracy.
+
+There is no consented corpus of genuine personal summonses, real scam-victim screenshots, or uncontrolled camera photos in this repository.
 
 ## Demo
 
-~~~bash
+```bash
 npm install
 npm run dev
-~~~
+```
 
-Open http://localhost:3000/demo.
+Open:
 
-The primary demo is a **clearly labeled synthetic jury-scam message** with fictional details and no real-person data. It exists to test the engineering path, not to claim that SEAL has been validated on real scam victims.
+```text
+http://localhost:3000/demo
+```
 
-A second coverage-limit demo uses a clearly fictional **New Delhi, India** court message. SEAL extracts the requested action, refuses to invent a direct court verdict, and hands the user to the official India eCourts service as an independent starting point. Browse also includes the Supreme Court of India’s 2026 advisory concerning fake websites impersonating its official site.
+The primary demo uses a clearly labeled synthetic jury-scam message with fictional details and no real-person data.
 
-The review UI keeps one visual chain central:
+A second coverage-limit demo uses a clearly fictional New Delhi court message. SEAL extracts the requested action, refuses to invent a direct court verdict, and directs the user to the official India eCourts service as an independent starting point.
 
-**message, requested action, official evidence, safe court contact**
+## Verification
 
-Selecting a claim highlights it in the original message/image and shows its verdict, exact official excerpt, source link, source mode, and checked timestamp.
-
-## Verification and benchmark
-
-~~~bash
+```bash
 npm run typecheck
 npm run lint
 npm test
 npm run benchmark
 npm run e2e
 npm run build
-~~~
+```
 
-The current 15-case benchmark covers the action-first jury message, an unmodified public Connecticut sample PDF, a clearly labeled single-field phone alteration, Riverside phone/portal alterations, a nonexistent private identifier, an unsupported jurisdiction, degraded OCR, prompt injection, a generic paper fee, and the Riverside official-source conflict.
+The repository includes unit tests, browser reliability tests, verification benchmarks, live sanity checks, image-specific release criteria, and regression fixtures for known edge cases.
 
-Current fixture-set metrics:
+## Official sources
 
-- **MISMATCH precision:** 1.00
-- **False MISMATCH count:** 0
-- **COULD_NOT_VERIFY rate:** 0.456
-- **Full-flow success:** 0.933
-- **Extraction accuracy by field:** 0.933–1.00 on the benchmark fields
+The reviewed action-first flow currently uses material from:
 
-These are engineering-fixture measurements, not a real-world accuracy estimate. There is no consented corpus of genuine personal summonses, camera photos, or real scam-message screenshots in this repository.
+- U.S. Courts
+- Federal Trade Commission
+- U.S. District Court for the District of Connecticut
+- Riverside Superior Court
 
-The public Connecticut sample is from the U.S. District Court for the District of Connecticut. On its text-PDF path, public court identity/address/status-number details can be independently corroborated while juror-specific and historical reporting details remain unverified. Those matches never authenticate the document.
+SEAL uses reviewed source routes and saved excerpts for decisive checks. It never treats a URL printed inside an uploaded message as trusted merely because it appeared in the document.
 
-## Official sources used by the action-first flow
-
-SEAL uses fixed allowlists and saved excerpts; it never follows a URL printed in an uploaded message.
-
-- U.S. Courts juror-scam guidance
-- Federal Trade Commission jury-duty scam guidance
-- Federal Trade Commission fake jury-duty website guidance
-- Federal Trade Commission government-impersonation guidance
-- U.S. District Court for the District of Connecticut jury information, FAQ, courthouse, and jury-contact pages
-- Riverside Superior Court Jury Services pages and Countywide Numbers table for the existing Riverside resolver
-
-Live checks can fail or official pages can change. When a live source is unavailable, affected verdicts abstain rather than silently inheriting a decisive cached result. A separately labeled, dated official snapshot may still be used for the safe-contact fallback.
-
-Research rationale and the action-first kill test are in [docs/ACTION_FLOW_DECISION.md](docs/ACTION_FLOW_DECISION.md). Image-specific release criteria are in [docs/IMAGE_KILL_TEST.md](docs/IMAGE_KILL_TEST.md). Build checkpoints are in [docs/BUILD_LOG.md](docs/BUILD_LOG.md).
+Live sources can fail or change. When a required source is unavailable, affected claims abstain rather than silently inheriting a decisive cached result.
 
 ## Limits
 
-SEAL does not determine authenticity, legal validity, enforceability, admissibility, or whether a particular person actually owes or must do anything. It does not validate demand or real-world uptake. If a real personal scam screenshot is unavailable, synthetic or official public examples are clearly labeled as such.
+SEAL does not determine authenticity, legal validity, enforceability, admissibility, or whether a particular person actually owes money or must take an action.
 
-Image OCR supports English, Spanish, Portuguese, French, German, Italian, Dutch, Turkish, Russian, Hindi, Arabic, Simplified/Traditional Chinese, Japanese, and Korean models. Weak OCR can trigger script recovery instead of assuming the browser language is correct; PDFs with a text layer and pasted text preserve their original scripts. These are extraction options, not measured accuracy guarantees. New direct court checks require reviewed sources and claim-specific comparison rules for the issuing court. The absence of a resolver must never prevent SEAL from describing readable instructions or turn a foreign court into a U.S. warning.
+It does not treat the absence of a public record as proof that a message is fraudulent.
 
-## Prior art and related work
+Image OCR supports multiple language models, but those are extraction options rather than measured accuracy guarantees. New direct court checks require reviewed sources and claim-specific comparison rules for the issuing court.
 
-SEAL builds on public court scam alerts, consumer-protection guidance, court-source verification patterns, and legal citation-checking / source-checking tools. Related product prior art should be evaluated on its own terms; SEAL's specific product experiment is the claim-to-source chain for a suspicious court message plus an independently sourced safe-contact override.
+The absence of a dedicated resolver must never turn a foreign or unsupported court into a false warning.
+
+## Research notes
+
+- [Action-flow decision and kill test](docs/ACTION_FLOW_DECISION.md)
+- [Image-specific release criteria](docs/IMAGE_KILL_TEST.md)
+- [Build checkpoints](docs/BUILD_LOG.md)
