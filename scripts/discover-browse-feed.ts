@@ -329,10 +329,19 @@ try{
  await rm(tempRoot,{recursive:true,force:true});
 }
 
-const combined=[...existingGenerated,...found]
+const ranked=[...existingGenerated,...found]
  .filter((item,index,items)=>items.findIndex(other=>canonicalUrl(other.sourceUrl)===canonicalUrl(item.sourceUrl))===index)
- .sort((a,b)=>String(b.sourcePublishedAt||b.discoveredAt||'').localeCompare(String(a.sourcePublishedAt||a.discoveredAt||'')))
- .slice(0,24);
+ .sort((a,b)=>String(b.sourcePublishedAt||b.discoveredAt||'').localeCompare(String(a.sourcePublishedAt||a.discoveredAt||'')));
+
+const combined:BrowseCase[]=[];
+const issuerCounts=new Map<string,number>();
+for(const item of ranked){
+ const seen=issuerCounts.get(item.issuer)||0;
+ if(seen>=2)continue;
+ issuerCounts.set(item.issuer,seen+1);
+ combined.push(item);
+ if(combined.length>=24)break;
+}
 
 const stable=(items:BrowseCase[])=>JSON.stringify(items.map(({discoveredAt:_,...item})=>item),null,2);
 if(stable(combined)===stable(existingGenerated)){
