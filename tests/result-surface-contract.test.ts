@@ -29,6 +29,10 @@ describe('result surface design contract',()=>{
   expect(app).not.toContain('finishWorkspaceSwipe');
   expect(app).not.toContain('onTouchStart={beginWorkspaceSwipe}');
   expect(app).toContain('name="workspaces"');
+  expect(app).toContain('workspace-page-edges');
+  expect(app).toContain('mobile-workspace-count');
+  expect(app).toContain("workspaces.length>1?'has-multiple':''");
+  expect(css).toContain('Persistent multi-workspace resting cue.');
   expect(css).toContain('translate3d(0,100dvh,0)');
   expect(css).toContain('font-size:37px!important');
  });
