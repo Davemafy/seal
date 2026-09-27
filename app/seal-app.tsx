@@ -20,6 +20,7 @@ import {DISPLAY_LANGUAGES,displayLocaleFor,uiCopy,type DisplayLocale,type UiCopy
 import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
 import './workspace.css';
 import './result-mobile-repair.css';
+import './result-desktop-final.css';
 
 type Mode='SNAPSHOT'|'LIVE';
 type WorkspaceRunStatus='idle'|'reading'|'verifying'|'done'|'error';
