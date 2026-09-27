@@ -5572,3 +5572,34 @@
   line-height:25px!important
  }
 }
+
+
+/* Onboarding progress: bars only, no numbered-step styling. */
+.onboarding-progress{
+ gap:8px!important;
+ padding-top:12px!important
+}
+.onboarding-progress span{
+ height:4px!important;
+ min-height:4px!important;
+ border-radius:999px!important;
+ overflow:hidden!important;
+ color:transparent!important;
+ font-size:0!important;
+ line-height:0!important
+}
+.onboarding-progress span.is-active,
+.onboarding-progress span.is-complete{
+ background:#111!important
+}
+@media(max-width:900px){
+ .onboarding-progress{
+  gap:7px!important;
+  padding-top:10px!important
+ }
+ .onboarding-progress span{
+  height:4px!important;
+  min-height:4px!important;
+  border-radius:999px!important
+ }
+}
