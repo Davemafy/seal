@@ -572,8 +572,12 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  await expect(leaving,'old check should remain visible while fading out').toBeVisible();
  let active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
  await expect(active,'new check should rise from the bottom').toHaveClass(/is-entering-forward/);
+ const incomingAnimation=await active.evaluate(node=>getComputedStyle(node).animationName);
+ const outgoingAnimation=await leaving.evaluate(node=>getComputedStyle(node).animationName);
+ expect(incomingAnimation).toContain('workspace-sheet-rise');
+ expect(outgoingAnimation).toContain('workspace-page-recede');
  await expect(active.getByTestId('entry-shell')).toBeVisible();
- await page.waitForTimeout(560);
+ await page.waitForTimeout(760);
  await expect(leaving).toBeHidden();
 
  await page.getByRole('button',{name:'Open checks',exact:true}).click();
