@@ -50,7 +50,7 @@ Extracted text can be sent to the SEAL server and, when configured, to Groq for 
 ## Demo
 
 ~~~bash
-npm ci
+npm install
 npm run dev
 ~~~
 
