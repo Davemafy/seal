@@ -4,7 +4,7 @@
 
 SEAL is an independent court-message checker designed for court messages from any country. A person can upload a screenshot/image, paste message text, or upload a PDF. SEAL separates the **action the message asks them to take** from surrounding official-looking details, then checks only the atomic claims that current independent official sources can establish.
 
-Understanding a readable message is the broad path. Direct court verification currently has a smaller, explicitly routed source set. The Browse archive includes court documents and official guidance from multiple countries; guidance pages are identified as such and are never passed off as individual notices.
+Understanding a readable message is the broad path. Direct court verification currently has a smaller, explicitly routed source set. When a court is outside that network, SEAL keeps the result at **COULD_NOT_VERIFY** and can offer an independently opened official court directory for clearly identified jurisdictions such as India, France, Spain, Brazil, Nigeria, and U.S. federal courts. Those directory links are navigation aids, not verification evidence, and never change a verdict. The Browse archive includes court documents and official guidance from multiple countries; guidance pages are identified as such and are never passed off as individual notices.
 
 The primary product question is:
 
@@ -57,6 +57,8 @@ npm run dev
 Open http://localhost:3000/demo.
 
 The primary demo is a **clearly labeled synthetic jury-scam message** with fictional details and no real-person data. It exists to test the engineering path, not to claim that SEAL has been validated on real scam victims.
+
+A second coverage-limit demo uses a clearly fictional **New Delhi, India** court message. SEAL extracts the requested action, refuses to invent a direct court verdict, and hands the user to the official India eCourts service as an independent starting point. Browse also includes the Supreme Court of India’s 2026 advisory concerning fake websites impersonating its official site.
 
 The review UI keeps one visual chain central:
 
