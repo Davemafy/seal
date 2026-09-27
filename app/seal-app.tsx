@@ -2344,14 +2344,15 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
     const raw=window.sessionStorage.getItem(WORKSPACE_LIST_KEY);
     if(raw){
      const parsed=JSON.parse(raw) as {active?:string;items?:WorkspaceMeta[]};
-     let items=Array.isArray(parsed.items)?parsed.items.filter(item=>item&&typeof item.id==='string').slice(0,8):[];
-     if(initialWorkspaceId&&!items.some(item=>item.id===initialWorkspaceId)){
-      items=[...items,{id:initialWorkspaceId,title:'New check',status:'idle' as WorkspaceRunStatus}].slice(-8);
-     }
+     const items=Array.isArray(parsed.items)?parsed.items.filter(item=>item&&typeof item.id==='string').slice(0,8):[];
      if(items.length){
       setWorkspaces(items.map(item=>({...item,status:(item.status==='reading'||item.status==='verifying'?'idle':item.status) as WorkspaceRunStatus})));
       const requested=initialWorkspaceId&&items.some(item=>item.id===initialWorkspaceId)?initialWorkspaceId:undefined;
-      setActiveWorkspace(requested||(items.some(item=>item.id===parsed.active)?parsed.active!:items[0].id));
+      const nextActive=requested||(items.some(item=>item.id===parsed.active)?parsed.active!:items[0].id);
+      setActiveWorkspace(nextActive);
+      if(initialWorkspaceId&&!requested){
+       window.history.replaceState({workspaceId:nextActive},'',checkRoute(nextActive));
+      }
      }
     }else if(initialWorkspaceId){
      setWorkspaces([{id:initialWorkspaceId,title:'New check',status:'idle' as WorkspaceRunStatus}]);
