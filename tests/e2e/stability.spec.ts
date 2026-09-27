@@ -196,7 +196,7 @@ test('mobile result has no horizontal overflow and keeps the review accessible',
  assertNoRuntimeErrors();
 });
 
-test('Browse ranks high-signal cases first and only exposes verified runnable examples',async({page})=>{
+test('Browse keeps every sourced document runnable and high-signal cases first',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.goto('/browse');
  await expect(page.getByRole('heading',{name:'Browse real cases'})).toBeVisible();
@@ -206,7 +206,11 @@ test('Browse ranks high-signal cases first and only exposes verified runnable ex
   'Public notice to interested parties',
   'Sample federal jury summons'
  ]);
- await expect(page.getByRole('link',{name:'Run in SEAL'})).toHaveCount(3);
+ await expect(page.locator('.case-card')).toHaveCount(7);
+ await expect(page.getByRole('link',{name:'Run in SEAL'})).toHaveCount(7);
+ const international=await page.request.get('/api/browse-case?id=brazil-parana-citation-notice');
+ expect(international.ok()).toBe(true);
+ expect(await international.json()).toMatchObject({assetType:'pdf',ocrLanguage:'por',title:'Public citation notice with response period'});
  assertNoRuntimeErrors();
 });
 

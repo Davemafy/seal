@@ -798,7 +798,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      setText(analysisText);
      setBusy(false);
      setStatus('');
-     await run('SNAPSHOT',{text:analysisText,file:doc,curated:!!seededText,curatedCaseId:caseId});
+     await run('SNAPSHOT',{text:analysisText,file:doc,curated:!!seededText,curatedCaseId:caseId,browse:true});
      return;
     }
 
@@ -963,10 +963,11 @@ async function upload(uploaded:File){
   }
  }
 
- async function run(sourceMode:Mode=mode,source?:{text:string;file:BrowserDocument|null;curated?:boolean;curatedCaseId?:string}){
+ async function run(sourceMode:Mode=mode,source?:{text:string;file:BrowserDocument|null;curated?:boolean;curatedCaseId?:string;browse?:boolean}){
   const sourceText=source?.text??text;
   const sourceFile=source?source.file:file;
   const sourceCurated=Boolean(source?.curated);
+  const sourceBrowse=Boolean(source?.browse);
   const curatedCaseId=source?.curatedCaseId;
   const sourceIsDemo=!sourceFile&&/^DEMO \/ (?:FICTIONAL NOTICE|SYNTHETIC MESSAGE)/.test(sourceText);
   activeRequestRef.current?.abort();
@@ -1035,7 +1036,7 @@ async function upload(uploaded:File){
    const courtRelated=/\b(?:court|jury|summons|hearing|case|docket|judge|tribunal|magistrate|citation|parking violation|juzgado|gericht|tribunale|mahakama|mahkama|mahkeme|pengadilan|cour|llys)\b|poder judiciário|vara cível|edital de citação|न्यायालय|अदालत|محكمة|المحكمة|法院|裁判所|법원|\bсуд\b/iu.test(sourceText)
     ||Boolean(extraction.court_name&&sourceText.toLocaleLowerCase().includes(extraction.court_name.toLocaleLowerCase()));
    if(!sourceCurated&&!courtRelated)throw new Error('This does not look like a court message SEAL can check. Try a court notice, text, or email.');
-   if(!sourceCurated&&!usableAction)throw new Error(sourceFile?.uncertain
+   if(!sourceCurated&&!sourceBrowse&&!usableAction)throw new Error(sourceFile?.uncertain
     ?'SEAL read parts of this document, but not a requested action clearly enough to check it safely. Try a clearer image or paste the instruction text.'
     :'We couldn’t find a requested action in this court message. Try another image or paste the message text.');
    if(!found.length){

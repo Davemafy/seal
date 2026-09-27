@@ -6,11 +6,10 @@ import type {BrowseCase} from '@/lib/browse-cases';
 import PdfThumb from './pdf-thumb';
 import ImageThumb from './image-thumb';
 
-type BrowseFilter='all'|'runnable'|'scam'|'official'|'international';
+type BrowseFilter='all'|'scam'|'official'|'international';
 
 const filters:{id:BrowseFilter;label:string}[]=[
  {id:'all',label:'All'},
- {id:'runnable',label:'Runnable'},
  {id:'scam',label:'Scam examples'},
  {id:'official',label:'Official documents'},
  {id:'international',label:'Outside U.S.'},
@@ -25,7 +24,6 @@ function CaseMedia({item,priority=false}:{item:BrowseCase;priority?:boolean}){
 }
 
 function matchesFilter(item:BrowseCase,filter:BrowseFilter){
- if(filter==='runnable')return Boolean(item.runText);
  if(filter==='scam')return item.classification==='Confirmed scam example'||item.category==='official-scam-guidance';
  if(filter==='official')return item.classification!=='Confirmed scam example';
  if(filter==='international')return item.country!=='United States';
@@ -55,11 +53,11 @@ export default function BrowseGrid({items}:{items:BrowseCase[]}){
     <div className="case-copy">
      <p className="case-kicker"><span>{item.jurisdiction}</span><span>{item.language||'English'}</span></p>
      <h2>{item.title}</h2>
-     <p className="case-context"><span>{item.classification}</span><span aria-hidden="true">·</span><strong>{item.runText?'Runnable example':'Reference document'}</strong></p>
+     <p className="case-context"><span>{item.classification}</span><span aria-hidden="true">·</span><strong>Runs from source asset</strong></p>
      <p className="case-note">{item.visualNote}</p>
      <p className="case-source">Source: {item.sourceTitle}</p>
      <div className="case-actions">
-      {item.runText&&<Link className="case-run-action" href={`/?case=${item.id}`}>Run in SEAL</Link>}
+      <Link className="case-run-action" href={`/?case=${item.id}`}>Run in SEAL</Link>
       <a className="case-source-action" href={item.sourceUrl} target="_blank" rel="noopener noreferrer">Open original <span aria-hidden="true">↗</span></a>
      </div>
     </div>
