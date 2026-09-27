@@ -699,3 +699,36 @@ test('desktop entry keeps sidebar and canvas in proportion',async({page})=>{
  expect(metrics.overflow).toBeLessThanOrEqual(1);
  assertNoRuntimeErrors();
 });
+
+
+test('1208 desktop keeps sidebar visually substantial and canvas restrained',async({page})=>{
+ const assertNoRuntimeErrors=guardRuntime(page);
+ await page.setViewportSize({width:1208,height:664});
+ await page.goto('/');
+ await expect(page.getByTestId('entry-shell')).toBeVisible();
+ const metrics=await page.evaluate(()=>{
+  const rail=document.querySelector<HTMLElement>('.workspace-rail')!;
+  const shell=document.querySelector<HTMLElement>('[data-testid="entry-shell"]')!;
+  const heading=shell.querySelector<HTMLElement>('.entry-copy h1')!;
+  const intake=shell.querySelector<HTMLElement>('.intake')!;
+  const row=rail.querySelector<HTMLElement>('.rail-check-row')!;
+  const title=rail.querySelector<HTMLElement>('.rail-check-copy strong')!;
+  return {
+   railWidth:rail.getBoundingClientRect().width,
+   shellWidth:shell.getBoundingClientRect().width,
+   intakeWidth:intake.getBoundingClientRect().width,
+   headingSize:Number.parseFloat(getComputedStyle(heading).fontSize),
+   rowHeight:row.getBoundingClientRect().height,
+   railTitleSize:Number.parseFloat(getComputedStyle(title).fontSize),
+   overflow:document.documentElement.scrollWidth-window.innerWidth
+  };
+ });
+ expect(metrics.railWidth).toBeGreaterThanOrEqual(265);
+ expect(metrics.shellWidth).toBeLessThanOrEqual(902);
+ expect(metrics.intakeWidth).toBeLessThanOrEqual(472);
+ expect(metrics.headingSize).toBeLessThanOrEqual(41);
+ expect(metrics.rowHeight).toBeGreaterThanOrEqual(58);
+ expect(metrics.railTitleSize).toBeGreaterThanOrEqual(12.5);
+ expect(metrics.overflow).toBeLessThanOrEqual(1);
+ assertNoRuntimeErrors();
+});
