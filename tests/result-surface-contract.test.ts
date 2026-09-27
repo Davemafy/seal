@@ -15,7 +15,7 @@ describe('result surface design contract',()=>{
   expect(css).toContain('Visual result composition: focused reading column + contextual artifact.');
   expect(app).toContain("const primaryRoute=file?.sample");
   expect(app).toContain("resultStatusLabel=file?.sample");
-  expect(app).toContain("workspaces.filter(item=>item.status!=='idle'||item.id===workspaceId)");
+  expect(app).toContain("{workspaces.map((item,index)=>{");
   expect(app).not.toContain('<select value={displayLocale}');
   expect(app).toContain("setWorkspaceMotion({id,fromId:activeWorkspace,direction:'forward'})");
   expect(app).toContain("},[activeWorkspace]);");
