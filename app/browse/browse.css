@@ -301,3 +301,12 @@
  .case-source{display:none}
  .case-actions{margin-top:9px!important}
 }
+
+
+/* Humanize Browse heading copy. */
+.browse-eyebrow{
+ text-transform:none!important;
+ letter-spacing:0!important;
+ font-size:10.5px!important;
+ font-weight:600!important
+}
