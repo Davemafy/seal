@@ -1,6 +1,7 @@
 import type {Metadata,Viewport} from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
+import SiteLoader from './site-loader';
 
 const uberMove=localFont({
  src:[
@@ -52,5 +53,5 @@ export const viewport:Viewport={
 };
 
 export default function RootLayout({children}:{children:React.ReactNode}){
- return <html lang="en"><body className={uberMove.variable}>{children}</body></html>;
+ return <html lang="en"><body className={uberMove.variable}><SiteLoader/>{children}</body></html>;
 }
