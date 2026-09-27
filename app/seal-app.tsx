@@ -291,7 +291,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [resultLanguageMenuOpen,setResultLanguageMenuOpen]=useState(false);
  const [workspaceDrawerOpen,setWorkspaceDrawerOpen]=useState(false);
  const [translatedResult,setTranslatedResult]=useState<Record<string,string>>({});
- const [resultTranslationState,setResultTranslationState]=useState<'idle'|'translated'|'unavailable'>('idle');
+ const [resultTranslationState,setResultTranslationState]=useState<'idle'|'translating'|'translated'|'unavailable'>('idle');
  const [documentLanguage,setDocumentLanguage]=useState<DetectedDocumentLanguage|null>(null);
  const [jurisdiction,setJurisdiction]=useState('');
  const [workspaceTitle,setWorkspaceTitle]=useState('New check');
@@ -765,6 +765,11 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   const strings:Record<string,string>={
    decisionTitle:file?.sample?'This is a sample form.':conciseDecisionTitle,
    decisionSummary:humanDecisionSummary,
+   resultStatus:resultStatusLabel,
+   instructionStatus,
+   matterStatus,
+   openServiceNote:'Opens an independently sourced official service.',
+   resolutionDisclaimer:curatedSignal?'This finding is about this published example only. It does not label other messages.':'These sources help with the check, but they still cannot tell us who sent the message.',
    relationship:decisionRelationship,
    plainTitle:plainExplanation?.title||'',
    plainSummary:plainExplanation?.summary||'',
@@ -807,10 +812,11 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    strings.safePrimary=verification.safe_action.primary_label;
   }
   return strings;
- },[verification,claims,file?.sample,conciseDecisionTitle,humanDecisionSummary,decisionRelationship,plainExplanation,riskSummary,caseReality,courtQuestionScript]);
+ },[verification,claims,file?.sample,conciseDecisionTitle,humanDecisionSummary,decisionRelationship,plainExplanation,riskSummary,caseReality,courtQuestionScript,resultStatusLabel,instructionStatus,matterStatus,curatedSignal]);
 
  useEffect(()=>{
   if(!verification||displayLocale==='en')return;
+  setResultTranslationState('translating');
   const controller=new AbortController();
   void fetch('/api/translate',{
    method:'POST',headers:{'Content-Type':'application/json'},
@@ -1367,7 +1373,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
 
  function changeDisplayLanguage(locale:DisplayLocale){
   setTranslatedResult({});
-  setResultTranslationState('idle');
+  setResultTranslationState(locale==='en'?'idle':'translating');
   setDisplayLocale(locale);
   try{window.localStorage.setItem(DISPLAY_LOCALE_KEY,locale)}catch{}
   setLanguageMenuOpen(false);
@@ -1958,10 +1964,10 @@ async function upload(uploaded:File){
      </div>
 
      <nav className="result-chapters" aria-label="Jump to result section">
-      <a href={`#${sectionId('review-summary')}`} className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={event=>jumpToResultSection(event,'summary','review-summary')}>Summary</a>
+      <a href={`#${sectionId('review-summary')}`} className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={event=>jumpToResultSection(event,'summary','review-summary')}>{ui('summary')}</a>
       <a href={`#${sectionId('original-message')}`} className={activeResultSection==='message'?'is-current':''} aria-current={activeResultSection==='message'?'location':undefined} onClick={event=>jumpToResultSection(event,'message','original-message')}>{ui('original')}</a>
-      <a href={`#${sectionId('source-checks')}`} className={activeResultSection==='evidence'?'is-current':''} aria-current={activeResultSection==='evidence'?'location':undefined} onClick={event=>jumpToResultSection(event,'evidence','source-checks')}>Evidence</a>
-      <a href={`#${sectionId('user-actions')}`} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={event=>jumpToResultSection(event,'next','user-actions')}>Resolve</a>
+      <a href={`#${sectionId('source-checks')}`} className={activeResultSection==='evidence'?'is-current':''} aria-current={activeResultSection==='evidence'?'location':undefined} onClick={event=>jumpToResultSection(event,'evidence','source-checks')}>{ui('evidence')}</a>
+      <a href={`#${sectionId('user-actions')}`} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={event=>jumpToResultSection(event,'next','user-actions')}>{ui('resolve')}</a>
      </nav>
     </header>
 
@@ -2099,6 +2105,7 @@ async function upload(uploaded:File){
     </div>,document.body)}
 
     <div ref={resultCarouselRef} className="result-carousel" data-testid="result-carousel" onScroll={syncResultCarousel}>
+     {displayLocale!=='en'&&resultTranslationState==='translating'&&<div className="result-translation-pending" role="status" aria-live="polite"><span className="translation-pulse" aria-hidden="true"/><strong>{ui('translatingResult')}</strong></div>}
      <div className="review-hero">
      <div className="decision-pane result-screen result-screen-summary result-slide result-slide-summary" data-result-section="summary" id={sectionId('review-summary')}>
       {!verification?
@@ -2123,7 +2130,7 @@ async function upload(uploaded:File){
        <div className="decision">
         <div className="decision-overview">
          <div className="decision-copy">
-        <p className="decision-status" data-testid="result-status">{resultStatusLabel}</p>
+        <p className="decision-status" data-testid="result-status">{translatedResult.resultStatus||resultStatusLabel}</p>
         <h1>{translatedResult.decisionTitle||(file?.sample?'This is a sample form.':conciseDecisionTitle)}</h1>
         <p className="decision-summary">{translatedResult.decisionSummary||humanDecisionSummary}</p>
         {displayLocale!=='en'&&resultTranslationState==='translated'&&<p className="translation-note">{ui('translatedNote')}</p>}
@@ -2134,12 +2141,12 @@ async function upload(uploaded:File){
           {primaryRoute&&<div className="decision-primary-route" data-testid="primary-next-step">
            <span>{ui('nextStep')}</span>
            <a href={primaryRoute.url} target="_blank" rel="noopener noreferrer">{primaryRoute.label}</a>
-           <small>Opens an independently sourced official service.</small>
+           <small>{translatedResult.openServiceNote||'Opens an independently sourced official service.'}</small>
           </div>}
 
           {riskSummary&&!file?.sample&&instructionStatus!==matterStatus&&<div className="decision-at-a-glance" data-testid="two-risk-result">
-           <div><span>This message</span><strong>{instructionStatus}</strong></div>
-           <div><span>The case</span><strong>{matterStatus}</strong></div>
+           <div><span>This message</span><strong>{translatedResult.instructionStatus||instructionStatus}</strong></div>
+           <div><span>The case</span><strong>{translatedResult.matterStatus||matterStatus}</strong></div>
           </div>}
          </div>
 
@@ -2242,7 +2249,7 @@ async function upload(uploaded:File){
     <section className="result-slide result-slide-evidence" data-result-section="evidence" aria-label="Evidence panel">
      {reviewWorthWatching&&!storyOpen&&<button type="button" className="evidence-review-entry" data-testid="mobile-evidence-review" onClick={replayStory}>
       <span className="evidence-review-icon" aria-hidden="true"><DesignPlayIcon/></span>
-      <span><strong>Watch how SEAL checked this</strong><small>17 sec · message · public source · next step</small></span>
+      <span><strong>{ui('seeHowChecked')}</strong><small>{ui('evidenceReviewHint')}</small></span>
      </button>}
      {ready&&verification&&<section className="source-resolution" id={sectionId('source-checks')} aria-label="What SEAL found">
      <div className="section-heading evidence-heading">
@@ -2276,7 +2283,7 @@ async function upload(uploaded:File){
          <h3>{translatedResult['resultLabel'+resultIndex]||claim.label}{claim.value?`: ${cleanDisplayText(claim.value)}`:''}</h3>
          <p>{translatedResult['resultExplain'+resultIndex]||result.explanation}</p>
          <div className="signal-links">
-          {result.evidence.length>1&&<span className="signal-links-label">Sources</span>}
+          {result.evidence.length>1&&<span className="signal-links-label">{ui('sources')}</span>}
           {result.evidence.map((evidence,index)=><a href={evidence.url} target="_blank" rel="noopener noreferrer" key={`${claim.id}-${index}`}>{compactEvidenceTitle(evidence.title,index,evidenceTitles)}</a>)}
          </div>
         </article>;
@@ -2290,7 +2297,7 @@ async function upload(uploaded:File){
        </article>
       </div>}
 
-     <p className="resolution-disclaimer">{curatedSignal?'This finding is about this published example only. It does not label other messages.':'These sources help with the check, but they still cannot tell us who sent the message.'}</p>
+     <p className="resolution-disclaimer">{translatedResult.resolutionDisclaimer||(curatedSignal?'This finding is about this published example only. It does not label other messages.':'These sources help with the check, but they still cannot tell us who sent the message.')}</p>
     </section>}
      <details className="record-disclosure" aria-label="Evidence record">
       <summary><span>Evidence record</span><small>Claims, source provenance, and technical details</small><SealGuideIcon/></summary>
