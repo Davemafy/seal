@@ -229,16 +229,19 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [showIndex,setShowIndex]=useState(false);
  const [activeResultSection,setActiveResultSection]=useState<'summary'|'message'|'next'|'checked'>('summary');
  const [technicalOpen,setTechnicalOpen]=useState(false);
- const jumpToResultSection=useCallback((event:React.MouseEvent<HTMLAnchorElement>,section:'summary'|'message'|'next'|'checked',target:string)=>{
+ const workspaceRootRef=useRef<HTMLElement>(null);
+ const sectionId=(base:string)=>workspaceId==='primary'?base:`${base}-${workspaceId}`;
+ const jumpToResultSection=useCallback((event:React.MouseEvent<HTMLAnchorElement>,section:'summary'|'message'|'next'|'checked',targetBase:string)=>{
   event.preventDefault();
   setActiveResultSection(section);
-  const node=document.querySelector<HTMLElement>(target);
+  const id=workspaceId==='primary'?targetBase:`${targetBase}-${workspaceId}`;
+  const node=workspaceRootRef.current?.querySelector<HTMLElement>(`#${CSS.escape(id)}`);
   if(!node)return;
   const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const top=Math.max(0,node.getBoundingClientRect().top+window.scrollY-16);
   window.scrollTo({top,behavior:reduce?'auto':'smooth'});
-  window.history.replaceState(null,'',target);
- },[]);
+  window.history.replaceState(null,'',`#${id}`);
+ },[workspaceId]);
  const [reviewOffer,setReviewOffer]=useState<'idle'|'counting'|'skipped'|'watching'|'completed'>('idle');
  const [,setReviewCountdown]=useState(3);
  const [,setReviewOfferPaused]=useState(false);
@@ -1195,7 +1198,7 @@ async function upload(uploaded:File){
   </div>;
  })}</div>;
 
- return <main className="seal-app" data-testid="seal-app">
+ return <main ref={workspaceRootRef} className="seal-app" data-testid="seal-app">
   <aside className="workspace-rail" aria-label="Workspace">
    <Link href="/" className="rail-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
    <div className="rail-group-label">CHECKS</div>
@@ -1328,7 +1331,7 @@ async function upload(uploaded:File){
     onPointerDownCapture={event=>{if(reviewOffer==='counting'&&!(event.target as Element).closest('[data-review-offer]'))skipReviewOffer()}}
     onDragOver={event=>{if(event.dataTransfer.types.includes('Files'))event.preventDefault()}}
     onDrop={event=>{if(event.dataTransfer.files.length){event.preventDefault();skipReviewOffer();upload(event.dataTransfer.files[0])}}}>
-    <header className="result-masthead" id="result-top">
+    <header className="result-masthead" id={sectionId('result-top')}>
      <div className="result-masthead-row">
       <div>
        <h1>Check result</h1>
@@ -1337,10 +1340,10 @@ async function upload(uploaded:File){
      </div>
 
      {verification&&<nav className="result-chapters" aria-label="Result sections">
-      <a href="#review-summary" className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={event=>jumpToResultSection(event,'summary','#review-summary')}>Result</a>
-      <a href="#original-message" className={activeResultSection==='message'?'is-current':''} aria-current={activeResultSection==='message'?'location':undefined} onClick={event=>jumpToResultSection(event,'message','#original-message')}>Original</a>
-      <a href={verification.safe_action||verification.contact||decisionClaim?.action?'#next-step':'#source-checks'} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={event=>jumpToResultSection(event,'next',verification.safe_action||verification.contact||decisionClaim?.action?'#next-step':'#source-checks')}>Next step</a>
-      {!directCourtUnavailable&&<a href="#checked-details" className={activeResultSection==='checked'?'is-current':''} aria-current={activeResultSection==='checked'?'location':undefined} onClick={event=>jumpToResultSection(event,'checked','#checked-details')}>Checked details</a>}
+      <a href={`#${sectionId('review-summary')}`} className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={event=>jumpToResultSection(event,'summary','review-summary')}>Result</a>
+      <a href={`#${sectionId('original-message')}`} className={activeResultSection==='message'?'is-current':''} aria-current={activeResultSection==='message'?'location':undefined} onClick={event=>jumpToResultSection(event,'message','original-message')}>Original</a>
+      <a href={`#${sectionId(verification.safe_action||verification.contact||decisionClaim?.action?'next-step':'source-checks')}`} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={event=>jumpToResultSection(event,'next',verification.safe_action||verification.contact||decisionClaim?.action?'next-step':'source-checks')}>Next step</a>
+      {!directCourtUnavailable&&<a href={`#${sectionId('checked-details')}`} className={activeResultSection==='checked'?'is-current':''} aria-current={activeResultSection==='checked'?'location':undefined} onClick={event=>jumpToResultSection(event,'checked','checked-details')}>Checked details</a>}
      </nav>}
     </header>
 
@@ -1466,12 +1469,12 @@ async function upload(uploaded:File){
     </div>}
 
     <div className="review-hero">
-     <div className="decision-pane" id="review-summary">
+     <div className="decision-pane" id={sectionId('review-summary')}>
       <div className="review-tools">
        {isDemo&&<select aria-label="Choose demo fixture" value={fixture} onChange={event=>chooseFixture(event.target.value as FixtureKey)}>
         {Object.entries(fixtures).map(([key,value])=><option value={key} key={key}>{value.title}</option>)}
        </select>}
-       {verification&&<a href="#full-evidence" className="full-evidence-link">Full evidence</a>}
+       {verification&&<a href={`#${sectionId('full-evidence')}`} className="full-evidence-link">Full evidence</a>}
        <button type="button" className="review-new-check" onClick={clear}>Check another message</button>
       </div>
 
@@ -1522,7 +1525,7 @@ async function upload(uploaded:File){
        </div>}
      </div>
 
-     <div className="document-zone" id="original-message">
+     <div className="document-zone" id={sectionId('original-message')}>
       <div className="document-heading"><span>Original message</span><span>{file?.kind==='pdf'?'PDF':file?'Image':'Text'}</span></div>
       <div className={`document-paper ${!file?'is-text-document':''}`}>
        {isActionDemo?
@@ -1564,9 +1567,9 @@ async function upload(uploaded:File){
      </div>
     </div>
 
-    {ready&&<div id="full-evidence" className="full-evidence-anchor" aria-hidden="true"/>}
+    {ready&&<div id={sectionId('full-evidence')} className="full-evidence-anchor" aria-hidden="true"/>}
 
-    {ready&&verification&&<section className="source-resolution" id="source-checks" aria-label="Evidence and safe next step">
+    {ready&&verification&&<section className="source-resolution" id={sectionId('source-checks')} aria-label="Evidence and safe next step">
      <div className="section-heading evidence-heading">
       <h2>Independent evidence</h2>
      </div>
@@ -1611,7 +1614,7 @@ async function upload(uploaded:File){
        </article>
       </div>}
 
-     {verification&&!verification.safe_action&&decisionClaim?.action&&!verification.contact&&<div className="unsupported-next-step" id="next-step">
+     {verification&&!verification.safe_action&&decisionClaim?.action&&!verification.contact&&<div className="unsupported-next-step" id={sectionId('next-step')}>
       <span>Safest next step</span>
       <h2>Verify through a court source you opened yourself.</h2>
       {messageDetails.length>0||scheduleQuote||noPaymentQuote?<dl className="message-detail-list">{messageDetails.map(claim=><div key={claim.id}><dt>{claim.type==='location'?'Location named':claim.label}</dt><dd>{cleanDisplayText(claim.value)}</dd></div>)}{scheduleQuote&&<div><dt>Schedule stated</dt><dd>{cleanDisplayText(scheduleQuote)}</dd></div>}{noPaymentQuote&&<div><dt>Payment statement</dt><dd>{cleanDisplayText(noPaymentQuote)}</dd></div>}</dl>:<p>No court or case details could be read reliably.</p>}
@@ -1623,7 +1626,7 @@ async function upload(uploaded:File){
        <p>{officialDirectory.note}</p>
       </div>}
      </div>}
-     {verification?.safe_action&&<div className="safe-route" id="next-step">
+     {verification?.safe_action&&<div className="safe-route" id={sectionId('next-step')}>
       <div>
        <h2>{verification.safe_action.title}</h2>
        <p>{verification.safe_action.summary}</p>
@@ -1640,7 +1643,7 @@ async function upload(uploaded:File){
      <p className="resolution-disclaimer">{curatedSignal?'This conclusion applies to this published example. It does not classify unrelated messages.':'These sources can inform the check, but they cannot confirm who sent the message.'}</p>
     </section>}
 
-    {ready&&verification?.contact&&<section className="contact-section" id={verification.safe_action?undefined:'next-step'} aria-label="Independent court contact">
+    {ready&&verification?.contact&&<section className="contact-section" id={verification.safe_action?undefined:sectionId('next-step')} aria-label="Independent court contact">
      <div className="court-contact">
       <div>
        <h3>Independent court contact</h3>
@@ -1657,7 +1660,7 @@ async function upload(uploaded:File){
      </div>
     </section>}
 
-    {ready&&!directCourtUnavailable&&<section className="record-section" id="checked-details">
+    {ready&&!directCourtUnavailable&&<section className="record-section" id={sectionId('checked-details')}>
      <div className="section-heading record-heading">
       <h2>What was checked</h2>
       <p>Inspect each extracted detail and the source evidence available for it.</p>
