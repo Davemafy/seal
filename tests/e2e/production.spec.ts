@@ -9,6 +9,13 @@ function guardRuntime(page:Page){
  return ()=>expect(errors,'production browser runtime errors').toEqual([]);
 }
 
+async function chooseFile(page:Page,path:string){
+ const chooserPromise=page.waitForEvent('filechooser');
+ await page.getByTestId('upload-file').click();
+ const chooser=await chooserPromise;
+ await chooser.setFiles(path);
+}
+
 async function syntheticImage(page:Page,path:string){
  await page.setViewportSize({width:900,height:700});
  await page.setContent(`<!doctype html><html><body style="margin:0;background:#eee;font-family:Arial,sans-serif">
@@ -32,7 +39,7 @@ test('deployed app stays idle on refresh and completes a real browser image flow
  await page.reload();
  await expect(page.getByTestId('entry-shell')).toBeVisible();
 
- await page.locator('input[type="file"]').setInputFiles(fixture);
+ await chooseFile(page,fixture);
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:60000});
  await expect(page.getByRole('heading',{name:'Your message'})).toBeVisible();
  await expect(page.locator('.inspection-error')).toHaveCount(0);
