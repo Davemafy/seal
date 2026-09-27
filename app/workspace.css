@@ -7102,3 +7102,134 @@
   line-height:18px!important
  }
 }
+
+
+/* Product-wide type scale normalization. */
+@media(min-width:901px){
+ .seal-app{
+  font-size:16px!important
+ }
+ .seal-app button,
+ .seal-app input,
+ .seal-app select,
+ .seal-app textarea{
+  font-size:14px!important
+ }
+ .seal-footer{
+  font-size:13px!important;
+  line-height:19px!important
+ }
+
+ /* Never let helper/status text collapse into 9–10px desktop microcopy. */
+ .seal-app small,
+ .field-label,
+ .privacy-note,
+ .upload-file-name,
+ .process-live-meta,
+ .process-device-note,
+ .process-wait-note,
+ .process-wait-note small,
+ .process-stage-row small,
+ .process-stage-row em,
+ .upload-copy small,
+ .entry-eyebrow,
+ .entry-intake-heading>small,
+ .entry-context-item small,
+ .entry-context-rail>span,
+ .rail-language-trigger>span,
+ .rail-language-popover small,
+ .translation-note,
+ .record-subheading>small,
+ .check-record-details dt{
+  font-size:12px!important;
+  line-height:18px!important
+ }
+
+ .process-stage-row b,
+ .process-device-note>span,
+ .field-label,
+ .record-subheading>span,
+ .rail-nav-item,
+ .rail-check-copy strong{
+  font-size:13.5px!important;
+  line-height:20px!important
+ }
+
+ .upload-copy strong,
+ .paste-mode-switch,
+ .upload-browse,
+ .check-message,
+ .demo-link{
+  font-size:14px!important;
+  line-height:20px!important
+ }
+
+ .onboarding-kicker{
+  font-size:12px!important;
+  line-height:17px!important
+ }
+ .onboarding-copy p{
+  font-size:16px!important;
+  line-height:24px!important
+ }
+ .onboarding-input-dock span,
+ .onboarding-claim-card>span,
+ .onboarding-source-head>span,
+ .onboarding-result-card>span,
+ .onboarding-result-action small{
+  font-size:12px!important;
+  line-height:17px!important
+ }
+ .onboarding-input-dock small,
+ .onboarding-claim-card small,
+ .onboarding-source-card>small{
+  font-size:11.5px!important;
+  line-height:17px!important
+ }
+ .onboarding-claim-card strong,
+ .onboarding-source-card>strong{
+  font-size:17px!important;
+  line-height:23px!important
+ }
+ .onboarding-controls,
+ .onboarding-next,
+ .onboarding-back,
+ .onboarding-skip,
+ .onboarding-final-actions>a{
+  font-size:13px!important;
+  line-height:19px!important
+ }
+}
+
+@media(max-width:900px){
+ .seal-app{
+  font-size:16px!important
+ }
+ .seal-app button,
+ .seal-app input,
+ .seal-app select,
+ .seal-app textarea{
+  font-size:16px!important
+ }
+ .seal-app small,
+ .privacy-note,
+ .upload-file-name,
+ .process-live-meta,
+ .process-device-note,
+ .process-wait-note,
+ .process-stage-row small,
+ .process-stage-row em,
+ .rail-language-trigger>span,
+ .translation-note{
+  font-size:12px!important;
+  line-height:18px!important
+ }
+ .field-label,
+ .process-stage-row b,
+ .paste-mode-switch,
+ .upload-browse,
+ .check-message{
+  font-size:14px!important;
+  line-height:20px!important
+ }
+}
