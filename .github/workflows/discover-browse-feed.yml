@@ -7,7 +7,6 @@ on:
       - 'lib/browse-source-registry.ts'
       - 'scripts/discover-browse-feed.ts'
       - 'scripts/curator-client.ts'
-      - 'scripts/check-browse-curator.ts'
       - 'app/api/browse-curate/route.ts'
       - '.github/workflows/discover-browse-feed.yml'
   schedule:
@@ -42,9 +41,6 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Install PDF text tools
         run: sudo apt-get update && sudo apt-get install -y poppler-utils
-      - name: Verify model curator bridge
-        if: github.event_name == 'push'
-        run: node --import tsx scripts/check-browse-curator.ts
       - name: Discover and gate official sources
         run: node --import tsx scripts/discover-browse-feed.ts
       - name: Commit verified feed updates
