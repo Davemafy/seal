@@ -139,10 +139,11 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
   const element=node as HTMLElement & {__sealScrollCalls?:Array<ScrollToOptions>};
   element.__sealScrollCalls=[];
   const original=element.scrollTo.bind(element);
-  element.scrollTo=(options?:ScrollToOptions|number,y?:number)=>{
-   if(typeof options==='object')element.__sealScrollCalls!.push(options);
-   return typeof options==='number'?original(options,y):original(options||{});
-  };
+  element.scrollTo=((options?:ScrollToOptions|number,y?:number)=>{
+   if(typeof options==='object'&&options)element.__sealScrollCalls!.push(options);
+   if(typeof options==='number')return original(options,y??0);
+   return original(options||{});
+  }) as typeof element.scrollTo;
   return true;
  });
  expect(calls).toBe(true);
