@@ -34,7 +34,8 @@ A user can upload an image/PDF or paste a court-related message. SEAL:
    - **MATCH**
    - **MISMATCH**
    - **COULD NOT VERIFY**
-6. gives an independently sourced verification route when available.
+6. gives an independently sourced verification route when available;
+7. when direct verification is unavailable, keeps the result unverified and can hand clearly identified jurisdictions to an official court directory opened independently of the message.
 
 SEAL deliberately avoids a single “scam probability” score. Suspicion, an unfamiliar number, missing data, or an OCR guess is not enough to produce a contradiction.
 
@@ -57,6 +58,11 @@ The notice uses official-looking court language, a case number, a pay-or-appear 
 **U.S. District Court for the District of Connecticut — sample jury summons**
 
 SEAL can corroborate supported public details while juror-specific/private or historical details remain unverified. A MATCH never authenticates the whole document.
+
+### Coverage-limit contrast
+**New Delhi, India — clearly labeled fictional message**
+
+SEAL still extracts the requested action, but because the court is outside the current direct-check network it refuses to produce a MATCH or MISMATCH. Instead, it gives the user the official India eCourts service as an independent place to continue. The public-source library separately includes the Supreme Court of India’s 2026 advisory about fake websites impersonating its official site.
 
 ## Safety / reliability design
 
@@ -117,6 +123,7 @@ Repository: https://github.com/Davemafy/seal
 - deployed Cloudflare URL opens in a fresh/private browser
 - Dallas Browse → Run in SEAL path works
 - Connecticut legitimate contrast works
+- India coverage-limit demo ends in abstention and links to official eCourts
 - demo video is under 3 minutes
 - screenshots show the real artifact and evidence result, not only the landing page
 - tech stack and AI/tool usage are declared
