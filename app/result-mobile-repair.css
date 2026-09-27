@@ -795,3 +795,50 @@
   font-weight:650!important
  }
 }
+
+
+/* Mobile vertical efficiency — keep more result content above the fold. */
+@media(max-width:900px){
+ .review-shell{
+  padding-top:8px!important;
+  padding-bottom:14px!important
+ }
+ .result-masthead-row{
+  padding-top:0!important;
+  padding-bottom:4px!important
+ }
+ .result-chapters{
+  margin-top:7px!important;
+  padding:3px!important
+ }
+ .result-chapters a{
+  min-height:34px!important;
+  padding-top:6px!important;
+  padding-bottom:6px!important
+ }
+ .result-slide-summary{
+  padding-top:14px!important;
+  padding-bottom:22px!important
+ }
+ .decision-status{
+  margin-bottom:6px!important
+ }
+ .decision-summary{
+  margin-top:9px!important
+ }
+ .decision-primary-route{
+  margin-top:16px!important
+ }
+ .decision-at-a-glance{
+  margin-top:14px!important
+ }
+ .decision-details{
+  margin-top:12px!important
+ }
+ .result-slide-original,
+ .result-slide-evidence,
+ .result-slide-resolve{
+  padding-top:16px!important;
+  padding-bottom:24px!important
+ }
+}
