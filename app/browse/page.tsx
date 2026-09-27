@@ -40,6 +40,7 @@ export default function Browse(){
     <p className="browse-eyebrow">PUBLIC SOURCE LIBRARY</p>
     <h1>Browse real cases</h1>
     <p className="browse-deck">Published court documents and scam examples from official sources. Open every original; examples that can be checked end to end are marked as runnable.</p>
+    <p className="browse-scope"><strong>Coverage:</strong> SEAL can read court messages beyond its direct-check jurisdictions. “Runnable” means the example has a reviewed end-to-end evidence path; reference documents demonstrate input and language support, not case verification.</p>
     <div className="browse-proof" aria-label="Browse collection coverage">
      <span><strong>{browseCases.length}</strong> source documents</span>
      <span><strong>{countryCount}</strong> countries</span>
