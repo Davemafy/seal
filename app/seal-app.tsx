@@ -10,7 +10,7 @@ import {fixtures,type FixtureKey} from '@/lib/fixtures';
 import {fallbackExtract,claimsFromExtraction,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '@/lib/extract';
 import {readInBrowser,ocrLanguages,type OcrLanguage,type BrowserDocument} from '@/lib/browser-file';
 import {clearOrphanedResultArtifacts,clearResultSession,persistResultSession,restoreResultSession} from '@/lib/result-session';
-import type {Claim,Extraction,Result,Verification} from '@/lib/types';
+import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
 import './workspace.css';
 
 type Mode='SNAPSHOT'|'LIVE';
@@ -93,6 +93,40 @@ function claimReliable(claim:Claim){
  const threshold=claim.action?66:80;
  return typeof claim.field_confidence!=='number'||claim.field_confidence>=threshold;
 }
+
+type ProcessRegion={x:number;y:number;width:number;height:number};
+
+function processingTextRegions(tokens:Token[]):ProcessRegion[]{
+ const page=tokens
+  .filter(token=>token.page===1&&token.text.trim()&&token.width>.004&&token.height>.004)
+  .sort((a,b)=>a.y-b.y||a.x-b.x);
+ if(!page.length)return [];
+ const lines:ProcessRegion[]=[];
+ for(const token of page){
+  const y=Math.max(0,Math.min(1,token.y));
+  const x=Math.max(0,Math.min(1,token.x));
+  const width=Math.max(.006,Math.min(1-x,token.width));
+  const height=Math.max(.006,Math.min(.12,token.height));
+  const center=y+height/2;
+  const line=lines.find(item=>Math.abs((item.y+item.height/2)-center)<Math.max(.012,height*.7));
+  if(!line){
+   lines.push({x,y,width,height});
+   continue;
+  }
+  const right=Math.max(line.x+line.width,x+width);
+  line.x=Math.min(line.x,x);
+  line.y=Math.min(line.y,y);
+  line.width=Math.min(1-line.x,right-line.x);
+  line.height=Math.max(line.height,height);
+ }
+ const useful=lines
+  .filter(line=>line.width>.06)
+  .sort((a,b)=>b.width-a.width)
+  .slice(0,14)
+  .sort((a,b)=>a.y-b.y);
+ return useful;
+}
+
 function claimNarrativelyUsable(claim:Claim){
  if(!claim.action||!claimTextUseful(claim))return false;
  if(typeof claim.field_confidence!=='number')return true;
@@ -1021,22 +1055,14 @@ async function upload(uploaded:File){
  },[verification,claims,selected,select]);
 
  const processingStage=status==='Checking independent sources'?2:status==='Reading requested actions'?1:0;
- const processingTitle=
-  status==='Reading text from the image'?'Reading image':
-  status==='Reading text from the PDF'?'Reading PDF':
-  status==='Scanning the first page'?'Scanning PDF':
-  status==='Reading requested actions'?'Finding the requested action':
-  status==='Checking independent sources'?'Checking public sources':
-  status==='Preparing the image'?'Opening image':
-  status==='Opening the PDF'?'Opening PDF':
-  status||'Opening file';
- const processingDetail=
-  status==='Reading text from the image'?'Looking for the words and layout in your image.':
-  status==='Reading text from the PDF'?'Reading the text layer in your PDF.':
-  status==='Scanning the first page'?'The PDF has no usable text layer, so SEAL is reading its first page as an image.':
-  status==='Reading requested actions'?'The document is read. Finding the action you were asked to take.':
-  status==='Checking independent sources'?'Comparing supported details with independent public sources.':
-  'Preparing the file locally.';
+ const processingTitle=processingStage===2?'Resolve against public sources':processingStage===1?'Ground the requested action':'Map the document';
+ const processingTextRegionsVisible=useMemo(()=>file?.tokens?processingTextRegions(file.tokens):[],[file]);
+ const processingClaimRegions=useMemo(()=>claims
+  .filter(claim=>claim.page===1&&claim.source_bbox&&claimReliable(claim))
+  .slice(0,8)
+  .map(claim=>({id:claim.id,...claim.source_bbox!})),[claims]);
+ const processingRegionCount=processingTextRegionsVisible.length;
+ const processingActionCount=claims.filter(claim=>Boolean(claim.action)&&claimReliable(claim)).length;
 
  const renderTextLines=(lines:string[])=><div className="message-lines">{lines.map((line,index)=>{
   const claim=claims.find(candidate=>candidate.exact_source_text===line||line.includes(candidate.value));
@@ -1094,16 +1120,40 @@ async function upload(uploaded:File){
         onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
         onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
         {busy?
-         <span className="upload-process" role="status" aria-live="polite">
-          <span className={`upload-process-media ${uploadPreview?.kind==='pdf'?'is-pdf':''}`} data-testid="processing-preview">
+         <span className="upload-process" role="status" aria-live="polite" aria-label={processingTitle}>
+          <span className={`upload-process-media stage-${processingStage} ${uploadPreview?.kind==='pdf'?'is-pdf':''}`} data-testid="processing-preview">
            {uploadPreview?.kind==='image'
             ?<img src={uploadPreview.url} alt="Selected court message"/>
             :<span className="upload-pdf-preview" aria-hidden="true"><b>PDF</b><i/></span>}
+           <span className="process-registration" aria-hidden="true"><i/><i/><i/><i/></span>
+           {processingStage>=1&&processingTextRegionsVisible.map((region,index)=><span
+            className="process-text-region"
+            key={`text-${index}`}
+            style={{left:`${region.x*100}%`,top:`${region.y*100}%`,width:`${region.width*100}%`,height:`${Math.max(region.height,.008)*100}%`}}
+           />)}
+           {processingStage>=2&&processingClaimRegions.map((region,index)=><span
+            className="process-claim-region"
+            key={region.id}
+            data-index={String(index+1).padStart(2,'0')}
+            style={{left:`${region.x*100}%`,top:`${region.y*100}%`,width:`${region.width*100}%`,height:`${Math.max(region.height,.012)*100}%`}}
+           />)}
+           <span className="process-page-index" aria-hidden="true">01</span>
           </span>
           <span className="upload-process-body">
-           <span className="upload-process-label">{processingStage===2?'PUBLIC SOURCE CHECK':processingStage===1?'MESSAGE STRUCTURE':'ON THIS DEVICE'}</span>
+           <span className="process-kicker"><span>SEAL ANALYSIS</span><b>{String(processingStage+1).padStart(2,'0')} / 03</b></span>
            <strong>{processingTitle}</strong>
-           <small>{processingDetail}</small>
+           <span className="process-flow" aria-hidden="true">
+            <span className={`process-node ${processingStage===0?'is-current':processingStage>0?'is-complete':''}`}><i/><small>DOCUMENT</small></span>
+            <span className={`process-link ${processingStage>=1?'is-complete':''}`}><i/></span>
+            <span className={`process-node ${processingStage===1?'is-current':processingStage>1?'is-complete':''}`}><i/><small>ACTION</small></span>
+            <span className={`process-link ${processingStage>=2?'is-complete':''}`}><i/></span>
+            <span className={`process-node ${processingStage===2?'is-current':''}`}><i/><small>SOURCES</small></span>
+           </span>
+           <span className="process-readout">
+            {processingStage===0?<><b>LOCAL OCR</b><i/><span>layout + text</span></>:
+             processingStage===1?<><b>{processingRegionCount||'—'} REGIONS</b><i/><span>source-grounded extraction</span></>:
+             <><b>{processingActionCount||claims.length||'—'} ACTION{processingActionCount===1?'':'S'}</b><i/><span>independent resolution</span></>}
+           </span>
            {uploadPreview?.name&&<span className="upload-file-name" title={uploadPreview.name}>{uploadPreview.name}</span>}
           </span>
          </span>
@@ -1119,7 +1169,7 @@ async function upload(uploaded:File){
         <label className="ocr-language-control"><span>Image language</span><select value={ocrLanguage} onChange={event=>setOcrLanguage(event.target.value as OcrLanguage)}>{Object.entries(ocrLanguages).map(([code,label])=><option key={code} value={code}>{label}</option>)}</select></label>
         <button className="paste-mode-switch" type="button" onClick={()=>setPasteMode(true)}>Paste text instead <DesignChevron direction="right"/></button>
         <p className="privacy-note">Original file stays on this device. Extracted text may be sent for checking.</p>
-       </>:<p className="processing-footnote">Keep this tab open. The original file stays on this device; extracted text may be sent for checking.</p>}
+       </>:<p className="processing-footnote"><span>LOCAL FILE</span><span>Keep this tab open</span></p>}
       </>
       :
       <div className="paste-mode-panel">
