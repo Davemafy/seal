@@ -1,1 +1,47 @@
-[]
+[
+  {
+    "id": "feed-maryland-judiciary-news-e1dde7fcf",
+    "category": "fake-summons-arrest-threat",
+    "section": "court-message-scams",
+    "title": "Text scams about traffic violations at the District Court of Maryland",
+    "language": "English",
+    "ocrLanguage": "eng",
+    "jurisdiction": "Maryland",
+    "country": "United States",
+    "issuer": "Maryland Judiciary",
+    "sourceTitle": "Maryland Judiciary — Text scams about traffic violations at the District Court of Maryland",
+    "sourceUrl": "https://www.mdcourts.gov/media/news/2026/pr20260806",
+    "classification": "Confirmed scam example",
+    "visualNote": "Maryland Judiciary published this example as a scam warning. The original authority asset is shown above.",
+    "excerpt": "Government Relations and Public Affairs187 Harry S. Truman ParkwayAnnapolis, Maryland 21401 SCAM ALERT: Maryland Judiciary warns of text scams about traffic violations at the District Court of MarylandThe Maryland Judiciary is warning the public about a variet",
+    "preview": {
+      "type": "image",
+      "url": "https://www.mdcourts.gov/sites/default/files/import/media/news/2026/img/dc_traffic_scam_august26.png",
+      "alt": "Example of a spam text message"
+    },
+    "discoveredAt": "2026-09-27T11:19:18.359Z"
+  },
+  {
+    "id": "feed-maryland-judiciary-news-20f1e9df0",
+    "category": "fake-summons-arrest-threat",
+    "section": "court-message-scams",
+    "title": "Text scam about parking and toll violations in Baltimore City District Court",
+    "language": "English",
+    "ocrLanguage": "eng",
+    "jurisdiction": "Maryland",
+    "country": "United States",
+    "issuer": "Maryland Judiciary",
+    "sourceTitle": "Maryland Judiciary — Text scam about parking and toll violations in Baltimore City District Court",
+    "sourceUrl": "https://www.mdcourts.gov/media/news/2026/pr20260318",
+    "classification": "Confirmed scam example",
+    "visualNote": "Maryland Judiciary published this example as a scam warning. The original authority asset is shown above.",
+    "excerpt": "News Releases/News Item HomeFOR IMMEDIATE RELEASEMarch 18, 2026 Government Relations and Public Affairs187 Harry S. Truman ParkwayAnnapolis, Maryland 21401 Maryland Judiciary warns of new text scam about parking and toll violations in Baltimore City District C",
+    "preview": {
+      "type": "image",
+      "url": "https://www.mdcourts.gov/sites/default/files/import/media/news/images/dctollviolationscamtext.jpg",
+      "alt": "Example of a spam text message"
+    },
+    "sourcePublishedAt": "2026-03-18T00:00:00.000Z",
+    "discoveredAt": "2026-09-27T11:19:18.359Z"
+  }
+]
