@@ -7,6 +7,7 @@ import StoryPdfPage from './story-pdf-page';
 import {fixtures,type FixtureKey} from '@/lib/fixtures';
 import {fallbackExtract,claimsFromExtraction,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '@/lib/extract';
 import {readInBrowser,warmOcr,type BrowserDocument} from '@/lib/browser-file';
+import {clearOrphanedResultArtifacts,clearResultSession,persistResultSession,restoreResultSession} from '@/lib/result-session';
 import type {Claim,Extraction,Result,Verification} from '@/lib/types';
 import './workspace.css';
 
@@ -177,6 +178,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const storyPauseButton=useRef<HTMLButtonElement>(null);
  const initialRunStarted=useRef(false);
  const filePickerArmed=useRef(false);
+ const sourceBlobRef=useRef<Blob|null>(null);
  const input=useRef<HTMLInputElement>(null);
  const anchors=useRef<Record<string,HTMLElement|null>>({});
  const runId=useRef(0);
@@ -558,10 +560,44 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  },[syncStoryTime]);
 
  useEffect(()=>{
+  let cancelled=false;
   if(input.current)input.current.value='';
   filePickerArmed.current=false;
-  const timer=window.setTimeout(()=>setHydrated(true),0);
-  return()=>{clearTimeout(timer);if(storyCloseTimer.current)window.clearTimeout(storyCloseTimer.current)};
+
+  void (async()=>{
+   const caseId=new URLSearchParams(window.location.search).get('case');
+   const navigation=performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming|undefined;
+   const freshBrowseHandoff=Boolean(caseId&&navigation?.type!=='reload'&&navigation?.type!=='back_forward');
+
+   if(!freshBrowseHandoff){
+    const restored=await restoreResultSession();
+    if(cancelled){
+     if(restored?.browserFile)URL.revokeObjectURL(restored.browserFile.preview);
+     return;
+    }
+    if(restored){
+     initialRunStarted.current=true;
+     setText(restored.text);
+     setClaims(restored.claims);
+     setVerification(restored.verification);
+     setMode(restored.mode);
+     setExtractionMode(restored.extractionMode);
+     setSelected(restored.selected||restored.claims[0]?.id||'');
+     setRevealed(restored.claims.length);
+     setFile(restored.browserFile);
+     setReviewOffer('completed');
+    }else{
+     void clearOrphanedResultArtifacts().catch(()=>{});
+    }
+   }
+
+   if(!cancelled)setHydrated(true);
+  })();
+
+  return()=>{
+   cancelled=true;
+   if(storyCloseTimer.current)window.clearTimeout(storyCloseTimer.current);
+  };
  },[]);
 
  useEffect(()=>{
@@ -600,6 +636,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      const type=isPdf?'application/pdf':blob.type.startsWith('image/')?blob.type:'image/jpeg';
      const extension=isPdf?'pdf':type.includes('png')?'png':'jpg';
      const sourceFile=new File([blob],`${caseId}.${extension}`,{type});
+     sourceBlobRef.current=sourceFile;
      setStatus('Opening the source document');
      const doc=await readInBrowser(sourceFile,next=>setStatus(next));
      const analysisText=seededText||doc.text;
@@ -736,6 +773,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  function replayStory(){startStory()}
 
  function clear(){
+  clearResultSession();
+  sourceBlobRef.current=null;
   if(typeof window!=='undefined'&&(window.location.search||window.location.hash)){
    window.history.replaceState(null,'',window.location.pathname);
   }
@@ -751,7 +790,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  function submitPaste(){const value=draft.trim();if(!value)return;clear();setText(value);void run('SNAPSHOT',{text:value,file:null})}
 
 async function upload(uploaded:File){
-  clear();const uploadId=runId.current;setBusy(true);setStatus('Preparing your file');
+  clear();
+  sourceBlobRef.current=uploaded;
+  const uploadId=runId.current;setBusy(true);setStatus('Preparing your file');
   try{
    const doc=await readInBrowser(uploaded,next=>{if(runId.current===uploadId)setStatus(next)});
    if(runId.current!==uploadId){URL.revokeObjectURL(doc.preview);return}
@@ -844,7 +885,24 @@ async function upload(uploaded:File){
 
    const requested=chooseDecisionClaim(found,checked);
    const firstReliable=found.find(claimReliable);
-   setSelected(requested?.id||firstReliable?.id||'');
+   const selectedId=requested?.id||firstReliable?.id||'';
+   setSelected(selectedId);
+
+   void persistResultSession({
+    text:sourceText,
+    claims:found,
+    verification:checked,
+    mode:sourceMode,
+    extractionMode:extractor,
+    selected:selectedId,
+    file:sourceFile?{
+     kind:sourceFile.kind,
+     uncertain:sourceFile.uncertain,
+     sample:sourceFile.sample,
+     ocrConfidence:sourceFile.ocrConfidence,
+     unreadableFields:sourceFile.unreadableFields
+    }:undefined
+   },sourceFile?sourceBlobRef.current:null);
   }catch(e){
    if(runId.current===id)setError(e instanceof Error?e.message:'The source check could not finish.');
   }finally{
