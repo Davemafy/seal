@@ -290,6 +290,21 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   const next=(['summary','message','evidence','next'] as const)[index];
   setActiveResultSection(current=>current===next?current:next);
  },[]);
+
+ useLayoutEffect(()=>{
+  if(!verification)return;
+  const frame=window.requestAnimationFrame(()=>{
+   const carousel=resultCarouselRef.current;
+   if(!carousel)return;
+   carousel.scrollTo({left:0,behavior:'auto'});
+   carousel.querySelectorAll<HTMLElement>('.result-slide').forEach(slide=>{
+    slide.scrollTo({top:0,left:0,behavior:'auto'});
+   });
+   setActiveResultSection('summary');
+   if(window.location.hash)window.history.replaceState(null,'',window.location.pathname+window.location.search);
+  });
+  return()=>window.cancelAnimationFrame(frame);
+ },[verification,workspaceId]);
  const [reviewOffer,setReviewOffer]=useState<'idle'|'counting'|'skipped'|'watching'|'completed'>('idle');
  const [,setReviewCountdown]=useState(3);
  const [,setReviewOfferPaused]=useState(false);
