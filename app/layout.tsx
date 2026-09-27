@@ -12,8 +12,8 @@ const uberMove=localFont({
 });
 
 export const metadata:Metadata={
- title:'SEAL — The seal can be faked. The source can’t.',
- description:'Check claims on a court notice against independent official sources.',
+ title:'SEAL — Verify before you act.',
+ description:'See what a court message asks you to do, what independent public sources support, and what remains unverified.',
  icons:{
   icon:'/icon.svg',
   shortcut:'/icon.svg'
