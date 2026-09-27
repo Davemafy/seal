@@ -8,15 +8,16 @@ import PDFPreview from './pdf-preview';
 import StoryPdfPage from './story-pdf-page';
 import {fixtures,type FixtureKey} from '@/lib/fixtures';
 import {fallbackExtract,claimsFromExtraction,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '@/lib/extract';
-import {readInBrowser,warmOcr,ocrLanguages,type OcrLanguage,type BrowserDocument} from '@/lib/browser-file';
+import {readInBrowser,warmOcr,ocrLanguages,ocrLanguageForLocale,type OcrLanguage,type BrowserDocument} from '@/lib/browser-file';
 import {clearOrphanedResultArtifacts,clearResultSession,persistResultSession,restoreResultSession} from '@/lib/result-session';
 import {officialCourtDirectoryFor} from '@/lib/official-directories';
+import {detectDocumentContext,type DetectedDocumentLanguage} from '@/lib/document-context';
 import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
 import './workspace.css';
 
 type Mode='SNAPSHOT'|'LIVE';
 type WorkspaceRunStatus='idle'|'reading'|'verifying'|'done'|'error';
-type WorkspaceMeta={id:string;title:string;status:WorkspaceRunStatus};
+type WorkspaceMeta={id:string;title:string;status:WorkspaceRunStatus;language?:string;jurisdiction?:string};
 type SealWorkspaceProps={
  initialDemo?:boolean;
  initialText?:string;
@@ -222,6 +223,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [dragging,setDragging]=useState(false);
  const [pasteMode,setPasteMode]=useState(false);
  const [ocrLanguage,setOcrLanguage]=useState<OcrLanguage>('eng');
+ const [documentLanguage,setDocumentLanguage]=useState<DetectedDocumentLanguage|null>(null);
+ const [jurisdiction,setJurisdiction]=useState('');
  const [workspaceTitle,setWorkspaceTitle]=useState('New check');
  const [revealed,setRevealed]=useState(0);
  const [selected,setSelected]=useState('');
@@ -262,6 +265,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const replayButton=useRef<HTMLButtonElement>(null);
  const storyPauseButton=useRef<HTMLButtonElement>(null);
  const initialRunStarted=useRef(false);
+ const localeInitialized=useRef(false);
  const filePickerArmed=useRef(false);
  const sourceBlobRef=useRef<Blob|null>(null);
  const uploadPreviewRef=useRef<string|null>(null);
@@ -766,6 +770,13 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  },[]);
 
  useEffect(()=>{
+  if(!hydrated||localeInitialized.current)return;
+  localeInitialized.current=true;
+  const browserLocale=typeof navigator!=='undefined'?(navigator.languages?.[0]||navigator.language||'en'):'en';
+  setOcrLanguage(ocrLanguageForLocale(browserLocale));
+ },[hydrated]);
+
+ useEffect(()=>{
   if(!hydrated||busy||verification)return;
   const timer=window.setTimeout(()=>{
    void warmOcr(ocrLanguage).catch(()=>{});
@@ -952,6 +963,9 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   sourceBlobRef.current=null;
   if(uploadPreviewRef.current){URL.revokeObjectURL(uploadPreviewRef.current);uploadPreviewRef.current=null}
   setUploadPreview(null);
+  setDocumentLanguage(null);
+  setJurisdiction('');
+  setWorkspaceTitle('New check');
   if(typeof window!=='undefined'&&(window.location.search||window.location.hash)){
    window.history.replaceState(null,'',window.location.pathname);
   }
@@ -1000,6 +1014,9 @@ async function upload(uploaded:File){
   const sourceBrowse=Boolean(source?.browse);
   const curatedCaseId=source?.curatedCaseId;
   const sourceIsDemo=!sourceFile&&/^DEMO \/ (?:FICTIONAL NOTICE|SYNTHETIC MESSAGE)/.test(sourceText);
+  const sourceContext=detectDocumentContext(sourceText);
+  setDocumentLanguage(sourceContext.language);
+  if(sourceContext.jurisdiction)setJurisdiction(sourceContext.jurisdiction);
   activeRequestRef.current?.abort();
   const controller=new AbortController();
   activeRequestRef.current=controller;
@@ -1054,6 +1071,9 @@ async function upload(uploaded:File){
 
    if(runId.current!==id)return;
    setExtractionMode(extractor);
+   const routedDirectory=officialCourtDirectoryFor([sourceText,extraction.court_name,extraction.court_location].filter(Boolean).join('\n'))||sourceContext.officialDirectory;
+   const routedJurisdiction=routedDirectory?.jurisdiction||sourceContext.jurisdiction||cleanDisplayText(extraction.court_location);
+   if(routedJurisdiction)setJurisdiction(routedJurisdiction);
    if(extraction.court_name)setWorkspaceTitle(cleanDisplayText(extraction.court_name));
 
    // Curated cases use a source-checked transcript for analysis. OCR tokens from
@@ -1088,7 +1108,7 @@ async function upload(uploaded:File){
    const response=await fetch('/api/verify',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({claims:verifiable,court_name:routingCourt,jurisdiction_hint:'',mode:sourceMode,text:sourceText,curated_case_id:curatedCaseId}),
+    body:JSON.stringify({claims:verifiable,court_name:routingCourt,jurisdiction_hint:routedJurisdiction,mode:sourceMode,text:sourceText,curated_case_id:curatedCaseId}),
     signal:controller.signal
    });
    if(!response.ok)throw new Error('The source check could not finish. Try again.');
@@ -1160,8 +1180,8 @@ async function upload(uploaded:File){
   const courtTitle=claims.find(claim=>claim.type==='court'&&claimReliable(claim))?.value;
   const title=cleanDisplayText(courtTitle||workspaceTitle||'New check');
   const state:WorkspaceRunStatus=error?'error':verification?'done':busy?(status==='Checking independent sources'?'verifying':'reading'):'idle';
-  onWorkspaceMeta(workspaceId,{title,status:state});
- },[workspaceId,workspaceTitle,claims,error,verification,busy,status,onWorkspaceMeta]);
+  onWorkspaceMeta(workspaceId,{title,status:state,language:documentLanguage?.label,jurisdiction});
+ },[workspaceId,workspaceTitle,claims,error,verification,busy,status,documentLanguage?.label,jurisdiction,onWorkspaceMeta]);
 
   const processingStage=status==='Checking independent sources'?2:status==='Reading requested actions'?1:0;
  const processingTitle=processingStage===2?'Resolve against public sources':processingStage===1?'Ground the requested action':'Map the document';
