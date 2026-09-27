@@ -1000,6 +1000,9 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
     }
     if(restored){
      initialRunStarted.current=true;
+     const restoredContext=detectDocumentContext(restored.text);
+     const restoredCourt=restored.claims.find(claim=>claim.type==='court'&&cleanDisplayText(claim.value))?.value;
+     const registryTitle=workspaces.find(item=>item.id===workspaceId)?.title||'';
      setText(restored.text);
      setClaims(restored.claims);
      setVerification(restored.verification);
@@ -1007,6 +1010,9 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
      setExtractionMode(restored.extractionMode);
      setSelected(restored.selected||restored.claims[0]?.id||'');
      setRevealed(restored.claims.length);
+     setDocumentLanguage(restoredContext.language);
+     setJurisdiction(restoredContext.jurisdiction);
+     setWorkspaceTitle(cleanDisplayText(restoredCourt||registryTitle||'Court message'));
      setFile(restored.browserFile);
      sourceBlobRef.current=restored.sourceBlob;
      setStoryArtifactReady(!restored.browserFile);
