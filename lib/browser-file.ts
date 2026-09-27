@@ -35,6 +35,7 @@ export async function readInBrowser(file:File,onStatus:(status:string)=>void=()=
  if(file.size>16_000_000)throw new Error('Maximum file size is 16 MB.');
  if(!['application/pdf','image/jpeg','image/png'].includes(file.type))throw new Error('Choose a PDF, JPG, or PNG.');
  const preview=URL.createObjectURL(file);
+ try{
  if(file.type==='application/pdf'){
   onStatus('Opening the PDF');
   const pdfjs=await import('pdfjs-dist');pdfjs.GlobalWorkerOptions.workerSrc='/pdf.worker.min.mjs';
@@ -83,6 +84,10 @@ export async function readInBrowser(file:File,onStatus:(status:string)=>void=()=
  const image=new Image();image.src=preview;await image.decode();
  onStatus('Reading text from the image');
  return {...await ocr(normalizeForOcr(image),language),preview,kind:'image',sample:false};
+ }catch(error){
+  URL.revokeObjectURL(preview);
+  throw error;
+ }
 }
 
 function normalizeForOcr(image:HTMLImageElement){
