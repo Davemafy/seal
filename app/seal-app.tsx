@@ -1112,7 +1112,7 @@ async function upload(uploaded:File){
      <p>See what it asks you to do, what the court can confirm, and where to check next.</p>
     </div>
 
-    <div className={`intake ${pasteMode?'is-paste-mode':'is-upload-mode'}`}>
+    <div className={`intake ${pasteMode?'is-paste-mode':'is-upload-mode'} ${busy?'is-processing-intake':''}`}>
      {!pasteMode?
       <>
        <button className={`upload-row ${dragging?'is-dragging':''} ${busy?'is-busy':''}`} data-testid="upload-file" type="button" disabled={busy||!hydrated} aria-busy={busy} onClick={()=>{filePickerArmed.current=true;input.current?.click()}}
@@ -1140,18 +1140,26 @@ async function upload(uploaded:File){
           <span className="upload-process-body">
            <strong>{processingTitle}</strong>
            <span className="process-flow" aria-hidden="true">
-            <span className={`process-node ${processingStage===0?'is-current':processingStage>0?'is-complete':''}`}><i/><small>Read</small></span>
+            <span className={`process-node ${processingStage===0?'is-current':processingStage>0?'is-complete':''}`}><i><span/></i><small>Read</small></span>
             <span className={`process-link ${processingStage>=1?'is-complete':''}`}><i/></span>
-            <span className={`process-node ${processingStage===1?'is-current':processingStage>1?'is-complete':''}`}><i/><small>Ground</small></span>
+            <span className={`process-node ${processingStage===1?'is-current':processingStage>1?'is-complete':''}`}><i><span/></i><small>Ground</small></span>
             <span className={`process-link ${processingStage>=2?'is-complete':''}`}><i/></span>
-            <span className={`process-node ${processingStage===2?'is-current':''}`}><i/><small>Verify</small></span>
+            <span className={`process-node ${processingStage===2?'is-current':''}`}><i><span/></i><small>Verify</small></span>
            </span>
            <span className="process-readout">
-            {processingStage===0?<span>Reading on this device</span>:
-             processingStage===1?<span>{processingRegionCount?processingRegionCount+' text regions mapped':'Text regions mapped'}</span>:
-             <span>{processingActionCount?processingActionCount+' grounded action'+(processingActionCount===1?'':'s'):'Grounded details ready'}</span>}
+            <span className="process-readout-main">
+             {processingStage===0?'Reading locally':
+              processingStage===1?(processingRegionCount?processingRegionCount+' text regions mapped':'Text regions mapped'):
+              (processingActionCount?processingActionCount+' grounded action'+(processingActionCount===1?'':'s'):'Grounded details ready')}
+            </span>
+            <span className="process-readout-detail">
+             {processingStage===0?(uploadPreview?.kind==='pdf'?'PDF':'Image')+' · '+ocrLanguages[ocrLanguage]:
+              processingStage===1?'Exact source spans':
+              'Independent sources'}
+            </span>
            </span>
            {uploadPreview?.name&&<span className="upload-file-name" title={uploadPreview.name}>{uploadPreview.name}</span>}
+           <span className="process-device-note"><i aria-hidden="true"><b/><b/></i><span>Original stays on this device</span></span>
           </span>
          </span>
          :<span className="upload-group">
@@ -1166,7 +1174,7 @@ async function upload(uploaded:File){
         <label className="ocr-language-control"><span>Image language</span><select value={ocrLanguage} onChange={event=>setOcrLanguage(event.target.value as OcrLanguage)}>{Object.entries(ocrLanguages).map(([code,label])=><option key={code} value={code}>{label}</option>)}</select></label>
         <button className="paste-mode-switch" type="button" onClick={()=>setPasteMode(true)}>Paste text instead <DesignChevron direction="right"/></button>
         <p className="privacy-note">Original file stays on this device. Extracted text may be sent for checking.</p>
-       </>:<p className="processing-footnote"><i aria-hidden="true"/><span>File stays on this device</span></p>}
+       </>}
       </>
       :
       <div className="paste-mode-panel">

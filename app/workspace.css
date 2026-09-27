@@ -1540,41 +1540,49 @@
 }
 
 
-/* Processing instrument — visualizes real pipeline state and grounded regions. */
-.upload-row.is-busy{
- min-height:292px;
+/* Processing instrument — SEAL fold language + real pipeline state. */
+.intake.is-processing-intake{
+ min-height:0;
  padding:20px;
+ border-radius:10px;
+ background:#f3f3f3
+}
+.upload-row.is-busy{
+ min-height:258px;
+ padding:0;
  align-items:stretch;
- border:1px solid #d4d4d4;
- background:#fff;
- cursor:wait
+ border:0;
+ border-radius:0;
+ background:transparent;
+ cursor:wait;
+ overflow:visible
 }
 .upload-process{
  width:100%;
  display:grid;
- grid-template-columns:minmax(150px,.82fr) minmax(240px,1.18fr);
- gap:24px;
+ grid-template-columns:minmax(152px,.82fr) minmax(240px,1.18fr);
+ gap:26px;
  align-items:stretch
 }
 .upload-process-media{
  position:relative;
  min-height:238px;
  overflow:hidden;
- border:1px solid #d7d7d7;
- border-radius:5px;
- background:#f4f4f4
+ border:1px solid #d5d5d5;
+ border-radius:6px;
+ background:#fff
 }
 .upload-process-media>img{
  width:100%;
  height:100%;
  display:block;
  object-fit:contain;
- background:#f7f7f7
+ background:#f8f8f8
 }
 .upload-process-media.is-pdf{
  display:grid;
  place-items:center;
- background:#f7f7f7
+ background:#fafafa
 }
 .upload-pdf-preview{
  width:82px;
@@ -1594,29 +1602,29 @@
  display:block;width:42px;height:2px;background:#cfcfcf;
  box-shadow:0 -9px 0 #dedede,0 -18px 0 #dedede,0 -27px 0 #dedede
 }
-.process-registration{position:absolute;inset:8px;pointer-events:none}
-.process-registration i{position:absolute;width:12px;height:12px}
-.process-registration i:nth-child(1){left:0;top:0;border-left:1px solid rgba(0,0,0,.45);border-top:1px solid rgba(0,0,0,.45)}
-.process-registration i:nth-child(2){right:0;top:0;border-right:1px solid rgba(0,0,0,.45);border-top:1px solid rgba(0,0,0,.45)}
-.process-registration i:nth-child(3){right:0;bottom:0;border-right:1px solid rgba(0,0,0,.45);border-bottom:1px solid rgba(0,0,0,.45)}
-.process-registration i:nth-child(4){left:0;bottom:0;border-left:1px solid rgba(0,0,0,.45);border-bottom:1px solid rgba(0,0,0,.45)}
+.process-registration{position:absolute;inset:9px;pointer-events:none}
+.process-registration i{position:absolute;width:15px;height:15px}
+.process-registration i:nth-child(1){left:0;top:0;border-left:1px solid rgba(0,0,0,.48);border-top:1px solid rgba(0,0,0,.48)}
+.process-registration i:nth-child(2){right:0;top:0;border-right:1px solid rgba(0,0,0,.48);border-top:1px solid rgba(0,0,0,.48)}
+.process-registration i:nth-child(3){right:0;bottom:0;border-right:1px solid rgba(0,0,0,.48);border-bottom:1px solid rgba(0,0,0,.48)}
+.process-registration i:nth-child(4){left:0;bottom:0;border-left:1px solid rgba(0,0,0,.48);border-bottom:1px solid rgba(0,0,0,.48)}
 .process-text-region{
  position:absolute;
  z-index:2;
  min-height:2px;
- border:1px solid rgba(17,17,17,.35);
- background:rgba(255,255,255,.06);
+ border:1px solid rgba(17,17,17,.34);
+ background:rgba(255,255,255,.04);
  pointer-events:none;
  animation:process-region-in .22s ease-out both
 }
-.process-text-region:nth-of-type(3n){border-color:rgba(17,17,17,.2)}
+.process-text-region:nth-of-type(3n){border-color:rgba(17,17,17,.18)}
 .process-claim-region{
  position:absolute;
  z-index:3;
  min-width:10px;
  min-height:7px;
  border:1.5px solid #111;
- background:rgba(255,255,255,.08);
+ background:rgba(255,255,255,.07);
  pointer-events:none;
  animation:process-claim-in .25s ease-out both
 }
@@ -1630,14 +1638,14 @@
  background:#111
 }
 @keyframes process-region-in{from{opacity:0}to{opacity:1}}
-@keyframes process-claim-in{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:scale(1)}}
+@keyframes process-claim-in{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:scale(1)}}
 
 .upload-process-body{
  min-width:0;
  display:flex;
  flex-direction:column;
  justify-content:center;
- padding:4px 2px
+ padding:2px 0
 }
 .upload-process-body>strong{
  display:block;
@@ -1648,28 +1656,45 @@
  font-weight:540;
  letter-spacing:-.018em
 }
+
+/* Three-stage rail: dots stay; SEAL's folded two-bar mark is the active/completed signal. */
 .process-flow{
  display:grid;
- grid-template-columns:auto minmax(20px,1fr) auto minmax(20px,1fr) auto;
+ grid-template-columns:auto minmax(26px,1fr) auto minmax(26px,1fr) auto;
  align-items:start;
  gap:0;
- margin-top:28px
+ margin-top:27px
 }
 .process-node{
- min-width:48px;
+ min-width:46px;
  display:grid;
  justify-items:center;
- gap:7px;
- color:#a0a0a0
+ gap:8px;
+ color:#9b9b9b
 }
 .process-node>i{
  position:relative;
- width:18px;height:18px;
+ width:20px;
+ height:20px;
  display:block;
- border:1px solid #c8c8c8;
+ border:1px solid #c7c7c7;
  border-radius:50%;
- background:#fff
+ background:#fff;
+ transition:border-color .18s ease,box-shadow .18s ease
 }
+.process-node>i>span,
+.process-node>i>span::after{
+ position:absolute;
+ display:block;
+ content:"";
+ width:8px;
+ height:3px;
+ border-radius:1px;
+ background:#111;
+ opacity:0
+}
+.process-node>i>span{left:6px;top:5px;transform:skewX(-28deg)}
+.process-node>i>span::after{left:-1px;top:6px;transform:skewX(28deg)}
 .process-node>small{
  font-size:9px;
  line-height:12px;
@@ -1678,137 +1703,169 @@
 }
 .process-node.is-complete,.process-node.is-current{color:#111}
 .process-node.is-complete>i,.process-node.is-current>i{border-color:#111}
-.process-node.is-complete>i::after{
- content:"";
- position:absolute;
- left:5px;top:5px;
- width:6px;height:6px;
- border-radius:50%;
- background:#111
+.process-node.is-complete>i>span,.process-node.is-current>i>span,
+.process-node.is-complete>i>span::after,.process-node.is-current>i>span::after{opacity:1}
+.process-node.is-complete>i>span,
+.process-node.is-complete>i>span::after{opacity:.72}
+.process-node.is-current>i{
+ animation:seal-fold-breathe 1.55s ease-out infinite
 }
-.process-node.is-current>i::before,
-.process-node.is-current>i::after{
- content:"";
- position:absolute;
- inset:4px;
- border-radius:50%;
- background:#111
-}
-.process-node.is-current>i::after{
- inset:-5px;
- border:1px solid rgba(0,0,0,.16);
- background:transparent;
- animation:process-node-pulse 1.55s ease-out infinite
-}
-@keyframes process-node-pulse{
- 0%{transform:scale(.72);opacity:0}
- 35%{opacity:1}
- 100%{transform:scale(1.25);opacity:0}
+@keyframes seal-fold-breathe{
+ 0%,100%{box-shadow:0 0 0 0 rgba(0,0,0,0)}
+ 45%{box-shadow:0 0 0 5px rgba(0,0,0,.07)}
 }
 .process-link{
  position:relative;
- height:18px;
+ height:20px;
  display:block
 }
 .process-link::before{
  content:"";
  position:absolute;
- left:0;right:0;top:8px;
+ left:0;right:0;top:10px;
  height:1px;
- background:#ddd
+ background:#d7d7d7
 }
 .process-link>i{
  position:absolute;
- left:0;top:7px;
- width:12px;height:3px;
- background:#111;
- opacity:0
+ left:-2px;
+ top:6px;
+ width:10px;
+ height:8px;
+ opacity:0;
+ animation:none
 }
+.process-link>i::before,
+.process-link>i::after{
+ content:"";
+ position:absolute;
+ width:7px;
+ height:2px;
+ border-radius:1px;
+ background:#111
+}
+.process-link>i::before{left:1px;top:1px;transform:skewX(-28deg)}
+.process-link>i::after{left:0;top:5px;transform:skewX(28deg)}
 .process-link.is-complete::before{background:#111}
 .process-link.is-complete>i{
  opacity:1;
- animation:process-signal 1.25s ease-in-out infinite
+ animation:seal-fold-travel 1.3s ease-in-out infinite
 }
-@keyframes process-signal{
- from{transform:translateX(-6px);opacity:0}
- 25%{opacity:1}
- to{transform:translateX(calc(100% + 12px));opacity:0}
+@keyframes seal-fold-travel{
+ from{left:-3px;opacity:0}
+ 18%{opacity:1}
+ to{left:calc(100% - 8px);opacity:0}
 }
 
 .process-readout{
- min-height:30px;
  display:flex;
- align-items:center;
- margin-top:24px;
+ align-items:baseline;
+ justify-content:space-between;
+ gap:12px;
+ margin-top:22px;
  padding-top:11px;
- border-top:1px solid #e7e7e7;
- color:#6f6f6f;
+ border-top:1px solid #dedede
+}
+.process-readout-main{
+ min-width:0;
+ color:#343434;
  font-size:11px;
  line-height:16px;
- letter-spacing:0
+ font-weight:520
+}
+.process-readout-detail{
+ flex:0 0 auto;
+ color:#8a8a8a;
+ font-size:10px;
+ line-height:15px
 }
 .upload-file-name{
  display:block;
  max-width:100%;
- margin-top:8px;
+ margin-top:7px;
  overflow:hidden;
  color:#999;
- font-size:10px;
+ font-size:9.5px;
  line-height:14px;
  text-overflow:ellipsis;
  white-space:nowrap
 }
-.processing-footnote{
+.process-device-note{
  display:flex;
  align-items:center;
  gap:7px;
- margin:10px 2px 0;
- color:#777;
+ margin-top:auto;
+ padding-top:16px;
+ color:#767676;
  font-size:10px;
- line-height:15px;
- font-weight:500;
- letter-spacing:0
+ line-height:15px
 }
-.processing-footnote>i{
- width:6px;
- height:6px;
+.process-device-note>i{
+ position:relative;
+ width:12px;
+ height:10px;
  display:block;
- border:1px solid #777;
- border-radius:50%
+ flex:0 0 12px
 }
+.process-device-note>i b{
+ position:absolute;
+ width:8px;
+ height:3px;
+ border-radius:1px;
+ background:#666
+}
+.process-device-note>i b:first-child{left:3px;top:0;transform:skewX(-28deg)}
+.process-device-note>i b:last-child{left:1px;bottom:0;transform:skewX(28deg)}
 
 @media(max-width:599px){
- .upload-row.is-busy{min-height:0;padding:14px}
+ .entry-shell.is-processing{padding-bottom:26px}
+ .intake.is-processing-intake{padding:16px}
+ .upload-row.is-busy{min-height:0}
  .upload-process{
-  grid-template-columns:118px minmax(0,1fr);
-  gap:16px
+  grid-template-columns:124px minmax(0,1fr);
+  gap:18px
  }
- .upload-process-media{min-height:176px}
- .upload-process-body{justify-content:flex-start;padding-top:4px}
+ .upload-process-media{min-height:186px}
+ .upload-process-body{justify-content:flex-start;padding-top:1px}
  .upload-process-body>strong{font-size:18px;line-height:23px}
- .process-flow{margin-top:22px}
- .process-node{min-width:34px;gap:5px}
- .process-node>i{width:16px;height:16px}
- .process-node>small{font-size:8px;letter-spacing:0}
- .process-node.is-complete>i::after{left:4px;top:4px}
+ .process-flow{
+  grid-template-columns:auto minmax(18px,1fr) auto minmax(18px,1fr) auto;
+  margin-top:20px
+ }
+ .process-node{min-width:35px;gap:6px}
+ .process-node>i{width:18px;height:18px}
+ .process-node>i>span{left:5px;top:4px}
+ .process-node>small{font-size:8px}
+ .process-link{height:18px}
+ .process-link::before{top:9px}
+ .process-link>i{top:5px}
  .process-readout{
-  margin-top:18px;
-  padding-top:9px;
-  font-size:9.5px;
+  align-items:flex-start;
+  flex-direction:column;
+  gap:1px;
+  margin-top:16px;
+  padding-top:9px
+ }
+ .process-readout-main{font-size:10px;line-height:14px}
+ .process-readout-detail{font-size:9px;line-height:13px}
+ .upload-file-name{margin-top:5px;font-size:8.5px;line-height:12px}
+ .process-device-note{
+  margin-top:12px;
+  padding-top:0;
+  font-size:9px;
   line-height:13px
  }
- .upload-file-name{margin-top:6px;font-size:8.5px}
- .processing-footnote{font-size:9px;line-height:13px}
 }
 
 @media(max-width:380px){
- .upload-process{grid-template-columns:104px minmax(0,1fr);gap:12px}
- .upload-process-media{min-height:164px}
+ .intake.is-processing-intake{padding:14px}
+ .upload-process{grid-template-columns:108px minmax(0,1fr);gap:14px}
+ .upload-process-media{min-height:174px}
  .process-node>small{display:none}
 }
 
 @media(prefers-reduced-motion:reduce){
- .process-node.is-current>i::after,
+ .process-node.is-current>i,
  .process-link.is-complete>i,
  .process-text-region,
  .process-claim-region{animation:none}
