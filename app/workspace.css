@@ -3946,3 +3946,34 @@
   max-width:62%;
  }
 }
+
+
+/* Compressed result viewport repair — 2026-09-27 */
+@media(min-width:901px) and (max-width:1080px){
+ .result-slide-summary{
+  padding:34px 36px!important;
+ }
+ .result-slide-summary .decision{
+  width:100%!important;
+ }
+ .result-slide-summary .decision-overview{
+  grid-template-columns:minmax(0,1fr)!important;
+  gap:24px!important;
+ }
+ .result-slide-summary .decision-copy{
+  max-width:620px!important;
+ }
+ .result-slide-summary .decision-visual{
+  width:min(100%,420px)!important;
+  max-width:420px!important;
+ }
+ .result-carousel,
+ .result-masthead,
+ .result-chapters{
+  width:100%!important;
+  max-width:100%!important;
+ }
+ .record-layout{
+  grid-template-columns:minmax(250px,.38fr) minmax(0,.62fr)!important;
+ }
+}
