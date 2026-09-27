@@ -245,19 +245,26 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [handoffCopied,setHandoffCopied]=useState(false);
  const [questionCopied,setQuestionCopied]=useState(false);
  const workspaceRootRef=useRef<HTMLElement>(null);
+ const resultCarouselRef=useRef<HTMLDivElement>(null);
  const sectionId=(base:string)=>workspaceId==='primary'?base:`${base}-${workspaceId}`;
  const jumpToResultSection=useCallback((event:React.MouseEvent<HTMLAnchorElement>,section:'summary'|'message'|'evidence'|'next',targetBase:string)=>{
   event.preventDefault();
+  const carousel=resultCarouselRef.current;
+  const slide=carousel?.querySelector<HTMLElement>(`[data-result-section="${section}"]`);
+  if(!carousel||!slide)return;
   setActiveResultSection(section);
-  const id=workspaceId==='primary'?targetBase:`${targetBase}-${workspaceId}`;
-  const node=workspaceRootRef.current?.querySelector<HTMLElement>(`#${CSS.escape(id)}`);
-  if(!node)return;
   const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const offset=window.innerWidth<=900?92:24;
-  const top=Math.max(0,node.getBoundingClientRect().top+window.scrollY-offset);
-  window.scrollTo({top,behavior:reduce?'auto':'smooth'});
+  carousel.scrollTo({left:slide.offsetLeft,behavior:reduce?'auto':'smooth'});
+  const id=workspaceId==='primary'?targetBase:`${targetBase}-${workspaceId}`;
   window.history.replaceState(null,'',`#${id}`);
  },[workspaceId]);
+ const syncResultCarousel=useCallback((event:React.UIEvent<HTMLDivElement>)=>{
+  const carousel=event.currentTarget;
+  if(!carousel.clientWidth)return;
+  const index=Math.max(0,Math.min(3,Math.round(carousel.scrollLeft/carousel.clientWidth)));
+  const next=(['summary','message','evidence','next'] as const)[index];
+  setActiveResultSection(current=>current===next?current:next);
+ },[]);
  const [reviewOffer,setReviewOffer]=useState<'idle'|'counting'|'skipped'|'watching'|'completed'>('idle');
  const [,setReviewCountdown]=useState(3);
  const [,setReviewOfferPaused]=useState(false);
@@ -1702,8 +1709,9 @@ async function upload(uploaded:File){
      </div>
     </div>}
 
-    <div className="review-hero">
-     <div className="decision-pane result-screen result-screen-summary" id={sectionId('review-summary')}>
+    <div ref={resultCarouselRef} className="result-carousel" data-testid="result-carousel" onScroll={syncResultCarousel}>
+     <div className="review-hero">
+     <div className="decision-pane result-screen result-screen-summary result-slide" data-result-section="summary" id={sectionId('review-summary')}>
       {!verification?
        <div className={`precheck ${error?'has-error':''}`}>
         <h1>{busy?'Checking this message':error?(file?'We couldn’t check this image.':'We couldn’t check this message.'):'Ready to check this message.'}</h1>
@@ -1741,11 +1749,6 @@ async function upload(uploaded:File){
          <div><span>The case</span><strong>{matterStatus}</strong></div>
         </div>}
 
-        <nav className="decision-shortcuts" aria-label="Result shortcuts">
-         <a href={`#${sectionId('original-message')}`} onClick={event=>jumpToResultSection(event,'message','original-message')}>View original</a>
-         <a href={`#${sectionId('source-checks')}`} onClick={event=>jumpToResultSection(event,'evidence','source-checks')}>See evidence</a>
-        </nav>
-
         <details className="decision-details">
          <summary><span>Why this result</span><SealGuideIcon/></summary>
          <div className="decision-details-body">
@@ -1778,7 +1781,7 @@ async function upload(uploaded:File){
        </div>}
      </div>
 
-     <div className="document-zone result-screen result-screen-original" id={sectionId('original-message')}>
+     <div className="document-zone result-screen result-screen-original result-slide" data-result-section="message" id={sectionId('original-message')}>
       <div className="document-heading"><span>Original message</span><span>{file?.kind==='pdf'?'PDF':file?'Image':'Text'}</span></div>
       <div className={`document-paper ${!file?'is-text-document':''}`}>
        {isActionDemo?
@@ -1820,7 +1823,8 @@ async function upload(uploaded:File){
      </div>
     </div>
 
-    {ready&&verification&&<section className="source-resolution result-screen result-screen-evidence" id={sectionId('source-checks')} aria-label="What SEAL found">
+    <section className="result-slide result-slide-evidence" data-result-section="evidence" aria-label="Evidence panel">
+{ready&&verification&&<section className="source-resolution" id={sectionId('source-checks')} aria-label="What SEAL found">
      <div className="section-heading evidence-heading">
       <h2>{ui('independentEvidence')}</h2>
      </div>
@@ -1894,71 +1898,10 @@ async function upload(uploaded:File){
 
      <p className="resolution-disclaimer">{curatedSignal?'This finding is about this published example only. It does not label other messages.':'These sources help with the check, but they still cannot tell us who sent the message.'}</p>
     </section>}
-
-    {ready&&verification&&caseReality&&<section className="user-actions result-screen result-screen-resolve" id={sectionId('user-actions')} aria-label="What to do next">
-     <div className="user-actions-heading"><span>NEXT</span><h2>What to do next</h2><p>Keep the message, but use a court site or support service you opened yourself for anything you do next.</p></div>
-     <div className="journey-block case-reality-block" data-testid="case-reality-check">
-      <div className="journey-label">The case</div>
-      <div className="journey-content">
-       <h3>{translatedResult.caseRealityTitle||caseReality.title}</h3><p>{translatedResult.caseRealityDetail||caseReality.detail}</p>
-       <dl className="case-reality-facts"><div><dt>Court claimed</dt><dd>{caseReality.court}</dd></div><div><dt>Case/reference</dt><dd>{caseReality.reference||'Not verified'}</dd></div></dl>
-       {verification.contact?.website?<a className="journey-link" href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open the court website independently</a>:officialLookup&&<a className="journey-link" href={officialLookup.url} target="_blank" rel="noopener noreferrer">{officialLookup.label}</a>}
-       {officialLookup&&<small className="journey-note">{officialLookup.note}</small>}
-      </div>
-     </div>
-     {obligations.length>0&&<div className="journey-block obligation-block" data-testid="obligation-map">
-      <div className="journey-label">What the message asks</div>
-      <div className="journey-content"><div className="obligation-list">{obligations.map(item=><div className="obligation-row" key={item.id}><div><strong>{cleanDisplayText(item.text)}</strong>{item.deadline&&<small>Time/date stated: {item.deadline}</small>}</div><span className={item.status==='MISMATCH'?'is-conflict':item.status==='MATCH'?'is-match':''}>{item.statusLabel}</span></div>)}</div><p className="journey-note">Dates and instructions here come from the message unless a row explicitly says it matches a public source.</p></div>
-     </div>}
-     <details className="journey-details" data-testid="plain-language-explanation">
-      <summary><span>Explain this notice</span><small>Plain language + translation</small><SealGuideIcon/></summary>
-      <div className="journey-details-body">
-       <div className="explanation-controls"><small>Explanation follows Display language: {DISPLAY_LANGUAGES[displayLocale]} · detected document language: {documentLanguage?.label||'Unknown'}{documentLanguage?.confidence==='low'?' · low confidence':''}</small></div>
-       {displayedExplanation&&<div className="plain-explanation" aria-live="polite"><h3>{displayedExplanation.title}</h3><p>{displayedExplanation.summary}</p></div>}
-       <p className="journey-note">This explains what SEAL extracted and verified. It is not legal advice.</p>
-      </div>
-     </details>
-     <details className="journey-details" data-testid="resolution-help">
-      <summary><span>Get help resolving this</span><small>Court, recovery, and legal-aid paths</small><SealGuideIcon/></summary>
-      <div className="journey-details-body support-paths">
-       <div className="support-path"><strong>{translatedResult.supportHaventTitle||'I haven’t acted yet'}</strong><p>{translatedResult.supportHaventCopy||'Use the independently sourced court route above before calling, paying, scanning, replying, or appearing because of this message.'}</p></div>
-       <div className="support-path"><strong>{translatedResult.supportPaidTitle||'I already paid'}</strong><p>{translatedResult.supportPaidCopy||'Contact your bank or payment provider through its official app, card, or website and report the transaction immediately.'}</p>{justiceSupport?.recovery&&<a className="journey-link" href={justiceSupport.recovery.url} target="_blank" rel="noopener noreferrer">{justiceSupport.recovery.label}</a>}</div>
-       <div className="support-path"><strong>{translatedResult.supportSharedTitle||'I shared personal information'}</strong><p>{translatedResult.supportSharedCopy||'Do not send anything else through the message. Use an official recovery service if one is available for this jurisdiction.'}</p>{justiceSupport?.recovery&&<a className="journey-link" href={justiceSupport.recovery.url} target="_blank" rel="noopener noreferrer">{justiceSupport.recovery.label}</a>}</div>
-       <div className="support-path"><strong>{translatedResult.supportLegalTitle||'I need legal help'}</strong><p>{translatedResult.supportLegalCopy||'Use an official legal-aid service to understand your options for a real legal matter.'}</p>{justiceSupport?.legalAid?<a className="journey-link" href={justiceSupport.legalAid.url} target="_blank" rel="noopener noreferrer">{justiceSupport.legalAid.label}</a>:<span className="support-unavailable">No reviewed legal-aid directory is linked for this jurisdiction yet.</span>}</div>
-       <div className="handoff-pack" data-testid="handoff-pack">
-        <span>{translatedResult.handoffEyebrow||'Take this with you'}</span>
-        <strong>{translatedResult.handoffTitle||'Ask the court without relying on the message'}</strong>
-        <p>{translatedResult.handoffCopy||'Use this wording with an independently sourced court channel. It carries the case reference and the exact instructions SEAL recovered without treating them as genuine.'}</p>
-        <blockquote>{translatedResult.courtQuestionScript||courtQuestionScript}</blockquote>
-        <div className="handoff-actions">
-         <button type="button" onClick={()=>void copyCourtQuestion()}>{questionCopied?'Copied':translatedResult.copyQuestion||'Copy what to ask'}</button>
-         <button type="button" onClick={()=>void copyHandoff()}>{handoffCopied?'Record copied':translatedResult.copyRecord||'Copy verification record'}</button>
-         <button type="button" onClick={saveHandoff}>{translatedResult.saveRecord||'Save verification record'}</button>
-        </div>
-        <small>{translatedResult.handoffNote||'The saved record includes verification states, source links, and source-check timestamps. It does not include a legal opinion.'}</small>
-       </div>
-      </div>
-     </details>
-    </section>}
-
-    {ready&&verification?.contact&&<section className="contact-section" id={verification.safe_action?undefined:sectionId('next-step')} aria-label="Court contact from an official source">
-     <div className="court-contact">
-      <div>
-       <h3>Court contact from an official source</h3>
-       <p>{verification.contact.name||(verification.resolver_id==='connecticut'?'District of Connecticut Jury Office':'Court contact')}</p>
-      </div>
-      <div>
-       <a className="contact-phone" href={`tel:${verification.contact.phone}`}>{verification.contact.phone}</a>
-       <div className="contact-actions">
-        <a href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open court website</a>
-        <button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button>
-       </div>
-       <p className="contact-source">This contact came from the court source, not from the message. {verification.contact.source.source_mode==='SNAPSHOT'?'Source snapshot checked '+new Date(verification.contact.source.checked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.':'Live source checked '+new Date(verification.contact.source.checked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.'}</p>
-      </div>
-     </div>
-    </section>}
-
-    {ready&&verification&&<section className="check-metadata-section" aria-label="Check details">
+     <details className="record-disclosure">
+      <summary><span>Checked details</span><small>Field-by-field evidence and technical record</small><SealGuideIcon/></summary>
+      <div className="record-disclosure-body">
+{ready&&verification&&<section className="check-metadata-section" aria-label="Check details">
      <details className="check-record-details" data-testid="check-details">
       <summary><span>Check details</span><SealGuideIcon/></summary>
       <dl>
@@ -1972,8 +1915,7 @@ async function upload(uploaded:File){
       <p>Original files stay in this browser. Source quotations remain attached to the check so the result can be inspected later.</p>
      </details>
     </section>}
-
-    {ready&&!directCourtUnavailable&&<section className="record-section" id={sectionId('checked-details')}>
+{ready&&!directCourtUnavailable&&<section className="record-section" id={sectionId('checked-details')}>
      <div className="section-heading record-heading">
       <h2>What was checked</h2>
       <p>Inspect each extracted detail and the source evidence available for it.</p>
@@ -2045,7 +1987,74 @@ async function upload(uploaded:File){
 
      {isDemo&&<button className="replay-button" onClick={()=>run('SNAPSHOT')}>Replay check</button>}
     </section>}
+      </div>
+     </details>
+    </section>
 
+    <section className="result-slide result-slide-resolve" data-result-section="next" aria-label="Resolve panel">
+{ready&&verification&&caseReality&&<section className="user-actions" id={sectionId('user-actions')} aria-label="What to do next">
+     <div className="user-actions-heading"><span>NEXT</span><h2>What to do next</h2><p>Keep the message, but use a court site or support service you opened yourself for anything you do next.</p></div>
+     <div className="journey-block case-reality-block" data-testid="case-reality-check">
+      <div className="journey-label">The case</div>
+      <div className="journey-content">
+       <h3>{translatedResult.caseRealityTitle||caseReality.title}</h3><p>{translatedResult.caseRealityDetail||caseReality.detail}</p>
+       <dl className="case-reality-facts"><div><dt>Court claimed</dt><dd>{caseReality.court}</dd></div><div><dt>Case/reference</dt><dd>{caseReality.reference||'Not verified'}</dd></div></dl>
+       {verification.contact?.website?<a className="journey-link" href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open the court website independently</a>:officialLookup&&<a className="journey-link" href={officialLookup.url} target="_blank" rel="noopener noreferrer">{officialLookup.label}</a>}
+       {officialLookup&&<small className="journey-note">{officialLookup.note}</small>}
+      </div>
+     </div>
+     {obligations.length>0&&<div className="journey-block obligation-block" data-testid="obligation-map">
+      <div className="journey-label">What the message asks</div>
+      <div className="journey-content"><div className="obligation-list">{obligations.map(item=><div className="obligation-row" key={item.id}><div><strong>{cleanDisplayText(item.text)}</strong>{item.deadline&&<small>Time/date stated: {item.deadline}</small>}</div><span className={item.status==='MISMATCH'?'is-conflict':item.status==='MATCH'?'is-match':''}>{item.statusLabel}</span></div>)}</div><p className="journey-note">Dates and instructions here come from the message unless a row explicitly says it matches a public source.</p></div>
+     </div>}
+     <details className="journey-details" data-testid="plain-language-explanation">
+      <summary><span>Explain this notice</span><small>Plain language + translation</small><SealGuideIcon/></summary>
+      <div className="journey-details-body">
+       <div className="explanation-controls"><small>Explanation follows Display language: {DISPLAY_LANGUAGES[displayLocale]} · detected document language: {documentLanguage?.label||'Unknown'}{documentLanguage?.confidence==='low'?' · low confidence':''}</small></div>
+       {displayedExplanation&&<div className="plain-explanation" aria-live="polite"><h3>{displayedExplanation.title}</h3><p>{displayedExplanation.summary}</p></div>}
+       <p className="journey-note">This explains what SEAL extracted and verified. It is not legal advice.</p>
+      </div>
+     </details>
+     <details className="journey-details" data-testid="resolution-help">
+      <summary><span>Get help resolving this</span><small>Court, recovery, and legal-aid paths</small><SealGuideIcon/></summary>
+      <div className="journey-details-body support-paths">
+       <div className="support-path"><strong>{translatedResult.supportHaventTitle||'I haven’t acted yet'}</strong><p>{translatedResult.supportHaventCopy||'Use the independently sourced court route above before calling, paying, scanning, replying, or appearing because of this message.'}</p></div>
+       <div className="support-path"><strong>{translatedResult.supportPaidTitle||'I already paid'}</strong><p>{translatedResult.supportPaidCopy||'Contact your bank or payment provider through its official app, card, or website and report the transaction immediately.'}</p>{justiceSupport?.recovery&&<a className="journey-link" href={justiceSupport.recovery.url} target="_blank" rel="noopener noreferrer">{justiceSupport.recovery.label}</a>}</div>
+       <div className="support-path"><strong>{translatedResult.supportSharedTitle||'I shared personal information'}</strong><p>{translatedResult.supportSharedCopy||'Do not send anything else through the message. Use an official recovery service if one is available for this jurisdiction.'}</p>{justiceSupport?.recovery&&<a className="journey-link" href={justiceSupport.recovery.url} target="_blank" rel="noopener noreferrer">{justiceSupport.recovery.label}</a>}</div>
+       <div className="support-path"><strong>{translatedResult.supportLegalTitle||'I need legal help'}</strong><p>{translatedResult.supportLegalCopy||'Use an official legal-aid service to understand your options for a real legal matter.'}</p>{justiceSupport?.legalAid?<a className="journey-link" href={justiceSupport.legalAid.url} target="_blank" rel="noopener noreferrer">{justiceSupport.legalAid.label}</a>:<span className="support-unavailable">No reviewed legal-aid directory is linked for this jurisdiction yet.</span>}</div>
+       <div className="handoff-pack" data-testid="handoff-pack">
+        <span>{translatedResult.handoffEyebrow||'Take this with you'}</span>
+        <strong>{translatedResult.handoffTitle||'Ask the court without relying on the message'}</strong>
+        <p>{translatedResult.handoffCopy||'Use this wording with an independently sourced court channel. It carries the case reference and the exact instructions SEAL recovered without treating them as genuine.'}</p>
+        <blockquote>{translatedResult.courtQuestionScript||courtQuestionScript}</blockquote>
+        <div className="handoff-actions">
+         <button type="button" onClick={()=>void copyCourtQuestion()}>{questionCopied?'Copied':translatedResult.copyQuestion||'Copy what to ask'}</button>
+         <button type="button" onClick={()=>void copyHandoff()}>{handoffCopied?'Record copied':translatedResult.copyRecord||'Copy verification record'}</button>
+         <button type="button" onClick={saveHandoff}>{translatedResult.saveRecord||'Save verification record'}</button>
+        </div>
+        <small>{translatedResult.handoffNote||'The saved record includes verification states, source links, and source-check timestamps. It does not include a legal opinion.'}</small>
+       </div>
+      </div>
+     </details>
+    </section>}
+{ready&&verification?.contact&&<section className="contact-section" id={verification.safe_action?undefined:sectionId('next-step')} aria-label="Court contact from an official source">
+     <div className="court-contact">
+      <div>
+       <h3>Court contact from an official source</h3>
+       <p>{verification.contact.name||(verification.resolver_id==='connecticut'?'District of Connecticut Jury Office':'Court contact')}</p>
+      </div>
+      <div>
+       <a className="contact-phone" href={`tel:${verification.contact.phone}`}>{verification.contact.phone}</a>
+       <div className="contact-actions">
+        <a href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open court website</a>
+        <button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button>
+       </div>
+       <p className="contact-source">This contact came from the court source, not from the message. {verification.contact.source.source_mode==='SNAPSHOT'?'Source snapshot checked '+new Date(verification.contact.source.checked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.':'Live source checked '+new Date(verification.contact.source.checked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.'}</p>
+      </div>
+     </div>
+    </section>}
+    </section>
+    </div>
    </section>}
 
   <input ref={input} hidden type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" onChange={event=>{
