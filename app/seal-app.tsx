@@ -1714,7 +1714,7 @@ async function upload(uploaded:File){
     <button className="icon-control rail-icon-control rail-new-check" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} data-tooltip={ui('newCheck')} onClick={onNewWorkspace}><SealUiIcon name="add"/></button>
    </div>
    <nav className="rail-primary-nav" aria-label="Primary">
-    <Link className="rail-nav-item" href="/browse"><SealUiIcon name="browse"/><span>{ui('browse')}</span></Link>
+    <Link className="rail-nav-item" href="/browse"><span>{ui('browse')}</span></Link>
    </nav>
    <div className="rail-section-head"><span>Checks</span><small>{workspaces.length}</small></div>
    <div className="rail-check-list" aria-label="Open checks">
