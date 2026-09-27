@@ -62,7 +62,7 @@ test('official sample survives result review, refresh, and replay',async({page})
  await page.getByTestId('play-evidence-review').click();
  await expect(page.getByTestId('evidence-review')).toBeVisible({timeout:15000});
  await expect(page.getByRole('dialog',{name:'SEAL verification review'})).toBeVisible();
- await page.getByRole('button',{name:'Full evidence'}).click();
+ await page.getByRole('button',{name:'Back to result'}).click();
  await expect(page.getByTestId('evidence-review')).toHaveCount(0,{timeout:5000});
 
  await page.reload();
@@ -72,7 +72,7 @@ test('official sample survives result review, refresh, and replay',async({page})
 
  await page.getByTestId('play-evidence-review').click();
  await expect(page.getByTestId('evidence-review')).toBeVisible({timeout:15000});
- await page.getByRole('button',{name:'Full evidence'}).click();
+ await page.getByRole('button',{name:'Back to result'}).click();
  await expect(page.getByTestId('evidence-review')).toHaveCount(0,{timeout:5000});
  assertNoRuntimeErrors();
 });
@@ -128,7 +128,7 @@ test('mobile result has no horizontal overflow and keeps the review accessible',
 
  await page.getByTestId('play-evidence-review').click();
  await expect(page.getByTestId('evidence-review')).toBeVisible({timeout:15000});
- await page.getByRole('button',{name:'Full evidence'}).click();
+ await page.getByRole('button',{name:'Back to result'}).click();
  await expect(page.getByTestId('evidence-review')).toHaveCount(0,{timeout:5000});
  assertNoRuntimeErrors();
 });
@@ -166,7 +166,7 @@ test('cinematic review stays fixed to the viewport after the result page has scr
  expect(Math.abs(box!.x)).toBeLessThanOrEqual(1);
  const viewport=page.viewportSize();
  expect(Math.abs(box!.width-(viewport?.width||box!.width))).toBeLessThanOrEqual(1);
- await page.getByRole('button',{name:'Full evidence'}).click();
+ await page.getByRole('button',{name:'Back to result'}).click();
  assertNoRuntimeErrors();
 });
 
