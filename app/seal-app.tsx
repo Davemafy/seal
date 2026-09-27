@@ -742,7 +742,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
      setStoryArtifactReady(!restored.browserFile);
      setReviewOffer('completed');
     }else{
-     void clearOrphanedResultArtifacts().catch(()=>{});
+     void clearOrphanedResultArtifacts(workspaceId).catch(()=>{});
     }
    }
 
@@ -753,7 +753,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    cancelled=true;
    if(storyCloseTimer.current)window.clearTimeout(storyCloseTimer.current);
   };
- },[]);
+ },[workspaceId]);
 
  useEffect(()=>{
   if(!hydrated||localeInitialized.current)return;
@@ -1754,18 +1754,21 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const [registryReady,setRegistryReady]=useState(false);
 
  useEffect(()=>{
-  try{
-   const raw=window.sessionStorage.getItem(WORKSPACE_LIST_KEY);
-   if(raw){
-    const parsed=JSON.parse(raw) as {active?:string;items?:WorkspaceMeta[]};
-    const items=Array.isArray(parsed.items)?parsed.items.filter(item=>item&&typeof item.id==='string').slice(0,8):[];
-    if(items.length){
-     setWorkspaces(items.map(item=>({...item,status:item.status==='reading'||item.status==='verifying'?'idle':item.status})));
-     setActiveWorkspace(items.some(item=>item.id===parsed.active)?parsed.active!:items[0].id);
+  const timer=window.setTimeout(()=>{
+   try{
+    const raw=window.sessionStorage.getItem(WORKSPACE_LIST_KEY);
+    if(raw){
+     const parsed=JSON.parse(raw) as {active?:string;items?:WorkspaceMeta[]};
+     const items=Array.isArray(parsed.items)?parsed.items.filter(item=>item&&typeof item.id==='string').slice(0,8):[];
+     if(items.length){
+      setWorkspaces(items.map(item=>({...item,status:item.status==='reading'||item.status==='verifying'?'idle':item.status})));
+      setActiveWorkspace(items.some(item=>item.id===parsed.active)?parsed.active!:items[0].id);
+     }
     }
-   }
-  }catch{}
-  setRegistryReady(true);
+   }catch{}
+   setRegistryReady(true);
+  },0);
+  return()=>window.clearTimeout(timer);
  },[]);
 
  useEffect(()=>{
