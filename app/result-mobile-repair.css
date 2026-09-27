@@ -281,3 +281,166 @@
 
  .seal-app .result-slide-resolve{padding:28px 18px 40px!important}
 }
+
+
+/* Cinematic review mobile QA repair — full viewport, controlled hierarchy. */
+@media(max-width:599px){
+ .story-overlay{
+  z-index:10000!important;
+  inset:0!important;
+  padding:0!important;
+  background:#090909!important
+ }
+ .story-player{
+  width:100vw!important;
+  height:100dvh!important;
+  max-width:none!important;
+  max-height:none!important;
+  grid-template-rows:52px minmax(0,1fr) 60px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:#090909!important;
+  box-shadow:none!important
+ }
+ .story-topbar{
+  min-height:52px!important;
+  padding:0 16px!important;
+  border-bottom:1px solid rgba(255,255,255,.08)!important;
+  background:#090909!important
+ }
+ .story-brand{
+  color:#fff!important;
+  font-size:15px!important;
+  line-height:20px!important;
+  font-weight:700!important
+ }
+ .story-brand img{width:18px!important;height:18px!important}
+ .story-topbar button{
+  min-height:32px!important;
+  color:#d7d7d7!important;
+  font-size:12px!important;
+  line-height:18px!important
+ }
+ .story-stage{background:#090909!important}
+ .story-document-region{inset:4% 5%!important}
+ .story-pdf-wrap img,
+ .story-image-wrap img{
+  max-width:92%!important;
+  max-height:88%!important;
+  box-shadow:none!important
+ }
+
+ .story-claim-anchor{
+  left:18px!important;
+  right:18px!important;
+  width:auto!important;
+  padding-left:10px!important
+ }
+ .story-claim-anchor span{
+  margin-bottom:4px!important;
+  font-size:11px!important;
+  line-height:16px!important
+ }
+ .story-claim-anchor strong{
+  font-size:20px!important;
+  line-height:26px!important;
+  font-weight:650!important;
+  letter-spacing:-.005em!important
+ }
+
+ .story-source-region{
+  left:18px!important;
+  right:18px!important;
+  bottom:5%!important;
+  width:auto!important;
+  height:40%!important;
+  padding:14px 0 0!important;
+  overflow:hidden!important
+ }
+ .story-source-panel>span{
+  margin-bottom:5px!important;
+  font-size:11px!important;
+  line-height:16px!important
+ }
+ .story-source-panel strong{
+  font-size:20px!important;
+  line-height:26px!important;
+  letter-spacing:-.005em!important
+ }
+ .story-source-panel p{
+  display:-webkit-box!important;
+  -webkit-box-orient:vertical!important;
+  -webkit-line-clamp:3!important;
+  overflow:hidden!important;
+  margin-top:8px!important;
+  font-size:13px!important;
+  line-height:19px!important
+ }
+ .story-source-panel a{
+  margin-top:10px!important;
+  font-size:12px!important;
+  line-height:18px!important
+ }
+
+ .story-verdict-panel{
+  width:calc(100% - 40px)!important
+ }
+ .story-verdict-panel strong{
+  font-size:27px!important;
+  line-height:34px!important;
+  letter-spacing:-.012em!important
+ }
+
+ .story-action-panel{
+  left:18px!important;
+  right:18px!important;
+  bottom:6%!important;
+  width:auto!important
+ }
+ .story-action-panel>span{
+  margin-bottom:6px!important;
+  font-size:11px!important;
+  line-height:16px!important
+ }
+ .story-action-panel strong{
+  font-size:28px!important;
+  line-height:34px!important;
+  letter-spacing:-.015em!important
+ }
+ .story-action-panel p{
+  margin-top:10px!important;
+  font-size:13px!important;
+  line-height:19px!important
+ }
+ .story-action-panel small{
+  margin-top:12px!important;
+  font-size:12px!important;
+  line-height:18px!important
+ }
+ .story-final-actions{margin-top:16px!important}
+ .story-final-actions a{
+  min-height:48px!important;
+  padding:12px 16px!important;
+  border-radius:8px!important;
+  font-size:14px!important;
+  line-height:20px!important
+ }
+
+ .story-transport{
+  min-height:60px!important;
+  grid-template-columns:42px minmax(0,1fr)!important;
+  gap:10px!important;
+  padding:0 14px!important;
+  border-top:1px solid rgba(255,255,255,.08)!important;
+  background:#0b0b0b!important
+ }
+ .story-play-toggle{
+  width:36px!important;
+  min-width:36px!important;
+  height:36px!important;
+  padding:0!important;
+  border-radius:6px!important
+ }
+ .story-timeline{height:30px!important}
+ .story-chapter-buttons button{width:18px!important;height:30px!important}
+}
