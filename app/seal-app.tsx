@@ -2567,7 +2567,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
     </header>
 
     <div className="onboarding-progress" aria-label={`Step ${onboardingStep+1} of 3`}>
-     {[0,1,2].map(step=><span className={step===onboardingStep?'is-active':step<onboardingStep?'is-complete':''} key={step}>{step+1}</span>)}
+     {[0,1,2].map(step=><span className={step===onboardingStep?'is-active':step<onboardingStep?'is-complete':''} key={step}/>)}
     </div>
 
     <div className="onboarding-stage" key={onboardingStep}>
