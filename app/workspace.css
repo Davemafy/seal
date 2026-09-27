@@ -6491,3 +6491,60 @@
  .entry-motion-rotor,.entry-motion-blade{animation:none!important}
  .entry-motion-blade{transform:scaleY(.9)!important;opacity:.72!important}
 }
+
+
+/* Entry kinetic containment — premium object, never page decoration. */
+@media(min-width:901px){
+ .entry-motion{
+  width:248px!important;
+  height:248px!important;
+  margin:54px 0 0 12px!important;
+  overflow:hidden!important;
+  border-radius:50%!important;
+  opacity:.74!important;
+  isolation:isolate!important;
+  -webkit-mask-image:radial-gradient(circle at 50% 50%,#000 0 72%,rgba(0,0,0,.9) 79%,transparent 96%)!important;
+  mask-image:radial-gradient(circle at 50% 50%,#000 0 72%,rgba(0,0,0,.9) 79%,transparent 96%)!important
+ }
+ .entry-motion::before{
+  inset:25%!important;
+  opacity:.55!important;
+  filter:blur(12px)!important;
+  transform:translateY(7px) scale(.94)!important
+ }
+ .entry-motion svg{
+  overflow:hidden!important;
+  contain:paint!important
+ }
+ .entry-motion-field{opacity:.48!important}
+ .entry-motion-orbit-ring{
+  stroke:rgba(0,0,0,.04)!important
+ }
+ .entry-motion-rotor{
+  animation-duration:42s!important
+ }
+ .entry-motion-blade{
+  opacity:.58!important;
+  animation-duration:9.8s!important
+ }
+ .entry-motion-blade-wrap.is-soft .entry-motion-blade{opacity:.34!important}
+ .entry-motion-blade-wrap.is-deep .entry-motion-blade{opacity:.68!important}
+ .entry-motion-blade-edge{
+  opacity:.24!important;
+  stroke:rgba(255,255,255,.42)!important
+ }
+ .entry-motion-aperture-ring{
+  stroke:rgba(0,0,0,.08)!important
+ }
+ .entry-motion-aperture{
+  stroke:rgba(0,0,0,.22)!important;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.045))!important
+ }
+}
+@media(min-width:901px) and (max-width:1180px){
+ .entry-motion{
+  width:216px!important;
+  height:216px!important;
+  margin:44px 0 0 8px!important
+ }
+}
