@@ -2227,7 +2227,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   if(workspaceMotionTimer.current)window.clearTimeout(workspaceMotionTimer.current);
   setWorkspaceMotion({id,fromId:activeWorkspace,direction});
   setActiveWorkspace(id);
-  workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),520);
+  workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),720);
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
  },[activeWorkspace]);
 
@@ -2255,7 +2255,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   if(workspaceMotionTimer.current)window.clearTimeout(workspaceMotionTimer.current);
   setWorkspaceMotion({id,fromId:activeWorkspace,direction:'forward'});
   setActiveWorkspace(id);
-  workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),520);
+  workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),720);
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
  },[]);
 
@@ -2281,7 +2281,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
     if(workspaceMotionTimer.current)window.clearTimeout(workspaceMotionTimer.current);
     setWorkspaceMotion({id:next.id,direction:index>=remaining.length?'backward':'forward'});
     setActiveWorkspace(next.id);
-    workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),520);
+    workspaceMotionTimer.current=window.setTimeout(()=>setWorkspaceMotion(null),720);
    }
   }
   toast.success('Check removed');
