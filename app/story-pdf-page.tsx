@@ -5,9 +5,6 @@ import {useEffect,useRef,useState} from 'react';
 type FocusBox={x:number;y:number;width:number;height:number};
 type Props={url:string;focusBox?:FocusBox;onReady?:()=>void;preloadOnly?:boolean};
 
-const previewCache=new Map<string,string>();
-const previewJobs=new Map<string,Promise<string>>();
-
 async function restoreInvisibleText(page:any,context:CanvasRenderingContext2D,scale:number){
  const content=await page.getTextContent();
  const horizontal=content.items.filter((item:any)=>'str' in item&&/[A-Za-z0-9]/.test(item.str)&&Math.abs(item.transform[1])<.01&&item.height>5);
@@ -34,71 +31,81 @@ async function restoreInvisibleText(page:any,context:CanvasRenderingContext2D,sc
  context.restore();
 }
 
-function renderFirstPage(url:string){
- const cached=previewCache.get(url);
- if(cached)return Promise.resolve(cached);
- const pending=previewJobs.get(url);
- if(pending)return pending;
-
- const job=(async()=>{
-  let loadingTask:any;
-  let documentHandle:any;
-  try{
-   const pdfjs=await import('pdfjs-dist');
-   pdfjs.GlobalWorkerOptions.workerSrc='/pdf.worker.min.mjs';
-   loadingTask=pdfjs.getDocument({url,standardFontDataUrl:'/standard_fonts/',disableFontFace:true});
-   documentHandle=await loadingTask.promise;
-   const page=await documentHandle.getPage(1);
-   const viewport=page.getViewport({scale:1.8});
-   const canvas=document.createElement('canvas');
-   canvas.width=viewport.width;canvas.height=viewport.height;
-   const context=canvas.getContext('2d');
-   if(!context)throw new Error('Canvas unavailable');
-   await page.render({canvas,canvasContext:context,viewport}).promise;
-   await restoreInvisibleText(page,context,1.8);
-   const dataUrl=canvas.toDataURL('image/png');
-   previewCache.set(url,dataUrl);
-   return dataUrl;
-  }finally{
-   if(documentHandle){
-    try{await documentHandle.destroy()}catch{}
-   }else if(loadingTask){
-    try{await loadingTask.destroy()}catch{}
-   }
+async function renderFirstPage(url:string){
+ let loadingTask:any;
+ let documentHandle:any;
+ let objectUrl='';
+ try{
+  const pdfjs=await import('pdfjs-dist');
+  pdfjs.GlobalWorkerOptions.workerSrc='/pdf.worker.min.mjs';
+  loadingTask=pdfjs.getDocument({url,standardFontDataUrl:'/standard_fonts/',disableFontFace:true});
+  documentHandle=await loadingTask.promise;
+  const page=await documentHandle.getPage(1);
+  const base=page.getViewport({scale:1});
+  const mobile=typeof window!=='undefined'&&window.matchMedia('(max-width: 599px)').matches;
+  const maxPixels=mobile?900_000:1_500_000;
+  const scale=Math.min(1.45,Math.sqrt(maxPixels/(base.width*base.height)));
+  const viewport=page.getViewport({scale});
+  const canvas=document.createElement('canvas');
+  canvas.width=Math.max(1,Math.round(viewport.width));
+  canvas.height=Math.max(1,Math.round(viewport.height));
+  const context=canvas.getContext('2d');
+  if(!context)throw new Error('Canvas unavailable');
+  await page.render({canvas,canvasContext:context,viewport}).promise;
+  await restoreInvisibleText(page,context,scale);
+  const blob=await new Promise<Blob>((resolve,reject)=>{
+   canvas.toBlob(value=>value?resolve(value):reject(new Error('Could not encode preview.')),'image/jpeg',.86);
+  });
+  objectUrl=URL.createObjectURL(blob);
+  page.cleanup();
+  canvas.width=1;canvas.height=1;
+  return objectUrl;
+ }catch(error){
+  if(objectUrl)URL.revokeObjectURL(objectUrl);
+  throw error;
+ }finally{
+  if(documentHandle){
+   try{await documentHandle.destroy()}catch{}
+  }else if(loadingTask){
+   try{await loadingTask.destroy()}catch{}
   }
- })();
-
- previewJobs.set(url,job);
- void job.finally(()=>previewJobs.delete(url)).catch(()=>{});
- return job;
+ }
 }
 
 export default function StoryPdfPage({url,focusBox,onReady,preloadOnly=false}:Props){
- const [preview,setPreview]=useState(()=>previewCache.get(url)||'');
+ const [preview,setPreview]=useState('');
  const [error,setError]=useState(false);
  const readyCallback=useRef(onReady);
  readyCallback.current=onReady;
 
  useEffect(()=>{
-  let mounted=true;
-  setError(false);
-  const cached=previewCache.get(url);
-  if(cached){
-   setPreview(cached);
+  if(preloadOnly){
    readyCallback.current?.();
-   return()=>{mounted=false};
+   return;
   }
-  void renderFirstPage(url).then(dataUrl=>{
-   if(!mounted)return;
-   setPreview(dataUrl);
+
+  let mounted=true;
+  let created='';
+  setPreview('');
+  setError(false);
+
+  void renderFirstPage(url).then(next=>{
+   created=next;
+   if(!mounted){URL.revokeObjectURL(next);return}
+   setPreview(next);
    readyCallback.current?.();
   }).catch(()=>{if(mounted)setError(true)});
-  return()=>{mounted=false};
- },[url]);
+
+  return()=>{
+   mounted=false;
+   if(created)URL.revokeObjectURL(created);
+  };
+ },[url,preloadOnly]);
 
  if(preloadOnly)return null;
 
  return <div className="story-pdf-wrap" style={{transformOrigin:focusBox?`${(focusBox.x+focusBox.width/2)*100}% ${(focusBox.y+focusBox.height/2)*100}%`:'50% 50%'}}>
+  {!preview&&!error&&<span className="story-pdf-loading">Opening document…</span>}
   {preview&&<img data-story-artifact src={preview} alt="Your uploaded PDF, first page"/>}
   {focusBox&&preview&&<span className="story-highlight"/>}
   {error&&<span className="story-pdf-error">PDF preview unavailable. The checked text remains available in Full evidence.</span>}
