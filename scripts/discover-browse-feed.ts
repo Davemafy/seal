@@ -18,7 +18,6 @@ const now=new Date().toISOString();
 
 const curatorSchema=z.object({
  publish:z.boolean(),
- title:z.string().min(4).max(110),
  visualNote:z.string().min(10).max(260),
  excerpt:z.string().min(10).max(300),
  category:z.enum(['jury-duty-payment-demand','fake-summons-arrest-threat','personal-information','court-payment-fee','official-scam-guidance']),
@@ -51,6 +50,24 @@ const matchesTerms=(value:string,terms:string[])=>{
  const lower=value.toLowerCase();
  return terms.some(term=>lower.includes(term.toLowerCase()));
 };
+const compactTitle=(value:string,source:BrowseDiscoverySource)=>{
+ let title=normalize(value)
+  .replace(/^(?:SCAM ALERT:\s*)/i,'')
+  .replace(/^Maryland Judiciary warns of (?:new )?/i,'')
+  .replace(/\s+(?:FOR IMMEDIATE RELEASE).*$/i,'')
+  .trim();
+ if(/^UNITED STATES DISTRICT COURT$/i.test(title))title='Jury and court-related scam warning';
+ const words=title.split(' ');
+ if(title.length>96){
+  let clipped='';
+  for(const word of words){
+   if((clipped+' '+word).trim().length>96)break;
+   clipped=(clipped+' '+word).trim();
+  }
+  title=clipped;
+ }
+ return title||source.sourceTitlePrefix;
+};
 const userAgent='SEAL/1.0 official-source discovery (+https://github.com/Davemafy/seal)';
 
 async function fetchSafe(url:string,accept:string){
@@ -71,9 +88,9 @@ function publishedDateFromHtml(html:string){
   if(!Number.isNaN(parsed.valueOf()))return parsed.toISOString();
  }
  const text=normalize($('body').text());
- const match=text.match(/\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+20\d{2}\b/i);
+ const match=text.match(/FOR IMMEDIATE RELEASE\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(20\d{2})/i);
  if(match){
-  const parsed=new Date(match[0]);
+  const parsed=new Date(`${match[1]} ${match[2]}, ${match[3]}`);
   if(!Number.isNaN(parsed.valueOf()))return parsed.toISOString();
  }
  return undefined;
@@ -100,7 +117,7 @@ async function verifyImage(url:string,source:BrowseDiscoverySource){
 function choosePageImage(html:string,pageUrl:string,source:BrowseDiscoverySource){
  const $=load(html);
  const candidates=$('main img, article img, .content img, #content img, img').toArray();
- return candidates
+ const best=candidates
   .map(node=>{
    const src=$(node).attr('src')||$(node).attr('data-src')||'';
    if(!src)return null;
@@ -111,12 +128,13 @@ function choosePageImage(html:string,pageUrl:string,source:BrowseDiscoverySource
    const hay=`${alt} ${url}`.toLowerCase();
    let score=0;
    if(/scam|spam|text|message|jury|warrant|notice|qr|fraud/.test(hay))score+=4;
-   if(/logo|seal|header|footer|icon|social|banner/.test(hay))score-=5;
+   if(/logo|seal|header|footer|icon|social|banner|\bhome\b/.test(hay))score-=6;
    if(/\.svg(?:\?|$)/i.test(url))score-=3;
    return {url,alt:alt||`${source.issuer} published source image`,score};
   })
   .filter((value):value is {url:string;alt:string;score:number}=>Boolean(value))
   .sort((a,b)=>b.score-a.score)[0];
+ return best&&best.score>=2?best:undefined;
 }
 
 async function readCandidate(url:string,source:BrowseDiscoverySource,contextTitle:string):Promise<Candidate|null>{
@@ -170,14 +188,16 @@ async function discoverFromSource(source:BrowseDiscoverySource){
   let url='';
   try{url=new URL(href,source.indexUrl).toString()}catch{return}
   if(!hostAllowed(url,source))return;
+  const anchor=normalize($(node).text());
   const context=normalize([
-   $(node).text(),
+   anchor,
    $(node).closest('tr,li,article,p,.views-row,.field-content').text()
   ].join(' '));
   if(!matchesTerms(context,source.includeTerms))return;
   const canonical=canonicalUrl(url);
   if(canonical===canonicalUrl(source.indexUrl))return;
-  links.set(canonical,context.slice(0,180));
+  const titleHint=anchor.length>=12&&!/^(?:view|read more|details|download)$/i.test(anchor)?anchor:context;
+  links.set(canonical,titleHint.slice(0,180));
  });
  return [...links.entries()].slice(0,24);
 }
@@ -192,14 +212,13 @@ async function modelCurate(candidate:Candidate){
   type:'object',additionalProperties:false,
   properties:{
    publish:{type:'boolean'},
-   title:{type:'string'},
    visualNote:{type:'string'},
    excerpt:{type:'string'},
    category:{type:'string',enum:['jury-duty-payment-demand','fake-summons-arrest-threat','personal-information','court-payment-fee','official-scam-guidance']},
    confidence:{type:'number'},
    reason:{type:'string'}
   },
-  required:['publish','title','visualNote','excerpt','category','confidence','reason']
+  required:['publish','visualNote','excerpt','category','confidence','reason']
  };
  const response=await fetch(base+'/chat/completions',{
   method:'POST',
@@ -221,11 +240,9 @@ async function modelCurate(candidate:Candidate){
 }
 
 function fallbackCopy(candidate:Candidate){
- const title=normalize(candidate.title).slice(0,110);
  const scam=candidate.source.classification==='Confirmed scam example';
  return {
   publish:true,
-  title,
   visualNote:scam
    ?`${candidate.source.issuer} published this example as a scam warning. The original authority asset is shown above.`
    :`${candidate.source.issuer} published this official warning. SEAL preserves the source asset and its provenance.`,
@@ -281,17 +298,18 @@ try{
    if(!curated)continue;
 
    const id=`feed-${slug(source.id)}-${createHash('sha256').update(canonical).digest('hex').slice(0,9)}`;
+   const displayTitle=compactTitle(candidate.title,source);
    found.push({
     id,
     category:curated.category,
     section:source.section,
-    title:curated.title,
+    title:displayTitle,
     language:source.language,
     ocrLanguage:source.ocrLanguage,
     jurisdiction:source.jurisdiction,
     country:source.country,
     issuer:source.issuer,
-    sourceTitle:`${source.sourceTitlePrefix} — ${curated.title}`,
+    sourceTitle:`${source.sourceTitlePrefix} — ${displayTitle}`,
     sourceUrl:url,
     classification:source.classification,
     visualNote:curated.visualNote,
