@@ -1,5 +1,5 @@
-import FilmExperience from "./film-experience";
+import {redirect} from 'next/navigation';
 
-export default function SealFilmPage() {
-  return <FilmExperience />;
+export default function SealFilmPage(){
+ redirect('/');
 }
