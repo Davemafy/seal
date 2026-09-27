@@ -139,8 +139,8 @@ test('Browse ranks high-signal cases first and only exposes verified runnable ex
  await expect(page.getByRole('heading',{name:'Browse real cases'})).toBeVisible();
  const titles=await page.locator('.case-card h2').allTextContents();
  expect(titles.slice(0,3)).toEqual([
-  'Traffic default notice with QR payment',
   'Court text with a fake hearing and payment route',
+  'Public notice to interested parties',
   'Sample federal jury summons'
  ]);
  await expect(page.getByRole('link',{name:'Run in SEAL'})).toHaveCount(3);
