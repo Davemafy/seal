@@ -92,8 +92,8 @@ You must appear at the court registry on October 14, 2026.
 Call +91 11 5555 0199 to confirm your attendance.`);
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await expect(page.getByRole('heading',{name:'Verify through the official court system'})).toBeVisible();
- await expect(page.getByTestId('two-risk-result')).toContainText('Not independently verified');
+ await expect(page.getByTestId('result-status')).toBeVisible();
+ await expect(page.getByTestId('two-risk-result')).toContainText('Not confirmed');
  await expect(page.getByText('Official directory',{exact:true})).toBeVisible();
  const route=page.getByTestId('case-reality-check').getByRole('link',{name:'Search India eCourts'});
  await expect(route).toBeVisible();
@@ -114,8 +114,8 @@ FINAL COURT-ORDERED MANDATORY COLLECTION NOTICE
 Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administrative fees, court costs, and enforcement surcharges.`);
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await expect(page.getByTestId('result-status')).toHaveText('Not independently verified');
- await expect(page.getByRole('heading',{level:1,name:'Verify before you pay.'})).toBeVisible();
+ await expect(page.getByTestId('result-status')).toHaveText('We could not confirm this notice');
+ await expect(page.getByRole('heading',{level:1,name:'Check it independently before you pay.'})).toBeVisible();
  const primary=page.getByTestId('primary-next-step');
  await expect(primary).toBeVisible();
  await expect(primary.getByRole('link')).toBeVisible();
@@ -123,7 +123,26 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  expect(box,'primary next step should be visible without hunting through the report').not.toBeNull();
  expect((box?.y||0)+(box?.height||0)).toBeLessThan(844);
  await expect(page.locator('.decision-details')).not.toHaveAttribute('open','');
- await expect(page.locator('.result-chapters')).toBeHidden();
+
+ const chapters=page.locator('.result-chapters');
+ await expect(chapters).toBeVisible();
+ await expect(chapters.getByRole('link')).toHaveCount(4);
+ const horizontalBefore=await page.evaluate(()=>window.scrollX);
+ await chapters.getByRole('link',{name:'Original'}).click();
+ await expect.poll(()=>page.locator('#original-message').evaluate(node=>Math.abs(node.getBoundingClientRect().top-92)),{timeout:5000}).toBeLessThan(36);
+ const originalY=await page.evaluate(()=>window.scrollY);
+ expect(originalY).toBeGreaterThan(0);
+
+ await chapters.getByRole('link',{name:'Evidence'}).click();
+ await expect.poll(()=>page.locator('#source-checks').evaluate(node=>Math.abs(node.getBoundingClientRect().top-92)),{timeout:5000}).toBeLessThan(36);
+ const evidenceY=await page.evaluate(()=>window.scrollY);
+ expect(evidenceY).toBeGreaterThan(originalY);
+
+ await chapters.getByRole('link',{name:'Resolve'}).click();
+ await expect.poll(()=>page.locator('#user-actions').evaluate(node=>Math.abs(node.getBoundingClientRect().top-92)),{timeout:5000}).toBeLessThan(36);
+ expect(await page.evaluate(()=>window.scrollX)).toBe(horizontalBefore);
+ await expect(chapters).toBeVisible();
+
  await expect(page.locator('.result-origin')).not.toContainText(/Street|Avenue|Road|Boulevard/i);
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
  expect(overflow).toBeLessThanOrEqual(1);
@@ -139,10 +158,10 @@ FINAL COURT-ORDERED MANDATORY COLLECTION NOTICE
 Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administrative fees, court costs, and enforcement surcharges.`);
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await expect(page.locator('#review-summary').getByRole('heading',{name:'Verify before you pay.'})).toBeVisible();
+ await expect(page.locator('#review-summary').getByRole('heading',{name:'Check it independently before you pay.'})).toBeVisible();
  await expect(page.getByText('Official process',{exact:true})).toBeVisible();
  await expect(page.getByText('New Hampshire publishes a specific process for toll and court collections')).toBeVisible();
- await expect(page.getByText(/These sources can inform the check, but they cannot confirm who sent the message/i)).toBeVisible();
+ await expect(page.getByText(/These sources help with the check, but they still cannot tell us who sent the message/i)).toBeVisible();
  await page.locator('.decision-details').locator('summary').click();
  await expect(page.locator('.decision-details').getByRole('link',{name:'Open public source'})).toHaveAttribute('href','https://www.gc.nh.gov/rsa/html/xx/236/236-mrg.htm');
  await expect(page.getByTestId('primary-next-step').getByRole('link',{name:'Open NH E-ZPass'})).toHaveAttribute('href','https://www.ezpassnh.com/');
@@ -185,7 +204,7 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
 
  await expect.poll(()=>verifyCount,{timeout:15000}).toBe(2);
  await expect(active.getByTestId('result-shell')).toBeVisible({timeout:30000});
- await expect(active.getByRole('heading',{level:1,name:'Verify before you pay.'})).toBeVisible();
+ await expect(active.getByRole('heading',{level:1,name:'Check it independently before you pay.'})).toBeVisible();
 
  releaseFirst();
  const checks=active.locator('.rail-check-list .rail-check');
@@ -197,7 +216,7 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
 
  await active.locator('.rail-check-list .rail-check').nth(1).click();
  active=page.locator('.seal-workspace-instance:not([hidden])');
- await expect(active.getByRole('heading',{level:1,name:'Verify before you pay.'})).toBeVisible();
+ await expect(active.getByRole('heading',{level:1,name:'Check it independently before you pay.'})).toBeVisible();
  assertNoRuntimeErrors();
 });
 
@@ -224,7 +243,7 @@ FINAL COURT-ORDERED MANDATORY COLLECTION NOTICE
 Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administrative fees, court costs, and enforcement surcharges.`);
  await active.getByRole('button',{name:'Check this message'}).click();
  await expect(active.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await expect(active.locator('[id^="review-summary"]').getByRole('heading',{level:1,name:'Verify before you pay.'})).toBeVisible();
+ await expect(active.locator('[id^="review-summary"]').getByRole('heading',{level:1,name:'Check it independently before you pay.'})).toBeVisible();
 
  const checks=active.locator('.rail-check-list .rail-check');
  await expect(checks).toHaveCount(2);
@@ -236,7 +255,7 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
 
  await active.locator('.rail-check-list .rail-check').nth(1).click();
  active=page.locator('.seal-workspace-instance:not([hidden])');
- await expect(active.locator('[id^="review-summary"]').getByRole('heading',{level:1,name:'Verify before you pay.'})).toBeVisible();
+ await expect(active.locator('[id^="review-summary"]').getByRole('heading',{level:1,name:'Check it independently before you pay.'})).toBeVisible();
  assertNoRuntimeErrors();
 });
 
