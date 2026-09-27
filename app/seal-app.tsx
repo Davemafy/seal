@@ -514,8 +514,6 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    decisionSummary:file?.sample?'Some printed details match official court pages, but this example form is not a summons to act on. The matches do not authenticate any notice you received.':decision.summary,
    relationship:decisionRelationship
   };
-  groundedActions.forEach((claim,index)=>{strings[`action${index}`]=cleanDisplayText(claim.action?.source_text||claim.exact_source_text||claim.value)});
-  if(decisionClaim&&!groundedActions.length)strings.decisionClaim=decisionClaimDisplay||cleanDisplayText(decisionClaim.value);
   if(verification.safe_action){
    strings.safeTitle=verification.safe_action.title;
    strings.safeSummary=verification.safe_action.summary;
@@ -1648,10 +1646,10 @@ async function upload(uploaded:File){
 
         {directCourtUnavailable&&groundedActions.length>0?<div className="decision-claim">
          <span>{ui('messageAsks')}</span>
-         <ul className="message-action-list">{groundedActions.map((claim,index)=><li key={claim.id}>{translatedResult[`action${index}`]||cleanDisplayText(claim.action?.source_text||claim.exact_source_text||claim.value)}</li>)}</ul>
+         <ul className="message-action-list">{groundedActions.map(claim=><li key={claim.id}>{cleanDisplayText(claim.action?.source_text||claim.exact_source_text||claim.value)}</li>)}</ul>
         </div>:decisionClaim&&<div className="decision-claim">
          <span>From the message</span>
-         <p>{translatedResult.decisionClaim||decisionClaimDisplay||cleanDisplayText(decisionClaim.value)}</p>
+         <p>{decisionClaimDisplay||cleanDisplayText(decisionClaim.value)}</p>
         </div>}
 
         <div className={`decision-evidence decision-relationship-block ${decisionRelationshipConflict?'is-conflict':''}`}>
