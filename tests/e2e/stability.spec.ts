@@ -381,7 +381,7 @@ test('mobile entry shell does not leave body space below its footer',async({page
  assertNoRuntimeErrors();
 });
 
-test('official sample survives result review, refresh, and replay',async({page})=>{
+test('official sample autoplays review once, survives refresh, and can replay',async({page})=>{
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.goto('/');
@@ -389,20 +389,18 @@ test('official sample survives result review, refresh, and replay',async({page})
 
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.locator('.result-masthead-title')).toHaveText('Check result');
- await expect(page.getByText('This is a sample form.')).toBeVisible();
- await page.locator('.decision-details').locator('summary').click();
- await expect(page.getByTestId('play-evidence-review')).toBeVisible();
-
- await page.getByTestId('play-evidence-review').click();
  await expect(page.getByTestId('evidence-review')).toBeVisible({timeout:15000});
  await expect(page.getByRole('dialog',{name:'SEAL verification review'})).toBeVisible();
  await page.getByRole('button',{name:'Back to result'}).click();
  await expect(page.getByTestId('evidence-review')).toHaveCount(0,{timeout:5000});
+ await expect(page.getByText('This is a sample form.')).toBeVisible();
+ await expect(page.locator('.decision-artifact')).toBeVisible();
+ await expect(page.getByTestId('play-evidence-review')).toBeVisible();
 
  await page.reload();
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:15000});
+ await expect(page.getByTestId('evidence-review')).toHaveCount(0);
  await expect(page.getByText('This is a sample form.')).toBeVisible();
- await page.locator('.decision-details').locator('summary').click();
  await expect(page.getByTestId('play-evidence-review')).toBeVisible();
 
  await page.getByTestId('play-evidence-review').click();
