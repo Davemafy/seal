@@ -38,7 +38,7 @@ export const UI_COPY={
  publicSourcesSay:'What public sources say',
  openPublicSource:'Open public source',
  seeHowChecked:'See how SEAL checked it',
- evidenceReviewHint:'17 sec · notice → public source → next step',
+ evidenceReviewHint:'17 sec · notice · public source · next step',
  independentEvidence:'What we found',sources:'Sources',officialProcess:'Official process',officialDirectory:'Official directory',sourceConflict:'Source conflict',knownPattern:'Known pattern',officialWarning:'Official warning',officialSourceMatch:'Official source match',officialSourceConflict:'Official source conflict',sourceEvidence:'Source evidence',independentCheck:'Independent check',
  translatedNote:'Translated for your display language. Source quotations remain in their original wording.',
  publicSourcesOnly:'Public sources only',
@@ -60,7 +60,7 @@ const T:Record<Exclude<DisplayLocale,'en'>,Partial<Record<UiCopyKey,string>>>={
   checkMessage:'Comprobar este mensaje',resultTitle:'Resultado de la comprobación',result:'Resultado',original:'Original',
   nextStep:'Siguiente paso',checkedDetails:'Detalles comprobados',messageAsks:'El mensaje pide',fromMessage:'Del mensaje',
   publicSourcesSay:'Qué dicen las fuentes públicas',openPublicSource:'Abrir fuente pública',seeHowChecked:'Ver cómo lo comprobó SEAL',
-  evidenceReviewHint:'17 s · aviso → fuente pública → siguiente paso',
+  evidenceReviewHint:'17 s · aviso · fuente pública · siguiente paso',
   translatedNote:'Traducido al idioma de la interfaz. Las citas de las fuentes permanecen en su redacción original.',
   publicSourcesOnly:'Solo fuentes públicas',publicSourcesNote:'Cada elemento enlaza con el tribunal o la entidad emisora.',
   translationUnavailable:'La traducción del resultado no está disponible ahora. El texto original y las pruebas no cambian.'
@@ -76,7 +76,7 @@ const T:Record<Exclude<DisplayLocale,'en'>,Partial<Record<UiCopyKey,string>>>={
   checkMessage:'Verificar esta mensagem',resultTitle:'Resultado da verificação',result:'Resultado',original:'Original',
   nextStep:'Próximo passo',checkedDetails:'Detalhes verificados',messageAsks:'A mensagem pede',fromMessage:'Da mensagem',
   publicSourcesSay:'O que dizem as fontes públicas',openPublicSource:'Abrir fonte pública',seeHowChecked:'Veja como o SEAL verificou',
-  evidenceReviewHint:'17 s · aviso → fonte pública → próximo passo',
+  evidenceReviewHint:'17 s · aviso · fonte pública · próximo passo',
   translatedNote:'Traduzido para o idioma da interface. As citações das fontes permanecem na redação original.',
   publicSourcesOnly:'Somente fontes públicas',publicSourcesNote:'Cada item leva ao tribunal ou órgão emissor.',
   translationUnavailable:'A tradução do resultado está indisponível no momento. O texto de origem e as evidências permanecem inalterados.'
@@ -92,7 +92,7 @@ const T:Record<Exclude<DisplayLocale,'en'>,Partial<Record<UiCopyKey,string>>>={
   checkMessage:'Vérifier ce message',resultTitle:'Résultat de la vérification',result:'Résultat',original:'Original',
   nextStep:'Étape suivante',checkedDetails:'Détails vérifiés',messageAsks:'Le message demande',fromMessage:'Dans le message',
   publicSourcesSay:'Ce que disent les sources publiques',openPublicSource:'Ouvrir la source publique',seeHowChecked:'Voir comment SEAL a vérifié',
-  evidenceReviewHint:'17 s · avis → source publique → étape suivante',
+  evidenceReviewHint:'17 s · avis · source publique · étape suivante',
   translatedNote:'Traduit dans la langue de l’interface. Les citations des sources restent dans leur formulation d’origine.',
   publicSourcesOnly:'Sources publiques uniquement',publicSourcesNote:'Chaque élément renvoie au tribunal ou à l’organisme émetteur.',
   translationUnavailable:'La traduction du résultat est indisponible pour le moment. Le texte source et les preuves restent inchangés.'
@@ -108,7 +108,7 @@ const T:Record<Exclude<DisplayLocale,'en'>,Partial<Record<UiCopyKey,string>>>={
   checkMessage:'Nachricht prüfen',resultTitle:'Prüfergebnis',result:'Ergebnis',original:'Original',
   nextStep:'Nächster Schritt',checkedDetails:'Geprüfte Details',messageAsks:'Die Nachricht verlangt',fromMessage:'Aus der Nachricht',
   publicSourcesSay:'Was öffentliche Quellen sagen',openPublicSource:'Öffentliche Quelle öffnen',seeHowChecked:'So hat SEAL geprüft',
-  evidenceReviewHint:'17 Sek. · Nachricht → öffentliche Quelle → nächster Schritt',
+  evidenceReviewHint:'17 Sek. · Nachricht · öffentliche Quelle · nächster Schritt',
   translatedNote:'Für die Anzeigesprache übersetzt. Quellenzitate bleiben im ursprünglichen Wortlaut.',
   publicSourcesOnly:'Nur öffentliche Quellen',publicSourcesNote:'Jeder Eintrag führt zum ausstellenden Gericht oder zur Behörde.',
   translationUnavailable:'Die Ergebnisübersetzung ist derzeit nicht verfügbar. Quelltext und Belege bleiben unverändert.'
@@ -124,7 +124,7 @@ const T:Record<Exclude<DisplayLocale,'en'>,Partial<Record<UiCopyKey,string>>>={
   checkMessage:'Verifica questo messaggio',resultTitle:'Risultato della verifica',result:'Risultato',original:'Originale',
   nextStep:'Passaggio successivo',checkedDetails:'Dettagli verificati',messageAsks:'Il messaggio chiede',fromMessage:'Dal messaggio',
   publicSourcesSay:'Cosa dicono le fonti pubbliche',openPublicSource:'Apri fonte pubblica',seeHowChecked:'Vedi come SEAL ha verificato',
-  evidenceReviewHint:'17 sec · avviso → fonte pubblica → passaggio successivo',
+  evidenceReviewHint:'17 sec · avviso · fonte pubblica · passaggio successivo',
   translatedNote:'Tradotto nella lingua dell’interfaccia. Le citazioni delle fonti restano nella formulazione originale.',
   publicSourcesOnly:'Solo fonti pubbliche',publicSourcesNote:'Ogni elemento rimanda al tribunale o all’ente emittente.',
   translationUnavailable:'La traduzione del risultato non è disponibile al momento. Testo originale e prove restano invariati.'
@@ -140,7 +140,7 @@ const T:Record<Exclude<DisplayLocale,'en'>,Partial<Record<UiCopyKey,string>>>={
   checkMessage:'इस संदेश की जाँच करें',resultTitle:'जाँच का परिणाम',result:'परिणाम',original:'मूल',
   nextStep:'अगला कदम',checkedDetails:'जाँचे गए विवरण',messageAsks:'संदेश आपसे कहता है',fromMessage:'संदेश से',
   publicSourcesSay:'सार्वजनिक स्रोत क्या कहते हैं',openPublicSource:'सार्वजनिक स्रोत खोलें',seeHowChecked:'देखें SEAL ने कैसे जाँच की',
-  evidenceReviewHint:'17 सेकंड · नोटिस → सार्वजनिक स्रोत → अगला कदम',
+  evidenceReviewHint:'17 सेकंड · नोटिस · सार्वजनिक स्रोत · अगला कदम',
   translatedNote:'इंटरफ़ेस भाषा में अनुवादित। स्रोत उद्धरण अपने मूल शब्दों में रहते हैं।',
   publicSourcesOnly:'केवल सार्वजनिक स्रोत',publicSourcesNote:'हर आइटम जारी करने वाली अदालत या एजेंसी से जुड़ता है।',
   translationUnavailable:'परिणाम का अनुवाद अभी उपलब्ध नहीं है। मूल टेक्स्ट और साक्ष्य अपरिवर्तित रहते हैं।'
@@ -156,7 +156,7 @@ const T:Record<Exclude<DisplayLocale,'en'>,Partial<Record<UiCopyKey,string>>>={
   checkMessage:'تحقق من هذه الرسالة',resultTitle:'نتيجة التحقق',result:'النتيجة',original:'الأصل',
   nextStep:'الخطوة التالية',checkedDetails:'التفاصيل التي تم التحقق منها',messageAsks:'تطلب الرسالة',fromMessage:'من الرسالة',
   publicSourcesSay:'ما تقوله المصادر العامة',openPublicSource:'فتح المصدر العام',seeHowChecked:'شاهد كيف تحقق SEAL',
-  evidenceReviewHint:'17 ثانية · الإشعار ← المصدر العام ← الخطوة التالية',
+  evidenceReviewHint:'17 ثانية · الإشعار · المصدر العام · الخطوة التالية',
   translatedNote:'مترجم إلى لغة الواجهة. تبقى اقتباسات المصادر بصياغتها الأصلية.',
   publicSourcesOnly:'مصادر عامة فقط',publicSourcesNote:'يرتبط كل عنصر بالمحكمة أو الجهة المصدرة.',
   translationUnavailable:'ترجمة النتيجة غير متاحة الآن. يبقى نص المصدر والأدلة دون تغيير.'
@@ -172,7 +172,7 @@ const T:Record<Exclude<DisplayLocale,'en'>,Partial<Record<UiCopyKey,string>>>={
   checkMessage:'检查此消息',resultTitle:'检查结果',result:'结果',original:'原文',
   nextStep:'下一步',checkedDetails:'已核查详情',messageAsks:'消息要求',fromMessage:'来自消息',
   publicSourcesSay:'公开来源显示',openPublicSource:'打开公开来源',seeHowChecked:'查看 SEAL 如何核查',
-  evidenceReviewHint:'17 秒 · 通知 → 公开来源 → 下一步',
+  evidenceReviewHint:'17 秒 · 通知 · 公开来源 · 下一步',
   translatedNote:'已按界面语言翻译。来源引文保持原始措辞。',
   publicSourcesOnly:'仅使用公开来源',publicSourcesNote:'每一项都链接到发出该内容的法院或机构。',
   translationUnavailable:'结果翻译目前不可用。原始文本和证据保持不变。'
@@ -188,7 +188,7 @@ const T:Record<Exclude<DisplayLocale,'en'>,Partial<Record<UiCopyKey,string>>>={
   checkMessage:'このメッセージを確認',resultTitle:'確認結果',result:'結果',original:'原文',
   nextStep:'次の手順',checkedDetails:'確認済みの詳細',messageAsks:'メッセージの要求',fromMessage:'メッセージから',
   publicSourcesSay:'公開情報の内容',openPublicSource:'公開情報を開く',seeHowChecked:'SEAL の確認方法を見る',
-  evidenceReviewHint:'17秒 · 通知 → 公開情報 → 次の手順',
+  evidenceReviewHint:'17秒 · 通知 · 公開情報 · 次の手順',
   translatedNote:'表示言語に翻訳されています。出典の引用は原文のままです。',
   publicSourcesOnly:'公開情報のみ',publicSourcesNote:'各項目は発行元の裁判所または機関にリンクします。',
   translationUnavailable:'結果の翻訳は現在利用できません。原文と証拠は変更されません。'
@@ -204,7 +204,7 @@ const T:Record<Exclude<DisplayLocale,'en'>,Partial<Record<UiCopyKey,string>>>={
   checkMessage:'이 메시지 확인',resultTitle:'확인 결과',result:'결과',original:'원문',
   nextStep:'다음 단계',checkedDetails:'확인된 세부정보',messageAsks:'메시지의 요구사항',fromMessage:'메시지에서',
   publicSourcesSay:'공개 출처의 내용',openPublicSource:'공개 출처 열기',seeHowChecked:'SEAL의 확인 과정 보기',
-  evidenceReviewHint:'17초 · 통지 → 공개 출처 → 다음 단계',
+  evidenceReviewHint:'17초 · 통지 · 공개 출처 · 다음 단계',
   translatedNote:'표시 언어로 번역되었습니다. 출처 인용문은 원래 문구를 유지합니다.',
   publicSourcesOnly:'공개 출처만 사용',publicSourcesNote:'각 항목은 발급 법원 또는 기관으로 연결됩니다.',
   translationUnavailable:'결과 번역을 지금 사용할 수 없습니다. 원문과 증거는 변경되지 않습니다.'
@@ -220,7 +220,7 @@ const T:Record<Exclude<DisplayLocale,'en'>,Partial<Record<UiCopyKey,string>>>={
   checkMessage:'Проверить сообщение',resultTitle:'Результат проверки',result:'Результат',original:'Оригинал',
   nextStep:'Следующий шаг',checkedDetails:'Проверенные сведения',messageAsks:'В сообщении требуется',fromMessage:'Из сообщения',
   publicSourcesSay:'Что говорят открытые источники',openPublicSource:'Открыть источник',seeHowChecked:'Как SEAL провёл проверку',
-  evidenceReviewHint:'17 сек · уведомление → открытый источник → следующий шаг',
+  evidenceReviewHint:'17 сек · уведомление · открытый источник · следующий шаг',
   translatedNote:'Переведено на язык интерфейса. Цитаты из источников остаются в исходной формулировке.',
   publicSourcesOnly:'Только открытые источники',publicSourcesNote:'Каждый пункт ведёт к выдавшему его суду или ведомству.',
   translationUnavailable:'Перевод результата сейчас недоступен. Исходный текст и доказательства не изменены.'
@@ -236,7 +236,7 @@ const T:Record<Exclude<DisplayLocale,'en'>,Partial<Record<UiCopyKey,string>>>={
   checkMessage:'Bu mesajı kontrol et',resultTitle:'Kontrol sonucu',result:'Sonuç',original:'Orijinal',
   nextStep:'Sonraki adım',checkedDetails:'Kontrol edilen ayrıntılar',messageAsks:'Mesajın istediği',fromMessage:'Mesajdan',
   publicSourcesSay:'Kamu kaynakları ne diyor',openPublicSource:'Kamu kaynağını aç',seeHowChecked:'SEAL’in nasıl kontrol ettiğini gör',
-  evidenceReviewHint:'17 sn · bildirim → kamu kaynağı → sonraki adım',
+  evidenceReviewHint:'17 sn · bildirim · kamu kaynağı · sonraki adım',
   translatedNote:'Arayüz diline çevrildi. Kaynak alıntıları özgün ifadeleriyle kalır.',
   publicSourcesOnly:'Yalnızca kamu kaynakları',publicSourcesNote:'Her öğe, belgeyi yayımlayan mahkeme veya kuruma bağlantı verir.',
   translationUnavailable:'Sonuç çevirisi şu anda kullanılamıyor. Kaynak metin ve kanıtlar değişmeden kalır.'
@@ -252,7 +252,7 @@ const T:Record<Exclude<DisplayLocale,'en'>,Partial<Record<UiCopyKey,string>>>={
   checkMessage:'Dit bericht controleren',resultTitle:'Controleresultaat',result:'Resultaat',original:'Origineel',
   nextStep:'Volgende stap',checkedDetails:'Gecontroleerde details',messageAsks:'Het bericht vraagt',fromMessage:'Uit het bericht',
   publicSourcesSay:'Wat openbare bronnen zeggen',openPublicSource:'Openbare bron openen',seeHowChecked:'Bekijk hoe SEAL dit controleerde',
-  evidenceReviewHint:'17 sec · kennisgeving → openbare bron → volgende stap',
+  evidenceReviewHint:'17 sec · kennisgeving · openbare bron · volgende stap',
   translatedNote:'Vertaald voor de interfacetaal. Broncitaten blijven in hun oorspronkelijke formulering.',
   publicSourcesOnly:'Alleen openbare bronnen',publicSourcesNote:'Elk item verwijst naar de uitgevende rechtbank of instantie.',
   translationUnavailable:'De vertaling van het resultaat is nu niet beschikbaar. Brontekst en bewijs blijven ongewijzigd.'
