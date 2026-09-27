@@ -11,6 +11,13 @@ function guardRuntime(page:Page){
  };
 }
 
+async function chooseFile(page:Page,path:string){
+ const chooserPromise=page.waitForEvent('filechooser');
+ await page.getByTestId('upload-file').click();
+ const chooser=await chooserPromise;
+ await chooser.setFiles(path);
+}
+
 test('entry stays idle across refresh until the user chooses an input',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.goto('/');
@@ -45,7 +52,7 @@ test('official sample survives result review, refresh, and replay',async({page})
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.goto('/');
- await page.locator('input[type="file"]').setInputFiles('tests/fixtures/connecticut-sample-jury-summons.pdf');
+ await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
 
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.getByRole('heading',{name:'Your message'})).toBeVisible();
@@ -89,7 +96,7 @@ test('multi-page PDF can be paged repeatedly without losing the application',asy
  await page.pdf({path:fixture,format:'A4',printBackground:true});
 
  await page.goto('/');
- await page.locator('input[type="file"]').setInputFiles(fixture);
+ await chooseFile(page,fixture);
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.getByText('Page 1 of 2')).toBeVisible({timeout:15000});
 
@@ -112,7 +119,7 @@ test('mobile result has no horizontal overflow and keeps the review accessible',
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:390,height:844});
  await page.goto('/');
- await page.locator('input[type="file"]').setInputFiles('tests/fixtures/connecticut-sample-jury-summons.pdf');
+ await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
 
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
@@ -145,7 +152,7 @@ test('cinematic review stays fixed to the viewport after the result page has scr
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.goto('/');
- await page.locator('input[type="file"]').setInputFiles('tests/fixtures/connecticut-sample-jury-summons.pdf');
+ await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.getByText('Review ready')).toHaveCount(0);
 
