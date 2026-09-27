@@ -288,6 +288,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [ocrLanguage,setOcrLanguage]=useState<OcrLanguage>('eng');
  const [displayLocale,setDisplayLocale]=useState<DisplayLocale>('en');
  const [languageMenuOpen,setLanguageMenuOpen]=useState(false);
+ const [resultLanguageMenuOpen,setResultLanguageMenuOpen]=useState(false);
  const [workspaceDrawerOpen,setWorkspaceDrawerOpen]=useState(false);
  const [translatedResult,setTranslatedResult]=useState<Record<string,string>>({});
  const [resultTranslationState,setResultTranslationState]=useState<'idle'|'translated'|'unavailable'>('idle');
@@ -1370,6 +1371,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   setDisplayLocale(locale);
   try{window.localStorage.setItem(DISPLAY_LOCALE_KEY,locale)}catch{}
   setLanguageMenuOpen(false);
+  setResultLanguageMenuOpen(false);
  }
 
  async function copyCourtQuestion(){
@@ -1939,8 +1941,14 @@ async function upload(uploaded:File){
        <p className="result-masthead-title">{ui('resultTitle')}</p>
        <h1>{checkObjectDisplayTitle}</h1>
        <div className="check-object-meta">
-        <span className="meta-status">{resultStatusLabel}</span>
-        {documentLanguage?.label&&<span className="meta-language" data-testid="document-language">{documentLanguage.label}</span>}
+        <div className="result-language-control">
+         <button type="button" className="result-language-trigger" aria-label={`Display language: ${DISPLAY_LANGUAGES[displayLocale]}`} aria-haspopup="listbox" aria-expanded={resultLanguageMenuOpen} onClick={()=>{setLanguageMenuOpen(false);setResultLanguageMenuOpen(open=>!open)}}>
+          <span>{DISPLAY_LANGUAGES[displayLocale]}</span><SealGuideIcon/>
+         </button>
+         {resultLanguageMenuOpen&&<div className="result-language-popover" role="listbox" aria-label={ui('displayLanguage')}>
+          {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><button type="button" role="option" aria-selected={code===displayLocale} className={code===displayLocale?'is-selected':''} key={code} onClick={()=>changeDisplayLanguage(code as DisplayLocale)}><span>{label}</span></button>)}
+         </div>}
+        </div>
         {documentJurisdictionLabel&&<span className="meta-jurisdiction" data-testid="document-jurisdiction">{documentJurisdictionLabel}</span>}
        </div>
       </div>
@@ -2129,7 +2137,7 @@ async function upload(uploaded:File){
            <small>Opens an independently sourced official service.</small>
           </div>}
 
-          {riskSummary&&!file?.sample&&<div className="decision-at-a-glance" data-testid="two-risk-result">
+          {riskSummary&&!file?.sample&&instructionStatus!==matterStatus&&<div className="decision-at-a-glance" data-testid="two-risk-result">
            <div><span>This message</span><strong>{instructionStatus}</strong></div>
            <div><span>The case</span><strong>{matterStatus}</strong></div>
           </div>}
