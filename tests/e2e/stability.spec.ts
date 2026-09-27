@@ -126,7 +126,7 @@ test('mobile result has no horizontal overflow and keeps the review accessible',
  assertNoRuntimeErrors();
 });
 
-test('Browse ranks runnable, high-signal examples first',async({page})=>{
+test('Browse ranks high-signal cases first and only exposes verified runnable examples',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.goto('/browse');
  await expect(page.getByRole('heading',{name:'Browse real cases'})).toBeVisible();
@@ -136,5 +136,29 @@ test('Browse ranks runnable, high-signal examples first',async({page})=>{
   'Court text with a fake hearing and payment route',
   'Sample federal jury summons'
  ]);
+ await expect(page.getByRole('link',{name:'Run in SEAL'})).toHaveCount(3);
+ assertNoRuntimeErrors();
+});
+
+
+test('cinematic review stays fixed to the viewport after the result page has scrolled',async({page})=>{
+ test.setTimeout(90000);
+ const assertNoRuntimeErrors=guardRuntime(page);
+ await page.goto('/');
+ await page.locator('input[type="file"]').setInputFiles('tests/fixtures/connecticut-sample-jury-summons.pdf');
+ await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
+ await expect(page.getByText('Review ready')).toHaveCount(0);
+
+ await page.evaluate(()=>window.scrollTo(0,Math.min(700,document.documentElement.scrollHeight-window.innerHeight)));
+ await page.getByTestId('play-evidence-review').evaluate((node:HTMLElement)=>node.click());
+ const overlay=page.getByTestId('evidence-review');
+ await expect(overlay).toBeVisible({timeout:15000});
+ const box=await overlay.boundingBox();
+ expect(box).not.toBeNull();
+ expect(Math.abs(box!.y)).toBeLessThanOrEqual(1);
+ expect(Math.abs(box!.x)).toBeLessThanOrEqual(1);
+ const viewport=page.viewportSize();
+ expect(Math.abs(box!.width-(viewport?.width||box!.width))).toBeLessThanOrEqual(1);
+ await page.getByRole('button',{name:'Full evidence'}).click();
  assertNoRuntimeErrors();
 });
