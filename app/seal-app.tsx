@@ -409,7 +409,13 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   &&storyHasIndependentEvidence
   &&(storyClaim||storySignal||storyEvidence)
  );
- const decision=directCourtUnavailable
+ const unsupportedWithoutIndependentFinding=Boolean(
+  directCourtUnavailable
+  &&!verification?.safe_action
+  &&!(verification?.signals?.length)
+  &&directEvidenceFindings.length===0
+ );
+ const decision=unsupportedWithoutIndependentFinding
   ?{
    title:'SEAL couldn’t independently verify this court yet.',
    summary:groundedActions.length
