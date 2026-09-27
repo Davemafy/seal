@@ -600,3 +600,43 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  await expect(page.locator('.mobile-check-strip')).toHaveCount(0);
  assertNoRuntimeErrors();
 });
+
+
+test('mobile checks can be swiped like pages and expose the current workspace identity',async({page})=>{
+ test.setTimeout(90000);
+ const assertNoRuntimeErrors=guardRuntime(page);
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+
+ await page.getByRole('button',{name:'New check'}).click();
+ await page.waitForTimeout(420);
+ let active=page.locator('.seal-workspace-instance:not([hidden])');
+ await expect(active.getByTestId('entry-shell')).toBeVisible();
+ await expect(active.locator('.mobile-current-check')).toBeVisible();
+
+ const start={x:300,y:420};
+ await active.evaluate((node,{start})=>{
+  const target=node.querySelector('.entry-copy')||node;
+  const touchStart=new TouchEvent('touchstart',{bubbles:true,cancelable:true,touches:[new Touch({identifier:1,target,clientX:start.x,clientY:start.y})]});
+  target.dispatchEvent(touchStart);
+ },{start});
+ await active.evaluate((node)=>{
+  const target=node.querySelector('.entry-copy')||node;
+  const touchEnd=new TouchEvent('touchend',{bubbles:true,cancelable:true,changedTouches:[new Touch({identifier:1,target,clientX:390,clientY:424})]});
+  target.dispatchEvent(touchEnd);
+ });
+ await page.waitForTimeout(80);
+ active=page.locator('.seal-workspace-instance:not([hidden])');
+ await expect(active).toHaveClass(/is-entering-backward/);
+
+ await page.waitForTimeout(420);
+ await active.evaluate((node)=>{
+  const target=node.querySelector('.entry-copy')||node;
+  target.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,cancelable:true,touches:[new Touch({identifier:2,target,clientX:320,clientY:420})]}));
+  target.dispatchEvent(new TouchEvent('touchend',{bubbles:true,cancelable:true,changedTouches:[new Touch({identifier:2,target,clientX:210,clientY:424})]}));
+ });
+ await page.waitForTimeout(80);
+ active=page.locator('.seal-workspace-instance:not([hidden])');
+ await expect(active).toHaveClass(/is-entering-forward/);
+ assertNoRuntimeErrors();
+});
