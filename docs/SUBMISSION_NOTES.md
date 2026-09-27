@@ -22,7 +22,7 @@ It is:
 
 ## Solution
 
-SEAL is an action-first court-message verification prototype.
+SEAL is an action-first court-message verification product prototype built around one rule: the uploaded message is never treated as its own proof.
 
 A user can upload an image/PDF or paste a court-related message. SEAL:
 
@@ -39,7 +39,13 @@ A user can upload an image/PDF or paste a court-related message. SEAL:
 
 SEAL deliberately avoids a single “scam probability” score. Suspicion, an unfamiliar number, missing data, or an OCR guess is not enough to produce a contradiction.
 
+Checks are independent workspaces. A user can start another verification while one is still running, switch between them, and keep each check's original document, extracted language, inferred jurisdiction, public sources, and result isolated.
+
+Language and jurisdiction are also independent. SEAL can detect the document language, route verification by jurisdiction, and translate its own explanation into the user's display language while preserving original source wording for auditability.
+
 ## Why this is different
+
+A general assistant can analyze the document you give it. SEAL is built to distrust that document.
 
 SEAL does not treat the uploaded notice as its own proof, and it does not turn an LLM opinion into a verdict.
 
@@ -109,7 +115,7 @@ The project uses public open-source libraries and public APIs/pages listed in th
 
 SEAL does not determine legal validity, admissibility, enforceability, whether a person actually owes money, or whether a private summons is authentic. It is not affiliated with any court and does not provide legal advice.
 
-Coverage is intentionally bounded by reviewed evidence adapters. When SEAL cannot establish something, the expected output is **COULD NOT VERIFY**, not a guess.
+Direct case-source depth is intentionally bounded by reviewed evidence adapters. The product can still identify a likely language/jurisdiction and surface an independent official judiciary route where available, but that route does not become case verification. When SEAL cannot establish something, the expected output is **COULD NOT VERIFY**, not a guess.
 
 ## Live links
 
