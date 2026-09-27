@@ -760,3 +760,33 @@
   padding-top:0
  }
 }
+
+
+/* Result action safe inset — prevent top-right clipping. */
+@media(min-width:901px){
+ .result-masthead-row{
+  padding-right:14px!important
+ }
+ .check-object-actions{
+  flex:0 0 auto!important;
+  align-self:flex-start!important;
+  margin-right:2px!important;
+  padding-top:2px!important;
+  overflow:visible!important
+ }
+ .check-object-actions .result-icon-action{
+  width:36px!important;
+  height:36px!important;
+  min-width:36px!important;
+  min-height:36px!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  overflow:visible!important
+ }
+ .check-object-actions .result-icon-action .seal-ui-icon{
+  width:17px!important;
+  height:17px!important;
+  overflow:visible!important
+ }
+}
