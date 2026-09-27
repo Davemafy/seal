@@ -444,7 +444,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const decision=nhProcessSignal
   ?{
    title:'New Hampshire publishes a different process for this payment demand.',
-   summary:'The notice asks for full payment of tolls, fines, fees, and court costs. New Hampshire’s published toll and court-collection materials describe a more specific process and official channels for checking what is actually owed.'
+   summary:'The notice asks for full payment of tolls, fines, fees, and court costs. New Hampshire law describes transaction-specific toll notices and a defined enforcement path; Judicial Branch materials separately describe court judgment collection.'
   }
   :unsupportedWithoutIndependentFinding
    ?{
