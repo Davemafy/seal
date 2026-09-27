@@ -213,6 +213,7 @@ test('desktop result stays contained to one carousel stage instead of a long rep
  await page.goto('/');
  await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
+ await dismissAutoReview(page);
  const carousel=page.getByTestId('result-carousel');
  const metrics=await carousel.evaluate(node=>({width:node.clientWidth,height:node.clientHeight,scrollWidth:node.scrollWidth}));
  expect(Math.abs(metrics.scrollWidth-metrics.width*4)).toBeLessThanOrEqual(8);
@@ -348,6 +349,7 @@ test('mobile SEAL brand returns a result to the clean entry state',async({page})
  await page.goto('/');
  await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
+ await dismissAutoReview(page);
 
  await page.locator('.mobile-brand').click();
  await expect(page.getByTestId('entry-shell')).toBeVisible();
@@ -431,6 +433,7 @@ test('multi-page PDF can be paged repeatedly without losing the application',asy
  await page.goto('/');
  await chooseFile(page,fixture);
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
+ await dismissAutoReview(page);
  await expect(page.getByText('Page 1 of 2')).toBeVisible({timeout:15000});
 
  const next=page.getByRole('button',{name:'Next'});
@@ -454,16 +457,13 @@ test('mobile result has no horizontal overflow and keeps the review accessible',
  await page.goto('/');
  await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
-
- const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
- expect(overflow).toBeLessThanOrEqual(1);
- await page.locator('.decision-details').locator('summary').click();
- await expect(page.getByTestId('play-evidence-review')).toBeVisible();
-
- await page.getByTestId('play-evidence-review').click();
  await expect(page.getByTestId('evidence-review')).toBeVisible({timeout:15000});
  await page.getByRole('button',{name:'Back to result'}).click();
  await expect(page.getByTestId('evidence-review')).toHaveCount(0,{timeout:5000});
+
+ const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
+ expect(overflow).toBeLessThanOrEqual(1);
+ await expect(page.getByTestId('play-evidence-review')).toBeVisible();
  assertNoRuntimeErrors();
 });
 
@@ -504,6 +504,9 @@ test('cinematic review stays fixed to the viewport after the result page has scr
  await page.goto('/');
  await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
+ await expect(page.getByTestId('evidence-review')).toBeVisible({timeout:15000});
+ await page.getByRole('button',{name:'Back to result'}).click();
+ await expect(page.getByTestId('evidence-review')).toHaveCount(0,{timeout:5000});
  await expect(page.getByText('Review ready')).toHaveCount(0);
 
  await page.evaluate(()=>window.scrollTo(0,Math.min(700,document.documentElement.scrollHeight-window.innerHeight)));
@@ -526,10 +529,10 @@ test('curated Dallas example preserves its source-backed resolution',async({page
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.goto('/?case=dallas-traffic-qr-scam');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:60000});
+ await dismissAutoReview(page);
  await expect(page.locator('#review-summary').getByRole('heading',{name:'Do not scan or pay from this message'})).toBeVisible();
  await expect(page.locator('#review-summary .decision-summary')).toContainText(/City of Dallas published this exact example as a scam/i);
  await expect(page.getByTestId('primary-next-step').getByRole('link',{name:/View the City of Dallas source/i})).toBeVisible();
- await page.locator('.decision-details').locator('summary').click();
  await expect(page.getByTestId('play-evidence-review')).toBeVisible();
  assertNoRuntimeErrors();
 });
