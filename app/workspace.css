@@ -7233,3 +7233,145 @@
   line-height:20px!important
  }
 }
+
+
+/* Quiet rail — strip chrome, keep function. */
+@media(min-width:901px){
+ .seal-app{
+  grid-template-columns:208px minmax(0,1fr)!important
+ }
+ .workspace-rail{
+  width:208px!important;
+  max-width:208px!important;
+  padding:18px 14px 14px!important;
+  background:#fbfbf9!important;
+  border-right:1px solid #e8e8e4!important
+ }
+ .rail-topbar{
+  min-height:36px!important;
+  padding:0 2px 20px!important
+ }
+ .rail-brand{
+  gap:8px!important
+ }
+ .rail-brand img{
+  width:18px!important;
+  height:18px!important
+ }
+ .rail-brand-word{
+  font-size:15px!important;
+  line-height:20px!important;
+  font-weight:650!important
+ }
+ .rail-brand-reg{
+  transform:translateY(-4px)!important;
+  font-size:7px!important
+ }
+ .rail-new-check{
+  width:28px!important;
+  height:28px!important;
+  min-width:28px!important;
+  border-radius:5px!important;
+  background:transparent!important
+ }
+ .rail-new-check:hover{
+  background:#f0f0ed!important
+ }
+
+ .rail-primary-nav{
+  margin:0 0 18px!important
+ }
+ .rail-nav-item{
+  min-height:32px!important;
+  padding:6px 8px!important;
+  border-radius:5px!important;
+  background:transparent!important;
+  font-size:13px!important;
+  line-height:20px!important;
+  font-weight:560!important
+ }
+ .rail-nav-item .seal-ui-icon{
+  display:none!important
+ }
+ .rail-nav-item:hover{
+  background:#f2f2ef!important
+ }
+ .rail-nav-item.is-current{
+  background:transparent!important;
+  color:#111!important;
+  font-weight:650!important
+ }
+
+ .rail-check-list{
+  gap:1px!important
+ }
+ .rail-check-row{
+  min-height:34px!important;
+  border-radius:5px!important
+ }
+ .rail-check{
+  min-height:34px!important;
+  padding:7px 30px 7px 8px!important;
+  border-radius:5px!important
+ }
+ .rail-check.is-current,
+ .rail-check-row.is-current .rail-check{
+  background:#f0f0ed!important
+ }
+ .rail-check-copy strong{
+  font-size:13px!important;
+  line-height:20px!important;
+  font-weight:560!important
+ }
+ .rail-check-row.is-current .rail-check-copy strong{
+  font-weight:650!important
+ }
+ .rail-check-delete{
+  top:3px!important;
+  right:3px!important;
+  width:28px!important;
+  height:28px!important;
+  border-radius:4px!important
+ }
+
+ .rail-bottom{
+  padding:12px 2px 0!important;
+  border-top:1px solid #e7e7e3!important
+ }
+ .rail-language{
+  width:auto!important
+ }
+ .rail-language-trigger{
+  width:auto!important;
+  min-height:30px!important;
+  padding:5px 4px!important;
+  gap:0!important;
+  border-radius:4px!important;
+  background:transparent!important
+ }
+ .rail-language-trigger .seal-ui-icon,
+ .rail-language-trigger .seal-guide-icon{
+  display:none!important
+ }
+ .rail-language-trigger>span{
+  font-size:12.5px!important;
+  line-height:18px!important;
+  font-weight:560!important
+ }
+
+ .browse-workspace-rail .rail-nav-item.is-current{
+  background:transparent!important;
+  font-weight:650!important
+ }
+}
+
+/* Restore a little breathing room for the main canvas after narrowing the rail. */
+@media(min-width:1190px){
+ .seal-app{
+  grid-template-columns:208px minmax(0,1fr)!important
+ }
+ .workspace-rail{
+  width:208px!important;
+  max-width:208px!important
+ }
+}
