@@ -10,7 +10,7 @@ import PDFPreview from './pdf-preview';
 import StoryPdfPage from './story-pdf-page';
 import {fixtures} from '@/lib/fixtures';
 import {fallbackExtract,claimsFromExtraction,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '@/lib/extract';
-import {readInBrowser,warmOcr,ocrLanguages,ocrLanguageForLocale,type OcrLanguage,type BrowserDocument} from '@/lib/browser-file';
+import {readInBrowser,warmOcr,ocrLanguageForLocale,type OcrLanguage,type BrowserDocument} from '@/lib/browser-file';
 import {clearOrphanedResultArtifacts,clearResultSession,persistResultSession,restoreResultSession} from '@/lib/result-session';
 import {officialCourtDirectoryFor} from '@/lib/official-directories';
 import {detectDocumentContext,type DetectedDocumentLanguage} from '@/lib/document-context';
@@ -1744,11 +1744,10 @@ async function upload(uploaded:File){
           <span className="upload-browse">{ui('browseFiles')}</span>
          </span>}
        </button>
-       {!busy&&<>
-        <label className="ocr-language-control"><span>{ui('imageLanguage')}</span><select value={ocrLanguage} onChange={event=>setOcrLanguage(event.target.value as OcrLanguage)}>{Object.entries(ocrLanguages).map(([code,label])=><option key={code} value={code}>{label}</option>)}</select></label>
+       {!busy&&<div className="intake-secondary-actions">
         <button className="paste-mode-switch" type="button" onClick={()=>setPasteMode(true)}>{ui('pasteInstead')} <SealGuideIcon direction="right"/></button>
         <p className="privacy-note">{ui('privacyNote')}</p>
-       </>}
+       </div>}
       </>
       :
       <div className="paste-mode-panel">
