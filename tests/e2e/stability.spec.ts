@@ -404,7 +404,7 @@ test('mobile entry shell does not leave body space below its footer',async({page
  assertNoRuntimeErrors();
 });
 
-test('official sample autoplays review once, survives refresh, and can replay',async({page})=>{
+test('official sample keeps review explicit, survives refresh, and can replay',async({page})=>{
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.goto('/');
@@ -412,6 +412,9 @@ test('official sample autoplays review once, survives refresh, and can replay',a
 
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.locator('.result-masthead-title')).toHaveText('Check result');
+ await expect(page.getByTestId('evidence-review')).toHaveCount(0);
+ await expect(page.getByTestId('play-evidence-review')).toBeVisible();
+ await page.getByTestId('play-evidence-review').click();
  await expect(page.getByTestId('evidence-review')).toBeVisible({timeout:15000});
  await expect(page.getByRole('dialog',{name:'SEAL verification review'})).toBeVisible();
  await page.getByRole('button',{name:'Back to result'}).click();
@@ -478,9 +481,8 @@ test('mobile result has no horizontal overflow and keeps the review accessible',
  await page.goto('/');
  await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await expect(page.getByTestId('evidence-review')).toBeVisible({timeout:15000});
- await page.getByRole('button',{name:'Back to result'}).click();
- await expect(page.getByTestId('evidence-review')).toHaveCount(0,{timeout:5000});
+ await expect(page.getByTestId('evidence-review')).toHaveCount(0);
+ await expect(page.getByTestId('play-evidence-review')).toBeVisible();
 
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
  expect(overflow).toBeLessThanOrEqual(1);
@@ -525,9 +527,8 @@ test('cinematic review stays fixed to the viewport after the result page has scr
  await page.goto('/');
  await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await expect(page.getByTestId('evidence-review')).toBeVisible({timeout:15000});
- await page.getByRole('button',{name:'Back to result'}).click();
- await expect(page.getByTestId('evidence-review')).toHaveCount(0,{timeout:5000});
+ await expect(page.getByTestId('evidence-review')).toHaveCount(0);
+ await expect(page.getByTestId('play-evidence-review')).toBeVisible();
  await expect(page.getByText('Review ready')).toHaveCount(0);
 
  await page.evaluate(()=>window.scrollTo(0,Math.min(700,document.documentElement.scrollHeight-window.innerHeight)));
