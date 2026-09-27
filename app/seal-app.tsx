@@ -244,9 +244,13 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   ||verification?.signals?.[0];
  const decisionClaim=verification?chooseDecisionClaim(claims,verification):undefined;
  const evidenceBackedClaim=verification?claims.find(claim=>Boolean(resultById.get(claim.id)?.evidence?.length)):undefined;
- const storyClaim=decisionClaim||evidenceBackedClaim;
+ const decisionClaimResult=decisionClaim?resultById.get(decisionClaim.id):undefined;
+ const storyClaim=decisionClaim&&Boolean(decisionClaimResult?.evidence?.length)
+  ?decisionClaim
+  :evidenceBackedClaim||decisionClaim;
  const storyResult=storyClaim?resultById.get(storyClaim.id):undefined;
- const storyEvidence=storySignal?.evidence?.[0]||storyResult?.evidence?.[0]||verification?.safe_action?.evidence?.[0];
+ const firstVerificationEvidence=verification?.results.find(result=>result.evidence.length)?.evidence?.[0];
+ const storyEvidence=storySignal?.evidence?.[0]||storyResult?.evidence?.[0]||verification?.safe_action?.evidence?.[0]||firstVerificationEvidence||verification?.contact?.source;
  const storyClaimHeading=storySignal?.id==='traffic-qr-warning'&&storyClaim?.action
   ?actionSummaryWord(storyClaim)
   :storyClaim?.action
@@ -331,10 +335,10 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const ready=Boolean(verification)&&revealed>=claims.length;
  const storyHasIndependentEvidence=Boolean(
   verification&&(
-   verification.signals?.some(signal=>Boolean(signal.evidence?.length))
-   ||storyResult?.evidence?.length
-   ||((storyResult?.verdict==='MATCH'||storyResult?.verdict==='MISMATCH')&&storyResult?.evidence?.length)
+   verification.results.some(result=>Boolean(result.evidence?.length))
+   ||verification.signals?.some(signal=>Boolean(signal.evidence?.length))
    ||verification.safe_action?.evidence?.length
+   ||verification.contact?.source
   )
  );
  const reviewWorthWatching=Boolean(
@@ -880,8 +884,13 @@ async function upload(uploaded:File){
    // extractor and claim-level confidence checks can safely use.
    let extraction:Extraction=fallbackExtract(sourceText);
    let extractor='DETERMINISTIC';
+   const deterministicReady=Boolean(
+    !sourceFile
+    &&extraction.court_name
+    &&extraction.requested_actions?.length
+   );
 
-   if(!sourceIsDemo){
+   if(!sourceIsDemo&&!deterministicReady){
     const extractController=new AbortController();
     const cancelExtract=()=>extractController.abort();
     controller.signal.addEventListener('abort',cancelExtract,{once:true});
