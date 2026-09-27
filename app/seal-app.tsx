@@ -1271,10 +1271,10 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  function submitPaste(){const value=draft.trim();if(!value)return;clear();setText(value);void run('SNAPSHOT',{text:value,file:null})}
 
 async function upload(uploaded:File){
-  setWorkspaceTitle(uploaded.name.replace(/\.[^.]+$/,'')||'New check');
   const origin=processingIntakeRef.current?.getBoundingClientRect();
   uploadOriginRectRef.current=origin?{left:origin.left,top:origin.top,width:origin.width,height:origin.height}:null;
   clear();
+  setWorkspaceTitle(uploaded.name.replace(/\.[^.]+$/,'')||'New check');
   const selectedPreview=URL.createObjectURL(uploaded);
   uploadPreviewRef.current=selectedPreview;
   setUploadPreview({url:selectedPreview,name:uploaded.name,kind:uploaded.type==='application/pdf'?'pdf':'image'});
@@ -1556,8 +1556,13 @@ async function upload(uploaded:File){
    <div className="rail-section-head"><span>Checks</span><small>{workspaces.length}</small></div>
    <div className="rail-check-list" aria-label="Open checks">
     {workspaces.filter(item=>item.status!=='idle'||item.id===workspaceId).map((item,index)=>{
-     const title=item.title||`Check ${index+1}`;
+     const rawTitle=cleanDisplayText(item.title||'');
+     const title=rawTitle.length>=3?rawTitle:`Check ${index+1}`;
+     const usefulPreview=cleanDisplayText(item.preview||'');
      const statusLabel=item.status==='verifying'?'Checking sources':item.status==='reading'?'Reading':item.status==='done'?'Checked':item.status==='error'?'Needs attention':'New';
+     const secondary=item.status==='reading'||item.status==='verifying'||item.status==='error'
+      ?[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · ')
+      :(usefulPreview.length>=8?usefulPreview:[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · '));
      return <div className={`rail-check-row ${item.id===workspaceId?'is-current':''}`} key={item.id}>
       <button
        type="button"
@@ -1566,7 +1571,7 @@ async function upload(uploaded:File){
        aria-current={item.id===workspaceId?'page':undefined}
       >
        <span className={`rail-check-state is-${item.status}`} aria-hidden="true"/>
-       <span className="rail-check-copy"><strong>{title}</strong><small>{item.status==='reading'||item.status==='verifying'||item.status==='error'?[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · '):(item.preview||[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · '))}</small></span>
+       <span className="rail-check-copy"><strong>{title}</strong><small>{secondary}</small></span>
       </button>
       <button className="rail-check-delete icon-control" type="button" aria-label={`Delete check ${index+1}: ${title}`} title={`Delete ${title}`} onClick={()=>onDeleteWorkspace(item.id)}><SealUiIcon name="delete"/></button>
      </div>;
