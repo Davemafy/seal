@@ -6,7 +6,7 @@ import PDFPreview from './pdf-preview';
 import StoryPdfPage from './story-pdf-page';
 import {fixtures,type FixtureKey} from '@/lib/fixtures';
 import {fallbackExtract,claimsFromExtraction,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '@/lib/extract';
-import {readInBrowser,warmOcr,ocrLanguages,type OcrLanguage,type BrowserDocument} from '@/lib/browser-file';
+import {readInBrowser,ocrLanguages,type OcrLanguage,type BrowserDocument} from '@/lib/browser-file';
 import {clearOrphanedResultArtifacts,clearResultSession,persistResultSession,restoreResultSession} from '@/lib/result-session';
 import type {Claim,Extraction,Result,Verification} from '@/lib/types';
 import './workspace.css';
@@ -508,7 +508,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  },[storyFocusBox,syncStoryTime]);
 
  useLayoutEffect(()=>{
-  if(!storyOpen)return;
+  if(!storyOpen||!storyArtifactReady)return;
   let cancelled=false;
   let frame=0;
   frame=window.requestAnimationFrame(()=>{
@@ -676,7 +676,10 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  },[file?.preview,file?.kind]);
 
  useEffect(()=>{
-  if(storyStartPending&&storyArtifactReady)startStory();
+  if(!storyStartPending||!storyArtifactReady)return;
+  setStoryStartPending(false);
+  setReviewOfferPaused(false);
+  setReviewCountdown(3);
  },[storyStartPending,storyArtifactReady]);
 
  useEffect(()=>{
@@ -728,10 +731,20 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  },[storyOpen,seekStoryBy,toggleStoryPlayback]);
 
  function startStory(){
-  if(!storyArtifactReady){
+  if(!storyArtifactReady&&file?.kind!=='pdf'){
    setStoryStartPending(true);
    setReviewOfferPaused(true);
    setReviewCountdown(1);
+   return;
+  }
+  if(file?.kind==='pdf'&&!storyArtifactReady){
+   setStoryStartPending(true);
+   setReviewOfferPaused(true);
+   setReviewCountdown(1);
+   setReviewOffer('watching');
+   setStoryPlaying(false);
+   setStoryClosing(false);
+   setStoryOpen(true);
    return;
   }
   if(storyCloseTimer.current){window.clearTimeout(storyCloseTimer.current);storyCloseTimer.current=undefined}
@@ -978,7 +991,7 @@ async function upload(uploaded:File){
     <div className={`intake ${pasteMode?'is-paste-mode':'is-upload-mode'}`}>
      {!pasteMode?
       <>
-       <button className={`upload-row ${dragging?'is-dragging':''} ${busy?'is-busy':''}`} type="button" disabled={busy||!hydrated} onPointerDown={()=>{void warmOcr(ocrLanguage)}} onClick={()=>{filePickerArmed.current=true;input.current?.click()}}
+       <button className={`upload-row ${dragging?'is-dragging':''} ${busy?'is-busy':''}`} type="button" disabled={busy||!hydrated} onClick={()=>{filePickerArmed.current=true;input.current?.click()}}
         onDragOver={event=>{if(event.dataTransfer.types.includes('Files')){event.preventDefault();setDragging(true)}}}
         onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false)}}
         onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
@@ -1072,7 +1085,6 @@ async function upload(uploaded:File){
      </nav>}
     </header>
 
-    {file?.kind==='pdf'&&<StoryPdfPage url={file.preview} preloadOnly onReady={()=>setStoryArtifactReady(true)}/>}
     {file?.sample&&<div className="source-failure sample-warning" role="status"><strong>SAMPLE DOCUMENT</strong><span>Example form only — not a summons to act on.</span></div>}
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
 
@@ -1100,7 +1112,7 @@ async function upload(uploaded:File){
             {storyFocusBox&&<span className="story-highlight"/>}
            </div>
            :file?.kind==='pdf'?
-            <StoryPdfPage url={file.preview} focusBox={storyFocusBox}/>
+            <StoryPdfPage url={file.preview} focusBox={storyFocusBox} onReady={()=>setStoryArtifactReady(true)}/>
            :<div className="story-text-document">
             <span>Pasted message</span>
             <p>{cleanDisplayText(text.slice(0,900))}</p>
