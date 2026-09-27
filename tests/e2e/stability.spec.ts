@@ -145,7 +145,7 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  await expect(page.getByText(/These sources can inform the check, but they cannot confirm who sent the message/i)).toBeVisible();
  await page.locator('.decision-details').locator('summary').click();
  await expect(page.locator('.decision-details').getByRole('link',{name:'Open public source'})).toHaveAttribute('href','https://www.gc.nh.gov/rsa/html/xx/236/236-mrg.htm');
- await expect(page.getByRole('link',{name:'Open NH E-ZPass'})).toHaveAttribute('href','https://www.ezpassnh.com/');
+ await expect(page.getByTestId('primary-next-step').getByRole('link',{name:'Open NH E-ZPass'})).toHaveAttribute('href','https://www.ezpassnh.com/');
  await expect(page.getByText('1-855-212-1234',{exact:true})).toBeVisible();
  assertNoRuntimeErrors();
 });
@@ -301,6 +301,7 @@ test('official sample survives result review, refresh, and replay',async({page})
  await page.reload();
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:15000});
  await expect(page.getByText('This is a sample form.')).toBeVisible();
+ await page.locator('.decision-details').locator('summary').click();
  await expect(page.getByTestId('play-evidence-review')).toBeVisible();
 
  await page.getByTestId('play-evidence-review').click();
@@ -357,6 +358,7 @@ test('mobile result has no horizontal overflow and keeps the review accessible',
 
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
  expect(overflow).toBeLessThanOrEqual(1);
+ await page.locator('.decision-details').locator('summary').click();
  await expect(page.getByTestId('play-evidence-review')).toBeVisible();
 
  await page.getByTestId('play-evidence-review').click();
