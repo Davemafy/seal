@@ -402,3 +402,24 @@
   opacity:1!important;
  }
 }
+
+
+/* Persisted-check restore state: no default-tab flash. */
+.workspace-restore-shell{
+ grid-column:2;
+ min-width:0;
+ min-height:calc(100dvh - 64px);
+ display:flex;
+ align-items:flex-start;
+ padding:28px 32px;
+ color:#777;
+ font-size:11px;
+ line-height:17px;
+ background:#fff;
+}
+@media(max-width:900px){
+ .workspace-restore-shell{
+  min-height:calc(100dvh - 58px);
+  padding:18px 16px;
+ }
+}
