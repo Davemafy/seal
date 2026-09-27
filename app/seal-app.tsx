@@ -1200,9 +1200,12 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  useEffect(()=>{
   if(!ready||!reviewWorthWatching||file?.sample||storyOpen||reviewOffer!=='idle')return;
   if(file?.kind==='image'&&!storyArtifactReady)return;
-  setReviewCountdown(3);
-  setReviewOfferPaused(false);
-  setReviewOffer('counting');
+  const timer=window.setTimeout(()=>{
+   setReviewCountdown(3);
+   setReviewOfferPaused(false);
+   setReviewOffer('counting');
+  },0);
+  return()=>window.clearTimeout(timer);
  },[ready,reviewWorthWatching,file?.sample,file?.kind,storyArtifactReady,storyOpen,reviewOffer]);
 
  useEffect(()=>{
