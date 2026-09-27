@@ -11,13 +11,29 @@ function Skeleton(){
  </div>;
 }
 
-export default function PdfThumb({id,alt}:{id:string;alt:string}){
+export default function PdfThumb({id,alt,priority=false}:{id:string;alt:string;priority?:boolean}){
  const host=useRef<HTMLDivElement>(null);
  const canvas=useRef<HTMLCanvasElement>(null);
  const [failed,setFailed]=useState(false);
  const [ready,setReady]=useState(false);
+ const [visible,setVisible]=useState(priority);
 
  useEffect(()=>{
+  if(priority)return;
+  const node=host.current;
+  if(!node)return;
+  const observer=new IntersectionObserver(entries=>{
+   if(entries.some(entry=>entry.isIntersecting)){
+    setVisible(true);
+    observer.disconnect();
+   }
+  },{rootMargin:'480px 0px'});
+  observer.observe(node);
+  return()=>observer.disconnect();
+ },[priority]);
+
+ useEffect(()=>{
+  if(!visible)return;
   let cancelled=false;
   let task:{destroy:()=>Promise<void>}|undefined;
   let renderTask:{promise:Promise<void>;cancel?:()=>void}|undefined;
@@ -65,7 +81,7 @@ export default function PdfThumb({id,alt}:{id:string;alt:string}){
    try{renderTask?.cancel?.()}catch{}
    void task?.destroy();
   };
- },[id]);
+ },[id,visible]);
 
  return <div className={`pdf-thumb ${ready?'is-ready':''} ${failed?'has-failed':''}`} ref={host}>
   {!ready&&!failed&&<Skeleton/>}
