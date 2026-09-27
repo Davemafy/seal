@@ -127,37 +127,21 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  await expect(page.locator('.decision-details')).not.toHaveAttribute('open','');
 
  const chapters=page.locator('.result-chapters');
- const carousel=page.getByTestId('result-carousel');
  await expect(chapters).toBeVisible();
  await expect(chapters.getByRole('link')).toHaveCount(4);
  const horizontalBefore=await page.evaluate(()=>window.scrollX);
+ await chapters.getByRole('link',{name:'Original'}).click();
+ await expect.poll(()=>page.locator('#original-message').evaluate(node=>Math.abs(node.getBoundingClientRect().top-92)),{timeout:5000}).toBeLessThan(36);
+ const originalY=await page.evaluate(()=>window.scrollY);
+ expect(originalY).toBeGreaterThan(0);
 
- const expectSlide=async(name:'Summary'|'Original'|'Evidence'|'Resolve',index:number)=>{
-  await chapters.getByRole('link',{name}).click();
-  await expect.poll(async()=>{
-   return carousel.evaluate(node=>{
-    const element=node as HTMLElement;
-    return element.clientWidth?element.scrollLeft/element.clientWidth:0;
-   });
-  },{timeout:5000}).toBeCloseTo(index,1);
-  await expect(chapters.getByRole('link',{name})).toHaveAttribute('aria-current','location');
- };
+ await chapters.getByRole('link',{name:'Evidence'}).click();
+ await expect.poll(()=>page.locator('#source-checks').evaluate(node=>Math.abs(node.getBoundingClientRect().top-92)),{timeout:5000}).toBeLessThan(36);
+ const evidenceY=await page.evaluate(()=>window.scrollY);
+ expect(evidenceY).toBeGreaterThan(originalY);
 
- await expectSlide('Original',1);
- await expect(page.locator('#original-message')).toBeInViewport();
- await expect(page.locator('#original-message')).toHaveCSS('overflow-y','auto');
-
- await expectSlide('Evidence',2);
- await expect(page.locator('#source-checks')).toBeInViewport();
-
- // A direct swipe-equivalent carousel move must update chapter state too.
- await carousel.evaluate(node=>{
-  const element=node as HTMLElement;
-  element.scrollTo({left:element.clientWidth*3,behavior:'auto'});
- });
- await expect(chapters.getByRole('link',{name:'Resolve'})).toHaveAttribute('aria-current','location');
- await expect(page.locator('#user-actions')).toBeInViewport();
-
+ await chapters.getByRole('link',{name:'Resolve'}).click();
+ await expect.poll(()=>page.locator('#user-actions').evaluate(node=>Math.abs(node.getBoundingClientRect().top-92)),{timeout:5000}).toBeLessThan(36);
  expect(await page.evaluate(()=>window.scrollX)).toBe(horizontalBefore);
  await expect(chapters).toBeVisible();
 
