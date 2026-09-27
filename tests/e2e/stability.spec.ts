@@ -575,6 +575,8 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  let drawer=page.getByRole('dialog',{name:'Checks'});
  await expect(drawer).toBeVisible();
  await expect(drawer.locator('.workspace-drawer-row')).toHaveCount(2);
+ const drawerCopyWidth=await drawer.locator('.workspace-drawer-copy').first().evaluate(node=>node.getBoundingClientRect().width);
+ expect(drawerCopyWidth,'workspace row copy must not collapse to a single character').toBeGreaterThan(120);
  await expect(drawer.getByRole('button',{name:/Delete check 2:/})).toBeVisible();
 
  await drawer.getByRole('button',{name:/Delete check 2:/}).click();
