@@ -2346,6 +2346,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const [registryReady,setRegistryReady]=useState(false);
  const [onboardingOpen,setOnboardingOpen]=useState(false);
  const [onboardingStep,setOnboardingStep]=useState(0);
+ const [workspaceTransition,setWorkspaceTransition]=useState<{from:string;to:string;direction:'forward'|'backward'}|null>(null);
+ const workspaceTransitionTimer=useRef<number|null>(null);
  const onboardingTouchStart=useRef<number|null>(null);
 
  useEffect(()=>{
@@ -2412,6 +2414,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   return()=>window.clearTimeout(timer);
  },[registryReady,initialDemo,initialText,initialRun]);
 
+ useEffect(()=>()=>{if(workspaceTransitionTimer.current!==null)window.clearTimeout(workspaceTransitionTimer.current)},[]);
+
  useEffect(()=>{
   if(!onboardingOpen)return;
   const previous=document.body.style.overflow;
@@ -2441,9 +2445,24 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
 
  const animateWorkspaceTo=useCallback((id:string)=>{
   if(id===activeWorkspace)return;
-  setActiveWorkspace(id);
+  const mobile=window.matchMedia('(max-width: 900px)').matches;
+  if(mobile){
+   const fromIndex=workspaces.findIndex(item=>item.id===activeWorkspace);
+   const toIndex=workspaces.findIndex(item=>item.id===id);
+   const direction: 'forward'|'backward'=toIndex>=fromIndex?'forward':'backward';
+   if(workspaceTransitionTimer.current!==null)window.clearTimeout(workspaceTransitionTimer.current);
+   setWorkspaceTransition({from:activeWorkspace,to:id,direction});
+   setActiveWorkspace(id);
+   workspaceTransitionTimer.current=window.setTimeout(()=>{
+    setWorkspaceTransition(null);
+    workspaceTransitionTimer.current=null;
+   },720);
+  }else{
+   setWorkspaceTransition(null);
+   setActiveWorkspace(id);
+  }
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
- },[activeWorkspace]);
+ },[activeWorkspace,workspaces]);
 
  const updateWorkspace=useCallback((id:string,patch:Partial<WorkspaceMeta>)=>{
   setWorkspaces(items=>items.map(item=>{
@@ -2461,15 +2480,26 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
 
  const createWorkspace=useCallback(()=>{
   const id=`check-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
+  const mobile=window.matchMedia('(max-width: 900px)').matches;
   setWorkspaces(items=>{
    const number=items.filter(item=>/^New check(?: \\d+)?$/.test(item.title)).length+1;
    const title=number===1?'New check':`New check ${number}`;
    return [...items,{id,title,status:'idle' as WorkspaceRunStatus}].slice(-8);
   });
+  if(mobile){
+   if(workspaceTransitionTimer.current!==null)window.clearTimeout(workspaceTransitionTimer.current);
+   setWorkspaceTransition({from:activeWorkspace,to:id,direction:'forward'});
+   workspaceTransitionTimer.current=window.setTimeout(()=>{
+    setWorkspaceTransition(null);
+    workspaceTransitionTimer.current=null;
+   },720);
+  }else{
+   setWorkspaceTransition(null);
+  }
   setActiveWorkspace(id);
   window.history.pushState({workspaceId:id},'',checkRoute(id));
   window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
- },[]);
+ },[activeWorkspace]);
 
  const selectWorkspace=useCallback((id:string)=>{
   if(id===activeWorkspace)return;
@@ -2605,12 +2635,20 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   <div className={`seal-workspace-stack ${workspaces.length>1?'has-multiple':''}`} data-workspace-count={workspaces.length}>
    {registryReady&&workspaces.map((workspace,index)=>{
     const active=workspace.id===activeWorkspace;
+    const leaving=workspaceTransition?.from===workspace.id;
+    const entering=workspaceTransition?.to===workspace.id;
+    const transitionClass=leaving
+     ?'is-leaving'
+     :entering
+      ?workspaceTransition?.direction==='backward'?'is-entering-backward':'is-entering-forward'
+      :'';
+    const visible=active||leaving;
     return <div
-     className={`seal-workspace-instance ${active?'is-active':''}`}
+     className={`seal-workspace-instance ${active?'is-active':''} ${transitionClass}`}
      data-workspace-id={workspace.id}
      key={workspace.id}
      aria-hidden={active?'false':'true'}
-     hidden={!active}
+     hidden={!visible}
     >
      <SealWorkspace
       initialDemo={index===0?initialDemo:false}
