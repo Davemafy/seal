@@ -2799,7 +2799,48 @@
   font-size:27px;
   line-height:34px
  }
- .seal-footer{display:none}
 }
 
+
 @media(prefers-reduced-motion:reduce){.result-carousel{scroll-behavior:auto}}
+
+
+/* Carousel containment hardening */
+.seal-app:has(.review-shell){
+ height:100vh;
+ min-height:0;
+ overflow:hidden
+}
+.seal-app:has(.review-shell)>.seal-footer{display:none}
+.review-shell{
+ min-height:0;
+ align-self:stretch
+}
+.result-carousel{
+ box-sizing:border-box;
+ gap:0!important;
+ padding:0!important;
+ contain:layout paint
+}
+.result-carousel *{box-sizing:border-box}
+.result-slide{
+ flex:0 0 100%!important;
+ inline-size:100%!important;
+ max-inline-size:100%!important;
+ margin:0!important;
+ overflow-x:clip!important;
+ contain:inline-size
+}
+.result-slide-original .document-heading,
+.result-slide-original .document-paper{
+ width:100%!important;
+ max-width:900px!important;
+ box-sizing:border-box
+}
+@media(max-width:900px){
+ .seal-app:has(.review-shell){height:100dvh}
+}
+@media(max-width:599px){
+ .seal-footer{display:flex}
+ .seal-app:has(.review-shell)>.seal-footer{display:none}
+}

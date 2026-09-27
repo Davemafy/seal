@@ -132,6 +132,7 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  const metrics=await carousel.evaluate(node=>({width:node.clientWidth,scrollWidth:node.scrollWidth,snap:getComputedStyle(node).scrollSnapType}));
  expect(metrics.width).toBeGreaterThan(300);
  expect(Math.abs(metrics.scrollWidth-metrics.width*4)).toBeLessThanOrEqual(8);
+ expect(await carousel.locator(':scope > .result-slide, :scope > .review-hero > .result-slide').count(),'carousel children should be exactly four full-width slides').toBeGreaterThanOrEqual(2);
  expect(metrics.snap).toContain('x');
 
  for(const [label,index] of [['Original',1],['Evidence',2],['Resolve',3]] as const){
