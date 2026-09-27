@@ -1364,3 +1364,101 @@
   vector-effect:non-scaling-stroke
  }
 }
+
+
+/* Result masthead cleanup — one status, working inline language control. */
+@media(min-width:901px){
+ .check-object-meta{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  margin-top:7px!important
+ }
+ .check-object-meta>span+span::before,
+ .check-object-meta .meta-jurisdiction::before{
+  display:none!important;
+  content:none!important
+ }
+ .result-language-control{
+  position:relative!important;
+  display:inline-flex!important
+ }
+ .result-language-trigger{
+  min-height:30px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:5px!important;
+  padding:5px 8px!important;
+  border:1px solid #deded9!important;
+  border-radius:7px!important;
+  background:#fff!important;
+  color:#30302d!important;
+  font:inherit!important;
+  font-size:13.5px!important;
+  line-height:19px!important;
+  font-weight:560!important;
+  cursor:pointer!important
+ }
+ .result-language-trigger:hover{
+  background:#f5f5f2!important
+ }
+ .result-language-trigger .seal-guide-icon{
+  width:11px!important;
+  height:11px!important;
+  color:#70706b!important
+ }
+ .result-language-trigger[aria-expanded="true"] .seal-guide-icon{
+  transform:rotate(-90deg)!important
+ }
+ .result-language-popover{
+  position:absolute!important;
+  z-index:500!important;
+  top:calc(100% + 6px)!important;
+  left:0!important;
+  width:180px!important;
+  max-height:320px!important;
+  overflow-y:auto!important;
+  padding:6px!important;
+  border:1px solid #deded9!important;
+  border-radius:9px!important;
+  background:#fff!important;
+  box-shadow:0 14px 34px rgba(0,0,0,.12)!important
+ }
+ .result-language-popover button{
+  width:100%!important;
+  min-height:36px!important;
+  display:flex!important;
+  align-items:center!important;
+  padding:8px 9px!important;
+  border:0!important;
+  border-radius:6px!important;
+  background:transparent!important;
+  color:#252522!important;
+  font:inherit!important;
+  font-size:13.5px!important;
+  line-height:19px!important;
+  text-align:left!important;
+  cursor:pointer!important
+ }
+ .result-language-popover button:hover,
+ .result-language-popover button.is-selected{
+  background:#f1f1ee!important
+ }
+ .result-language-popover button.is-selected{
+  font-weight:650!important
+ }
+ .meta-jurisdiction{
+  color:#777772!important;
+  font-size:13.5px!important;
+  line-height:19px!important
+ }
+
+ /* When the split statuses are redundant, the next-step panel stays compact. */
+ .decision-summary-side:not(:has(.decision-at-a-glance)){
+  padding:18px!important
+ }
+ .decision-summary-side:not(:has(.decision-at-a-glance)) .decision-primary-route{
+  margin:0!important
+ }
+}
