@@ -4505,3 +4505,28 @@
   line-height:14px!important;
  }
 }
+
+
+/* Launch rail proportion lock — one desktop width, no breakpoint whiplash. */
+@media(min-width:901px){
+ .seal-app{
+  grid-template-columns:236px minmax(0,1fr)!important;
+ }
+ .workspace-rail{
+  width:236px!important;
+  max-width:236px!important;
+  padding-inline:14px!important;
+ }
+ .rail-check{
+  min-height:56px!important;
+  padding:9px 8px 9px 10px!important;
+ }
+ .rail-check-copy strong{
+  font-size:12.5px!important;
+  line-height:17px!important;
+ }
+ .rail-check-copy small{
+  font-size:10px!important;
+  line-height:14px!important;
+ }
+}
