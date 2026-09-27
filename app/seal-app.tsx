@@ -732,7 +732,17 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    if(event.key==='Escape'){closeStory();return}
    if(event.key==='ArrowRight'){event.preventDefault();seekStoryBy(5);return}
    if(event.key==='ArrowLeft'){event.preventDefault();seekStoryBy(-5);return}
-   if(event.key===' '){event.preventDefault();toggleStoryPlayback()}
+   if(event.key===' '){event.preventDefault();toggleStoryPlayback();return}
+   if(event.key==='Tab'){
+    const root=storyPlayerRef.current;
+    if(!root)return;
+    const focusable=Array.from(root.querySelectorAll<HTMLElement>('button:not([disabled]),a[href]:not([tabindex="-1"]),input:not([disabled]):not([tabindex="-1"])'))
+     .filter(node=>node.getClientRects().length>0);
+    if(!focusable.length)return;
+    const first=focusable[0],last=focusable[focusable.length-1];
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+   }
   };
   window.addEventListener('keydown',onKey);
   return()=>{document.body.style.overflow=previous;window.removeEventListener('keydown',onKey)};
@@ -1087,34 +1097,6 @@ async function upload(uploaded:File){
     <header className="result-masthead" id="result-top">
      <div className="result-masthead-row">
       <h1>Your message</h1>
-
-      {verification&&ready&&reviewWorthWatching&&!storyOpen&&(reviewOffer==='counting'||reviewOffer==='idle')?
-       <div
-        className={`review-offer ${reviewOffer==='counting'?'is-counting':'is-explicit'} ${reviewOfferPaused?'is-paused':''}`}
-        data-review-offer
-        onMouseEnter={()=>setReviewOfferPaused(true)}
-        onMouseLeave={()=>setReviewOfferPaused(false)}
-        onFocusCapture={()=>setReviewOfferPaused(true)}
-        onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setReviewOfferPaused(false)}}
-        role="status"
-        aria-live="polite"
-       >
-        {reviewOffer==='counting'&&<div className="review-timer" aria-hidden="true">
-         <svg viewBox="0 0 44 44" focusable="false">
-          <circle className="review-timer-track" cx="22" cy="22" r="19" pathLength="100"/>
-          <circle className="review-timer-progress" cx="22" cy="22" r="19" pathLength="100"/>
-         </svg>
-         <span>{reviewCountdown}</span>
-        </div>}
-        <div className="review-offer-meta">
-         <strong>{storyStartPending?'Preparing review':'Review ready'}</strong>
-         <div className="review-offer-actions">
-          <button type="button" onClick={startStory}>{reviewOffer==='counting'?'Watch now':'Watch review'}</button>
-          <button type="button" onClick={skipReviewOffer}>Skip</button>
-         </div>
-        </div>
-       </div>
-       :verification&&reviewWorthWatching&&<button ref={replayButton} type="button" className="masthead-play-review" onClick={replayStory}>Play review</button>}
      </div>
 
      {verification&&<nav className="result-chapters" aria-label="Result sections">
@@ -1164,7 +1146,7 @@ async function upload(uploaded:File){
            <span>{storySourceLabel}</span>
            <strong>{storyEvidence?.title||'No supported public source available'}</strong>
            <p>{storySourceDisplay}</p>
-           {storyEvidence&&<a href={storyEvidence.url} target="_blank" rel="noopener noreferrer">Open source</a>}
+           {storyEvidence&&<a href={storyEvidence.url} target="_blank" rel="noopener noreferrer" tabIndex={storyStep>=2&&storyStep<=3?0:-1}>Open source</a>}
           </div>
          </div>
         </div>
@@ -1185,8 +1167,8 @@ async function upload(uploaded:File){
          <p>{storyFinalSummary}</p>
          {verification.contact?.name&&<small>{verification.contact.name}{verification.contact.phone?` · ${verification.contact.phone}`:''}</small>}
          <div className="story-final-actions">
-          {verification.contact?.website&&<a href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open official court website</a>}
-          {!verification.contact?.website&&verification.safe_action&&<a href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>}
+          {verification.contact?.website&&<a href={verification.contact.website} target="_blank" rel="noopener noreferrer" tabIndex={storyStep===4?0:-1}>Open official court website</a>}
+          {!verification.contact?.website&&verification.safe_action&&<a href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer" tabIndex={storyStep===4?0:-1}>{verification.safe_action.primary_label}</a>}
          </div>
         </div>
        </div>
@@ -1293,7 +1275,7 @@ async function upload(uploaded:File){
          {directCheckSummary&&<small className="decision-direct-check">{directCheckSummary}</small>}
         </div>
 
-        {reviewWorthWatching&&!storyOpen&&<button type="button" className="decision-review-player" data-testid="play-evidence-review" onClick={replayStory}>
+        {reviewWorthWatching&&!storyOpen&&<button ref={replayButton} type="button" className="decision-review-player" data-testid="play-evidence-review" onClick={replayStory}>
          <span className="decision-review-play" aria-hidden="true"><DesignPlayIcon/></span>
          <span><strong>Play evidence review</strong><small>17 sec · message → source → next step</small></span>
         </button>}
@@ -1400,7 +1382,7 @@ async function upload(uploaded:File){
      </div>}
      {verification?.safe_action&&<div className="safe-route" id="next-step">
       <div>
-       <h2>Safest next step</h2>
+       <h2>{verification.safe_action.title}</h2>
        <p>{verification.safe_action.summary}</p>
       </div>
       <div>
