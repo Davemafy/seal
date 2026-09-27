@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- Local SVG brand mark needs no image optimizer. */
 'use client';
 
 import {useEffect} from 'react';
