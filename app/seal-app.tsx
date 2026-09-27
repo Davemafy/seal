@@ -273,23 +273,31 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const jumpToResultSection=useCallback((event:React.MouseEvent<HTMLAnchorElement>,section:'summary'|'message'|'evidence'|'next',targetBase:string)=>{
   event.preventDefault();
   const carousel=resultCarouselRef.current;
-  const slide=carousel?.querySelector<HTMLElement>(`[data-result-section="${section}"]`);
+  const slides=carousel?Array.from(carousel.querySelectorAll<HTMLElement>('.result-slide')):[];
+  const slide=slides.find(candidate=>candidate.dataset.resultSection===section);
   if(!carousel||!slide)return;
-  const currentIndex=carousel.clientWidth?Math.round(carousel.scrollLeft/carousel.clientWidth):0;
-  const targetIndex=Math.max(0,Math.round(slide.offsetLeft/Math.max(1,carousel.clientWidth)));
+  const sections=['summary','message','evidence','next'] as const;
+  const currentIndex=Math.max(0,sections.indexOf(activeResultSection));
+  const targetIndex=Math.max(0,sections.indexOf(section));
   const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const adjacent=Math.abs(targetIndex-currentIndex)===1;
-  slide.scrollTo({top:0,behavior:'auto'});
   setActiveResultSection(section);
-  carousel.scrollTo({left:slide.offsetLeft,behavior:reduce||!adjacent?'auto':'smooth'});
+  carousel.scrollTo({top:slide.offsetTop,left:0,behavior:reduce||!adjacent?'auto':'smooth'});
   const id=workspaceId==='primary'?targetBase:`${targetBase}-${workspaceId}`;
   window.history.replaceState(null,'',`#${id}`);
- },[workspaceId]);
+ },[workspaceId,activeResultSection]);
  const syncResultCarousel=useCallback((event:React.UIEvent<HTMLDivElement>)=>{
   const carousel=event.currentTarget;
-  if(!carousel.clientWidth)return;
-  const index=Math.max(0,Math.min(3,Math.round(carousel.scrollLeft/carousel.clientWidth)));
-  const next=(['summary','message','evidence','next'] as const)[index];
+  const slides=Array.from(carousel.querySelectorAll<HTMLElement>('.result-slide'));
+  if(!slides.length)return;
+  const probe=carousel.scrollTop+Math.min(160,carousel.clientHeight*.22);
+  let index=0;
+  for(let i=0;i<slides.length;i++){
+   if(slides[i].offsetTop<=probe)index=i;
+   else break;
+  }
+  if(carousel.scrollTop+carousel.clientHeight>=carousel.scrollHeight-4)index=slides.length-1;
+  const next=(['summary','message','evidence','next'] as const)[Math.min(3,index)];
   setActiveResultSection(current=>current===next?current:next);
  },[]);
 
@@ -298,10 +306,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   const frame=window.requestAnimationFrame(()=>{
    const carousel=resultCarouselRef.current;
    if(!carousel)return;
-   carousel.scrollTo({left:0,behavior:'auto'});
-   carousel.querySelectorAll<HTMLElement>('.result-slide').forEach(slide=>{
-    slide.scrollTo({top:0,left:0,behavior:'auto'});
-   });
+   carousel.scrollTo({top:0,left:0,behavior:'auto'});
    setActiveResultSection('summary');
    if(window.location.hash)window.history.replaceState(null,'',window.location.pathname+window.location.search);
   });
