@@ -1362,7 +1362,7 @@ async function upload(uploaded:File){
      </div>
 
      <details className="technical-record" open={technicalOpen} onToggle={event=>setTechnicalOpen(event.currentTarget.open)}>
-      <summary>Technical record <span>{technicalOpen?'−':'+'}</span></summary>
+      <summary>Technical record</summary>
       <p>Extractor: {extractionMode} · {resolverSummary}</p>
       {technicalEvidence.map((evidence,index)=><p key={evidence.url||index}>{evidence.title} · {evidence.source_mode} · {evidence.checked_at} · <a href={evidence.url} target="_blank" rel="noopener noreferrer">Original source</a></p>)}
      </details>
