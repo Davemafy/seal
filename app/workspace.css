@@ -1835,39 +1835,60 @@
   padding-top:28px;
   padding-bottom:24px
  }
- .intake.is-processing-intake{padding:15px}
+ .intake.is-processing-intake{padding:14px}
  .upload-row.is-busy{min-height:0}
  .upload-process{
-  grid-template-columns:128px minmax(0,1fr);
-  gap:16px
+  grid-template-columns:118px minmax(0,1fr);
+  gap:18px
  }
- .upload-process-media{min-height:194px}
- .upload-process-body{justify-content:flex-start;padding-top:1px}
- .upload-process-body>strong{font-size:19px;line-height:24px}
+ .upload-process-media{min-height:186px}
+ .upload-process-body{
+  min-height:186px;
+  justify-content:flex-start;
+  padding-top:1px
+ }
+ .upload-process-body>strong{
+  max-width:none;
+  font-size:18px;
+  line-height:22px
+ }
  .process-flow{
-  grid-template-columns:auto minmax(16px,1fr) auto minmax(16px,1fr) auto;
-  margin-top:20px
+  grid-template-columns:auto minmax(14px,1fr) auto minmax(14px,1fr) auto;
+  margin-top:18px
  }
- .process-node{min-width:36px;gap:6px}
+ .process-node{min-width:32px;gap:5px}
  .process-node>i{width:20px;height:20px}
  .process-node>i>img{width:10px;height:10px}
- .process-node>small{font-size:9px;line-height:12px}
+ .process-node>small{font-size:8.5px;line-height:11px}
  .process-link{height:20px}
  .process-link::before{top:10px}
  .process-link>i{top:6px}
  .process-readout{
-  align-items:flex-start;
-  flex-direction:column;
-  gap:1px;
-  margin-top:15px;
-  padding-top:9px
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:baseline;
+  gap:8px;
+  margin-top:14px;
+  padding-top:10px
  }
- .process-readout-main{font-size:10px;line-height:14px}
- .process-readout-detail{font-size:9px;line-height:13px}
- .upload-file-name{margin-top:4px;font-size:8.5px;line-height:12px}
+ .process-readout-main{
+  min-width:0;
+  font-size:10px;
+  line-height:14px
+ }
+ .process-readout-detail{
+  max-width:74px;
+  overflow:hidden;
+  font-size:9px;
+  line-height:13px;
+  text-align:right;
+  text-overflow:ellipsis;
+  white-space:nowrap
+ }
+ .upload-file-name{display:none}
  .process-device-note{
-  margin-top:11px;
-  padding-top:9px
+  margin-top:auto;
+  padding-top:10px
  }
  .process-device-note>span{font-size:9px;line-height:13px}
  .process-device-note>small{font-size:8px;line-height:12px}
@@ -1879,8 +1900,9 @@
 
 @media(max-width:380px){
  .intake.is-processing-intake{padding:13px}
- .upload-process{grid-template-columns:112px minmax(0,1fr);gap:13px}
- .upload-process-media{min-height:184px}
+ .upload-process{grid-template-columns:108px minmax(0,1fr);gap:14px}
+ .upload-process-media,
+ .upload-process-body{min-height:178px}
  .process-node>small{font-size:8px}
 }
 
