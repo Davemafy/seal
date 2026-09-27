@@ -56,7 +56,8 @@ function WebGLWorld({ root }: { root: React.RefObject<HTMLDivElement | null> }) 
       .to(group.scale,{x:.01,y:.01,z:.01,duration:.7,ease:"expo.in"},8.1)
       .to([knot.scale,ring.scale],{x:.001,y:.001,z:.001,duration:.5,ease:"expo.in"},8.1);
 
-    let raf=0, start=performance.now();
+    let raf=0;
+    const start=performance.now();
     const draw=(now:number)=>{const t=((now-start)/1000)%TOTAL;tl.time(t,false);knot.rotation.z += .0015;renderer.render(scene,camera);raf=requestAnimationFrame(draw)}; raf=requestAnimationFrame(draw);
     return()=>{cancelAnimationFrame(raf);removeEventListener("resize",resize);renderer.dispose();pageGeo.dispose();paperMat.dispose();acidMat.dispose();chromeMat.dispose()};
   },[root]);
