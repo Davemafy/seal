@@ -3478,11 +3478,11 @@
  .seal-workspace-instance.is-entering-forward{animation:workspace-page-forward .34s cubic-bezier(.22,.84,.26,1) both}
  .seal-workspace-instance.is-entering-backward{animation:workspace-page-backward .34s cubic-bezier(.22,.84,.26,1) both}
  @keyframes workspace-page-forward{
-  from{opacity:.72;transform:translate3d(9vw,0,0)}
+  from{opacity:.55;transform:translate3d(0,42px,0)}
   to{opacity:1;transform:translate3d(0,0,0)}
  }
  @keyframes workspace-page-backward{
-  from{opacity:.72;transform:translate3d(-7vw,0,0)}
+  from{opacity:.55;transform:translate3d(0,42px,0)}
   to{opacity:1;transform:translate3d(0,0,0)}
  }
 
@@ -3554,58 +3554,26 @@
 }
 
 
-/* Multi-workspace mobile shell: identity, swipe affordance, quieter entry. */
-@media(max-width:900px){
- .mobile-nav-identity{
-  min-width:0;display:flex;align-items:center;gap:9px;flex:1 1 auto
- }
- .mobile-current-check{
-  min-width:0;max-width:min(31vw,128px);height:32px;display:flex;align-items:center;gap:6px;
-  padding:0 5px;border:0;border-radius:7px;background:transparent;color:#202020;text-align:left;cursor:pointer
- }
- .mobile-current-check:hover,.mobile-current-check:focus-visible{background:#f3f3f1;outline:none}
- .mobile-current-check>span:last-child{
-  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  font-size:10px;line-height:14px;font-weight:600;letter-spacing:-.005em
- }
- .mobile-current-check-state{
-  width:5px;height:5px;flex:0 0 5px;border:1px solid #aaa;border-radius:50%
- }
- .mobile-current-check-state.is-reading,.mobile-current-check-state.is-verifying{
-  border-color:#111;background:#111;animation:workspace-running 1.15s ease-in-out infinite
- }
- .mobile-current-check-state.is-done{border-color:#111;background:#111}
- .mobile-current-check-state.is-error{border-color:#111;background:#fff}
- .mobile-nav-tools{flex:0 0 auto}
- .mobile-workspace-trigger{position:relative}
- .mobile-workspace-trigger::after{
-  content:"";position:absolute;width:8px;height:8px;right:4px;top:4px;border:1px solid currentColor;border-radius:2px;
-  opacity:.0;pointer-events:none
- }
-}
 
+/* Quieter mobile entry without changing the upload composition. */
 @media(max-width:599px){
  .entry-shell{
-  padding-top:24px!important;
-  row-gap:22px!important
+  padding-top:26px!important;
+  row-gap:26px!important
  }
  .entry-copy h1{
-  max-width:330px!important;
-  font-size:35px!important;
-  line-height:39px!important;
-  letter-spacing:-.02em!important
+  max-width:340px!important;
+  font-size:37px!important;
+  line-height:41px!important;
+  letter-spacing:-.018em!important
  }
  .entry-copy>p{
-  max-width:330px!important;
+  max-width:340px!important;
   margin-top:10px!important;
-  font-size:15px!important;
-  line-height:22px!important
+  font-size:15.5px!important;
+  line-height:23px!important
  }
- .intake{padding:14px!important}
- .upload-row{min-height:218px!important;padding:24px 20px!important}
 }
-
 @media(max-width:360px){
- .mobile-current-check{max-width:88px}
- .entry-copy h1{font-size:33px!important;line-height:37px!important}
+ .entry-copy h1{font-size:35px!important;line-height:39px!important}
 }
