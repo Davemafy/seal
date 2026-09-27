@@ -110,7 +110,7 @@ Final line:
 - Do not claim SEAL authenticates documents, determines fraud, or has direct case coverage for every court.
 - Never call pattern/process evidence direct case verification.
 - Keep the original artifact visible through the core result.
-- Show the horizontal Result → Original → Evidence → Resolve interaction once, not repeatedly.
+- Show the horizontal Result, Original, Evidence, and Resolve interaction once, not repeatedly.
 - Show parallel checks once; do not turn the demo into workspace management.
 - Translation may explain SEAL's result, but do not imply translated text replaces the original evidence.
 - If a model/API is rate-limited during recording, use the conservative fallback or record after the provider recovers; never hide an abstention.
