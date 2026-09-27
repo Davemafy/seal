@@ -191,10 +191,10 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   window.history.replaceState(null,'',target);
  },[]);
  const [reviewOffer,setReviewOffer]=useState<'idle'|'counting'|'skipped'|'watching'|'completed'>('idle');
- const [reviewCountdown,setReviewCountdown]=useState(3);
- const [reviewOfferPaused,setReviewOfferPaused]=useState(false);
+ const [,setReviewCountdown]=useState(3);
+ const [,setReviewOfferPaused]=useState(false);
  const [storyArtifactReady,setStoryArtifactReady]=useState(true);
- const [storyStartPending,setStoryStartPending]=useState(false);
+ const [,setStoryStartPending]=useState(false);
  const [storyOpen,setStoryOpen]=useState(false);
  const [storyStep,setStoryStep]=useState(0);
  const [storyPlaying,setStoryPlaying]=useState(true);
@@ -747,7 +747,9 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
   };
   window.addEventListener('keydown',onKey);
   return()=>{document.body.style.overflow=previous;window.removeEventListener('keydown',onKey)};
- },[storyOpen,seekStoryBy,toggleStoryPlayback,closeStory]);
+ // closeStory is intentionally a local command bound to current result state.
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[storyOpen,seekStoryBy,toggleStoryPlayback]);
 
  function startStory(){
   if(!storyArtifactReady&&file?.kind!=='pdf'){
