@@ -39,6 +39,7 @@ export const UI_COPY={
  openPublicSource:'Open public source',
  seeHowChecked:'See how SEAL checked it',
  evidenceReviewHint:'17 sec · notice → public source → next step',
+ independentEvidence:'Independent evidence',sources:'Sources',officialProcess:'Official process',officialDirectory:'Official directory',sourceConflict:'Source conflict',knownPattern:'Known pattern',officialWarning:'Official warning',officialSourceMatch:'Official source match',officialSourceConflict:'Official source conflict',sourceEvidence:'Source evidence',independentCheck:'Independent check',
  translatedNote:'Translated for your display language. Source quotations remain in their original wording.',
  publicSourcesOnly:'Public sources only',
  publicSourcesNote:'Every item links back to the issuing court or agency.',
