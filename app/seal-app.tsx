@@ -1541,11 +1541,14 @@ async function upload(uploaded:File){
 
  return <main ref={workspaceRootRef} className="seal-app" data-testid="seal-app">
   <aside className="workspace-rail" aria-label="Workspace">
-   <Link href="/" className="rail-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
-   <div className="rail-command-row">
-    <button className="icon-control rail-icon-control rail-new-check" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} data-tooltip={ui('newCheck')} onClick={onNewWorkspace}><SealUiIcon name="add"/></button>
-    <Link className="icon-control rail-icon-control" href="/browse" aria-label={ui('browse')} title={ui('browse')} data-tooltip={ui('browse')}><SealUiIcon name="browse"/></Link>
+   <div className="rail-topbar">
+    <Link href="/" className="rail-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
+    <div className="rail-command-row" aria-label="Workspace actions">
+     <Link className="icon-control rail-icon-control" href="/browse" aria-label={ui('browse')} title={ui('browse')} data-tooltip={ui('browse')}><SealUiIcon name="browse"/></Link>
+     <button className="icon-control rail-icon-control rail-new-check" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} data-tooltip={ui('newCheck')} onClick={onNewWorkspace}><SealUiIcon name="add"/></button>
+    </div>
    </div>
+   <div className="rail-section-head"><span>Checks</span><small>{workspaces.length}</small></div>
    <div className="rail-check-list" aria-label="Open checks">
     {workspaces.filter(item=>item.status!=='idle'||item.id===workspaceId).map((item,index)=>{
      const title=item.title||`Check ${index+1}`;
@@ -1558,13 +1561,14 @@ async function upload(uploaded:File){
        aria-current={item.id===workspaceId?'page':undefined}
       >
        <span className={`rail-check-state is-${item.status}`} aria-hidden="true"/>
-       <span className="rail-check-copy"><strong>{title}</strong><small>{[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · ')}</small></span>
+       <span className="rail-check-copy"><strong>{title}</strong><small>{item.preview||[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · ')}</small></span>
       </button>
       <button className="rail-check-delete icon-control" type="button" aria-label={`Delete check ${index+1}: ${title}`} title={`Delete ${title}`} onClick={()=>onDeleteWorkspace(item.id)}><SealUiIcon name="delete"/></button>
      </div>;
     })}
    </div>
    <div className="rail-spacer"/>
+   <div className="rail-bottom">
    <div className="rail-language">
     <div className="rail-language-menu">
      <button type="button" className="rail-language-trigger" aria-label={ui('displayLanguage')} title={ui('displayLanguage')} aria-haspopup="listbox" aria-expanded={languageMenuOpen} onClick={()=>setLanguageMenuOpen(open=>!open)}>
@@ -1574,6 +1578,7 @@ async function upload(uploaded:File){
       {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><button type="button" role="option" aria-selected={code===displayLocale} className={code===displayLocale?'is-selected':''} key={code} onClick={()=>changeDisplayLanguage(code as DisplayLocale)}><span>{label}</span><small>{code.toUpperCase()}</small></button>)}
      </div>}
     </div>
+   </div>
    </div>
   </aside>
   <header className="seal-nav mobile-only-nav">
