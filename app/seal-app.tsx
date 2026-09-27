@@ -521,11 +521,10 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    strings.safePrimary=verification.safe_action.primary_label;
   }
   return strings;
- },[verification,file?.sample,decision.title,decision.summary,decisionRelationship,groundedActions,decisionClaim,decisionClaimDisplay]);
+ },[verification,file?.sample,decision.title,decision.summary,decisionRelationship]);
 
- const resultTranslationSignature=JSON.stringify(resultTranslationSource);
  useEffect(()=>{
-  if(!verification||displayLocale==='en'){setTranslatedResult({});return}
+  if(!verification||displayLocale==='en')return;
   const controller=new AbortController();
   void fetch('/api/translate',{
    method:'POST',headers:{'Content-Type':'application/json'},
@@ -536,7 +535,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    if(payload.strings)setTranslatedResult(payload.strings);
   }).catch(()=>{});
   return()=>controller.abort();
- },[verification,displayLocale,resultTranslationSignature]);
+ },[verification,displayLocale,resultTranslationSource]);
 
  const technicalEvidence=useMemo(()=>{
   if(!verification)return [];
@@ -842,8 +841,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  },[hydrated]);
 
  useEffect(()=>{
-  if(!hydrated)return;
-  if(displayLocale==='en'){setTranslatedUi({});return}
+  if(!hydrated||displayLocale==='en')return;
   const controller=new AbortController();
   void fetch('/api/translate',{
    method:'POST',headers:{'Content-Type':'application/json'},
@@ -1033,6 +1031,12 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   },260);
  }
  function replayStory(){startStory()}
+
+ function changeDisplayLanguage(locale:DisplayLocale){
+  setTranslatedUi({});
+  setTranslatedResult({});
+  setDisplayLocale(locale);
+ }
 
  async function changeExplanationLocale(locale:string){
   setExplainLocale(locale);setTranslatedExplanation(null);setTranslationState('idle');
@@ -1340,7 +1344,7 @@ async function upload(uploaded:File){
    <div className="rail-spacer"/>
    <label className="rail-language">
     <span>{ui('displayLanguage')}</span>
-    <select value={displayLocale} onChange={event=>setDisplayLocale(event.target.value as DisplayLocale)} aria-label={ui('displayLanguage')}>
+    <select value={displayLocale} onChange={event=>changeDisplayLanguage(event.target.value as DisplayLocale)} aria-label={ui('displayLanguage')}>
      {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><option key={code} value={code}>{label}</option>)}
     </select>
    </label>
@@ -1349,7 +1353,7 @@ async function upload(uploaded:File){
   <header className="seal-nav mobile-only-nav">
    <Link href="/" className="mobile-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></Link>
    <div className="mobile-nav-tools">
-    <select className="mobile-language-select" value={displayLocale} onChange={event=>setDisplayLocale(event.target.value as DisplayLocale)} aria-label={ui('displayLanguage')}>
+    <select className="mobile-language-select" value={displayLocale} onChange={event=>changeDisplayLanguage(event.target.value as DisplayLocale)} aria-label={ui('displayLanguage')}>
      {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><option key={code} value={code}>{label}</option>)}
     </select>
    {!verification&&!busy&&workspaces.length===1
