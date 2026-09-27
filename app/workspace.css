@@ -7694,3 +7694,83 @@
   font-weight:600!important
  }
 }
+
+
+/* Viewport-safe tooltip system — direction follows control context. */
+@media(hover:hover) and (pointer:fine){
+ .icon-control[data-tooltip],
+ .rail-topbar,
+ .rail-command-row,
+ .handoff-actions,
+ .check-object-actions{
+  overflow:visible!important
+ }
+
+ /* Safe default: open below instead of escaping through the top edge. */
+ .icon-control[data-tooltip]::after{
+  top:calc(100% + 8px)!important;
+  bottom:auto!important;
+  left:50%!important;
+  right:auto!important;
+  transform:translate(-50%,-3px)!important;
+  transform-origin:top center!important;
+  white-space:nowrap!important;
+  font-size:12px!important;
+  line-height:17px!important
+ }
+ .icon-control[data-tooltip]:hover::after,
+ .icon-control[data-tooltip]:focus-visible::after{
+  transform:translate(-50%,0)!important
+ }
+
+ /* Right-side chrome must grow leftward, never outside the viewport/rail. */
+ .rail-new-check[data-tooltip]::after,
+ .check-object-actions .icon-control[data-tooltip]::after{
+  left:auto!important;
+  right:0!important;
+  transform:translateY(-3px)!important;
+  transform-origin:top right!important
+ }
+ .rail-new-check[data-tooltip]:hover::after,
+ .rail-new-check[data-tooltip]:focus-visible::after,
+ .check-object-actions .icon-control[data-tooltip]:hover::after,
+ .check-object-actions .icon-control[data-tooltip]:focus-visible::after{
+  transform:translateY(0)!important
+ }
+
+ /* In-content handoff controls have room above and should not cover the record below. */
+ .handoff-actions .icon-control[data-tooltip]::after{
+  top:auto!important;
+  bottom:calc(100% + 8px)!important;
+  left:50%!important;
+  right:auto!important;
+  transform:translate(-50%,3px)!important;
+  transform-origin:bottom center!important
+ }
+ .handoff-actions .icon-control[data-tooltip]:hover::after,
+ .handoff-actions .icon-control[data-tooltip]:focus-visible::after{
+  transform:translate(-50%,0)!important
+ }
+
+ /* First/last handoff controls bias inward so long labels stay on-canvas. */
+ .handoff-actions .icon-control:first-child[data-tooltip]::after{
+  left:0!important;
+  right:auto!important;
+  transform:translateY(3px)!important;
+  transform-origin:bottom left!important
+ }
+ .handoff-actions .icon-control:first-child[data-tooltip]:hover::after,
+ .handoff-actions .icon-control:first-child[data-tooltip]:focus-visible::after{
+  transform:translateY(0)!important
+ }
+ .handoff-actions .icon-control:last-child[data-tooltip]::after{
+  left:auto!important;
+  right:0!important;
+  transform:translateY(3px)!important;
+  transform-origin:bottom right!important
+ }
+ .handoff-actions .icon-control:last-child[data-tooltip]:hover::after,
+ .handoff-actions .icon-control:last-child[data-tooltip]:focus-visible::after{
+  transform:translateY(0)!important
+ }
+}
