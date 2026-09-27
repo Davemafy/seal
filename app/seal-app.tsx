@@ -55,6 +55,23 @@ const cleanDisplayText=(value:string)=>value
  .replace(/^(?:[~≈·|:;,.\-–—]\s*)+|(?:\s*[~≈·|:;,.\-–—])+$/g,'')
  .trim();
 
+const humanizeDisplayName=(value:string)=>{
+ const clean=cleanDisplayText(value);
+ const letters=clean.replace(/[^A-Za-z]/g,'');
+ if(!letters||clean!==clean.toUpperCase())return clean;
+ const smallWords=new Set(['a','an','and','as','at','by','for','from','in','of','on','or','the','to','with']);
+ const roman=new Set(['ii','iii','iv','vi','vii','viii','ix','xi','xii']);
+ return clean.toLowerCase().split(/\s+/).map((word,index,all)=>{
+  const bare=word.replace(/^[^a-z0-9]+|[^a-z0-9.]+$/g,'');
+  if(!bare)return word;
+  let transformed=bare;
+  if(roman.has(bare))transformed=bare.toUpperCase();
+  else if(index>0&&index<all.length-1&&smallWords.has(bare))transformed=bare;
+  else transformed=bare.charAt(0).toUpperCase()+bare.slice(1);
+  return word.replace(bare,transformed);
+ }).join(' ');
+};
+
 const cinematicExcerpt=(value:string,max=220)=>{
  const clean=cleanDisplayText(value);
  if(clean.length<=max)return clean;
@@ -821,8 +838,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   :'';
 
  const checkObjectTitle=caseReality?.court&&caseReality.court!=='Court not identified'?cleanDisplayText(caseReality.court):'Court message';
- const checkObjectDisplayTitle=checkObjectTitle
-  .replace(/^UNITED STATES DISTRICT COURT\s*/i,'U.S. District Court · ')
+ const checkObjectDisplayTitle=humanizeDisplayName(checkObjectTitle)
+  .replace(/^United States District Court\s*/i,'U.S. District Court · ')
   .replace(/\s{2,}/g,' ')
   .replace(/·\s*·/g,'·')
   .replace(/·\s*$/,'');
