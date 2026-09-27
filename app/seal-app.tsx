@@ -1518,7 +1518,7 @@ async function upload(uploaded:File){
        aria-current={item.id===workspaceId?'page':undefined}
       >
        <span className={`rail-check-state is-${item.status}`} aria-hidden="true"/>
-       <span className="rail-check-copy"><strong>{title}</strong><small>{item.preview||[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · ')}</small></span>
+       <span className="rail-check-copy"><strong>{title}</strong><small>{[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · ')}</small></span>
       </button>
       <button className="rail-check-delete icon-control" type="button" aria-label={`Delete check ${index+1}: ${title}`} title={`Delete ${title}`} onClick={()=>onDeleteWorkspace(item.id)}><SealUiIcon name="delete"/></button>
      </div>;
