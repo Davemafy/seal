@@ -1,2 +1,3 @@
-Cloudflare preview trigger: 2026-09-26T00:52Z
+Cloudflare preview trigger
 Branch: cloudflare-preview
+Redeploy: current hardened branch state
