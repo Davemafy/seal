@@ -31,7 +31,12 @@ export async function warmOcr(language:OcrLanguage='eng'){
  return ocrWorkerPromise;
 }
 
-export async function readInBrowser(file:File,onStatus:(status:string)=>void=()=>{},language:OcrLanguage='eng'):Promise<BrowserDocument>{
+function throwIfAborted(signal?:AbortSignal){
+ if(signal?.aborted)throw new DOMException('Document read cancelled.','AbortError');
+}
+
+export async function readInBrowser(file:File,onStatus:(status:string)=>void=()=>{},language:OcrLanguage='eng',signal?:AbortSignal):Promise<BrowserDocument>{
+ throwIfAborted(signal);
  if(file.size>16_000_000)throw new Error('Maximum file size is 16 MB.');
  if(!['application/pdf','image/jpeg','image/png'].includes(file.type))throw new Error('Choose a PDF, JPG, or PNG.');
  const preview=URL.createObjectURL(file);
@@ -39,12 +44,19 @@ export async function readInBrowser(file:File,onStatus:(status:string)=>void=()=
  if(file.type==='application/pdf'){
   onStatus('Opening the PDF');
   const pdfjs=await import('pdfjs-dist');pdfjs.GlobalWorkerOptions.workerSrc='/pdf.worker.min.mjs';
-  const loading=pdfjs.getDocument({data:await file.arrayBuffer(),standardFontDataUrl:'/standard_fonts/',useSystemFonts:true});
+  throwIfAborted(signal);
+  const bytes=await file.arrayBuffer();
+  throwIfAborted(signal);
+  const loading=pdfjs.getDocument({data:bytes,standardFontDataUrl:'/standard_fonts/',useSystemFonts:true});
+  const abortPdf=()=>{void loading.destroy().catch(()=>{})};
+  signal?.addEventListener('abort',abortPdf,{once:true});
   const doc=await loading.promise;
+  throwIfAborted(signal);
   const pages:string[]=[];const tokens:Token[]=[];let sample=false;
   try{
    onStatus('Reading text from the PDF');
    for(let i=1;i<=Math.min(doc.numPages,8);i++){
+    throwIfAborted(signal);
     const page=await doc.getPage(i);const viewport=page.getViewport({scale:1});const content=await page.getTextContent();let pageText='';
     for(const item of content.items){
      if(!('str' in item))continue;
@@ -72,18 +84,21 @@ export async function readInBrowser(file:File,onStatus:(status:string)=>void=()=
    if(!context)throw new Error('Could not prepare this PDF page.');
    const renderTask=page.render({canvas,canvasContext:context,viewport});
    await renderTask.promise;
-   const recognized=await ocr(canvas,language);
+   const recognized=await ocr(canvas,language,signal);
+   throwIfAborted(signal);
    page.cleanup();
    canvas.width=1;canvas.height=1;
    return {...recognized,preview,kind:'pdf',sample};
   }finally{
+   signal?.removeEventListener('abort',abortPdf);
    try{await loading.destroy()}catch{}
   }
  }
  onStatus('Preparing the image');
  const image=new Image();image.src=preview;await image.decode();
+ throwIfAborted(signal);
  onStatus('Reading text from the image');
- return {...await ocr(normalizeForOcr(image),language),preview,kind:'image',sample:false};
+ return {...await ocr(normalizeForOcr(image),language,signal),preview,kind:'image',sample:false};
  }catch(error){
   URL.revokeObjectURL(preview);
   throw error;
@@ -289,14 +304,20 @@ async function recognize(worker:Awaited<ReturnType<typeof import('tesseract.js')
  return {result,lines,quality:scoreOcr(result)};
 }
 
-async function ocr(image:HTMLImageElement|HTMLCanvasElement,language:OcrLanguage):Promise<OcrResult>{
+async function ocr(image:HTMLImageElement|HTMLCanvasElement,language:OcrLanguage,signal?:AbortSignal):Promise<OcrResult>{
+ throwIfAborted(signal);
  const worker=await warmOcr(language);
+ const abortWorker=()=>{void worker.terminate().catch(()=>{})};
+ signal?.addEventListener('abort',abortWorker,{once:true});
  try{
+  throwIfAborted(signal);
   const first=await recognize(worker,image);
+  throwIfAborted(signal);
   if(!shouldRetryOcr(first))return first.result;
   const variant=binaryVariant(image);
   try{
    const second=await recognize(worker,variant);
+   throwIfAborted(signal);
    const primary=second.quality>first.quality?second:first;
    const alternate=primary===first?second:first;
    return mergeCandidates(primary,alternate);
@@ -304,6 +325,7 @@ async function ocr(image:HTMLImageElement|HTMLCanvasElement,language:OcrLanguage
    variant.width=1;variant.height=1;
   }
  }finally{
+  signal?.removeEventListener('abort',abortWorker);
   // Tesseract's WASM heap is large on mobile. Do not keep it resident after
   // the scan has completed; the result screen also needs memory for PDF/image rendering.
   if(ocrWorkerPromise){
