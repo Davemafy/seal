@@ -1504,6 +1504,7 @@ async function upload(uploaded:File){
  const processingTextRegionsVisible=useMemo(()=>file?.tokens?processingTextRegions(file.tokens):[],[file]);
  const processingRegionCount=processingTextRegionsVisible.length;
  const processingMeta=[documentLanguage?.label,jurisdiction].filter(Boolean).join(' · ');
+ const processingFileName=uploadPreview?.name&&uploadPreview.name.length<=56&&/[A-Za-z]{3}/.test(uploadPreview.name)?uploadPreview.name:'';
  const processingStages=[
   {
    label:'Read document',
@@ -1555,7 +1556,7 @@ async function upload(uploaded:File){
    </div>
    <div className="rail-section-head"><span>Checks</span><small>{workspaces.length}</small></div>
    <div className="rail-check-list" aria-label="Open checks">
-    {workspaces.filter(item=>item.status!=='idle'||item.id===workspaceId).map((item,index)=>{
+    {workspaces.map((item,index)=>{
      const rawTitle=cleanDisplayText(item.title||'');
      const title=rawTitle.length>=3?rawTitle:`Check ${index+1}`;
      const usefulPreview=cleanDisplayText(item.preview||'');
@@ -1676,7 +1677,7 @@ async function upload(uploaded:File){
              </span>;
             })}
            </span>
-           {uploadPreview?.name&&<span className="upload-file-name" title={uploadPreview.name}>{uploadPreview.name}</span>}
+           {processingFileName&&<span className="upload-file-name" title={processingFileName}>{processingFileName}</span>}
            <span className="process-device-note"><span>Original stays on this device</span><small>Extracted text may be sent for checking</small></span>
           </span>
          </span>
