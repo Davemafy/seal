@@ -260,7 +260,9 @@ Call 1-866-388-2430 after 5:30 PM for the status of your jury service.`);
 
  await expect.poll(()=>verifyCount,{timeout:15000}).toBe(1);
  let active=page.locator('.seal-workspace-instance:not([hidden])');
- await expect(active.locator('.rail-check-state.is-verifying')).toBeVisible();
+ const firstCheck=active.locator('.rail-check-list .rail-check').first();
+ await expect(firstCheck.locator('.rail-check-state')).toHaveClass(/is-verifying/);
+ await expect(firstCheck.locator('.rail-check-copy small')).toContainText('Checking sources');
 
  await active.locator('.rail-new-check').click();
  active=page.locator('.seal-workspace-instance:not([hidden])');
