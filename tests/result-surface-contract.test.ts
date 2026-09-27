@@ -9,7 +9,8 @@ describe('result surface design contract',()=>{
   expect(app).toContain('className="decision-visual"');
   expect(app).toContain('className="decision-artifact"');
   expect(app).toContain('aria-label="Check snapshot"');
-  expect(app).toContain("reviewOffer!=='idle'||!reviewWorthWatching");
+  expect(app).toContain('data-testid="play-evidence-review"');
+  expect(app).not.toContain('setTimeout(()=>startStory(),260)');
   expect(css).toContain('Visual result composition: focused reading column + contextual artifact.');
   expect(app).toContain("const primaryRoute=file?.sample");
   expect(app).toContain("resultStatusLabel=file?.sample");
