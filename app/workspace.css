@@ -7591,3 +7591,82 @@
   max-width:224px!important
  }
 }
+
+
+/* Product-wide readable metadata floor — final system pass. */
+@media(min-width:901px){
+ .entry-eyebrow,
+ .entry-intake-heading>small,
+ .entry-context-rail>span,
+ .entry-context-item small,
+ .upload-copy small,
+ .privacy-note,
+ .upload-file-name,
+ .field-label,
+ .process-live-meta,
+ .process-device-note,
+ .process-wait-note,
+ .process-wait-note small,
+ .process-stage-row small,
+ .process-stage-row em,
+ .rail-language-trigger>span,
+ .rail-language-popover small,
+ .translation-note,
+ .record-subheading>small,
+ .check-record-details dt,
+ .check-record-details dd,
+ .onboarding-kicker,
+ .onboarding-input-dock span,
+ .onboarding-input-dock small,
+ .onboarding-claim-card>span,
+ .onboarding-claim-card small,
+ .onboarding-source-head>span,
+ .onboarding-source-card>small,
+ .onboarding-result-card>span,
+ .onboarding-result-action small{
+  font-size:13px!important;
+  line-height:19px!important
+ }
+
+ .process-stage-row b,
+ .process-device-note>span,
+ .record-subheading>span,
+ .upload-browse,
+ .paste-mode-switch,
+ .check-message,
+ .demo-link{
+  font-size:14px!important;
+  line-height:20px!important
+ }
+
+ .onboarding-copy p{
+  font-size:16px!important;
+  line-height:24px!important
+ }
+ .onboarding-controls,
+ .onboarding-next,
+ .onboarding-back,
+ .onboarding-skip,
+ .onboarding-final-actions>a{
+  font-size:13.5px!important;
+  line-height:20px!important
+ }
+}
+
+@media(max-width:900px){
+ .entry-intake-heading>small,
+ .entry-context-item small,
+ .upload-copy small,
+ .privacy-note,
+ .upload-file-name,
+ .field-label,
+ .process-live-meta,
+ .process-device-note,
+ .process-wait-note,
+ .process-stage-row small,
+ .process-stage-row em,
+ .translation-note{
+  font-size:12.5px!important;
+  line-height:18px!important
+ }
+}
