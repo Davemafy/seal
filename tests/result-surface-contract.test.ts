@@ -36,6 +36,13 @@ describe('result surface design contract',()=>{
   expect(css).toContain('Persistent multi-workspace resting cue.');
   expect(css).toContain('translate3d(0,100dvh,0)');
   expect(css).toContain('font-size:37px!important');
+  expect(app).toContain('data-testid="first-run-onboarding"');
+  expect(app).toContain('window.localStorage.getItem(ONBOARDING_KEY)');
+  expect(app).toContain('aria-label="Check progress"');
+  expect(app).toContain("label:'Read document'");
+  expect(app).toContain("label:'Find instructions'");
+  expect(app).toContain("label:'Check public sources'");
+  expect(css).toContain('never fake percentage progress');
   expect(mobileCss).toContain('.result-slide-summary .decision-visual{display:none!important}');
   expect(mobileCss).toContain('.result-slide-evidence .evidence-review-entry');
   expect(mobileCss).toContain('Tabs behave as real sibling pages');
