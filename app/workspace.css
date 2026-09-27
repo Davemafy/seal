@@ -7395,3 +7395,199 @@
   content:none!important
  }
 }
+
+
+/* Old-rail visual language, current workspace behavior. */
+@media(min-width:901px){
+ .seal-app{
+  grid-template-columns:224px minmax(0,1fr)!important
+ }
+ .workspace-rail{
+  width:224px!important;
+  max-width:224px!important;
+  padding:20px 14px 14px!important;
+  background:#fbfbfa!important;
+  border-right:1px solid #e6e6e2!important
+ }
+
+ .rail-topbar{
+  min-height:38px!important;
+  padding:0 10px 22px!important
+ }
+ .rail-brand{
+  gap:8px!important
+ }
+ .rail-brand img{
+  width:19px!important;
+  height:19px!important
+ }
+ .rail-brand-word{
+  font-size:16px!important;
+  line-height:21px!important;
+  font-weight:660!important
+ }
+ .rail-new-check{
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  border-radius:6px!important
+ }
+
+ .rail-primary-nav{
+  margin:0 0 18px!important;
+  padding:0!important
+ }
+ .rail-nav-item{
+  min-height:38px!important;
+  padding:8px 12px!important;
+  border-radius:7px!important;
+  background:transparent!important;
+  font-size:13.5px!important;
+  line-height:20px!important;
+  font-weight:560!important
+ }
+ .rail-nav-item:hover{
+  background:#f1f1ee!important
+ }
+ .browse-workspace-rail .rail-nav-item.is-current{
+  background:#ececea!important;
+  font-weight:650!important
+ }
+
+ .rail-section-head{
+  height:auto!important;
+  min-height:18px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  margin:0!important;
+  padding:0 12px 8px!important;
+  overflow:visible!important;
+  visibility:visible!important
+ }
+ .rail-section-head>span{
+  display:block!important;
+  color:#666661!important;
+  font-size:10.5px!important;
+  line-height:15px!important;
+  font-weight:650!important;
+  letter-spacing:.02em!important;
+  text-transform:uppercase!important
+ }
+ .rail-section-head>small{
+  display:none!important
+ }
+
+ .rail-check-list{
+  gap:4px!important;
+  margin:0!important;
+  padding:0!important
+ }
+ .rail-check-row{
+  min-height:42px!important;
+  border-radius:7px!important;
+  background:transparent!important
+ }
+ .rail-check{
+  position:relative!important;
+  min-height:42px!important;
+  width:100%!important;
+  padding:10px 34px 10px 12px!important;
+  border-radius:7px!important;
+  background:transparent!important
+ }
+ .rail-check:hover{
+  background:#f3f3f0!important
+ }
+ .rail-check.is-current,
+ .rail-check-row.is-current .rail-check{
+  background:#e9e9e7!important
+ }
+
+ /* No selection stripe / state chrome — the soft row is the entire active state. */
+ .rail-check::before,
+ .rail-check::after,
+ .rail-check-row::before,
+ .rail-check-row::after,
+ .rail-check-state{
+  display:none!important;
+  content:none!important
+ }
+ .rail-check-copy{
+  display:block!important;
+  min-width:0!important;
+  overflow:hidden!important
+ }
+ .rail-check-copy strong{
+  display:block!important;
+  color:#111!important;
+  font-size:14px!important;
+  line-height:20px!important;
+  font-weight:560!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important
+ }
+ .rail-check-row.is-current .rail-check-copy strong{
+  font-weight:650!important
+ }
+ .rail-check-copy small{
+  display:none!important
+ }
+
+ .rail-check-delete{
+  top:6px!important;
+  right:5px!important;
+  width:30px!important;
+  height:30px!important;
+  border-radius:5px!important;
+  opacity:0!important
+ }
+ .rail-check-row:hover .rail-check-delete,
+ .rail-check-row:focus-within .rail-check-delete{
+  opacity:.55!important
+ }
+ .rail-check-delete:hover{
+  opacity:1!important;
+  background:#dededb!important
+ }
+
+ .rail-spacer{
+  min-height:28px!important
+ }
+ .rail-bottom{
+  padding:0 10px 2px!important;
+  border-top:0!important
+ }
+ .rail-language-trigger{
+  width:auto!important;
+  min-height:34px!important;
+  padding:7px 0!important;
+  background:transparent!important;
+  border-radius:0!important
+ }
+ .rail-language-trigger:hover{
+  background:transparent!important
+ }
+ .rail-language-trigger .seal-ui-icon,
+ .rail-language-trigger .seal-guide-icon{
+  display:none!important
+ }
+ .rail-language-trigger>span{
+  color:#333!important;
+  font-size:12.5px!important;
+  line-height:18px!important;
+  font-weight:560!important
+ }
+}
+
+/* Keep the old-rail proportions at wide desktop too. */
+@media(min-width:1190px){
+ .seal-app{
+  grid-template-columns:224px minmax(0,1fr)!important
+ }
+ .workspace-rail{
+  width:224px!important;
+  max-width:224px!important
+ }
+}
