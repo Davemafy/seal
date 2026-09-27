@@ -28,7 +28,6 @@ type SealWorkspaceProps={
  initialText?:string;
  initialRun?:boolean;
  workspaceId:string;
- workspaceActive:boolean;
  workspaces:WorkspaceMeta[];
  onNewWorkspace:()=>void;
  onSelectWorkspace:(id:string)=>void;
@@ -235,7 +234,7 @@ function decisionCopy(verification:Verification|null,claim?:Claim){
  };
 }
 
-function SealWorkspace({initialDemo=false,initialText='',initialRun=false,workspaceId,workspaceActive,workspaces,onNewWorkspace,onSelectWorkspace,onDeleteWorkspace,onWorkspaceMeta}:SealWorkspaceProps){
+function SealWorkspace({initialDemo=false,initialText='',initialRun=false,workspaceId,workspaces,onNewWorkspace,onSelectWorkspace,onDeleteWorkspace,onWorkspaceMeta}:SealWorkspaceProps){
  const [hydrated,setHydrated]=useState(false);
  const [text,setText]=useState(initialText||(initialDemo?fixtures['action-message-demo'].text:''));
  const [draft,setDraft]=useState('');
@@ -2330,7 +2329,6 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      initialText={index===0?initialText:''}
      initialRun={index===0?initialRun:false}
      workspaceId={workspace.id}
-     workspaceActive={workspace.id===activeWorkspace}
      workspaces={workspaces}
      onNewWorkspace={createWorkspace}
      onSelectWorkspace={selectWorkspace}
