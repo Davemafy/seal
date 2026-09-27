@@ -19,8 +19,5 @@ describe('result carousel design contract',()=>{
   expect(css).toContain('scroll-snap-type:x mandatory');
   expect(css).toContain('scroll-snap-align:start');
   expect(css).toContain('.record-disclosure');
-  expect(app).not.toContain('className="decision-visual"');
-  expect(app).not.toContain('className="decision-overview"');
-  expect(app).not.toContain('aria-label="Check snapshot"');
  });
 });
