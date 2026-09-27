@@ -75,7 +75,7 @@ Call 1-866-388-2430 after 5:30 PM for the status of your jury service.`);
   console.log('PASTE_BODY',await page.locator('body').innerText());
   throw error;
  });
- await expect(page.getByRole('heading',{name:'Check result'})).toBeVisible();
+ await expect(page.locator('.result-masthead-title')).toHaveText('Check result');
  await expect(page.locator('.pasted-message')).toContainText('Call 1-866-388-2430 after 5:30 PM');
  await expect(page.locator('.inspection-error')).toHaveCount(0);
  expect(extractRequests,'clear pasted actions should not depend on the optional model extractor').toBe(0);
@@ -93,7 +93,7 @@ Call +91 11 5555 0199 to confirm your attendance.`);
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.getByRole('heading',{name:'Verify through the official court system'})).toBeVisible();
- await expect(page.getByTestId('two-risk-result')).toContainText('instructions remain unverified');
+ await expect(page.getByTestId('two-risk-result')).toContainText('Not independently verified');
  await expect(page.getByText('Official directory',{exact:true})).toBeVisible();
  const route=page.getByTestId('case-reality-check').getByRole('link',{name:'Search India eCourts'});
  await expect(route).toBeVisible();
@@ -143,7 +143,8 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  await expect(page.getByText('Official process',{exact:true})).toBeVisible();
  await expect(page.getByText('New Hampshire publishes a specific process for toll and court collections')).toBeVisible();
  await expect(page.getByText(/These sources can inform the check, but they cannot confirm who sent the message/i)).toBeVisible();
- await expect(page.getByRole('link',{name:'Open public source'})).toHaveAttribute('href','https://www.gc.nh.gov/rsa/html/xx/236/236-mrg.htm');
+ await page.locator('.decision-details').locator('summary').click();
+ await expect(page.locator('.decision-details').getByRole('link',{name:'Open public source'})).toHaveAttribute('href','https://www.gc.nh.gov/rsa/html/xx/236/236-mrg.htm');
  await expect(page.getByRole('link',{name:'Open NH E-ZPass'})).toHaveAttribute('href','https://www.ezpassnh.com/');
  await expect(page.getByText('1-855-212-1234',{exact:true})).toBeVisible();
  assertNoRuntimeErrors();
@@ -286,8 +287,9 @@ test('official sample survives result review, refresh, and replay',async({page})
  await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
 
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await expect(page.getByRole('heading',{name:'Check result'})).toBeVisible();
+ await expect(page.locator('.result-masthead-title')).toHaveText('Check result');
  await expect(page.getByText('This is a sample form.')).toBeVisible();
+ await page.locator('.decision-details').locator('summary').click();
  await expect(page.getByTestId('play-evidence-review')).toBeVisible();
 
  await page.getByTestId('play-evidence-review').click();
@@ -414,7 +416,8 @@ test('curated Dallas example preserves its source-backed resolution',async({page
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:60000});
  await expect(page.locator('#review-summary').getByRole('heading',{name:'Do not scan or pay from this message'})).toBeVisible();
  await expect(page.locator('#review-summary .decision-summary')).toContainText(/City of Dallas published this exact example as a scam/i);
- await expect(page.getByRole('link',{name:/View the City of Dallas source/i})).toBeVisible();
+ await expect(page.getByTestId('primary-next-step').getByRole('link',{name:/View the City of Dallas source/i})).toBeVisible();
+ await page.locator('.decision-details').locator('summary').click();
  await expect(page.getByTestId('play-evidence-review')).toBeVisible();
  assertNoRuntimeErrors();
 });
