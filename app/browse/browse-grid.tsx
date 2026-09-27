@@ -57,7 +57,7 @@ export default function BrowseGrid({items}:{items:BrowseCase[]}){
      <p className="case-note">{item.visualNote}</p>
      <p className="case-source">Source: {item.sourceTitle}</p>
      <div className="case-actions">
-      <Link className="case-run-action" href={`/?case=${item.id}`}>Check with SEAL</Link>
+      <Link className="case-run-action" href={`/?case=${item.id}`}>Check in SEAL</Link>
       <a className="case-source-action" href={item.sourceUrl} target="_blank" rel="noopener noreferrer">Open source</a>
      </div>
     </div>
