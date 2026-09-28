@@ -56,6 +56,10 @@ const cleanDisplayText=(value:string)=>value
  .replace(/^(?:[~≈·|:;,.\-–—]\s*)+|(?:\s*[~≈·|:;,.\-–—])+$/g,'')
  .trim();
 
+const actionDisplayKey=(claim:Claim)=>cleanDisplayText(
+ claim.action?.source_text||claim.exact_source_text||claim.value||''
+).toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+
 const humanizeDisplayName=(value:string)=>{
  const clean=cleanDisplayText(value);
  const letters=clean.replace(/[^A-Za-z]/g,'');
@@ -566,7 +570,14 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const isActionDemo=isDemo&&text.startsWith('DEMO / SYNTHETIC MESSAGE');
  const resultById=useMemo(()=>new Map(verification?.results.map(result=>[result.claim_id,result])||[]),[verification]);
  const requestedActions=useMemo(()=>claims.filter(claim=>Boolean(claim.action)),[claims]);
- const groundedActions=useMemo(()=>requestedActions.filter(claimReliable),[requestedActions]);
+ const groundedActions=useMemo(()=>{
+  const unique=new Map<string,Claim>();
+  requestedActions.filter(claimReliable).forEach(claim=>{
+   const key=actionDisplayKey(claim);
+   if(key&&!unique.has(key))unique.set(key,claim);
+  });
+  return [...unique.values()];
+ },[requestedActions]);
  const messageDetails=useMemo(()=>claims.filter(claim=>
   ['court','location','docket','reporting_date'].includes(claim.type)&&claimReliable(claim)
  ),[claims]);
