@@ -290,8 +290,11 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const [languageMenuOpen,setLanguageMenuOpen]=useState(false);
  const [resultLanguageMenuOpen,setResultLanguageMenuOpen]=useState(false);
  const [workspaceDrawerOpen,setWorkspaceDrawerOpen]=useState(false);
- const [translatedResult,setTranslatedResult]=useState<Record<string,string>>({});
+ const [translatedResultData,setTranslatedResult]=useState<Record<string,string>>({});
  const [resultTranslationState,setResultTranslationState]=useState<'idle'|'translating'|'translated'|'unavailable'>('idle');
+ const [translationRetry,setTranslationRetry]=useState(0);
+ const translationCacheRef=useRef<Map<string,Record<string,string>>>(new Map());
+ const translatedResult=displayLocale==='en'||resultTranslationState!=='translated'?{}:translatedResultData;
  const [documentLanguage,setDocumentLanguage]=useState<DetectedDocumentLanguage|null>(null);
  const [jurisdiction,setJurisdiction]=useState('');
  const [workspaceTitle,setWorkspaceTitle]=useState('New check');
@@ -754,7 +757,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   :verification?.safe_action?.primary_url
    ?{url:verification.safe_action.primary_url,label:translatedResult.safePrimary||verification.safe_action.primary_label}
    :verification?.contact?.website
-    ?{url:verification.contact.website,label:'Open official court website'}
+    ?{url:verification.contact.website,label:translatedResult.openCourtWebsite||'Open official court website'}
     :officialLookup
      ?{url:officialLookup.url,label:officialLookup.label}
      :officialDirectory
@@ -769,6 +772,10 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    instructionStatus,
    matterStatus,
    openServiceNote:'Opens an independently sourced official service.',
+   openCourtWebsite:'Open official court website',
+   messageStatusLabel:'This message',
+   caseStatusLabel:'The case',
+   whyResult:'Why this result',
    resolutionDisclaimer:curatedSignal?'This finding is about this published example only. It does not label other messages.':'These sources help with the check, but they still cannot tell us who sent the message.',
    relationship:decisionRelationship,
    plainTitle:plainExplanation?.title||'',
@@ -816,19 +823,51 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
 
  useEffect(()=>{
   if(!verification||displayLocale==='en')return;
+  const sourceKey=JSON.stringify(resultTranslationSource);
+  const cacheKey=displayLocale+'|'+sourceKey;
+  const cached=translationCacheRef.current.get(cacheKey);
+  if(cached){
+   const timer=window.setTimeout(()=>{
+    setTranslatedResult(cached);
+    setResultTranslationState('translated');
+   },0);
+   return()=>window.clearTimeout(timer);
+  }
+
   const controller=new AbortController();
+  const stateTimer=window.setTimeout(()=>{
+   setTranslatedResult({});
+   setResultTranslationState('translating');
+  },0);
+
   void fetch('/api/translate',{
-   method:'POST',headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({locale:displayLocale,strings:resultTranslationSource}),signal:controller.signal
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({locale:displayLocale,strings:resultTranslationSource}),
+   signal:controller.signal
   }).then(async response=>{
-   if(!response.ok){setResultTranslationState('unavailable');return}
+   if(!response.ok){
+    if(!controller.signal.aborted)setResultTranslationState('unavailable');
+    return;
+   }
    const payload=await response.json() as {strings?:Record<string,string>;mode?:string};
-   if(payload.mode!=='TRANSLATED'||!payload.strings){setResultTranslationState('unavailable');return}
+   if(payload.mode!=='TRANSLATED'||!payload.strings){
+    if(!controller.signal.aborted)setResultTranslationState('unavailable');
+    return;
+   }
+   if(controller.signal.aborted)return;
+   translationCacheRef.current.set(cacheKey,payload.strings);
    setTranslatedResult(payload.strings);
    setResultTranslationState('translated');
-  }).catch(()=>{if(!controller.signal.aborted)setResultTranslationState('unavailable')});
-  return()=>controller.abort();
- },[verification,displayLocale,resultTranslationSource]);
+  }).catch(()=>{
+   if(!controller.signal.aborted)setResultTranslationState('unavailable');
+  });
+
+  return()=>{
+   window.clearTimeout(stateTimer);
+   controller.abort();
+  };
+ },[verification,displayLocale,resultTranslationSource,translationRetry]);
 
  const technicalEvidence=useMemo(()=>{
   if(!verification)return [];
@@ -1350,6 +1389,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  function changeDisplayLanguage(locale:DisplayLocale){
   setTranslatedResult({});
   setResultTranslationState(locale==='en'?'idle':'translating');
+  setTranslationRetry(0);
   setDisplayLocale(locale);
   try{window.localStorage.setItem(DISPLAY_LOCALE_KEY,locale)}catch{}
   setLanguageMenuOpen(false);
@@ -1934,12 +1974,20 @@ async function upload(uploaded:File){
       <div className="check-object-identity">
        <h1>{checkObjectDisplayTitle}</h1>
        <div className="check-object-meta">
-        <div className="result-language-control">
+        <div className={`result-language-control is-${resultTranslationState}`}>
          <button type="button" className="result-language-trigger" aria-label={`Display language: ${DISPLAY_LANGUAGES[displayLocale]}`} aria-haspopup="listbox" aria-expanded={resultLanguageMenuOpen} onClick={()=>{setLanguageMenuOpen(false);setResultLanguageMenuOpen(open=>!open)}}>
-          <span>{DISPLAY_LANGUAGES[displayLocale]}</span><SealGuideIcon/>
+          <SealUiIcon name="globe"/>
+          <span className="result-language-label">{DISPLAY_LANGUAGES[displayLocale]}</span>
+          {displayLocale!=='en'&&<span className="result-language-state" aria-hidden="true"/>}
+          <SealGuideIcon/>
          </button>
          {resultLanguageMenuOpen&&<div className="result-language-popover" role="listbox" aria-label={ui('displayLanguage')}>
-          {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><button type="button" role="option" aria-selected={code===displayLocale} className={code===displayLocale?'is-selected':''} key={code} onClick={()=>changeDisplayLanguage(code as DisplayLocale)}><span>{label}</span></button>)}
+          <div className="result-language-popover-head">
+           <strong>{ui('displayLanguage')}</strong>
+           <small>{documentLanguage?.label?`Original: ${documentLanguage.label}`:'Original preserved'}</small>
+          </div>
+          {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><button type="button" role="option" aria-selected={code===displayLocale} className={code===displayLocale?'is-selected':''} key={code} onClick={()=>changeDisplayLanguage(code as DisplayLocale)}><span>{label}</span><small>{code.toUpperCase()}</small></button>)}
+          {displayLocale!=='en'&&resultTranslationState==='unavailable'&&<button type="button" className="result-translation-retry" onClick={()=>{setResultTranslationState('translating');setTranslationRetry(value=>value+1)}}><span>Retry translation</span><small>Try again</small></button>}
          </div>}
         </div>
         {documentJurisdictionLabel&&<span className="meta-jurisdiction" data-testid="document-jurisdiction">{documentJurisdictionLabel}</span>}
@@ -2133,8 +2181,8 @@ async function upload(uploaded:File){
           </div>}
 
           {riskSummary&&!file?.sample&&instructionStatus!==matterStatus&&<div className="decision-at-a-glance" data-testid="two-risk-result">
-           <div><span>This message</span><strong>{translatedResult.instructionStatus||instructionStatus}</strong></div>
-           <div><span>The case</span><strong>{translatedResult.matterStatus||matterStatus}</strong></div>
+           <div><span>{translatedResult.messageStatusLabel||'This message'}</span><strong>{translatedResult.instructionStatus||instructionStatus}</strong></div>
+           <div><span>{translatedResult.caseStatusLabel||'The case'}</span><strong>{translatedResult.matterStatus||matterStatus}</strong></div>
           </div>}
          </div>
 
@@ -2163,7 +2211,7 @@ async function upload(uploaded:File){
         </div>
 
         <details className="decision-details">
-         <summary><span>Why this result</span><SealGuideIcon/></summary>
+         <summary><span>{translatedResult.whyResult||'Why this result'}</span><SealGuideIcon/></summary>
          <div className="decision-details-body">
           {riskSummary&&<div className="decision-risks">
            <div className="decision-risk-row"><span>Message instructions</span><div><strong>{translatedResult.riskInstructionsTitle||riskSummary.instructions.title}</strong><small>{translatedResult.riskInstructionsDetail||riskSummary.instructions.detail}</small></div></div>
