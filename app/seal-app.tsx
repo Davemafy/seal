@@ -16,7 +16,8 @@ import {officialCourtDirectoryFor} from '@/lib/official-directories';
 import {detectDocumentContext,type DetectedDocumentLanguage} from '@/lib/document-context';
 import {justiceSupportFor} from '@/lib/justice-support';
 import {buildCaseReality,buildCourtQuestionScript,buildHandoffSummary,buildObligationMap,buildPlainLanguageSummary,buildRiskSummary} from '@/lib/user-guidance';
-import {DISPLAY_LANGUAGES,displayLocaleFor,uiCopy,type DisplayLocale,type UiCopyKey} from '@/lib/ui-locales';
+import {DISPLAY_LANGUAGES,displayLocaleFor,type DisplayLocale} from '@/lib/ui-locales';
+import {persistUiLocale,useStoredUiLocale,useUiText} from '@/lib/use-ui-text';
 import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
 import './workspace.css';
 import './result-mobile-repair.css';
@@ -404,7 +405,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  const input=useRef<HTMLInputElement>(null);
  const anchors=useRef<Record<string,HTMLElement|null>>({});
  const runId=useRef(0);
- const ui=(key:UiCopyKey)=>uiCopy(displayLocale,key);
+ const ui=useUiText(displayLocale);
  const documentPreviewAsset=uploadPreview
   ?uploadPreview
   :file
@@ -418,6 +419,15 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   if(storyCloseTimer.current)window.clearTimeout(storyCloseTimer.current);
   if(uploadPreviewRef.current)URL.revokeObjectURL(uploadPreviewRef.current);
  },[]);
+
+ useEffect(()=>{
+  const onLocale=(event:Event)=>{
+   const next=(event as CustomEvent<DisplayLocale>).detail;
+   if(next&&next!==displayLocale)setDisplayLocale(next);
+  };
+  window.addEventListener('seal:locale-change',onLocale);
+  return()=>window.removeEventListener('seal:locale-change',onLocale);
+ },[displayLocale]);
 
  useEffect(()=>{
   if(!workspaceDrawerOpen)return;
@@ -1391,7 +1401,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   setResultTranslationState(locale==='en'?'idle':'translating');
   setTranslationRetry(0);
   setDisplayLocale(locale);
-  try{window.localStorage.setItem(DISPLAY_LOCALE_KEY,locale)}catch{}
+  persistUiLocale(locale);
   setLanguageMenuOpen(false);
   setResultLanguageMenuOpen(false);
  }
@@ -1758,15 +1768,15 @@ async function upload(uploaded:File){
  })}</div>;
 
  return <main ref={workspaceRootRef} className="seal-app" data-testid="seal-app">
-  <aside className="workspace-rail" aria-label="Workspace">
+  <aside className="workspace-rail" aria-label={ui('workspace')}>
    <div className="rail-topbar">
     <Link href="/" className="rail-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
     <button className="icon-control rail-icon-control rail-new-check" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} data-tooltip={ui('newCheck')} onClick={onNewWorkspace}><SealUiIcon name="add"/></button>
    </div>
-   <nav className="rail-primary-nav" aria-label="Primary">
+   <nav className="rail-primary-nav" aria-label={ui('primary')}>
     <Link className="rail-nav-item" href="/browse"><span>{ui('browse')}</span></Link>
    </nav>
-   <div className="rail-section-head"><span>Checks</span><small>{workspaces.length}</small></div>
+   <div className="rail-section-head"><span>{ui('checks')}</span><small>{workspaces.length}</small></div>
    <div className="rail-check-list" aria-label="Open checks">
     {workspaces.map((item,index)=>{
      const rawTitle=cleanDisplayText(item.title||'');
@@ -1806,7 +1816,7 @@ async function upload(uploaded:File){
      </div>}
     </div>
     <span className="mobile-nav-divider" aria-hidden="true"/>
-    <button className="icon-control mobile-nav-icon mobile-workspace-trigger" type="button" aria-label={`Open checks, ${workspaces.length} open`} title="Open checks" aria-haspopup="dialog" aria-expanded={workspaceDrawerOpen} onClick={()=>{setLanguageMenuOpen(false);setWorkspaceDrawerOpen(true)}}>
+    <button className="icon-control mobile-nav-icon mobile-workspace-trigger" type="button" aria-label={`Open checks, ${workspaces.length} open`} title={ui('openChecks')} aria-haspopup="dialog" aria-expanded={workspaceDrawerOpen} onClick={()=>{setLanguageMenuOpen(false);setWorkspaceDrawerOpen(true)}}>
      <SealUiIcon name="workspaces"/>
     </button>
     <button className="icon-control mobile-nav-icon mobile-new-check" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} onClick={()=>{setWorkspaceDrawerOpen(false);onNewWorkspace()}}><SealUiIcon name="add"/></button>
@@ -1814,13 +1824,13 @@ async function upload(uploaded:File){
   </header>
 
   <div className={`workspace-drawer-layer ${workspaceDrawerOpen?'is-open':''}`} data-testid="workspace-drawer-layer" aria-hidden={!workspaceDrawerOpen}>
-   <button className="workspace-drawer-backdrop" type="button" aria-label="Close checks" onClick={()=>setWorkspaceDrawerOpen(false)}/>
+   <button className="workspace-drawer-backdrop" type="button" aria-label={ui('closeChecks')} onClick={()=>setWorkspaceDrawerOpen(false)}/>
    <aside className="workspace-drawer" role={workspaceDrawerOpen?'dialog':undefined} aria-modal={workspaceDrawerOpen?'true':undefined} aria-label={workspaceDrawerOpen?'Checks':undefined}>
     <div className="workspace-drawer-head">
      <div className="workspace-drawer-title"><strong>Checks</strong><span>{workspaces.length}</span></div>
      <div className="workspace-drawer-head-actions">
       <button className="icon-control drawer-icon-button" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} onClick={()=>{setWorkspaceDrawerOpen(false);onNewWorkspace()}}><SealUiIcon name="add"/></button>
-      <button className="icon-control drawer-icon-button" type="button" aria-label="Close checks" title="Close checks" onClick={()=>setWorkspaceDrawerOpen(false)}><SealUiIcon name="close"/></button>
+      <button className="icon-control drawer-icon-button" type="button" aria-label={ui('closeChecks')} title={ui('closeChecks')} onClick={()=>setWorkspaceDrawerOpen(false)}><SealUiIcon name="close"/></button>
      </div>
     </div>
     <div className="workspace-drawer-list" aria-label="Open checks">
@@ -1848,7 +1858,7 @@ async function upload(uploaded:File){
 
   {!hydrated?
    <section className="workspace-restore-shell" aria-live="polite">
-    <span>Opening check…</span>
+    <span>{ui('openingCheck')}</span>
    </section>
    :busy||!verification?
    <section className={`entry-shell ${busy?'is-processing':''}`} data-testid="entry-shell">
@@ -1987,14 +1997,14 @@ async function upload(uploaded:File){
            <small>{documentLanguage?.label?`Original: ${documentLanguage.label}`:'Original preserved'}</small>
           </div>
           {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><button type="button" role="option" aria-selected={code===displayLocale} className={code===displayLocale?'is-selected':''} key={code} onClick={()=>changeDisplayLanguage(code as DisplayLocale)}><span>{label}</span><small>{code.toUpperCase()}</small></button>)}
-          {displayLocale!=='en'&&resultTranslationState==='unavailable'&&<button type="button" className="result-translation-retry" onClick={()=>{setResultTranslationState('translating');setTranslationRetry(value=>value+1)}}><span>Retry translation</span><small>Try again</small></button>}
+          {displayLocale!=='en'&&resultTranslationState==='unavailable'&&<button type="button" className="result-translation-retry" onClick={()=>{setResultTranslationState('translating');setTranslationRetry(value=>value+1)}}><span>{ui('retryTranslation')}</span><small>{ui('tryAgain')}</small></button>}
          </div>}
         </div>
         {documentJurisdictionLabel&&<span className="meta-jurisdiction" data-testid="document-jurisdiction">{documentJurisdictionLabel}</span>}
        </div>
       </div>
       <div className="check-object-actions" aria-label="Check actions">
-       <button type="button" className="icon-control result-icon-action" aria-label="Check again" title="Check again" data-tooltip="Check again" onClick={()=>run('LIVE')} disabled={busy}><SealUiIcon name="refresh"/></button>
+       <button type="button" className="icon-control result-icon-action" aria-label={ui('checkAgain')} title={ui('checkAgain')} data-tooltip={ui('checkAgain')} onClick={()=>run('LIVE')} disabled={busy}><SealUiIcon name="refresh"/></button>
       </div>
      </div>
 
@@ -2009,7 +2019,7 @@ async function upload(uploaded:File){
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
 
     {verification&&ready&&reviewOffer==='counting'&&createPortal(<div className="review-autoplay-overlay" data-review-offer role="dialog" aria-modal="true" aria-label="Verification review starting">
-     <button type="button" className="review-autoplay-skip" onClick={skipReviewOffer}>Skip</button>
+     <button type="button" className="review-autoplay-skip" onClick={skipReviewOffer}>{shellUi('skip')}</button>
      <div className="review-autoplay-center">
       <div className="review-autoplay-timer" aria-live="polite" aria-label={`Verification review starts in ${reviewCountdown}`}>
        <svg viewBox="0 0 48 48" aria-hidden="true">
@@ -2151,16 +2161,16 @@ async function upload(uploaded:File){
         {busy?
          <div className="check-status" role="status" aria-live="polite" aria-label={status||'Checking the message'}>
           <span>{status||'Checking the message'}</span>
-          <small>{status==='Reading text from the image'?'Reading locally before any text is checked.':'Keep this tab open while this check finishes.'}</small>
+          <small>{status==='Reading text from the image'?ui('readingLocal'):ui('keepTabOpen')}</small>
          </div>
          :error?
          <div className="precheck-actions">
-          <button type="button" className="run-button" onClick={clear}>{file?'Choose another file':'Start again'}</button>
-          {text.trim()&&<button type="button" className="replay-button" onClick={()=>run()}>Try again</button>}
+          <button type="button" className="run-button" onClick={clear}>{file?ui('chooseAnotherFile'):ui('startAgain')}</button>
+          {text.trim()&&<button type="button" className="replay-button" onClick={()=>run()}>{ui('tryAgain')}</button>}
          </div>
          :
-         <button type="button" className="run-button" disabled={busy||!text.trim()||!hydrated} onClick={()=>run()}>Check this message</button>}
-        <p className="precheck-note">{file?'The original file stays in this browser. Only extracted text is sent for claim structuring.':'Pasted text can be sent for claim structuring; SEAL does not store it.'}</p>
+         <button type="button" className="run-button" disabled={busy||!text.trim()||!hydrated} onClick={()=>run()}>{ui('checkMessage')}</button>}
+        <p className="precheck-note">{file?ui('filePrivacy'):ui('pastePrivacy')}</p>
        </div>
        :
        <div className="decision">
@@ -2177,12 +2187,12 @@ async function upload(uploaded:File){
           {primaryRoute&&<div className="decision-primary-route" data-testid="primary-next-step">
            <span>{ui('nextStep')}</span>
            <a href={primaryRoute.url} target="_blank" rel="noopener noreferrer">{primaryRoute.label}</a>
-           <small>{translatedResult.openServiceNote||'Opens an independently sourced official service.'}</small>
+           <small>{translatedResult.openServiceNote||ui('openServiceNote')}</small>
           </div>}
 
           {riskSummary&&!file?.sample&&instructionStatus!==matterStatus&&<div className="decision-at-a-glance" data-testid="two-risk-result">
-           <div><span>{translatedResult.messageStatusLabel||'This message'}</span><strong>{translatedResult.instructionStatus||instructionStatus}</strong></div>
-           <div><span>{translatedResult.caseStatusLabel||'The case'}</span><strong>{translatedResult.matterStatus||matterStatus}</strong></div>
+           <div><span>{translatedResult.messageStatusLabel||ui('thisMessage')}</span><strong>{translatedResult.instructionStatus||instructionStatus}</strong></div>
+           <div><span>{translatedResult.caseStatusLabel||ui('theCase')}</span><strong>{translatedResult.matterStatus||matterStatus}</strong></div>
           </div>}
          </div>
 
@@ -2192,14 +2202,14 @@ async function upload(uploaded:File){
             ?<img src={file.preview} alt="Original message preview"/>
             :file?.kind==='pdf'
              ?<StoryPdfPage url={file.preview}/>
-             :<div className="decision-text-thumb"><span>Original message</span><p>{cleanDisplayText(text.slice(0,360))}</p></div>}
+             :<div className="decision-text-thumb"><span>{ui('originalMessage')}</span><p>{cleanDisplayText(text.slice(0,360))}</p></div>}
           </div>
           <div className="decision-artifact-caption">
-           <strong>{file?.sample?'Sample document':'Original message'}</strong>
+           <strong>{file?.sample?ui('sampleDocument'):ui('originalMessage')}</strong>
            <span>{file?.kind==='pdf'?'PDF':file?.kind==='image'?'Image':'Text'}</span>
           </div>
           <div className="decision-source-brief">
-           <span>Independent check</span>
+           <span>{ui('independentCheck')}</span>
            <strong>{checkSourceCount?checkSourceCount+' public source'+(checkSourceCount===1?'':'s'):'No public source attached'}</strong>
            {storyEvidence&&<small>{storyEvidence.title}</small>}
           </div>
@@ -2211,11 +2221,11 @@ async function upload(uploaded:File){
         </div>
 
         <details className="decision-details">
-         <summary><span>{translatedResult.whyResult||'Why this result'}</span><SealGuideIcon/></summary>
+         <summary><span>{translatedResult.whyResult||ui('whyResult')}</span><SealGuideIcon/></summary>
          <div className="decision-details-body">
           {riskSummary&&<div className="decision-risks">
-           <div className="decision-risk-row"><span>Message instructions</span><div><strong>{translatedResult.riskInstructionsTitle||riskSummary.instructions.title}</strong><small>{translatedResult.riskInstructionsDetail||riskSummary.instructions.detail}</small></div></div>
-           <div className="decision-risk-row"><span>Underlying matter</span><div><strong>{translatedResult.riskMatterTitle||riskSummary.matter.title}</strong><small>{translatedResult.riskMatterDetail||riskSummary.matter.detail}</small></div></div>
+           <div className="decision-risk-row"><span>{ui('messageInstructions')}</span><div><strong>{translatedResult.riskInstructionsTitle||riskSummary.instructions.title}</strong><small>{translatedResult.riskInstructionsDetail||riskSummary.instructions.detail}</small></div></div>
+           <div className="decision-risk-row"><span>{ui('underlyingMatter')}</span><div><strong>{translatedResult.riskMatterTitle||riskSummary.matter.title}</strong><small>{translatedResult.riskMatterDetail||riskSummary.matter.detail}</small></div></div>
           </div>}
 
           {directCourtUnavailable&&groundedActions.length>0?<div className="decision-claim">
@@ -2240,7 +2250,7 @@ async function upload(uploaded:File){
      </div>
 
      <div className="document-zone result-screen result-screen-original result-slide result-slide-original" data-result-section="message" id={sectionId('original-message')}>
-      <div className="document-heading"><span>Original message</span><span>{file?.kind==='pdf'?'PDF':file?'Image':'Text'}</span></div>
+      <div className="document-heading"><span>{ui('originalMessage')}</span><span>{file?.kind==='pdf'?'PDF':file?'Image':'Text'}</span></div>
       <div className={`document-paper ${!file?'is-text-document':''}`}>
        {isActionDemo?
         <div className="message-card">
@@ -2337,17 +2347,17 @@ async function upload(uploaded:File){
      <p className="resolution-disclaimer">{translatedResult.resolutionDisclaimer||(curatedSignal?'This finding is about this published example only. It does not label other messages.':'These sources help with the check, but they still cannot tell us who sent the message.')}</p>
     </section>}
      <details className="record-disclosure" aria-label="Evidence record">
-      <summary><span>Evidence record</span><small>Claims, source provenance, and technical details</small><SealGuideIcon/></summary>
+      <summary><span>{ui('evidenceRecord')}</span><small>{ui('evidenceRecordHint')}</small><SealGuideIcon/></summary>
       <div className="record-disclosure-body">
        {ready&&verification&&<section className="check-metadata-section" aria-label="Check context">
      <div className="check-record-details" data-testid="check-details">
       <div className="record-subheading"><span>Check context</span><small>Provenance for this result</small></div>
       <dl>
-       <div><dt>Input</dt><dd>{checkInputLabel}</dd></div>
-       <div><dt>Document language</dt><dd>{documentLanguage?.label||'Not resolved'}</dd></div>
-       <div><dt>Jurisdiction</dt><dd>{jurisdiction||'Not resolved'}</dd></div>
-       <div><dt>Source mode</dt><dd>{mode==='LIVE'?'Live public sources':'Source snapshot'}</dd></div>
-       <div><dt>Sources attached</dt><dd>{String(checkSourceCount)}</dd></div>
+       <div><dt>{ui('input')}</dt><dd>{checkInputLabel}</dd></div>
+       <div><dt>{ui('documentLanguage')}</dt><dd>{documentLanguage?.label||'Not resolved'}</dd></div>
+       <div><dt>{ui('jurisdiction')}</dt><dd>{jurisdiction||'Not resolved'}</dd></div>
+       <div><dt>{ui('sourceMode')}</dt><dd>{mode==='LIVE'?'Live public sources':'Source snapshot'}</dd></div>
+       <div><dt>{ui('sourcesAttached')}</dt><dd>{String(checkSourceCount)}</dd></div>
        {checkDateLabel&&<div><dt>Checked</dt><dd>{checkDateLabel}</dd></div>}
       </dl>
       <p>Original files stay in this browser. Source quotations remain attached to the check so the result can be inspected later.</p>
@@ -2356,7 +2366,7 @@ async function upload(uploaded:File){
        {ready&&!directCourtUnavailable&&<section className="record-section" id={sectionId('checked-details')}>
      <div className="section-heading record-heading">
       <h2>What was checked</h2>
-      <p>Inspect each extracted detail and the source evidence available for it.</p>
+      <p>{ui('inspectEachDetail')}</p>
      </div>
 
      <div className="record-layout">
@@ -2391,7 +2401,7 @@ async function upload(uploaded:File){
         {(currentResult.explanation==='Official sources currently disagree.'?currentResult.evidence:currentResult.evidence.slice(0,1)).map((evidence,index)=><div className="evidence-excerpt" key={`${evidence.url}-${index}`}>
          <div className="source-name">{evidence.title}</div>
          <div className="source-quote">“{evidence.excerpt}”</div>
-         <a className="official-link" href={evidence.url} target="_blank" rel="noopener noreferrer">Open official source</a>
+         <a className="official-link" href={evidence.url} target="_blank" rel="noopener noreferrer">{ui('openOfficialSource')}</a>
          <div className="source-timestamp">{evidence.source_mode==='LIVE'?'Live official source':'Source snapshot'} · {new Date(evidence.checked_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'})}</div>
         </div>)}
         {currentResult.evidence.length>1&&currentResult.explanation!=='Official sources currently disagree.'&&<details className="additional-sources">
@@ -2409,7 +2419,7 @@ async function upload(uploaded:File){
      </div>
 
      <details className="technical-record" open={technicalOpen} onToggle={event=>setTechnicalOpen(event.currentTarget.open)}>
-      <summary><span>Technical record</span><SealGuideIcon/></summary>
+      <summary><span>{ui('technicalRecord')}</span><SealGuideIcon/></summary>
       <p>Extractor: {extractionMode} · {resolverSummary}</p>
       {!!verification.lanes?.length&&<div className="verification-lanes">
        {verification.lanes.map(lane=><div className="verification-lane" key={lane.id}>
@@ -2423,7 +2433,7 @@ async function upload(uploaded:File){
       {technicalEvidence.map((evidence,index)=><p key={evidence.url||index}>{evidence.title} · {evidence.source_mode} · {evidence.checked_at} · <a href={evidence.url} target="_blank" rel="noopener noreferrer">Original source</a></p>)}
      </details>
 
-     {isDemo&&<button className="replay-button" onClick={()=>run('SNAPSHOT')}>Replay check</button>}
+     {isDemo&&<button className="replay-button" onClick={()=>run('SNAPSHOT')}>{ui('replayCheck')}</button>}
     </section>}
       </div>
      </details>
@@ -2459,22 +2469,22 @@ async function upload(uploaded:File){
 
      </div>}
      {ready&&verification&&caseReality&&<section className="user-actions" id={sectionId('user-actions')} aria-label="What to do next">
-     <div className="user-actions-heading"><h2>What to do next</h2><p>Keep the message, but use a court site or support service you opened yourself for anything you do next.</p></div>
+     <div className="user-actions-heading"><h2>{ui('whatToDoNext')}</h2><p>{ui('nextHelpCopy')}</p></div>
      <div className="journey-block case-reality-block" data-testid="case-reality-check">
-      <div className="journey-label">The case</div>
+      <div className="journey-label">{ui('theCase')}</div>
       <div className="journey-content">
        <h3>{translatedResult.caseRealityTitle||caseReality.title}</h3><p>{translatedResult.caseRealityDetail||caseReality.detail}</p>
-       <dl className="case-reality-facts"><div><dt>Court claimed</dt><dd>{caseReality.court}</dd></div><div><dt>Case/reference</dt><dd>{caseReality.reference||'Not verified'}</dd></div></dl>
-       {verification.contact?.website?<a className="journey-link" href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open the court website independently</a>:officialLookup&&<a className="journey-link" href={officialLookup.url} target="_blank" rel="noopener noreferrer">{officialLookup.label}</a>}
+       <dl className="case-reality-facts"><div><dt>{ui('courtClaimed')}</dt><dd>{caseReality.court}</dd></div><div><dt>{ui('caseReference')}</dt><dd>{caseReality.reference||'Not verified'}</dd></div></dl>
+       {verification.contact?.website?<a className="journey-link" href={verification.contact.website} target="_blank" rel="noopener noreferrer">{ui('openCourtWebsiteIndependently')}</a>:officialLookup&&<a className="journey-link" href={officialLookup.url} target="_blank" rel="noopener noreferrer">{officialLookup.label}</a>}
        {officialLookup&&<small className="journey-note">{officialLookup.note}</small>}
       </div>
      </div>
      {obligations.length>0&&<div className="journey-block obligation-block" data-testid="obligation-map">
-      <div className="journey-label">What the message asks</div>
+      <div className="journey-label">{ui('whatMessageAsks')}</div>
       <div className="journey-content"><div className="obligation-list">{obligations.map(item=><div className="obligation-row" key={item.id}><div><strong>{cleanDisplayText(item.text)}</strong>{item.deadline&&<small>Time/date stated: {item.deadline}</small>}</div><span className={item.status==='MISMATCH'?'is-conflict':item.status==='MATCH'?'is-match':''}>{item.statusLabel}</span></div>)}</div><p className="journey-note">Dates and instructions here come from the message unless a row explicitly says it matches a public source.</p></div>
      </div>}
      <details className="journey-details" data-testid="plain-language-explanation">
-      <summary><span>Explain this notice</span><small>Plain language + translation</small><SealGuideIcon/></summary>
+      <summary><span>{ui('explainNotice')}</span><small>{ui('plainLanguageTranslation')}</small><SealGuideIcon/></summary>
       <div className="journey-details-body">
        <div className="explanation-controls"><small>Explanation follows Display language: {DISPLAY_LANGUAGES[displayLocale]} · detected document language: {documentLanguage?.label||'Unknown'}{documentLanguage?.confidence==='low'?' · low confidence':''}</small></div>
        {displayedExplanation&&<div className="plain-explanation" aria-live="polite"><h3>{displayedExplanation.title}</h3><p>{displayedExplanation.summary}</p></div>}
@@ -2482,7 +2492,7 @@ async function upload(uploaded:File){
       </div>
      </details>
      <details className="journey-details" data-testid="resolution-help">
-      <summary><span>Get help resolving this</span><small>Court, recovery, and legal-aid paths</small><SealGuideIcon/></summary>
+      <summary><span>{ui('getHelpResolving')}</span><small>{ui('courtRecoveryLegalAid')}</small><SealGuideIcon/></summary>
       <div className="journey-details-body support-paths">
        <div className="support-path"><strong>{translatedResult.supportHaventTitle||'I haven’t acted yet'}</strong><p>{translatedResult.supportHaventCopy||'Use the independently sourced court route above before calling, paying, scanning, replying, or appearing because of this message.'}</p></div>
        <div className="support-path"><strong>{translatedResult.supportPaidTitle||'I already paid'}</strong><p>{translatedResult.supportPaidCopy||'Contact your bank or payment provider through its official app, card, or website and report the transaction immediately.'}</p>{justiceSupport?.recovery&&<a className="journey-link" href={justiceSupport.recovery.url} target="_blank" rel="noopener noreferrer">{justiceSupport.recovery.label}</a>}</div>
@@ -2512,7 +2522,7 @@ async function upload(uploaded:File){
       <div>
        <a className="contact-phone" href={`tel:${verification.contact.phone}`}>{verification.contact.phone}</a>
        <div className="contact-actions">
-        <a href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open court website</a>
+        <a href={verification.contact.website} target="_blank" rel="noopener noreferrer">{ui('openCourtWebsite')}</a>
         <button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button>
        </div>
        <p className="contact-source">This contact came from the court source, not from the message. {verification.contact.source.source_mode==='SNAPSHOT'?'Source snapshot checked '+new Date(verification.contact.source.checked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.':'Live source checked '+new Date(verification.contact.source.checked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.'}</p>
@@ -2573,6 +2583,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  const [activeWorkspace,setActiveWorkspace]=useState('primary');
  const [registryReady,setRegistryReady]=useState(false);
  const [onboardingOpen,setOnboardingOpen]=useState(false);
+ const [shellLocale]=useStoredUiLocale();
+ const shellUi=useUiText(shellLocale);
  const [onboardingStep,setOnboardingStep]=useState(0);
  const [workspaceTransition,setWorkspaceTransition]=useState<{from:string;to:string;direction:'forward'|'backward';snapshot:WorkspaceMeta[]}|null>(null);
  const workspaceTransitionTimer=useRef<number|null>(null);
@@ -2776,7 +2788,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    <div className="onboarding-shell" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
     <header className="onboarding-topbar">
      <div className="onboarding-brand"><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></div>
-     {onboardingStep<2&&<button type="button" className="onboarding-skip" onClick={()=>dismissOnboarding(false)}>Skip</button>}
+     {onboardingStep<2&&<button type="button" className="onboarding-skip" onClick={()=>dismissOnboarding(false)}>{shellUi('skip')}</button>}
     </header>
 
     <div className="onboarding-progress" aria-label={`Step ${onboardingStep+1} of 3`}>
@@ -2795,67 +2807,67 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
          <small>Payment requested today</small>
         </div>
         <div className="onboarding-input-dock">
-         <div><span>Screenshot</span><small>PNG · JPG</small></div>
-         <div><span>Document</span><small>PDF</small></div>
-         <div><span>Paste text</span><small>Message</small></div>
+         <div><span>{shellUi('screenshot')}</span><small>PNG · JPG</small></div>
+         <div><span>{shellUi('document')}</span><small>PDF</small></div>
+         <div><span>{shellUi('pasteText')}</span><small>{shellUi('message')}</small></div>
         </div>
        </div>
       </div>
       <div className="onboarding-copy">
-       <span className="onboarding-kicker">Start with the message</span>
-       <h1 id="onboarding-title">Bring the notice you received.</h1>
-       <p>Upload a screenshot or PDF, or paste the text. SEAL reads the message before it checks anything else.</p>
+       <span className="onboarding-kicker">{shellUi('startWithMessage')}</span>
+       <h1 id="onboarding-title">{shellUi('bringNotice')}</h1>
+       <p>{shellUi('onboardingUploadCopy')}</p>
       </div>
      </>}
 
      {onboardingStep===1&&<>
       <div className="onboarding-visual onboarding-visual-evidence" aria-hidden="true">
        <div className="onboarding-claim-card">
-        <span>Message says</span>
-        <strong>Pay today to avoid arrest.</strong>
-        <small>Instruction found in the message</small>
+        <span>{shellUi('messageSays')}</span>
+        <strong>{shellUi('payTodayExample')}</strong>
+        <small>{shellUi('instructionFound')}</small>
        </div>
        <div className="onboarding-source-card">
-        <div className="onboarding-source-head"><span>Public source</span><em>Official</em></div>
-        <strong>Courts do not demand payment this way.</strong>
-        <small>Independent court guidance</small>
+        <div className="onboarding-source-head"><span>{shellUi('publicSource')}</span><em>{shellUi('official')}</em></div>
+        <strong>{shellUi('courtsNoDemand')}</strong>
+        <small>{shellUi('independentGuidance')}</small>
        </div>
-       <div className="onboarding-match-line"><span>Compared independently</span></div>
+       <div className="onboarding-match-line"><span>{shellUi('comparedIndependently')}</span></div>
       </div>
       <div className="onboarding-copy">
-       <span className="onboarding-kicker">Independent evidence</span>
-       <h1 id="onboarding-title">A real court name is not enough.</h1>
-       <p>SEAL separates what the message asks you to do from official-looking details, then checks only what public sources can establish.</p>
+       <span className="onboarding-kicker">{shellUi('independentEvidence')}</span>
+       <h1 id="onboarding-title">{shellUi('realCourtNameNotEnough')}</h1>
+       <p>{shellUi('onboardingEvidenceCopy')}</p>
       </div>
      </>}
 
      {onboardingStep===2&&<>
       <div className="onboarding-visual onboarding-visual-result" aria-hidden="true">
        <div className="onboarding-result-card">
-        <span>Check result</span>
+        <span>{shellUi('resultTitle')}</span>
         <h2>Check it independently before you pay.</h2>
         <p>We found an official process, but not enough to confirm this notice or the case.</p>
         <div className="onboarding-result-action">
-         <small>Next step</small>
-         <strong>Open the official court service</strong>
+         <small>{shellUi('nextStep')}</small>
+         <strong>{shellUi('openOfficialCourtService')}</strong>
         </div>
        </div>
       </div>
       <div className="onboarding-copy">
-       <span className="onboarding-kicker">Leave with a next step</span>
-       <h1 id="onboarding-title">Know what to do next.</h1>
-       <p>SEAL does not authenticate a message just because some details match. It shows what is confirmed, what is not, and where to verify safely.</p>
+       <span className="onboarding-kicker">{shellUi('leaveNextStep')}</span>
+       <h1 id="onboarding-title">{shellUi('knowNext')}</h1>
+       <p>{shellUi('onboardingResultCopy')}</p>
       </div>
      </>}
     </div>
 
     <footer className="onboarding-controls">
-     <button type="button" className="onboarding-back" onClick={retreatOnboarding} disabled={onboardingStep===0}>Back</button>
+     <button type="button" className="onboarding-back" onClick={retreatOnboarding} disabled={onboardingStep===0}>{shellUi('back')}</button>
      {onboardingStep<2
-      ?<button type="button" className="onboarding-next" onClick={advanceOnboarding}>Next</button>
+      ?<button type="button" className="onboarding-next" onClick={advanceOnboarding}>{shellUi('next')}</button>
       :<div className="onboarding-final-actions">
-        <Link href="/browse" onClick={()=>dismissOnboarding(false)}>Browse examples</Link>
-        <button type="button" className="onboarding-next" onClick={finishOnboarding}>Start a check</button>
+        <Link href="/browse" onClick={()=>dismissOnboarding(false)}>{shellUi('browseExamples')}</Link>
+        <button type="button" className="onboarding-next" onClick={finishOnboarding}>{shellUi('startCheck')}</button>
        </div>}
     </footer>
    </div>
