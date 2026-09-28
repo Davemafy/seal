@@ -2,6 +2,7 @@ import type {Metadata,Viewport} from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 import SiteLoader from './site-loader';
+import PwaRegister from './pwa-register';
 
 const uberMove=localFont({
  src:[
@@ -25,10 +26,15 @@ export const metadata:Metadata={
  manifest:'/manifest.webmanifest',
  icons:{
   icon:[
-   {url:'/favicon-seal-v3.svg',type:'image/svg+xml'}
+   {url:'/brand/seal-app-icon-dark.svg',type:'image/svg+xml'}
   ],
-  shortcut:'/favicon-seal-v3.svg',
-  apple:'/favicon-seal-v3.svg'
+  shortcut:'/brand/seal-app-icon-dark.svg',
+  apple:'/brand/seal-app-icon-dark.svg'
+ },
+ appleWebApp:{
+  capable:true,
+  title:'SEAL',
+  statusBarStyle:'default'
  },
  openGraph:{
   title:'SEAL — The seal can be faked. The source can’t.',
@@ -54,5 +60,5 @@ export const viewport:Viewport={
 };
 
 export default function RootLayout({children}:{children:React.ReactNode}){
- return <html lang="en"><body className={uberMove.variable}><SiteLoader/>{children}</body></html>;
+ return <html lang="en"><body className={uberMove.variable}><PwaRegister/><SiteLoader/>{children}</body></html>;
 }
