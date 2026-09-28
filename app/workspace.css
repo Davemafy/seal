@@ -10320,3 +10320,74 @@
 @media(prefers-reduced-motion:reduce){
  .decision-voice.is-speaking .seal-ui-icon{animation:none}
 }
+
+
+/* Persistent result voice control — lives beside display language on every result tab. */
+.result-voice-trigger{
+ min-height:32px;
+ display:inline-flex;
+ align-items:center;
+ gap:6px;
+ padding:6px 9px;
+ border:1px solid #deded9;
+ border-radius:7px;
+ background:#fff;
+ color:#222;
+ font:inherit;
+ font-size:11px;
+ line-height:16px;
+ font-weight:620;
+ cursor:pointer;
+ white-space:nowrap
+}
+.result-voice-trigger .seal-ui-icon{
+ width:16px;
+ height:16px
+}
+.result-voice-trigger:hover{
+ border-color:#b9b9b4;
+ background:#f7f7f4
+}
+.result-voice-trigger:focus-visible{
+ outline:2px solid #111;
+ outline-offset:2px
+}
+.result-voice-trigger.is-speaking{
+ background:#111;
+ border-color:#111;
+ color:#fff
+}
+.result-voice-trigger.is-speaking .seal-ui-icon{
+ animation:seal-voice-pulse 1.25s ease-in-out infinite
+}
+@media(max-width:900px){
+ .result-voice-trigger{
+  min-height:40px;
+  padding:8px 10px;
+  border-radius:9px;
+  font-size:13px;
+  line-height:18px
+ }
+ .result-voice-trigger .seal-ui-icon{
+  width:18px;
+  height:18px
+ }
+}
+@media(max-width:420px){
+ .result-voice-trigger span{
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0,0,0,0);
+  white-space:nowrap;
+  border:0
+ }
+ .result-voice-trigger{
+  width:40px;
+  justify-content:center;
+  padding:0
+ }
+}
