@@ -6,7 +6,7 @@ const request=z.object({
  strings:z.record(z.string().min(1).max(80),z.string().max(4000))
 });
 
-const MAX_STRINGS=192;
+const MAX_STRINGS=256;
 const BATCH_SIZE=32;
 
 const delay=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
