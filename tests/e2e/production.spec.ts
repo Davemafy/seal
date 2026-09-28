@@ -53,9 +53,10 @@ test('deployed curated sample can open, review, close, and restore after refresh
  await page.goto('/?case=connecticut-sample-jury-summons');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:60000});
  await expect(page.getByText('This is a sample form.')).toBeVisible();
- await expect(page.getByTestId('play-evidence-review')).toBeVisible();
+ await page.getByRole('tablist').getByRole('tab',{name:'Evidence'}).click();
+ await expect(page.getByTestId('evidence-review-entry')).toBeVisible();
 
- await page.getByTestId('play-evidence-review').click();
+ await page.getByTestId('evidence-review-entry').click();
  await expect(page.getByTestId('evidence-review')).toBeVisible({timeout:20000});
  await page.getByRole('button',{name:'Back to result'}).click();
  await expect(page.getByTestId('evidence-review')).toHaveCount(0,{timeout:5000});

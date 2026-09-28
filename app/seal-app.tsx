@@ -2492,7 +2492,6 @@ async function upload(uploaded:File){
         <h1>{translatedResult.decisionTitle||(file?.sample?'This is a sample form.':conciseDecisionTitle)}</h1>
         <p className="decision-summary">{translatedResult.decisionSummary||humanDecisionSummary}</p>
         {displayLocale!=='en'&&resultTranslationState==='translated'&&<p className="translation-note">{resultUi('translatedNote')}</p>}
-        {displayLocale!=='en'&&resultTranslationState==='unavailable'&&<p className="translation-note is-unavailable" role="status">{resultUi('translationUnavailable')}</p>}
          </div>
 
          <div className="decision-summary-side">
@@ -2525,10 +2524,6 @@ async function upload(uploaded:File){
            <strong>{checkSourceCount?checkSourceCount+' public source'+(checkSourceCount===1?'':'s'):'No public source attached'}</strong>
            {storyEvidence&&<small>{storyEvidence.title}</small>}
           </div>
-          {reviewWorthWatching&&!storyOpen&&<button ref={replayButton} type="button" className="decision-review-player" data-testid="play-evidence-review" onClick={replayStory} disabled={!storyArtifactReady&&file?.kind!=='pdf'}>
-           <span className="decision-review-play" aria-hidden="true"><DesignPlayIcon/></span>
-           <span><strong>{resultUi('seeHowChecked')}</strong><small>{resultUi('evidenceReviewHint')}</small></span>
-          </button>}
          </aside>
         </div>
 
@@ -2606,7 +2601,7 @@ async function upload(uploaded:File){
     </div>
 
     <section className="result-slide result-slide-evidence" data-result-section="evidence" id={sectionId('source-checks-panel')} role="tabpanel" aria-labelledby={sectionId('tab-evidence')} aria-label={resultUi('evidencePanel')} hidden={activeResultSection!=='evidence'}>
-     {reviewWorthWatching&&!storyOpen&&<button type="button" className="evidence-review-entry" data-testid="mobile-evidence-review" onClick={replayStory} disabled={!storyArtifactReady&&file?.kind!=='pdf'}>
+     {reviewWorthWatching&&!storyOpen&&<button ref={replayButton} type="button" className="evidence-review-entry" data-testid="evidence-review-entry" onClick={replayStory} disabled={!storyArtifactReady&&file?.kind!=='pdf'}>
       <span className="evidence-review-icon" aria-hidden="true"><DesignPlayIcon/></span>
       <span><strong>{resultUi('seeHowChecked')}</strong><small>{resultUi('evidenceReviewHint')}</small></span>
      </button>}

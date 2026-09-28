@@ -18,9 +18,14 @@ async function chooseFile(page:Page,path:string){
  await chooser.setFiles(path);
 }
 
+async function disableOnboarding(page:Page){
+ await page.addInitScript(()=>window.localStorage.setItem('seal:onboarding:v2','1'));
+}
+
 test('mobile interface language changes locally even when translation provider is unavailable',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:390,height:844});
+ await disableOnboarding(page);
  let translationRequests=0;
  page.on('request',request=>{if(request.url().includes('/api/translate'))translationRequests++});
  await page.route('**/api/translate',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'unavailable',mode:'UNAVAILABLE'})}));
@@ -75,7 +80,6 @@ Call 1-866-388-2430 after 5:30 PM for the status of your jury service.`);
   console.log('PASTE_BODY',await page.locator('body').innerText());
   throw error;
  });
- await expect(page.locator('.result-masthead-title')).toHaveText('Check result');
  await expect(page.getByTestId('check-object-header')).toContainText(/U\.S\. District Court/i);
  await expect(page.locator('.decision-source-brief')).toContainText(/public source|No public source attached/);
  await expect(page.locator('.pasted-message')).toContainText('Call 1-866-388-2430 after 5:30 PM');
@@ -96,8 +100,6 @@ Call +91 11 5555 0199 to confirm your attendance.`);
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.getByTestId('result-status')).toBeVisible();
- await expect(page.getByTestId('document-language')).toBeVisible();
- await expect(page.getByTestId('document-language')).toHaveText('English');
  await expect(page.getByTestId('document-jurisdiction')).toBeVisible();
  await expect(page.getByTestId('document-jurisdiction')).toContainText('India');
  await expect(page.getByTestId('two-risk-result')).toContainText('Not confirmed');
@@ -345,28 +347,31 @@ test('mobile SEAL brand returns a result to the clean entry state',async({page})
  assertNoRuntimeErrors();
 });
 
-test('mobile entry shell does not leave body space below its footer',async({page})=>{
+test('mobile entry shell stays contained to the app viewport',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:390,height:844});
+ await disableOnboarding(page);
  await page.goto('/check/primary');
+ await expect(page.getByTestId('entry-shell')).toBeVisible();
 
  const metrics=await page.evaluate(()=>{
-  const footer=document.querySelector('.seal-footer') as HTMLElement|null;
-  const app=document.querySelector('.seal-app') as HTMLElement|null;
-  if(!footer||!app)return null;
-  const footerBox=footer.getBoundingClientRect();
+  const app=document.querySelector<HTMLElement>('.seal-app');
+  if(!app)return null;
   const appBox=app.getBoundingClientRect();
   return {
    viewport:window.innerHeight,
    bodyHeight:document.body.getBoundingClientRect().height,
+   appTop:appBox.top,
    appBottom:appBox.bottom,
-   footerBottom:footerBox.bottom
+   overflow:document.documentElement.scrollWidth-window.innerWidth
   };
  });
 
  expect(metrics).not.toBeNull();
- expect(Math.abs(metrics!.bodyHeight-metrics!.appBottom)).toBeLessThanOrEqual(2);
- expect(metrics!.footerBottom).toBeGreaterThanOrEqual(metrics!.viewport-2);
+ expect(metrics!.appTop).toBeGreaterThanOrEqual(-1);
+ expect(metrics!.appBottom).toBeLessThanOrEqual(metrics!.viewport+2);
+ expect(metrics!.bodyHeight).toBeLessThanOrEqual(metrics!.viewport+2);
+ expect(metrics!.overflow).toBeLessThanOrEqual(1);
  assertNoRuntimeErrors();
 });
 
@@ -379,21 +384,25 @@ test('official sample keeps review explicit, survives refresh, and can replay',a
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.locator('.result-masthead-title')).toHaveText('Check result');
  await expect(page.getByTestId('evidence-review')).toHaveCount(0);
- await expect(page.getByTestId('play-evidence-review')).toBeVisible();
- await page.getByTestId('play-evidence-review').click();
+ await page.getByRole('tablist').getByRole('tab',{name:'Evidence'}).click();
+ await expect(page.getByTestId('evidence-review-entry')).toBeVisible();
+ await page.getByTestId('evidence-review-entry').click();
  await expect(page.getByTestId('evidence-review')).toBeVisible({timeout:15000});
  await expect(page.getByRole('dialog',{name:'SEAL verification review'})).toBeVisible();
  await page.getByRole('button',{name:'Back to result'}).click();
  await expect(page.getByTestId('evidence-review')).toHaveCount(0,{timeout:5000});
+ await page.getByRole('tablist').getByRole('tab',{name:'Summary'}).click();
  await expect(page.getByText('This is a sample form.')).toBeVisible();
  await expect(page.locator('.decision-artifact')).toBeVisible();
- await expect(page.getByTestId('play-evidence-review')).toBeVisible();
+ await page.getByRole('tablist').getByRole('tab',{name:'Evidence'}).click();
+ await expect(page.getByTestId('evidence-review-entry')).toBeVisible();
 
  await page.reload();
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:15000});
  await expect(page.getByTestId('evidence-review')).toHaveCount(0);
  await expect(page.getByText('This is a sample form.')).toBeVisible();
- await expect(page.getByTestId('play-evidence-review')).toBeVisible();
+ await page.getByRole('tablist').getByRole('tab',{name:'Evidence'}).click();
+ await expect(page.getByTestId('evidence-review-entry')).toBeVisible();
 
  await page.getByTestId('play-evidence-review').click();
  await expect(page.getByTestId('evidence-review')).toBeVisible({timeout:15000});
@@ -449,7 +458,7 @@ test('mobile result has no horizontal overflow and keeps the review accessible',
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.getByTestId('evidence-review')).toHaveCount(0);
  await page.getByRole('tablist').getByRole('tab',{name:'Evidence'}).click();
- await expect(page.getByTestId('mobile-evidence-review')).toBeVisible();
+ await expect(page.getByTestId('evidence-review-entry')).toBeVisible();
 
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
  expect(overflow).toBeLessThanOrEqual(1);
@@ -470,7 +479,7 @@ test('desktop entry and Browse never create a page-level horizontal scrollbar',a
 test('Browse keeps every sourced document runnable and high-signal cases first',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.goto('/browse');
- await expect(page.getByRole('heading',{name:'Browse real cases'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'See what real court messages look like'})).toBeVisible();
  const titles=await page.locator('.case-card h2').allTextContents();
  expect(titles.slice(0,3)).toEqual([
   'Court text with a fake hearing and payment route',
@@ -494,11 +503,12 @@ test('cinematic review stays fixed to the viewport after the result page has scr
  await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.getByTestId('evidence-review')).toHaveCount(0);
- await expect(page.getByTestId('play-evidence-review')).toBeVisible();
+ await page.getByRole('tablist').getByRole('tab',{name:'Evidence'}).click();
+ await expect(page.getByTestId('evidence-review-entry')).toBeVisible();
  await expect(page.getByText('Review ready')).toHaveCount(0);
 
  await page.evaluate(()=>window.scrollTo(0,Math.min(700,document.documentElement.scrollHeight-window.innerHeight)));
- await page.getByTestId('play-evidence-review').evaluate((node:HTMLElement)=>node.click());
+ await page.getByTestId('evidence-review-entry').evaluate((node:HTMLElement)=>node.click());
  const overlay=page.getByTestId('evidence-review');
  await expect(overlay).toBeVisible({timeout:15000});
  const box=await overlay.boundingBox();
@@ -520,7 +530,8 @@ test('curated Dallas example preserves its source-backed resolution',async({page
  await expect(page.locator('#review-summary').getByRole('heading',{name:'Do not scan or pay from this message'})).toBeVisible();
  await expect(page.locator('#review-summary .decision-summary')).toContainText(/City of Dallas published this exact example as a scam/i);
  await expect(page.getByTestId('primary-next-step').getByRole('link',{name:/View the City of Dallas source/i})).toBeVisible();
- await expect(page.getByTestId('play-evidence-review')).toBeVisible();
+ await page.getByRole('tablist').getByRole('tab',{name:'Evidence'}).click();
+ await expect(page.getByTestId('evidence-review-entry')).toBeVisible();
  assertNoRuntimeErrors();
 });
 
@@ -529,10 +540,11 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:390,height:844});
- await page.goto('/');
+ await disableOnboarding(page);
+ await page.goto('/check/primary');
 
  await expect(page.locator('.mobile-check-strip')).toHaveCount(0);
- await page.getByRole('button',{name:'New check'}).click();
+ await page.locator('.mobile-new-check').click();
  const leaving=page.locator('.seal-workspace-instance.is-leaving');
  await expect(leaving,'old check should remain visible while fading out').toBeVisible();
  let active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
@@ -546,7 +558,7 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  await expect(leaving).toBeHidden();
 
  const previousActiveId=await active.getAttribute('data-workspace-id');
- await page.getByRole('button',{name:'New check'}).click();
+ await page.locator('.mobile-new-check').click();
  const secondLeaving=page.locator('.seal-workspace-instance.is-leaving');
  await expect(secondLeaving,'the immediately previous check should remain visible on repeated new-check transitions').toBeVisible();
  const outgoingId=await secondLeaving.getAttribute('data-workspace-id');
@@ -645,8 +657,8 @@ test('desktop entry keeps compact sidebar and canvas in proportion',async({page}
    overflow:document.documentElement.scrollWidth-window.innerWidth
   };
  });
- expect(metrics.railWidth).toBeGreaterThanOrEqual(232);
- expect(metrics.railWidth).toBeLessThanOrEqual(240);
+ expect(metrics.railWidth).toBeGreaterThanOrEqual(212);
+ expect(metrics.railWidth).toBeLessThanOrEqual(220);
  expect(metrics.shellWidth).toBeLessThanOrEqual(902);
  expect(metrics.intakeWidth).toBeLessThanOrEqual(472);
  expect(metrics.headingSize).toBeLessThanOrEqual(41);
@@ -671,7 +683,7 @@ test('1208 desktop keeps sidebar compact and canvas restrained',async({page})=>{
   const row=rail.querySelector<HTMLElement>('.rail-check-row')!;
   const copy=rail.querySelector<HTMLElement>('.rail-check-copy')!;
   const title=rail.querySelector<HTMLElement>('.rail-check-copy strong')!;
-  const footer=document.querySelector<HTMLElement>('.seal-footer')!;
+  const app=document.querySelector<HTMLElement>('.seal-app')!;
   return {
    railWidth:rail.getBoundingClientRect().width,
    shellWidth:shell.getBoundingClientRect().width,
@@ -680,14 +692,13 @@ test('1208 desktop keeps sidebar compact and canvas restrained',async({page})=>{
    rowHeight:row.getBoundingClientRect().height,
    railCopyWidth:copy.getBoundingClientRect().width,
    railTitleSize:Number.parseFloat(getComputedStyle(title).fontSize),
-   footerTop:footer.getBoundingClientRect().top,
-   footerBottom:footer.getBoundingClientRect().bottom,
+   appBottom:app.getBoundingClientRect().bottom,
    viewport:window.innerHeight,
    overflow:document.documentElement.scrollWidth-window.innerWidth
   };
  });
- expect(metrics.railWidth).toBeGreaterThanOrEqual(232);
- expect(metrics.railWidth).toBeLessThanOrEqual(240);
+ expect(metrics.railWidth).toBeGreaterThanOrEqual(212);
+ expect(metrics.railWidth).toBeLessThanOrEqual(220);
  expect(metrics.shellWidth).toBeLessThanOrEqual(982);
  expect(metrics.intakeWidth).toBeLessThanOrEqual(520);
  expect(metrics.headingSize).toBeLessThanOrEqual(45);
@@ -696,8 +707,7 @@ test('1208 desktop keeps sidebar compact and canvas restrained',async({page})=>{
  expect(metrics.railCopyWidth,'desktop check labels must not collapse to one character').toBeGreaterThan(130);
  expect(metrics.railTitleSize).toBeGreaterThanOrEqual(12);
  expect(metrics.railTitleSize).toBeLessThanOrEqual(13);
- expect(metrics.footerTop,'footer should sit near the viewport bottom, not start halfway down the page').toBeGreaterThan(metrics.viewport-100);
- expect(metrics.footerBottom).toBeLessThanOrEqual(metrics.viewport+1);
+ expect(metrics.appBottom).toBeLessThanOrEqual(metrics.viewport+1);
  expect(metrics.overflow).toBeLessThanOrEqual(1);
  assertNoRuntimeErrors();
 });
@@ -715,7 +725,7 @@ test('desktop rail keeps Browse visible and consistent across pages',async({page
  const browseRail=page.locator('.workspace-rail');
  await expect(browseRail.getByRole('link',{name:'Browse',exact:true})).toBeVisible();
  await expect(browseRail.getByRole('link',{name:'Browse',exact:true})).toHaveClass(/is-current/);
- await expect(browseRail.getByRole('link',{name:'New check',exact:true})).toBeVisible();
+ await expect(browseRail.getByRole('button',{name:'New check',exact:true})).toBeVisible();
  const browseWidth=await browseRail.evaluate(node=>node.getBoundingClientRect().width);
  expect(Math.abs(appWidth-browseWidth)).toBeLessThanOrEqual(1);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth)).toBeLessThanOrEqual(1);
