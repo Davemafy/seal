@@ -2794,7 +2794,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    <div className="onboarding-shell" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
     <header className="onboarding-topbar">
      <div className="onboarding-brand"><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></div>
-     {onboardingStep<2&&<button type="button" className="onboarding-skip" onClick={()=>dismissOnboarding(false)}>{ui('skip')}</button>}
+     {onboardingStep<2&&<button type="button" className="onboarding-skip" onClick={()=>dismissOnboarding(false)}>{shellUi('skip')}</button>}
     </header>
 
     <div className="onboarding-progress" aria-label={`Step ${onboardingStep+1} of 3`}>
