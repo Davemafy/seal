@@ -1829,7 +1829,10 @@ async function upload(uploaded:File){
     <div className="workspace-drawer-head">
      <div className="workspace-drawer-title"><strong>Checks</strong><span>{workspaces.length}</span></div>
      <div className="workspace-drawer-head-actions">
-      <button className="icon-control drawer-icon-button" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} onClick={()=>{setWorkspaceDrawerOpen(false);onNewWorkspace()}}><SealUiIcon name="add"/></button>
+      <button className="icon-control drawer-icon-button" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} onClick={()=>{
+       setWorkspaceDrawerOpen(false);
+       window.setTimeout(()=>onNewWorkspace(),340);
+      }}><SealUiIcon name="add"/></button>
       <button className="icon-control drawer-icon-button" type="button" aria-label={ui('closeChecks')} title={ui('closeChecks')} onClick={()=>setWorkspaceDrawerOpen(false)}><SealUiIcon name="close"/></button>
      </div>
     </div>
@@ -1839,7 +1842,10 @@ async function upload(uploaded:File){
       const title=!rawTitle||/^new check(?: \d+)?$/i.test(rawTitle)?(workspaces.length===1?'New check':`Check ${index+1}`):rawTitle;
       const statusLabel=item.status==='verifying'?'Checking sources':item.status==='reading'?'Reading':item.status==='done'?'Checked':item.status==='error'?'Needs attention':'';
       return <div className={`workspace-drawer-row ${item.id===workspaceId?'is-current':''}`} key={item.id}>
-       <button className="workspace-drawer-select" type="button" aria-current={item.id===workspaceId?'page':undefined} onClick={()=>{onSelectWorkspace(item.id);setWorkspaceDrawerOpen(false)}}>
+       <button className="workspace-drawer-select" type="button" aria-current={item.id===workspaceId?'page':undefined} onClick={()=>{
+        setWorkspaceDrawerOpen(false);
+        window.setTimeout(()=>onSelectWorkspace(item.id),340);
+       }}>
         <span className={`rail-check-state is-${item.status}`} aria-hidden="true"/>
         <span className="workspace-drawer-copy"><strong>{title}</strong>{(item.preview||[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · '))&&<small>{item.preview||[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · ')}</small>}</span>
        </button>
