@@ -252,5 +252,15 @@
   "fileTypeImage": "Image",
   "fileTypeText": "Texte",
   "courtNoticeShort": "Avis judiciaire",
-  "courtMessageShort": "Message judiciaire"
+  "courtMessageShort": "Message judiciaire",
+  "curatedScamTitle": "Ne scannez pas le QR code et ne payez pas depuis ce message",
+  "curatedScamSummary": "L’autorité émettrice a publié cet exemple exact comme une arnaque. SEAL dispose de suffisamment de preuves pour rejeter la voie de paiement par QR code présentée ici.",
+  "curatedScamPrimary": "Ouvrir la source publiée",
+  "curatedScamStep1": "Ne scannez pas le QR code et n’envoyez aucun paiement via ce message.",
+  "curatedScamStep2": "Conservez la source publiée par l’autorité si vous devez expliquer pourquoi cette voie a été rejetée.",
+  "curatedScamRelationship": "L’autorité émettrice a publié ce document comme exemple d’arnaque.",
+  "curatedRiskInstructionsTitle": "N’utilisez pas la voie signalée dans ce message.",
+  "curatedRiskInstructionsDetail": "L’autorité émettrice a publié cet exemple exact comme une arnaque. N’utilisez pas son QR code ni sa voie de paiement.",
+  "curatedRiskMatterTitle": "Le dossier sous-jacent n’est pas confirmé indépendamment.",
+  "curatedRiskMatterDetail": "Le rejet de la voie présentée dans cet exemple d’arnaque publié ne prouve pas qu’un dossier sous-jacent existe."
 }

@@ -631,6 +631,17 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const officialDirectory=useMemo(()=>officialCourtDirectoryFor(text),[text]);
  const justiceSupport=useMemo(()=>justiceSupportFor(text),[text]);
  const riskSummary=useMemo(()=>verification?buildRiskSummary(claims,verification):null,[claims,verification]);
+ const riskSummaryCopy=riskSummary
+  ?curatedAuthorityMatch
+   ?{
+     instructions:{title:resultUi('curatedRiskInstructionsTitle'),detail:resultUi('curatedRiskInstructionsDetail')},
+     matter:{title:resultUi('curatedRiskMatterTitle'),detail:resultUi('curatedRiskMatterDetail')}
+    }
+   :{
+     instructions:{title:translatedResult.riskInstructionsTitle||riskSummary.instructions.title,detail:translatedResult.riskInstructionsDetail||riskSummary.instructions.detail},
+     matter:{title:translatedResult.riskMatterTitle||riskSummary.matter.title,detail:translatedResult.riskMatterDetail||riskSummary.matter.detail}
+    }
+  :null;
  const caseReality=useMemo(()=>verification?buildCaseReality(claims,verification):null,[claims,verification]);
  const caseRealityCopy=caseReality
   ?caseReality.status==='NO_IDENTIFIER'
@@ -651,7 +662,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const officialLookup=justiceSupport?.caseLookup||justiceSupport?.court;
  const directCheckSummary=directCourtUnavailable&&!curatedAuthorityMatch?'SEAL did not classify the sender, case, or payment request as genuine or fraudulent.':'';
  const decisionRelationship=storySignal?.id.startsWith('curated-')
-  ?'The issuing authority published this artifact as a scam example.'
+  ?resultUi('curatedScamRelationship')
   :storySignal
    ?storySignal.summary
    :decisionResult?.verdict==='MATCH'
@@ -696,7 +707,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const hasPaymentAction=groundedActions.some(claim=>claim.action?.kind==='pay')||decisionClaim?.action?.kind==='pay';
  const primaryActionKind=decisionClaim?.action?.kind||groundedActions[0]?.action?.kind;
  const conciseDecisionTitle=curatedAuthorityMatch
-  ?(translatedResult.decisionTitle||decision.title)
+  ?resultUi('curatedScamTitle')
   :verification?.safe_action&&primaryActionKind==='pay'
    ?resultUi('decisionPayTitle')
    :verification?.safe_action&&primaryActionKind==='contact'
@@ -713,7 +724,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const humanDecisionSummary=file?.sample
   ?resultUi('decisionSampleSummary')
   :curatedAuthorityMatch
-   ?(translatedResult.decisionSummary||decision.summary)
+   ?resultUi('curatedScamSummary')
    :decisionRelationshipConflict
     ?resultUi('decisionConflictSummary')
     :verification?.safe_action&&hasPaymentAction
@@ -751,8 +762,15 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
     ?resultUi('instructionMismatch')
     :resultUi('notConfirmed');
  const safeActionCopy=verification?.safe_action
-  ?/ezpassnh\.com/i.test(verification.safe_action.primary_url)
+  ?curatedAuthorityMatch
    ?{
+     title:resultUi('curatedScamTitle'),
+     summary:resultUi('curatedScamSummary'),
+     primaryLabel:resultUi('curatedScamPrimary'),
+     steps:[resultUi('curatedScamStep1'),resultUi('curatedScamStep2')]
+    }
+   :/ezpassnh\.com/i.test(verification.safe_action.primary_url)
+    ?{
      title:resultUi('nhSafeTitle'),
      summary:resultUi('nhSafeSummary'),
      primaryLabel:resultUi('nhSafePrimary'),
@@ -986,8 +1004,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   };
 
   if(activeResultSection==='summary'){
-   ['relationship','riskInstructionsTitle','riskInstructionsDetail','riskMatterTitle','riskMatterDetail'].forEach(take);
-   if(curatedAuthorityMatch)['decisionTitle','decisionSummary'].forEach(take);
+   if(!curatedAuthorityMatch)['relationship','riskInstructionsTitle','riskInstructionsDetail','riskMatterTitle','riskMatterDetail'].forEach(take);
   }else if(activeResultSection==='evidence'){
    ['emptyEvidenceTitleDirect','emptyEvidenceTitle','emptyEvidenceCopyDirect','emptyEvidenceCopy'].forEach(take);
    takeIndexed('signalTitle',6);
@@ -995,10 +1012,11 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
    takeIndexed('resultExplain',8);
    takeIndexed('resultLabel',8);
   }else if(activeResultSection==='next'){
-   [
-    'plainTitle','plainSummary','safeTitle','safeSummary','safePrimary'
-   ].forEach(take);
-   takeIndexed('safeStep',5);
+   ['plainTitle','plainSummary'].forEach(take);
+   if(!curatedAuthorityMatch){
+    ['safeTitle','safeSummary','safePrimary'].forEach(take);
+    takeIndexed('safeStep',5);
+   }
    takeIndexed('obligationStatus',6);
   }
 
@@ -2517,8 +2535,8 @@ async function upload(uploaded:File){
          <summary><span>{translatedResult.whyResult||resultUi('whyResult')}</span><SealGuideIcon/></summary>
          <div className="decision-details-body">
           {riskSummary&&<div className="decision-risks">
-           <div className="decision-risk-row"><span>{resultUi('messageInstructions')}</span><div><strong>{translatedResult.riskInstructionsTitle||riskSummary.instructions.title}</strong><small>{translatedResult.riskInstructionsDetail||riskSummary.instructions.detail}</small></div></div>
-           <div className="decision-risk-row"><span>{resultUi('underlyingMatter')}</span><div><strong>{translatedResult.riskMatterTitle||riskSummary.matter.title}</strong><small>{translatedResult.riskMatterDetail||riskSummary.matter.detail}</small></div></div>
+           <div className="decision-risk-row"><span>{resultUi('messageInstructions')}</span><div><strong>{riskSummaryCopy?.instructions.title}</strong><small>{riskSummaryCopy?.instructions.detail}</small></div></div>
+           <div className="decision-risk-row"><span>{resultUi('underlyingMatter')}</span><div><strong>{riskSummaryCopy?.matter.title}</strong><small>{riskSummaryCopy?.matter.detail}</small></div></div>
           </div>}
 
           {directCourtUnavailable&&groundedActions.length>0?<div className="decision-claim">
@@ -2755,7 +2773,7 @@ async function upload(uploaded:File){
        <ol className="safe-steps">{(safeActionCopy?.steps||verification.safe_action.steps).map((step,index)=><li key={index}>{step}</li>)}</ol>
        <div className="safe-route-actions">
         {verification.contact?.website&&<a className="safe-primary" href={verification.contact.website} target="_blank" rel="noopener noreferrer">{resultUi('openOfficialCourtWebsite')}</a>}
-        {verification.safe_action.primary_url&&verification.safe_action.primary_url!==verification.contact?.website&&<a className="safe-source-link" href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{translatedResult.safePrimary||verification.safe_action.primary_label}</a>}
+        {verification.safe_action.primary_url&&verification.safe_action.primary_url!==verification.contact?.website&&<a className="safe-source-link" href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{safeActionCopy?.primaryLabel||verification.safe_action.primary_label}</a>}
        </div>
       </div>
      </div>}

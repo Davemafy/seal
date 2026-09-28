@@ -252,5 +252,15 @@
   "fileTypeImage": "Image",
   "fileTypeText": "Text",
   "courtNoticeShort": "Court notice",
-  "courtMessageShort": "Court message"
+  "courtMessageShort": "Court message",
+  "curatedScamTitle": "Do not scan or pay from this message",
+  "curatedScamSummary": "The issuing authority published this exact example as a scam. SEAL has enough evidence to reject the QR/payment route shown here.",
+  "curatedScamPrimary": "Open the published source",
+  "curatedScamStep1": "Do not scan the QR code or send payment through this message.",
+  "curatedScamStep2": "Keep the published authority source if you need to show why this route was rejected.",
+  "curatedScamRelationship": "The issuing authority published this artifact as a scam example.",
+  "curatedRiskInstructionsTitle": "Do not use the flagged route in this message.",
+  "curatedRiskInstructionsDetail": "The issuing authority published this exact example as a scam. Do not use its QR code or payment route.",
+  "curatedRiskMatterTitle": "The underlying case is not independently confirmed.",
+  "curatedRiskMatterDetail": "Rejecting the route shown in this published scam example does not establish that an underlying case exists."
 }

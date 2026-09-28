@@ -252,5 +252,15 @@
   "fileTypeImage": "이미지",
   "fileTypeText": "텍스트",
   "courtNoticeShort": "법원 통지",
-  "courtMessageShort": "법원 메시지"
+  "courtMessageShort": "법원 메시지",
+  "curatedScamTitle": "이 메시지의 QR 코드를 스캔하거나 결제하지 마세요",
+  "curatedScamSummary": "발행 기관이 이 정확한 예시를 사기로 공개했습니다. SEAL은 여기에 표시된 QR/결제 경로를 거부할 충분한 근거를 확보했습니다.",
+  "curatedScamPrimary": "공개된 원본 출처 열기",
+  "curatedScamStep1": "QR 코드를 스캔하거나 이 메시지를 통해 결제하지 마세요.",
+  "curatedScamStep2": "이 경로를 거부한 이유를 보여줘야 한다면 발행 기관의 공개 출처를 보관하세요.",
+  "curatedScamRelationship": "발행 기관이 이 자료를 사기 사례로 공개했습니다.",
+  "curatedRiskInstructionsTitle": "이 메시지에서 표시된 경로를 사용하지 마세요.",
+  "curatedRiskInstructionsDetail": "발행 기관이 이 정확한 예시를 사기로 공개했습니다. 해당 QR 코드나 결제 경로를 사용하지 마세요.",
+  "curatedRiskMatterTitle": "기초 사건은 독립적으로 확인되지 않았습니다.",
+  "curatedRiskMatterDetail": "공개된 사기 예시의 경로를 거부했다는 사실만으로 실제 기초 사건의 존재가 확인되는 것은 아닙니다."
 }

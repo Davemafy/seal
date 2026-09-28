@@ -250,5 +250,15 @@
   "reusedCaseSignalTitle": "Temel dava numarası resmî dolandırıcılık uyarısı örneklerinde geçiyor",
   "reusedCaseSignalSummary": "Dallas ve Miami-Dade tarafından yayımlanan resmî dolandırıcılık uyarılarında sahte trafik bildirimlerinde aynı 26-TR-273196 temel dava numarası görülüyor.",
   "courtNoticeShort": "Mahkeme bildirimi",
-  "courtMessageShort": "Mahkeme mesajı"
+  "courtMessageShort": "Mahkeme mesajı",
+  "curatedScamTitle": "Bu mesajdaki QR kodunu taramayın veya ödeme yapmayın",
+  "curatedScamSummary": "Yayımlayan kurum bu örneğin dolandırıcılık olduğunu doğruladı. SEAL, burada gösterilen QR/ödeme yolunu reddetmek için yeterli kanıta sahip.",
+  "curatedScamPrimary": "Yayımlanan kaynağı aç",
+  "curatedScamStep1": "QR kodunu taramayın ve bu mesaj üzerinden ödeme göndermeyin.",
+  "curatedScamStep2": "Bu yolun neden reddedildiğini göstermeniz gerekirse yayımlayan kurumun kaynağını saklayın.",
+  "curatedScamRelationship": "Yayımlayan kurum bu içeriği bir dolandırıcılık örneği olarak yayımladı.",
+  "curatedRiskInstructionsTitle": "Bu mesajda işaretlenen yolu kullanmayın.",
+  "curatedRiskInstructionsDetail": "Yayımlayan kurum bu örneğin dolandırıcılık olduğunu doğruladı. QR kodunu veya ödeme yolunu kullanmayın.",
+  "curatedRiskMatterTitle": "Temel dava bağımsız olarak doğrulanmadı.",
+  "curatedRiskMatterDetail": "Bu yayımlanmış dolandırıcılık örneğindeki yolun reddedilmesi, temel bir davanın var olduğunu kanıtlamaz."
 }
