@@ -2276,6 +2276,14 @@ async function upload(uploaded:File){
           {displayLocale!=='en'&&resultTranslationState==='unavailable'&&<button type="button" className="result-translation-retry" onClick={()=>{setResultTranslationState('translating');setTranslationRetry(value=>value+1)}}><span>{resultUi('retryTranslation')}</span><small>{resultUi('tryAgain')}</small></button>}
          </div>}
         </div>
+        {voiceSupported&&<button
+         type="button"
+         className={`result-voice-trigger${resultSpeaking?' is-speaking':''}`}
+         aria-pressed={resultSpeaking}
+         aria-label={resultSpeaking?'Stop reading result aloud':'Read result aloud'}
+         title={resultSpeaking?'Stop reading result aloud':'Read result aloud'}
+         onClick={toggleResultSpeech}
+        ><SealUiIcon name="voice"/><span>{resultSpeaking?(translatedResult.voiceStop||'Stop'):(translatedResult.voiceListen||'Listen')}</span></button>}
         {documentJurisdictionLabel&&<span className="meta-jurisdiction" data-testid="document-jurisdiction">{documentJurisdictionLabel}</span>}
        </div>
       </div>
@@ -2454,13 +2462,6 @@ async function upload(uploaded:File){
         <p className="decision-status" data-testid="result-status">{translatedResult.resultStatus||resultStatusLabel}</p>
         <h1>{translatedResult.decisionTitle||(file?.sample?'This is a sample form.':conciseDecisionTitle)}</h1>
         <p className="decision-summary">{translatedResult.decisionSummary||humanDecisionSummary}</p>
-        {voiceSupported&&<button
-         type="button"
-         className={`decision-voice${resultSpeaking?' is-speaking':''}`}
-         aria-pressed={resultSpeaking}
-         aria-label={resultSpeaking?'Stop reading result aloud':'Read result aloud'}
-         onClick={toggleResultSpeech}
-        ><SealUiIcon name="voice"/><span>{resultSpeaking?(translatedResult.voiceStop||'Stop'):(translatedResult.voiceListen||'Listen')}</span></button>}
         {displayLocale!=='en'&&resultTranslationState==='translated'&&<p className="translation-note">{resultUi('translatedNote')}</p>
         {displayLocale!=='en'&&resultTranslationState==='unavailable'&&<p className="translation-note is-unavailable" role="status">{resultUi('translationUnavailable')}</p>}
          </div>
