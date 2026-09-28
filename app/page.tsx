@@ -45,7 +45,7 @@ export default function Home(){
    <div className="landing-hero-inner">
     <div className="landing-hero-copy">
      <p className="landing-kicker">Before you call, click, pay, or reply.</p>
-     <h1>The seal can be faked.<br/>The source can’t.</h1>
+     <h1><span>The seal can be faked.</span><span className="landing-headline-muted">The source can’t.</span></h1>
      <p className="landing-hero-summary">Check what a court message is asking you to do against independent public sources.</p>
      <p className="landing-hero-principle">If a source cannot establish it, SEAL leaves it unconfirmed. SEAL is not affiliated with any court.</p>
     </div>
@@ -162,9 +162,21 @@ export default function Home(){
    </section>
 
    <footer className="landing-footer">
-    <span>SEAL</span>
-    <span>Independent court-message checking</span>
-    <Link href="/browse">Browse public-source examples</Link>
+    <div className="landing-footer-main">
+     <div className="landing-footer-brand">
+      <img src="/brand/seal-mark-white.svg" alt=""/>
+      <span>SEAL</span>
+     </div>
+     <p className="landing-footer-thesis"><span>The seal can be faked.</span><strong>The source can’t.</strong></p>
+     <nav aria-label="Footer navigation">
+      <a href="#check">Check a message</a>
+      <Link href="/browse">Browse real examples</Link>
+     </nav>
+    </div>
+    <div className="landing-footer-meta">
+     <p>SEAL checks court-message claims against independent public sources. It does not authenticate a sender from appearance alone.</p>
+     <span>Not affiliated with any court.</span>
+    </div>
    </footer>
   </div>
  </div>;
