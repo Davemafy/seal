@@ -8332,3 +8332,187 @@
   min-height:330px!important
  }
 }
+
+
+/* Demo launcher rail — prove the product instead of explaining it. */
+@media(min-width:901px){
+ .entry-shell:not(.is-processing){
+  width:min(100%,1080px)!important;
+  max-width:1080px!important;
+  grid-template-columns:minmax(0,1fr) 286px!important;
+  column-gap:42px!important
+ }
+ .entry-demo-rail{
+  align-self:start!important;
+  padding:0!important;
+  border:1px solid #e1e1dd!important;
+  border-radius:12px!important;
+  background:#f7f7f4!important;
+  overflow:hidden!important
+ }
+ .entry-demo-head{
+  display:grid!important;
+  gap:3px!important;
+  padding:16px 16px 14px!important;
+  border-bottom:1px solid #e1e1dd!important;
+  background:#fff!important
+ }
+ .entry-demo-head>span{
+  margin:0!important;
+  color:#151514!important;
+  font-size:12.5px!important;
+  line-height:18px!important;
+  font-weight:650!important
+ }
+ .entry-demo-head>small{
+  color:#7a7a75!important;
+  font-size:9.5px!important;
+  line-height:14px!important
+ }
+
+ .entry-demo-feature{
+  width:100%!important;
+  display:grid!important;
+  gap:14px!important;
+  padding:16px!important;
+  border:0!important;
+  border-bottom:1px solid #e1e1dd!important;
+  background:transparent!important;
+  color:#111!important;
+  text-align:left!important;
+  font:inherit!important;
+  cursor:pointer!important
+ }
+ .entry-demo-feature:hover{
+  background:#f1f1ed!important
+ }
+ .entry-demo-preview{
+  min-height:118px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-end!important;
+  gap:8px!important;
+  padding:15px!important;
+  border:1px solid #deded9!important;
+  border-radius:8px!important;
+  background:#fff!important;
+  box-shadow:0 10px 24px rgba(0,0,0,.035)!important
+ }
+ .entry-demo-preview>small{
+  color:#8a8a85!important;
+  font-size:8.5px!important;
+  line-height:12px!important;
+  text-transform:uppercase!important;
+  letter-spacing:.04em!important
+ }
+ .entry-demo-preview>strong{
+  max-width:210px!important;
+  color:#222!important;
+  font-size:13px!important;
+  line-height:19px!important;
+  font-weight:580!important
+ }
+ .entry-demo-feature-copy{
+  display:grid!important;
+  gap:2px!important
+ }
+ .entry-demo-feature-copy>span{
+  font-size:12px!important;
+  line-height:17px!important;
+  font-weight:650!important
+ }
+ .entry-demo-feature-copy>small{
+  color:#777!important;
+  font-size:9px!important;
+  line-height:13px!important
+ }
+ .entry-demo-feature-copy>b{
+  width:max-content!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:5px!important;
+  margin-top:7px!important;
+  color:#111!important;
+  font-size:10px!important;
+  line-height:15px!important;
+  font-weight:620!important
+ }
+ .entry-demo-feature-copy>b .seal-guide-icon{
+  width:11px!important;
+  height:11px!important
+ }
+
+ .entry-demo-list{
+  display:grid!important
+ }
+ .entry-demo-list>button{
+  width:100%!important;
+  min-height:58px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  padding:11px 16px!important;
+  border:0!important;
+  border-bottom:1px solid #e7e7e3!important;
+  background:transparent!important;
+  color:#20201e!important;
+  text-align:left!important;
+  font:inherit!important;
+  cursor:pointer!important
+ }
+ .entry-demo-list>button:hover{
+  background:#efefeb!important
+ }
+ .entry-demo-list>button>span{
+  min-width:0!important;
+  display:grid!important;
+  gap:1px!important
+ }
+ .entry-demo-list strong{
+  font-size:11px!important;
+  line-height:16px!important;
+  font-weight:620!important
+ }
+ .entry-demo-list small{
+  overflow:hidden!important;
+  color:#80807b!important;
+  font-size:8.75px!important;
+  line-height:13px!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important
+ }
+ .entry-demo-list .seal-guide-icon{
+  width:12px!important;
+  height:12px!important;
+  flex:0 0 auto!important
+ }
+ .entry-demo-note{
+  margin:0!important;
+  padding:12px 16px 14px!important;
+  color:#8b8b86!important;
+  font-size:8.75px!important;
+  line-height:14px!important
+ }
+
+ /* Neutralize the old FAQ rail styles inside the demo launcher. */
+ .entry-demo-rail>span,
+ .entry-demo-rail>.entry-context-item{
+  display:none!important
+ }
+}
+
+@media(min-width:901px) and (max-width:1180px){
+ .entry-shell:not(.is-processing){
+  width:min(100%,900px)!important;
+  grid-template-columns:minmax(0,1fr) 250px!important;
+  column-gap:28px!important
+ }
+ .entry-demo-feature{padding:13px!important}
+ .entry-demo-preview{min-height:102px!important;padding:13px!important}
+ .entry-demo-preview>strong{font-size:12px!important;line-height:18px!important}
+}
+
+@media(max-width:900px){
+ .entry-demo-rail{display:none!important}
+}
