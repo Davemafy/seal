@@ -161,7 +161,7 @@ export const UI_COPY={
  checkInSeal:'Check in SEAL',
  openSource:'Open source',
  source:'source',
- sources:'sources',
+ sourcePlural:'sources',
  courtLiveFailed:'The court’s live pages didn’t respond. Affected claims remain unverified.',
  checkLiveSources:'Check live sources',
  yourMessage:'Your message',
