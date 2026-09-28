@@ -2249,3 +2249,235 @@
   padding-top:14px!important
  }
 }
+
+
+/* Desktop continuity: results use the onboarding system with research density. */
+@media(min-width:901px){
+ .review-shell{
+  background:#fdfdfb!important;
+  padding-top:12px!important
+ }
+
+ /* Compact product chrome: same material family, denser than onboarding. */
+ .result-masthead{
+  width:min(100%,1080px)!important;
+  max-width:1080px!important;
+  margin:0 auto!important;
+  padding:12px 14px 10px!important;
+  border:1px solid #e5e5e0!important;
+  border-radius:14px!important;
+  background:rgba(247,247,244,.94)!important;
+  -webkit-backdrop-filter:blur(10px) saturate(108%)!important;
+  backdrop-filter:blur(10px) saturate(108%)!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.035)!important
+ }
+ .check-object-identity h1{
+  max-width:820px!important;
+  font-size:25px!important;
+  line-height:31px!important;
+  letter-spacing:-.025em!important;
+  font-weight:670!important
+ }
+ .check-object-meta{
+  color:#777771!important;
+  font-size:12px!important;
+  line-height:18px!important
+ }
+
+ .result-chapters{
+  width:max-content!important;
+  max-width:100%!important;
+  margin-top:10px!important;
+  padding:3px!important;
+  gap:3px!important;
+  border:1px solid #e0e0db!important;
+  border-radius:10px!important;
+  background:#ecece8!important;
+  box-shadow:none!important
+ }
+ .result-chapters a{
+  min-height:34px!important;
+  padding:7px 12px!important;
+  border:0!important;
+  border-radius:7px!important;
+  color:#676762!important;
+  font-size:12.5px!important;
+  line-height:18px!important;
+  font-weight:610!important
+ }
+ .result-chapters a:hover{
+  color:#111!important
+ }
+ .result-chapters a.is-current{
+  background:#fff!important;
+  color:#111!important;
+  box-shadow:0 1px 2px rgba(0,0,0,.07)!important
+ }
+
+ .result-carousel{
+  width:min(100%,1080px)!important;
+  max-width:1080px!important;
+  padding-top:18px!important;
+  background:transparent!important
+ }
+
+ /* Summary remains spacious, but surfaces now match the onboarding stage/card system. */
+ .result-slide-summary{
+  padding:24px 24px 36px!important
+ }
+ .result-slide-summary .decision{
+  width:100%!important;
+  max-width:none!important
+ }
+ .result-slide-summary .decision-overview{
+  gap:34px!important
+ }
+ .result-slide-summary .decision-copy{
+  max-width:620px!important
+ }
+ .result-slide-summary .decision-status{
+  color:#6f6f69!important;
+  font-size:12.5px!important;
+  line-height:18px!important;
+  font-weight:620!important
+ }
+ .result-slide-summary .decision-copy h1,
+ .result-slide-summary .decision h1{
+  max-width:600px!important;
+  font-size:40px!important;
+  line-height:45px!important;
+  letter-spacing:-.035em!important;
+  font-weight:670!important
+ }
+ .result-slide-summary .decision-summary{
+  max-width:600px!important;
+  margin-top:12px!important;
+  color:#4f4f4a!important;
+  font-size:16px!important;
+  line-height:24px!important
+ }
+
+ .result-slide-summary .decision-visual,
+ .result-slide-summary .next-step-card{
+  border:1px solid #e3e3de!important;
+  border-radius:14px!important;
+  background:#f5f5f2!important;
+  box-shadow:none!important
+ }
+ .result-slide-summary .decision-visual>*,
+ .result-slide-summary .next-step-card>*{
+  border-color:#ddddD8!important
+ }
+
+ .result-slide-summary .decision-details{
+  margin-top:22px!important;
+  border:1px solid #e7e7e2!important;
+  border-radius:10px!important;
+  background:#fff!important
+ }
+
+ /* Original is the crisp paper/object state. */
+ .result-slide-original{
+  padding:28px 24px 40px!important
+ }
+ .result-slide-original .document-heading{
+  color:#6f6f69!important
+ }
+ .result-slide-original .document-paper{
+  border:1px solid #ddddD8!important;
+  border-radius:10px!important;
+  background:#fff!important;
+  box-shadow:0 16px 42px rgba(0,0,0,.055)!important
+ }
+
+ /* Evidence stays editorial/research-like: white, provenance-first, restrained. */
+ .result-slide-evidence{
+  padding:28px 24px 40px!important
+ }
+ .result-slide-evidence .section-heading h2{
+  font-size:28px!important;
+  line-height:34px!important;
+  letter-spacing:-.025em!important;
+  font-weight:660!important
+ }
+ .result-slide-evidence .source-resolution{
+  width:100%!important;
+  max-width:980px!important;
+  margin-inline:auto!important
+ }
+ .result-slide-evidence .source-signals{
+  border:1px solid #e7e7e2!important;
+  border-radius:12px!important;
+  background:#fff!important;
+  overflow:hidden!important
+ }
+ .result-slide-evidence .source-signal{
+  padding:18px 20px!important;
+  border-bottom:1px solid #ecece7!important;
+  background:#fff!important
+ }
+ .result-slide-evidence .source-signal:last-child{
+  border-bottom:0!important
+ }
+ .result-slide-evidence .source-signal.is-primary{
+  background:#fafaf7!important
+ }
+ .result-slide-evidence .signal-kind{
+  color:#777771!important;
+  font-size:11.5px!important;
+  line-height:17px!important;
+  font-weight:620!important
+ }
+ .result-slide-evidence .source-signal h3{
+  font-size:18px!important;
+  line-height:24px!important;
+  font-weight:640!important
+ }
+ .result-slide-evidence .source-signal>p{
+  color:#555550!important
+ }
+ .result-slide-evidence .record-disclosure{
+  border:1px solid #e7e7e2!important;
+  border-radius:10px!important;
+  background:#fff!important
+ }
+
+ /* Resolve: action-oriented, same materials, slightly stronger grouping. */
+ .result-slide-resolve{
+  padding:28px 24px 42px!important
+ }
+ .result-slide-resolve .user-actions{
+  width:100%!important;
+  max-width:980px!important;
+  margin-inline:auto!important
+ }
+ .result-slide-resolve .user-actions-heading h2{
+  font-size:30px!important;
+  line-height:36px!important;
+  letter-spacing:-.025em!important;
+  font-weight:660!important
+ }
+ .result-slide-resolve .journey-block,
+ .result-slide-resolve .journey-details,
+ .result-slide-resolve .safe-route{
+  border:1px solid #e5e5e0!important;
+  border-radius:12px!important;
+  background:#fff!important;
+  box-shadow:none!important
+ }
+ .result-slide-resolve .safe-route{
+  background:#f5f5f2!important
+ }
+ .result-slide-resolve .safe-primary{
+  border-radius:8px!important;
+  background:#111!important;
+  color:#fff!important
+ }
+}
+
+@media(min-width:901px) and (max-width:1180px){
+ .result-masthead,
+ .result-carousel{
+  max-width:940px!important
+ }
+}
