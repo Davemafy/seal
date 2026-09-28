@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element -- Source previews use proxied runtime URLs and native load/error events. */
+/* eslint-disable @next/next/no-img-element -- Browse previews deliberately use static/cached authority thumbnails. */
 'use client';
 
 import {useState} from 'react';
@@ -13,8 +13,10 @@ function Skeleton(){
 }
 
 export default function ImageThumb({id,alt,sourceUrl,priority=false}:{id:string;alt:string;sourceUrl:string;priority?:boolean}){
+ const local=`/browse-assets/${id}.jpg`;
  const proxy=`/api/browse-asset?id=${encodeURIComponent(id)}`;
- const [src,setSrc]=useState(sourceUrl);
+ const [src,setSrc]=useState(local);
+ const [stage,setStage]=useState<'local'|'proxy'|'remote'>('local');
  const [ready,setReady]=useState(false);
  const [failed,setFailed]=useState(false);
 
@@ -25,10 +27,21 @@ export default function ImageThumb({id,alt,sourceUrl,priority=false}:{id:string;
    src={src}
    alt={alt}
    loading={priority?'eager':'lazy'}
+   decoding="async"
    fetchPriority={priority?'high':'auto'}
    onLoad={()=>setReady(true)}
    onError={()=>{
-    if(src!==proxy){setReady(false);setSrc(proxy);return}
+    setReady(false);
+    if(stage==='local'){
+     setStage('proxy');
+     setSrc(proxy);
+     return;
+    }
+    if(stage==='proxy'){
+     setStage('remote');
+     setSrc(sourceUrl);
+     return;
+    }
     setFailed(true);
    }}
   />
