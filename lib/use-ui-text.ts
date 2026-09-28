@@ -5,7 +5,7 @@ import {DISPLAY_LANGUAGES,UI_COPY,displayLocaleFor,uiCopy,type DisplayLocale,typ
 
 export const DISPLAY_LOCALE_KEY='seal:display-locale:v1';
 const EVENT='seal:locale-change';
-const CACHE_VERSION='v2';
+const CACHE_VERSION='v3';
 const memory=new Map<DisplayLocale,Partial<Record<UiCopyKey,string>>>();
 const pending=new Map<DisplayLocale,Promise<Partial<Record<UiCopyKey,string>>>>();
 
