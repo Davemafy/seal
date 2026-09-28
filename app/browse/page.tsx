@@ -2,7 +2,7 @@
 import {browseCases} from '@/lib/browse-cases';
 import BrowseGrid from './browse-grid';
 import BrowseRail from './browse-rail';
-import BrowseIntro from './browse-intro';
+import BrowseIntro,{BrowseMobileHeader} from './browse-intro';
 import '../workspace.css';
 import './browse.css';
 
@@ -22,9 +22,10 @@ export default function Browse(){
  return <main className="seal-app browse-page">
   <BrowseRail/>
 
-  <BrowseIntro/>
+  <BrowseMobileHeader/>
 
   <section className="browse-shell">
+   <BrowseIntro/>
    <BrowseGrid items={rankedCases}/>
   </section>
  </main>;
