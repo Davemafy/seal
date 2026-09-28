@@ -370,7 +370,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  },[workspaceActive,verification,resultSectionStorageKey]);
  const [reviewOffer,setReviewOffer]=useState<'idle'|'counting'|'skipped'|'watching'|'completed'>('idle');
  const [reviewCountdown,setReviewCountdown]=useState(3);
- const [reviewOfferPaused,setReviewOfferPaused]=useState(false);
+ const [,setReviewOfferPaused]=useState(false);
  const [storyArtifactReady,setStoryArtifactReady]=useState(true);
  const [,setStoryStartPending]=useState(false);
  const [storyOpen,setStoryOpen]=useState(false);
@@ -816,7 +816,6 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
 
  useEffect(()=>{
   if(!verification||displayLocale==='en')return;
-  setResultTranslationState('translating');
   const controller=new AbortController();
   void fetch('/api/translate',{
    method:'POST',headers:{'Content-Type':'application/json'},
@@ -1347,11 +1346,6 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   },260);
  }
  function replayStory(){startStory()}
-
- useEffect(()=>{
-  if(!ready||!reviewWorthWatching||file?.sample||reviewOffer!=='idle')return;
-  setReviewOffer('skipped');
- },[ready,reviewWorthWatching,file?.sample,reviewOffer]);
 
  function changeDisplayLanguage(locale:DisplayLocale){
   setTranslatedResult({});
@@ -2087,7 +2081,7 @@ async function upload(uploaded:File){
     </div>,document.body)}
 
     <div ref={resultCarouselRef} className="result-carousel" data-testid="result-carousel" onScroll={syncResultCarousel}>
-     {displayLocale!=='en'&&resultTranslationState==='translating'&&<div className="result-translation-pending" role="status" aria-live="polite"><span className="translation-pulse" aria-hidden="true"/><strong>{ui('translatingResult')}</strong></div>}
+     {displayLocale!=='en'&&resultTranslationState!=='translated'&&resultTranslationState!=='unavailable'&&<div className="result-translation-pending" role="status" aria-live="polite"><span className="translation-pulse" aria-hidden="true"/><strong>{ui('translatingResult')}</strong></div>}
      <div className="review-hero">
      <div className="decision-pane result-screen result-screen-summary result-slide result-slide-summary" data-result-section="summary" id={sectionId('review-summary')}>
       {!verification?
