@@ -14,10 +14,25 @@ function Skeleton(){
 export default function PdfThumb({id,alt,priority=false}:{id:string;alt:string;priority?:boolean}){
  const host=useRef<HTMLDivElement>(null);
  const canvas=useRef<HTMLCanvasElement>(null);
+ const staticImage=useRef<HTMLImageElement>(null);
  const [staticState,setStaticState]=useState<'loading'|'ready'|'failed'>('loading');
  const [failed,setFailed]=useState(false);
  const [ready,setReady]=useState(false);
  const [visible,setVisible]=useState(priority);
+
+ useEffect(()=>{
+  // Hydration can attach after an eager static thumbnail has already loaded.
+  // Recover that state immediately instead of waiting for an onLoad event that
+  // already fired before React was listening.
+  const image=staticImage.current;
+  if(!image||!image.complete)return;
+  let cancelled=false;
+  window.queueMicrotask(()=>{
+   if(cancelled)return;
+   setStaticState(image.naturalWidth>0?'ready':'failed');
+  });
+  return()=>{cancelled=true};
+ },[id]);
 
  useEffect(()=>{
   if(priority)return;
@@ -90,6 +105,7 @@ export default function PdfThumb({id,alt,priority=false}:{id:string;alt:string;p
  return <div className={`pdf-thumb ${displayReady?'is-ready':''} ${displayFailed?'has-failed':''}`} ref={host}>
   {!displayReady&&!displayFailed&&<Skeleton/>}
   <img
+   ref={staticImage}
    className="case-source-static"
    src={`/browse-assets/${id}.jpg`}
    alt={alt}
