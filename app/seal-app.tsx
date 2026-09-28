@@ -776,7 +776,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
       ?{url:officialDirectory.url,label:officialDirectory.label}
       :null;
 
- const toggleResultSpeech=useCallback(()=>{
+ function toggleResultSpeech(){
   if(!verification||!voiceSupported)return;
   const synthesis=window.speechSynthesis;
   if(resultSpeaking){
@@ -841,21 +841,17 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   const speech=parts.filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
   if(!speech)return;
   const utterance=new SpeechSynthesisUtterance(speech);
+  const localizedSpeech=displayLocale!=='en'&&(resultTranslationState==='translated'||activeResultSection==='summary'||activeResultSection==='next');
   utterance.lang=activeResultSection==='message'
    ?(documentLanguage?.code||'en')
-   :(displayLocale!=='en'&&resultTranslationState==='translated'?displayLocale:'en');
+   :(localizedSpeech?displayLocale:'en');
   utterance.rate=.96;
   utterance.pitch=1;
   utterance.onend=()=>setResultSpeaking(false);
   utterance.onerror=()=>setResultSpeaking(false);
   setResultSpeaking(true);
   synthesis.speak(utterance);
- },[
-  verification,voiceSupported,resultSpeaking,activeResultSection,translatedResult,file?.sample,conciseDecisionTitle,
-  humanDecisionSummary,resultStatusLabel,primaryRoute,riskSummary,instructionStatus,matterStatus,displayLocale,
-  resultTranslationState,resultUi,text,documentLanguage,claims,caseReality,obligations
- ]);
-
+ }
  const resultTranslationSource=useMemo(()=>{
   if(!verification)return {};
   const strings:Record<string,string>={
@@ -1107,7 +1103,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   :'';
 
  const reliableCourtTitle=claims.find(claim=>claim.type==='court'&&claimReliable(claim)&&cleanDisplayText(claim.value))?.value;
- const plausibleCourtTitle=reliableCourtTitle&&/[A-Za-z]{4}/.test(reliableCourtTitle)&&!/[^p{L}p{N}s.,'’&()\-]/u.test(reliableCourtTitle)
+ const plausibleCourtTitle=reliableCourtTitle&&/[A-Za-zÀ-ÿ]{4}/.test(reliableCourtTitle)&&!/[^A-Za-zÀ-ÿ0-9\s.,'’&()\-]/.test(reliableCourtTitle)
   ?reliableCourtTitle
   :'';
  const checkObjectTitle=cleanDisplayText(plausibleCourtTitle||workspaceTitle||'Court message');
