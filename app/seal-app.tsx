@@ -18,6 +18,7 @@ import {justiceSupportFor} from '@/lib/justice-support';
 import {buildCaseReality,buildCourtQuestionScript,buildHandoffSummary,buildObligationMap,buildPlainLanguageSummary,buildRiskSummary} from '@/lib/user-guidance';
 import {DISPLAY_LANGUAGES,UI_COPY,displayLocaleFor,type DisplayLocale,type UiCopyKey} from '@/lib/ui-locales';
 import {persistUiLocale,useStoredUiLocale,useUiText} from '@/lib/use-ui-text';
+import {primeBrowserTranslator,translateRecordWithBrowser} from '@/lib/browser-translate';
 import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
 import './workspace.css';
 import './result-mobile-repair.css';
@@ -982,28 +983,45 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
    setResultTranslationState('translating');
   },0);
 
-  void fetch('/api/translate',{
-   method:'POST',
-   headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({locale:displayLocale,strings:resultTranslationSource}),
-   signal:controller.signal
-  }).then(async response=>{
-   if(!response.ok){
-    if(!controller.signal.aborted)setResultTranslationState('unavailable');
-    return;
+  void (async()=>{
+   try{
+    const nativeStrings=await translateRecordWithBrowser(resultTranslationSource,displayLocale,controller.signal);
+    if(nativeStrings&&!controller.signal.aborted){
+     translationCacheRef.current.set(cacheKey,nativeStrings);
+     setTranslatedResult(nativeStrings);
+     setResultTranslationState('translated');
+     return;
+    }
+   }catch(error){
+    if(controller.signal.aborted)return;
+    if(error instanceof DOMException&&error.name==='AbortError')return;
    }
-   const payload=await response.json() as {strings?:Record<string,string>;mode?:string};
-   if(payload.mode!=='TRANSLATED'||!payload.strings){
-    if(!controller.signal.aborted)setResultTranslationState('unavailable');
-    return;
-   }
+
    if(controller.signal.aborted)return;
-   translationCacheRef.current.set(cacheKey,payload.strings);
-   setTranslatedResult(payload.strings);
-   setResultTranslationState('translated');
-  }).catch(()=>{
-   if(!controller.signal.aborted)setResultTranslationState('unavailable');
-  });
+   try{
+    const response=await fetch('/api/translate',{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({locale:displayLocale,strings:resultTranslationSource}),
+     signal:controller.signal
+    });
+    if(!response.ok){
+     if(!controller.signal.aborted)setResultTranslationState('unavailable');
+     return;
+    }
+    const payload=await response.json() as {strings?:Record<string,string>;mode?:string};
+    if(payload.mode!=='TRANSLATED'||!payload.strings){
+     if(!controller.signal.aborted)setResultTranslationState('unavailable');
+     return;
+    }
+    if(controller.signal.aborted)return;
+    translationCacheRef.current.set(cacheKey,payload.strings);
+    setTranslatedResult(payload.strings);
+    setResultTranslationState('translated');
+   }catch{
+    if(!controller.signal.aborted)setResultTranslationState('unavailable');
+   }
+  })();
 
   return()=>{
    window.clearTimeout(stateTimer);
@@ -1613,6 +1631,9 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  function replayStory(){startStory()}
 
  function changeDisplayLanguage(locale:DisplayLocale){
+  // Start browser-native translation while this click still has user activation.
+  // Unsupported browsers/language pairs simply fall through to the existing API.
+  if(locale!=='en')void primeBrowserTranslator(locale);
   setTranslatedResult({});
   setResultTranslationState(locale==='en'?'idle':'translating');
   setTranslationRetry(0);
