@@ -9,10 +9,11 @@ describe('result surface design contract',()=>{
   expect(app).toContain('className="decision-overview"');
   expect(app).toContain('result-slide result-slide-summary');
   expect(app).toContain('result-slide result-slide-original');
-  expect(app).toContain('className="decision-visual"');
-  expect(app).toContain('className="decision-artifact"');
-  expect(app).toContain("aria-label={resultUi('checkSnapshot')}");
-  expect(app).toContain('data-testid="play-evidence-review"');
+  expect(app).toContain('data-testid="evidence-review-entry"');
+  expect(app).not.toContain('data-testid="play-evidence-review"');
+  expect(app).toContain('role="tablist"');
+  expect(app).toContain('role="tabpanel"');
+  expect(app).toContain('data-testid="result-tabs-stage"');
   expect(app).not.toContain('setTimeout(()=>startStory(),260)');
   expect(css).toContain('Visual result composition: focused reading column + contextual artifact.');
   expect(app).toContain("const primaryRoute=file?.sample");
@@ -48,7 +49,6 @@ describe('result surface design contract',()=>{
   expect(css).toContain('Result grid repair: shell must occupy the content rows');
   expect(css).toContain('grid-row:1 / 3!important');
   expect(css).toContain('flex:1 1 auto!important');
-  expect(mobileCss).toContain('.result-slide-summary .decision-visual{display:none!important}');
   expect(mobileCss).toContain('.result-slide-evidence .evidence-review-entry');
   expect(mobileCss).toContain('Tabs behave as real sibling pages');
  });

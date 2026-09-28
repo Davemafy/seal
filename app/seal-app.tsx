@@ -2507,24 +2507,6 @@ async function upload(uploaded:File){
           </div>}
          </div>
 
-         <aside className="decision-visual" aria-label={resultUi('checkSnapshot')}>
-          <div className="decision-artifact">
-           {file?.kind==='image'
-            ?<img src={file.preview} alt="Original message preview"/>
-            :file?.kind==='pdf'
-             ?<StoryPdfPage url={file.preview}/>
-             :<div className="decision-text-thumb"><span>{resultUi('originalMessage')}</span><p>{cleanDisplayText(text.slice(0,360))}</p></div>}
-          </div>
-          <div className="decision-artifact-caption">
-           <strong>{file?.sample?resultUi('sampleDocument'):resultUi('originalMessage')}</strong>
-           <span>{file?.kind==='pdf'?'PDF':file?.kind==='image'?(resultUi('fileTypeImage')):(resultUi('fileTypeText'))}</span>
-          </div>
-          <div className="decision-source-brief">
-           <span>{resultUi('independentCheck')}</span>
-           <strong>{checkSourceCount?checkSourceCount+' public source'+(checkSourceCount===1?'':'s'):'No public source attached'}</strong>
-           {storyEvidence&&<small>{storyEvidence.title}</small>}
-          </div>
-         </aside>
         </div>
 
         <details className="decision-details">

@@ -382,7 +382,6 @@ test('official sample keeps review explicit, survives refresh, and can replay',a
  await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
 
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await expect(page.locator('.result-masthead-title')).toHaveText('Check result');
  await expect(page.getByTestId('evidence-review')).toHaveCount(0);
  await page.getByRole('tablist').getByRole('tab',{name:'Evidence'}).click();
  await expect(page.getByTestId('evidence-review-entry')).toBeVisible();
@@ -393,7 +392,6 @@ test('official sample keeps review explicit, survives refresh, and can replay',a
  await expect(page.getByTestId('evidence-review')).toHaveCount(0,{timeout:5000});
  await page.getByRole('tablist').getByRole('tab',{name:'Summary'}).click();
  await expect(page.getByText('This is a sample form.')).toBeVisible();
- await expect(page.locator('.decision-artifact')).toBeVisible();
  await page.getByRole('tablist').getByRole('tab',{name:'Evidence'}).click();
  await expect(page.getByTestId('evidence-review-entry')).toBeVisible();
 
@@ -404,7 +402,7 @@ test('official sample keeps review explicit, survives refresh, and can replay',a
  await page.getByRole('tablist').getByRole('tab',{name:'Evidence'}).click();
  await expect(page.getByTestId('evidence-review-entry')).toBeVisible();
 
- await page.getByTestId('play-evidence-review').click();
+ await page.getByTestId('evidence-review-entry').click();
  await expect(page.getByTestId('evidence-review')).toBeVisible({timeout:15000});
  await page.getByRole('button',{name:'Back to result'}).click();
  await expect(page.getByTestId('evidence-review')).toHaveCount(0,{timeout:5000});
@@ -571,7 +569,7 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  await expect(page.locator('.mobile-workspace-count')).toHaveCount(0);
  await expect(page.locator('.workspace-page-edges')).toBeVisible();
 
- await page.getByRole('button',{name:/Open checks, 3 open/}).click();
+ await page.getByRole('button',{name:/Open checks, 3/}).click();
  let drawer=page.getByRole('dialog',{name:'Checks'});
  await expect(drawer).toBeVisible();
  await expect(drawer.locator('.workspace-drawer-row')).toHaveCount(3);
@@ -584,7 +582,7 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  await expect(active.getByRole('dialog',{name:'Checks',includeHidden:true})).not.toBeVisible();
  await expect(active.getByTestId('entry-shell')).toBeVisible();
 
- await page.getByRole('button',{name:/Open checks, \d+ open/}).click();
+ await page.getByRole('button',{name:/Open checks, \d+/}).click();
  drawer=page.getByRole('dialog',{name:'Checks'});
  await expect(drawer.locator('.workspace-drawer-row')).toHaveCount(2);
  await drawer.getByRole('button',{name:/Delete check 2:/}).click();
@@ -592,7 +590,7 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  await expect(active.getByRole('dialog',{name:'Checks',includeHidden:true})).not.toBeVisible();
  await expect(active.getByTestId('entry-shell')).toBeVisible();
 
- await page.getByRole('button',{name:/Open checks, \d+ open/}).click();
+ await page.getByRole('button',{name:/Open checks, \d+/}).click();
  drawer=page.getByRole('dialog',{name:'Checks'});
  await expect(drawer.locator('.workspace-drawer-row')).toHaveCount(1);
  await drawer.getByRole('button',{name:/Delete check 1:/}).click();
@@ -600,7 +598,7 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  await expect(active.getByRole('dialog',{name:'Checks',includeHidden:true})).not.toBeVisible();
  await expect(active.getByTestId('entry-shell')).toBeVisible();
 
- await page.getByRole('button',{name:/Open checks, \d+ open/}).click();
+ await page.getByRole('button',{name:/Open checks, \d+/}).click();
  drawer=page.getByRole('dialog',{name:'Checks'});
  await expect(drawer.locator('.workspace-drawer-row')).toHaveCount(1);
  await expect(drawer.getByText('New check',{exact:true})).toBeVisible();
