@@ -10273,3 +10273,50 @@
   display:none!important
  }
 }
+
+
+/* Result voice — quiet, native-feeling playback control. */
+.decision-voice{
+ display:inline-flex;
+ align-items:center;
+ gap:7px;
+ min-height:34px;
+ margin-top:14px;
+ padding:0;
+ border:0;
+ background:transparent;
+ color:#5f5f5a;
+ font:inherit;
+ font-size:12.5px;
+ line-height:18px;
+ font-weight:620;
+ cursor:pointer
+}
+.decision-voice .seal-ui-icon{
+ width:17px;
+ height:17px
+}
+.decision-voice:hover{color:#111}
+.decision-voice:focus-visible{
+ outline:2px solid #111;
+ outline-offset:4px;
+ border-radius:3px
+}
+.decision-voice.is-speaking{color:#111}
+.decision-voice.is-speaking .seal-ui-icon{
+ animation:seal-voice-pulse 1.25s ease-in-out infinite
+}
+@keyframes seal-voice-pulse{
+ 0%,100%{opacity:1;transform:scale(1)}
+ 50%{opacity:.58;transform:scale(.94)}
+}
+@media(max-width:900px){
+ .decision-voice{
+  min-height:40px;
+  margin-top:12px;
+  font-size:13px
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .decision-voice.is-speaking .seal-ui-icon{animation:none}
+}
