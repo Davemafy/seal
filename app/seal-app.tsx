@@ -1233,12 +1233,12 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  },[hydrated]);
 
  useEffect(()=>{
-  if(!hydrated||busy||verification)return;
+  if(!hydrated||busy||verification||deferIdleOcr)return;
   const timer=window.setTimeout(()=>{
    void warmOcr(ocrLanguage).catch(()=>{});
   },350);
   return()=>window.clearTimeout(timer);
- },[hydrated,busy,verification,ocrLanguage]);
+ },[hydrated,busy,verification,ocrLanguage,deferIdleOcr]);
 
  useEffect(()=>{
   if(!hydrated||initialRunStarted.current||!workspaceActive)return;
@@ -2717,7 +2717,7 @@ const workspaceIdFromPath=(pathname:string)=>{
  }catch{return ''}
 };
 
-export default function SealApp({initialDemo=false,initialText='',initialRun=false,initialWorkspaceId,suppressOnboarding=false}:{initialDemo?:boolean;initialText?:string;initialRun?:boolean;initialWorkspaceId?:string;suppressOnboarding?:boolean}){
+export default function SealApp({initialDemo=false,initialText='',initialRun=false,initialWorkspaceId,suppressOnboarding=false,deferIdleOcr=false}:{initialDemo?:boolean;initialText?:string;initialRun?:boolean;initialWorkspaceId?:string;suppressOnboarding?:boolean;deferIdleOcr?:boolean}){
  const [workspaces,setWorkspaces]=useState<WorkspaceMeta[]>([{id:'primary',title:'New check',status:'idle'}]);
  const [activeWorkspace,setActiveWorkspace]=useState('primary');
  const [registryReady,setRegistryReady]=useState(false);
