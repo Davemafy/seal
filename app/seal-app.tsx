@@ -2628,13 +2628,13 @@ async function upload(uploaded:File){
     <section className="result-slide result-slide-resolve" data-result-section="next" aria-label={ui('resolvePanel')}>
      {ready&&verification&&<div className="resolve-primary" data-testid="resolve-primary">
      {verification&&!verification.safe_action&&decisionClaim?.action&&!verification.contact&&<div className="unsupported-next-step" id={sectionId('next-step')}>
-      <span>What to do next</span>
-      <h2>Check this with the court directly.</h2>
-      {messageDetails.length>0||scheduleQuote||noPaymentQuote?<dl className="message-detail-list">{messageDetails.map(claim=><div key={claim.id}><dt>{claim.type==='location'?'Location named':claim.label}</dt><dd>{cleanDisplayText(claim.value)}</dd></div>)}{scheduleQuote&&<div><dt>{ui('scheduleStated')}</dt><dd>{cleanDisplayText(scheduleQuote)}</dd></div>}{noPaymentQuote&&<div><dt>{ui('paymentStatement')}</dt><dd>{cleanDisplayText(noPaymentQuote)}</dd></div>}</dl>:<p>{ui('noCourtDetails')}</p>}
-      <p>Those details come from the message itself. They do not confirm that the case exists or that the sender is connected to the court.</p>
-      <p>Do not use a payment link, QR code, phone number, or reply address from the message until you reach the court independently.</p>
+      <span>{translatedResult.unsupportedNextEyebrow||'What to do next'}</span>
+      <h2>{translatedResult.unsupportedNextTitle||'Check this with the court directly.'}</h2>
+      {messageDetails.length>0||scheduleQuote||noPaymentQuote?<dl className="message-detail-list">{messageDetails.map(claim=><div key={claim.id}><dt>{claim.type==='location'?(translatedResult.locationNamed||'Location named'):claim.label}</dt><dd>{cleanDisplayText(claim.value)}</dd></div>)}{scheduleQuote&&<div><dt>{ui('scheduleStated')}</dt><dd>{cleanDisplayText(scheduleQuote)}</dd></div>}{noPaymentQuote&&<div><dt>{ui('paymentStatement')}</dt><dd>{cleanDisplayText(noPaymentQuote)}</dd></div>}</dl>:<p>{ui('noCourtDetails')}</p>}
+      <p>{translatedResult.detailsUnconfirmed||'Those details come from the message itself. They do not confirm that the case exists or that the sender is connected to the court.'}</p>
+      <p>{translatedResult.avoidMessageRoutes||'Do not use a payment link, QR code, phone number, or reply address from the message until you reach the court independently.'}</p>
       {officialDirectory&&<div className="official-directory-route">
-       <span>Start here</span>
+       <span>{translatedResult.startHere||'Start here'}</span>
        <a href={officialDirectory.url} target="_blank" rel="noopener noreferrer">{officialDirectory.label}</a>
        <p>{officialDirectory.note}</p>
       </div>}
@@ -2660,21 +2660,21 @@ async function upload(uploaded:File){
       <div className="journey-label">{ui('theCase')}</div>
       <div className="journey-content">
        <h3>{translatedResult.caseRealityTitle||caseReality.title}</h3><p>{translatedResult.caseRealityDetail||caseReality.detail}</p>
-       <dl className="case-reality-facts"><div><dt>{ui('courtClaimed')}</dt><dd>{caseReality.court}</dd></div><div><dt>{ui('caseReference')}</dt><dd>{caseReality.reference||'Not verified'}</dd></div></dl>
+       <dl className="case-reality-facts"><div><dt>{ui('courtClaimed')}</dt><dd>{caseReality.court}</dd></div><div><dt>{ui('caseReference')}</dt><dd>{caseReality.reference||(translatedResult.notVerified||'Not verified')}</dd></div></dl>
        {verification.contact?.website?<a className="journey-link" href={verification.contact.website} target="_blank" rel="noopener noreferrer">{ui('openCourtWebsiteIndependently')}</a>:officialLookup&&<a className="journey-link" href={officialLookup.url} target="_blank" rel="noopener noreferrer">{officialLookup.label}</a>}
        {officialLookup&&<small className="journey-note">{officialLookup.note}</small>}
       </div>
      </div>
      {obligations.length>0&&<div className="journey-block obligation-block" data-testid="obligation-map">
       <div className="journey-label">{ui('whatMessageAsks')}</div>
-      <div className="journey-content"><div className="obligation-list">{obligations.map(item=><div className="obligation-row" key={item.id}><div><strong>{cleanDisplayText(item.text)}</strong>{item.deadline&&<small>Time/date stated: {item.deadline}</small>}</div><span className={item.status==='MISMATCH'?'is-conflict':item.status==='MATCH'?'is-match':''}>{item.statusLabel}</span></div>)}</div><p className="journey-note">Dates and instructions here come from the message unless a row explicitly says it matches a public source.</p></div>
+      <div className="journey-content"><div className="obligation-list">{obligations.map((item,index)=><div className="obligation-row" key={item.id}><div><strong>{cleanDisplayText(item.text)}</strong>{item.deadline&&<small>{translatedResult.timeDateStated||'Time/date stated'}: {item.deadline}</small>}</div><span className={item.status==='MISMATCH'?'is-conflict':item.status==='MATCH'?'is-match':''}>{translatedResult['obligationStatus'+index]||item.statusLabel}</span></div>)}</div><p className="journey-note">{translatedResult.obligationNote||'Dates and instructions here come from the message unless a row explicitly says it matches a public source.'}</p></div>
      </div>}
      <details className="journey-details" data-testid="plain-language-explanation">
       <summary><span>{ui('explainNotice')}</span><small>{ui('plainLanguageTranslation')}</small><SealGuideIcon/></summary>
       <div className="journey-details-body">
-       <div className="explanation-controls"><small>Explanation follows Display language: {DISPLAY_LANGUAGES[displayLocale]} · detected document language: {documentLanguage?.label||'Unknown'}{documentLanguage?.confidence==='low'?' · low confidence':''}</small></div>
+       <div className="explanation-controls"><small>{translatedResult.explanationLanguagePrefix||'Explanation follows display language'}: {DISPLAY_LANGUAGES[displayLocale]} · {translatedResult.detectedDocumentLanguage||'detected document language'}: {documentLanguage?.label||(translatedResult.unknownLanguage||'Unknown')}{documentLanguage?.confidence==='low'?` · ${translatedResult.lowConfidence||'low confidence'}`:''}</small></div>
        {displayedExplanation&&<div className="plain-explanation" aria-live="polite"><h3>{displayedExplanation.title}</h3><p>{displayedExplanation.summary}</p></div>}
-       <p className="journey-note">This explains what SEAL extracted and verified. It is not legal advice.</p>
+       <p className="journey-note">{translatedResult.explanationDisclaimer||'This explains what SEAL extracted and verified. It is not legal advice.'}</p>
       </div>
      </details>
      <details className="journey-details" data-testid="resolution-help">
@@ -2683,7 +2683,7 @@ async function upload(uploaded:File){
        <div className="support-path"><strong>{translatedResult.supportHaventTitle||'I haven’t acted yet'}</strong><p>{translatedResult.supportHaventCopy||'Use the independently sourced court route above before calling, paying, scanning, replying, or appearing because of this message.'}</p></div>
        <div className="support-path"><strong>{translatedResult.supportPaidTitle||'I already paid'}</strong><p>{translatedResult.supportPaidCopy||'Contact your bank or payment provider through its official app, card, or website and report the transaction immediately.'}</p>{justiceSupport?.recovery&&<a className="journey-link" href={justiceSupport.recovery.url} target="_blank" rel="noopener noreferrer">{justiceSupport.recovery.label}</a>}</div>
        <div className="support-path"><strong>{translatedResult.supportSharedTitle||'I shared personal information'}</strong><p>{translatedResult.supportSharedCopy||'Do not send anything else through the message. Use an official recovery service if one is available for this jurisdiction.'}</p>{justiceSupport?.recovery&&<a className="journey-link" href={justiceSupport.recovery.url} target="_blank" rel="noopener noreferrer">{justiceSupport.recovery.label}</a>}</div>
-       <div className="support-path"><strong>{translatedResult.supportLegalTitle||'I need legal help'}</strong><p>{translatedResult.supportLegalCopy||'Use an official legal-aid service to understand your options for a real legal matter.'}</p>{justiceSupport?.legalAid?<a className="journey-link" href={justiceSupport.legalAid.url} target="_blank" rel="noopener noreferrer">{justiceSupport.legalAid.label}</a>:<span className="support-unavailable">No reviewed legal-aid directory is linked for this jurisdiction yet.</span>}</div>
+       <div className="support-path"><strong>{translatedResult.supportLegalTitle||'I need legal help'}</strong><p>{translatedResult.supportLegalCopy||'Use an official legal-aid service to understand your options for a real legal matter.'}</p>{justiceSupport?.legalAid?<a className="journey-link" href={justiceSupport.legalAid.url} target="_blank" rel="noopener noreferrer">{justiceSupport.legalAid.label}</a>:<span className="support-unavailable">{translatedResult.noLegalAid||'No reviewed legal-aid directory is linked for this jurisdiction yet.'}</span>}</div>
        <div className="handoff-pack" data-testid="handoff-pack">
         <span>{translatedResult.handoffEyebrow||'Take this with you'}</span>
         <strong>{translatedResult.handoffTitle||'Ask the court without relying on the message'}</strong>
@@ -2699,10 +2699,10 @@ async function upload(uploaded:File){
       </div>
      </details>
     </section>}
-     {ready&&verification?.contact&&<section className="contact-section" id={verification.safe_action?undefined:sectionId('next-step')} aria-label="Court contact from an official source">
+     {ready&&verification?.contact&&<section className="contact-section" id={verification.safe_action?undefined:sectionId('next-step')} aria-label={translatedResult.courtContactHeading||'Court contact from an official source'}>
      <div className="court-contact">
       <div>
-       <h3>Court contact from an official source</h3>
+       <h3>{translatedResult.courtContactHeading||'Court contact from an official source'}</h3>
        <p>{verification.contact.name||(verification.resolver_id==='connecticut'?'District of Connecticut Jury Office':'Court contact')}</p>
       </div>
       <div>
