@@ -2010,7 +2010,7 @@ async function upload(uploaded:File){
        </div>
       </div>
       <div className="check-object-actions" aria-label={ui('checkActions')}>
-       <button type="button" className="icon-control result-icon-action" aria-label={ui('checkAgain')} title={ui('checkAgain')} data-tooltip={ui('checkAgain')} onClick={()=>run('LIVE')} disabled={busy}><SealUiIcon name="refresh"/></button>
+       <button type="button" className="icon-control result-icon-action" aria-label={ui('checkAgain')} data-tooltip={ui('checkAgain')} onClick={()=>run('LIVE')} disabled={busy}><SealUiIcon name="refresh"/></button>
       </div>
      </div>
 
@@ -2022,7 +2022,7 @@ async function upload(uploaded:File){
      </nav>
     </header>
 
-    {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>{ui('checkLiveSources')}</button></div>}
+    {liveFailed&&<div className="source-retry-status" role="status"><span><strong>Live source unavailable</strong><small>The current result is preserved; claims that needed the live court page remain unverified.</small></span><button type="button" onClick={()=>run('LIVE')} disabled={busy}>{busy?'Checking…':ui('checkLiveSources')}</button></div>}
 
     {verification&&ready&&reviewOffer==='counting'&&createPortal(<div className="review-autoplay-overlay" data-review-offer role="dialog" aria-modal="true" aria-label={ui('verificationReviewStarting')}>
      <button type="button" className="review-autoplay-skip" onClick={skipReviewOffer}>{ui('skip')}</button>
