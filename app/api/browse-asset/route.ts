@@ -20,7 +20,7 @@ export async function GET(req:Request){
   if(item.preview.type==='image'&&!type.toLowerCase().startsWith('image/'))return new Response('Unexpected source type',{status:502});
   return new Response(body,{headers:{
    'Content-Type':item.preview.type==='pdf'?'application/pdf':type||'image/jpeg',
-   'Cache-Control':'public, max-age=3600, s-maxage=86400'
+   'Cache-Control':'public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000'
   }});
  }catch{
   return new Response('Source unavailable',{status:502});
