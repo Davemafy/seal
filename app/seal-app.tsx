@@ -125,7 +125,7 @@ function DesignPlayIcon(){
  </svg>;
 }
 
-type SealUiIconName='add'|'browse'|'globe'|'refresh'|'copy'|'message'|'download'|'list'|'workspaces'|'delete'|'close';
+type SealUiIconName='add'|'browse'|'globe'|'refresh'|'copy'|'message'|'download'|'list'|'workspaces'|'delete'|'close'|'voice';
 
 function SealUiIcon({name}:{name:SealUiIconName}){
  const common={fill:'none',stroke:'currentColor',strokeWidth:1.7,strokeLinecap:'round' as const,strokeLinejoin:'round' as const};
@@ -141,6 +141,7 @@ function SealUiIcon({name}:{name:SealUiIconName}){
   {name==='workspaces'&&<><rect {...common} x="7.25" y="5.25" width="11.5" height="13.5" rx="1.8"/><path {...common} d="M5.25 8.25H4.8A1.8 1.8 0 0 0 3 10.05v7.15A1.8 1.8 0 0 0 4.8 19h.45M9.75 9h6.5M9.75 12.25h6.5M9.75 15.5h4.25"/></>}
   {name==='delete'&&<><path {...common} d="M5.5 7.25h13M9 7.25V5.5h6v1.75M7.5 7.25l.65 11h7.7l.65-11M10 10.5v4.75M14 10.5v4.75"/></>}
   {name==='close'&&<><path {...common} d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></>}
+  {name==='voice'&&<><path {...common} d="M5 10v4h3l4 3V7L8 10H5Z"/><path {...common} d="M15 9.25a4 4 0 0 1 0 5.5M17.5 6.75a7.25 7.25 0 0 1 0 10.5"/></>}
  </svg>;
 }
 
@@ -314,6 +315,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const [hovered,setHovered]=useState('');
  const [showIndex,setShowIndex]=useState(false);
  const [activeResultSection,setActiveResultSection]=useState<'summary'|'message'|'evidence'|'next'>('summary');
+ const [voiceSupported,setVoiceSupported]=useState(false);
+ const [resultSpeaking,setResultSpeaking]=useState(false);
  const [technicalOpen,setTechnicalOpen]=useState(false);
  const [,setHandoffCopied]=useState(false);
 
@@ -324,6 +327,19 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   },3200);
   return()=>window.clearInterval(timer);
  },[busy]);
+
+ useEffect(()=>{
+  setVoiceSupported('speechSynthesis' in window&&typeof window.SpeechSynthesisUtterance!=='undefined');
+  return()=>{
+   window.speechSynthesis?.cancel();
+  };
+ },[]);
+
+ useEffect(()=>{
+  if(workspaceActive||!resultSpeaking)return;
+  window.speechSynthesis?.cancel();
+  setResultSpeaking(false);
+ },[workspaceActive,resultSpeaking]);
  const [,setQuestionCopied]=useState(false);
  const workspaceRootRef=useRef<HTMLElement>(null);
  const resultCarouselRef=useRef<HTMLDivElement>(null);
@@ -795,6 +811,40 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
      :officialDirectory
       ?{url:officialDirectory.url,label:officialDirectory.label}
       :null;
+
+ const toggleResultSpeech=useCallback(()=>{
+  if(!verification||!voiceSupported)return;
+  const synthesis=window.speechSynthesis;
+  if(resultSpeaking){
+   synthesis.cancel();
+   setResultSpeaking(false);
+   return;
+  }
+
+  synthesis.cancel();
+  const title=translatedResult.decisionTitle||(file?.sample?'This is a sample form.':conciseDecisionTitle);
+  const summary=translatedResult.decisionSummary||humanDecisionSummary;
+  const parts=[
+   title,
+   summary,
+   primaryRoute?('Next step. '+primaryRoute.label):'',
+   riskSummary&&!file?.sample&&instructionStatus!==matterStatus
+    ?('This message. '+(translatedResult.instructionStatus||instructionStatus)+'. The case. '+(translatedResult.matterStatus||matterStatus)+'.')
+    :''
+  ].filter(Boolean);
+  const utterance=new SpeechSynthesisUtterance(parts.join(' '));
+  utterance.lang=displayLocale!=='en'&&resultTranslationState==='translated'?displayLocale:'en';
+  utterance.rate=.96;
+  utterance.pitch=1;
+  utterance.onend=()=>setResultSpeaking(false);
+  utterance.onerror=()=>setResultSpeaking(false);
+  setResultSpeaking(true);
+  synthesis.speak(utterance);
+ },[
+  verification,voiceSupported,resultSpeaking,translatedResult,file?.sample,conciseDecisionTitle,
+  humanDecisionSummary,primaryRoute,riskSummary,instructionStatus,matterStatus,displayLocale,resultTranslationState
+ ]);
+
  const resultTranslationSource=useMemo(()=>{
   if(!verification)return {};
   const strings:Record<string,string>={
@@ -808,6 +858,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
    messageStatusLabel:'This message',
    caseStatusLabel:'The case',
    whyResult:'Why this result',
+   voiceListen:'Listen',
+   voiceStop:'Stop',
    resolutionDisclaimer:curatedSignal?'This finding is about this published example only. It does not label other messages.':'These sources help with the check, but they still cannot tell us who sent the message.',
    relationship:decisionRelationship,
    plainTitle:plainExplanation?.title||'',
@@ -2381,7 +2433,14 @@ async function upload(uploaded:File){
         <p className="decision-status" data-testid="result-status">{translatedResult.resultStatus||resultStatusLabel}</p>
         <h1>{translatedResult.decisionTitle||(file?.sample?'This is a sample form.':conciseDecisionTitle)}</h1>
         <p className="decision-summary">{translatedResult.decisionSummary||humanDecisionSummary}</p>
-        {displayLocale!=='en'&&resultTranslationState==='translated'&&<p className="translation-note">{resultUi('translatedNote')}</p>}
+        {voiceSupported&&<button
+         type="button"
+         className={`decision-voice${resultSpeaking?' is-speaking':''}`}
+         aria-pressed={resultSpeaking}
+         aria-label={resultSpeaking?'Stop reading result aloud':'Read result aloud'}
+         onClick={toggleResultSpeech}
+        ><SealUiIcon name="voice"/><span>{resultSpeaking?(translatedResult.voiceStop||'Stop'):(translatedResult.voiceListen||'Listen')}</span></button>}
+        {displayLocale!=='en'&&resultTranslationState==='translated'&&<p className="translation-note">{resultUi('translatedNote')}</p>
         {displayLocale!=='en'&&resultTranslationState==='unavailable'&&<p className="translation-note is-unavailable" role="status">{resultUi('translationUnavailable')}</p>}
          </div>
 
