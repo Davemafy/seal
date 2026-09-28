@@ -7,12 +7,12 @@ import '../workspace.css';
 import './browse.css';
 
 const visualOrder=[
+ 'dallas-traffic-qr-scam',
  'maryland-court-text-scam',
- 'spain-public-judicial-notice',
  'connecticut-sample-jury-summons',
+ 'spain-public-judicial-notice',
  'india-supreme-court-fake-website-advisory',
  'brazil-parana-citation-notice',
- 'dallas-traffic-qr-scam',
  'france-court-convocation-form',
 ];
 
