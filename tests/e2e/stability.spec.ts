@@ -33,7 +33,7 @@ test('mobile interface language changes locally even when translation provider i
  let translationRequests=0;
  page.on('request',request=>{if(request.url().includes('/api/translate'))translationRequests++});
  await page.route('**/api/translate',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'unavailable',mode:'UNAVAILABLE'})}));
- await page.goto('/');
+ await page.goto('/check/primary');
  await expect(page.getByRole('heading',{name:'Check a court message'})).toBeVisible();
 
  await page.locator('.mobile-language-trigger').click();
@@ -55,7 +55,7 @@ test('mobile interface language changes locally even when translation provider i
 
 test('entry stays idle across refresh until the user chooses an input',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
- await page.goto('/');
+ await page.goto('/check/primary');
  await expect(page.getByTestId('entry-shell')).toBeVisible();
  await expect(page.getByRole('heading',{name:'Check a court message'})).toBeVisible();
  await expect(page.getByText(/Reading image|Reading PDF|Checking public sources/)).toHaveCount(0);
@@ -401,7 +401,7 @@ test('mobile SEAL brand returns a result to the clean entry state',async({page})
 test('mobile entry shell does not leave body space below its footer',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:390,height:844});
- await page.goto('/');
+ await page.goto('/check/primary');
 
  const metrics=await page.evaluate(()=>{
   const footer=document.querySelector('.seal-footer') as HTMLElement|null;
@@ -655,7 +655,7 @@ test('entry layout stays inside the viewport across desktop compression',async({
  const assertNoRuntimeErrors=guardRuntime(page);
  for(const width of [1208,1100,1024]){
   await page.setViewportSize({width,height:646});
-  await page.goto('/');
+  await page.goto('/check/primary');
   await expect(page.getByTestId('entry-shell')).toBeVisible();
   const metrics=await page.evaluate(()=>{
    const shell=document.querySelector<HTMLElement>('[data-testid="entry-shell"]')!;
@@ -682,7 +682,7 @@ test('entry layout stays inside the viewport across desktop compression',async({
 test('desktop entry keeps compact sidebar and canvas in proportion',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:1440,height:900});
- await page.goto('/');
+ await page.goto('/check/primary');
  await expect(page.getByTestId('entry-shell')).toBeVisible();
  const metrics=await page.evaluate(()=>{
   const rail=document.querySelector<HTMLElement>('.workspace-rail')!;
@@ -715,7 +715,7 @@ test('desktop entry keeps compact sidebar and canvas in proportion',async({page}
 test('1208 desktop keeps sidebar compact and canvas restrained',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:1208,height:664});
- await page.goto('/');
+ await page.goto('/check/primary');
  await expect(page.getByTestId('entry-shell')).toBeVisible();
  const metrics=await page.evaluate(()=>{
   const rail=document.querySelector<HTMLElement>('.workspace-rail')!;
@@ -760,7 +760,7 @@ test('1208 desktop keeps sidebar compact and canvas restrained',async({page})=>{
 test('desktop rail keeps Browse visible and consistent across pages',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:1208,height:664});
- await page.goto('/');
+ await page.goto('/check/primary');
  const appRail=page.locator('.workspace-rail');
  await expect(appRail.getByRole('link',{name:'Browse',exact:true})).toBeVisible();
  const appWidth=await appRail.evaluate(node=>node.getBoundingClientRect().width);
@@ -773,5 +773,26 @@ test('desktop rail keeps Browse visible and consistent across pages',async({page
  const browseWidth=await browseRail.evaluate(node=>node.getBoundingClientRect().width);
  expect(Math.abs(appWidth-browseWidth)).toBeLessThanOrEqual(1);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth)).toBeLessThanOrEqual(1);
+ assertNoRuntimeErrors();
+});
+
+
+test('landing keeps the checker above the fold and exposes Dallas provenance',async({page})=>{
+ const assertNoRuntimeErrors=guardRuntime(page);
+ await page.setViewportSize({width:1440,height:900});
+ await page.goto('/');
+ await expect(page.getByRole('heading',{level:1,name:/The seal can be faked/})).toBeVisible();
+ await expect(page.getByTestId('upload-file')).toBeVisible();
+ await expect(page.getByTestId('dallas-official-source')).toHaveAttribute('href',/dallascityhall\.com/);
+ let overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
+ expect(overflow).toBeLessThanOrEqual(1);
+
+ await page.setViewportSize({width:390,height:844});
+ await page.reload();
+ const uploadBox=await page.getByTestId('upload-file').boundingBox();
+ expect(uploadBox).not.toBeNull();
+ expect(uploadBox!.top,'mobile checker should begin inside the opening viewport').toBeLessThan(844);
+ overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
+ expect(overflow).toBeLessThanOrEqual(1);
  assertNoRuntimeErrors();
 });
