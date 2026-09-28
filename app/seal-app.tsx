@@ -2462,7 +2462,7 @@ async function upload(uploaded:File){
         <p className="decision-status" data-testid="result-status">{translatedResult.resultStatus||resultStatusLabel}</p>
         <h1>{translatedResult.decisionTitle||(file?.sample?'This is a sample form.':conciseDecisionTitle)}</h1>
         <p className="decision-summary">{translatedResult.decisionSummary||humanDecisionSummary}</p>
-        {displayLocale!=='en'&&resultTranslationState==='translated'&&<p className="translation-note">{resultUi('translatedNote')}</p>
+        {displayLocale!=='en'&&resultTranslationState==='translated'&&<p className="translation-note">{resultUi('translatedNote')}</p>}
         {displayLocale!=='en'&&resultTranslationState==='unavailable'&&<p className="translation-note is-unavailable" role="status">{resultUi('translationUnavailable')}</p>}
          </div>
 
