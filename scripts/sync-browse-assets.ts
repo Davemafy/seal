@@ -8,7 +8,6 @@ import {browseCases} from '../lib/browse-cases';
 const run=promisify(execFile);
 const outputDir=join(process.cwd(),'public','browse-assets');
 await mkdir(outputDir,{recursive:true});
-const pdfCases=browseCases.filter(item=>item.preview.type==='pdf');
 const tempRoot=await mkdtemp(join(tmpdir(),'seal-browse-assets-'));
 const failures:string[]=[];
 
@@ -16,22 +15,46 @@ async function sameBytes(path:string,next:Buffer){
  try{return (await readFile(path)).equals(next)}catch{return false}
 }
 
+async function fetchSource(url:string,accept:string){
+ const response=await fetch(url,{
+  redirect:'follow',
+  signal:AbortSignal.timeout(25000),
+  headers:{'User-Agent':'SEAL/1.0 browse source sync (+https://github.com/Davemafy/seal)','Accept':accept}
+ });
+ if(!response.ok)throw new Error(`HTTP ${response.status}`);
+ return {bytes:Buffer.from(await response.arrayBuffer()),type:response.headers.get('content-type')||''};
+}
+
 try{
- for(const item of pdfCases){
+ for(const item of browseCases){
   const target=join(outputDir,`${item.id}.jpg`);
   try{
-   const response=await fetch(item.preview.url,{
-    redirect:'follow',
-    signal:AbortSignal.timeout(25000),
-    headers:{'User-Agent':'SEAL/1.0 browse source sync (+https://github.com/Davemafy/seal)','Accept':'application/pdf'}
-   });
-   if(!response.ok)throw new Error(`HTTP ${response.status}`);
-   const bytes=Buffer.from(await response.arrayBuffer());
-   if(bytes.length<5||bytes.subarray(0,5).toString('ascii')!=='%PDF-')throw new Error('source did not return a PDF');
-   const source=join(tempRoot,`${item.id}.pdf`);
+   const source=join(tempRoot,`${item.id}.${item.preview.type==='pdf'?'pdf':'source'}`);
    const base=join(tempRoot,item.id);
-   await writeFile(source,bytes);
-   await run('pdftoppm',['-f','1','-l','1','-singlefile','-jpeg','-jpegopt','quality=86','-r','135',source,base],{timeout:45000,maxBuffer:1024*1024});
+   const {bytes,type}=await fetchSource(item.preview.url,item.preview.type==='pdf'?'application/pdf':'image/*');
+
+   if(item.preview.type==='pdf'){
+    if(bytes.length<5||bytes.subarray(0,5).toString('ascii')!=='%PDF-')throw new Error('source did not return a PDF');
+    await writeFile(source,bytes);
+    await run('pdftoppm',[
+     '-f','1','-l','1','-singlefile','-jpeg',
+     '-jpegopt','quality=84',
+     '-scale-to-x','1100','-scale-to-y','-1',
+     source,base
+    ],{timeout:45000,maxBuffer:1024*1024});
+   }else{
+    if(!type.toLowerCase().startsWith('image/'))throw new Error('source did not return an image');
+    await writeFile(source,bytes);
+    await run('convert',[
+     source,
+     '-auto-orient',
+     '-strip',
+     '-resize','1100x1100>',
+     '-quality','84',
+     `${base}.jpg`
+    ],{timeout:45000,maxBuffer:1024*1024});
+   }
+
    const rendered=await readFile(`${base}.jpg`);
    if(!(await sameBytes(target,rendered))){
     await writeFile(target,rendered);
