@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element -- Small local SVG brand marks do not need Next Image optimization. */
-import Link from 'next/link';
 import {browseCases} from '@/lib/browse-cases';
 import BrowseGrid from './browse-grid';
 import BrowseRail from './browse-rail';
+import BrowseIntro from './browse-intro';
 import '../workspace.css';
 import './browse.css';
 
@@ -22,19 +22,9 @@ export default function Browse(){
  return <main className="seal-app browse-page">
   <BrowseRail/>
 
-  <header className="seal-nav mobile-only-nav">
-   <Link href="/" className="mobile-brand" aria-label="SEAL home"><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></Link>
-   <Link href="/" className="mobile-nav-action">Check</Link>
-  </header>
+  <BrowseIntro/>
 
   <section className="browse-shell">
-   <header className="browse-intro">
-    <p className="browse-eyebrow">Real examples</p>
-    <h1>See what real court messages look like</h1>
-    <p className="browse-deck">Browse notices and scam warnings published by courts and public agencies. Open the original source, or check an example in SEAL.</p>
-    <p className="browse-scope">If a detail cannot be independently confirmed, SEAL leaves it unconfirmed.</p>
-   </header>
-
    <BrowseGrid items={rankedCases}/>
   </section>
  </main>;
