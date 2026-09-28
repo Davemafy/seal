@@ -40,11 +40,11 @@ export default function BrowseRail(){
      setWorkspaces(parsed.items);
      setActiveId(parsed.active||parsed.items[0].id);
     }else{
-     setWorkspaces([{id:'primary',title:ui('newCheck'),status:'idle'}]);
+     setWorkspaces([{id:'primary',title:'New check',status:'idle'}]);
      setActiveId('primary');
     }
    }catch{
-    setWorkspaces([{id:'primary',title:ui('newCheck'),status:'idle'}]);
+    setWorkspaces([{id:'primary',title:'New check',status:'idle'}]);
     setActiveId('primary');
    }
   },0);
@@ -64,7 +64,7 @@ export default function BrowseRail(){
 
  const newCheck=()=>{
   const id=`check-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
-  const next=[...workspaces,{id,title:ui('newCheck'),status:'idle' as WorkspaceRunStatus}].slice(-8);
+  const next=[...workspaces,{id,title:'New check',status:'idle' as WorkspaceRunStatus}].slice(-8);
   save(next,id);
   router.push(checkRoute(id));
  };
@@ -76,7 +76,7 @@ export default function BrowseRail(){
   let active=activeId;
   if(!next.length){
    const id2=`check-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
-   next=[{id:id2,title:ui('newCheck'),status:'idle'}];
+   next=[{id:id2,title:'New check',status:'idle'}];
    active=id2;
   }else if(active===id){
    active=next[Math.min(index,next.length-1)].id;
@@ -94,7 +94,7 @@ export default function BrowseRail(){
    ?[item.jurisdiction||item.language,status].filter(Boolean).join(' · ')
    :(preview.length>=8?preview:[item.jurisdiction||item.language,item.status==='done'?ui('checked'):''].filter(Boolean).join(' · '));
   return {...item,title,secondary,index};
- }),[workspaces]);
+ }),[workspaces,ui]);
 
  return <aside className="workspace-rail browse-workspace-rail" aria-label={ui('workspace')}>
   <div className="rail-topbar">
