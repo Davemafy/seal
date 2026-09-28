@@ -1224,7 +1224,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  },[hydrated,busy,verification,ocrLanguage]);
 
  useEffect(()=>{
-  if(!hydrated||initialRunStarted.current)return;
+  if(!hydrated||initialRunStarted.current||!workspaceActive)return;
   if(initialRun&&initialText){
    initialRunStarted.current=true;
    void run('SNAPSHOT',{text:initialText,file:null});
@@ -1298,7 +1298,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  // This is a one-shot URL handoff. Adding run/ocrLanguage would replay the
  // case after the effect itself mutates result state.
  // eslint-disable-next-line react-hooks/exhaustive-deps
- },[hydrated,initialRun,initialText]);
+ },[hydrated,initialRun,initialText,workspaceActive]);
 
  useEffect(()=>{
   if(!file||file.kind!=='image')return;
@@ -2604,10 +2604,13 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
      const parsed=JSON.parse(raw) as {active?:string;items?:WorkspaceMeta[]};
      const rawItems=Array.isArray(parsed.items)?parsed.items.filter(item=>item&&typeof item.id==='string').slice(0,8):[];
      const deduped=rawItems.filter((item,index,all)=>all.findIndex(candidate=>candidate.id===item.id)===index);
-     const requested=initialWorkspaceId&&deduped.some(item=>item.id===initialWorkspaceId)?initialWorkspaceId:undefined;
-     const preservedActive=requested||(deduped.some(item=>item.id===parsed.active)?parsed.active:undefined);
-     const cleaned=deduped.filter(item=>item.id===preservedActive||!isDisposableBlankWorkspace(item));
-     const items=(cleaned.length?cleaned:(preservedActive?deduped.filter(item=>item.id===preservedActive):deduped.slice(0,1))).slice(0,8);
+     const requestedMissing=!!initialWorkspaceId&&!deduped.some(item=>item.id===initialWorkspaceId);
+     const withRequested=requestedMissing
+      ?[...deduped.slice(0,7),{id:initialWorkspaceId!,title:'New check',status:'idle' as WorkspaceRunStatus}]
+      :deduped;
+     const preservedActive=initialWorkspaceId||(withRequested.some(item=>item.id===parsed.active)?parsed.active:undefined);
+     const cleaned=withRequested.filter(item=>item.id===preservedActive||!isDisposableBlankWorkspace(item));
+     const items=(cleaned.length?cleaned:(preservedActive?withRequested.filter(item=>item.id===preservedActive):withRequested.slice(0,1))).slice(0,8);
      if(items.length){
       setWorkspaces(items.map(item=>({...item,status:(item.status==='reading'||item.status==='verifying'?'idle':item.status) as WorkspaceRunStatus})));
       const nextActive=(preservedActive&&items.some(item=>item.id===preservedActive)?preservedActive:items[0].id);
