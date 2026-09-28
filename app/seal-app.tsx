@@ -828,7 +828,52 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    copyQuestion:'Copy what to ask',
    copyRecord:'Copy verification record',
    saveRecord:'Save verification record',
-   handoffNote:'The saved record includes verification states, source links, and source-check timestamps. It does not include a legal opinion.'
+   handoffNote:'The saved record includes verification states, source links, and source-check timestamps. It does not include a legal opinion.',
+   emptyEvidenceTitleDirect:'This court is not in SEAL’s direct-check network yet.',
+   emptyEvidenceTitle:'No independent source evidence was available for this result.',
+   emptyEvidenceCopyDirect:'SEAL can still show exactly what the message asks you to do, but it will not guess whether the case or sender is genuine.',
+   emptyEvidenceCopy:'The inspection below shows what SEAL could and could not establish from its supported sources.',
+   checkContext:'Check context',
+   checkContextHint:'Provenance for this result',
+   notResolved:'Not resolved',
+   livePublicSources:'Live public sources',
+   sourceSnapshot:'Source snapshot',
+   checkedLabel:'Checked',
+   recordPrivacy:'Original files stay in this browser. Source quotations remain attached to the check so the result can be inspected later.',
+   whatWasChecked:'What was checked',
+   hideList:'Hide list',
+   showList:'Show list',
+   inMessage:'In the message',
+   officialSourceEvidence:'Official source evidence',
+   whatCanEstablish:'What we can establish',
+   liveOfficialSource:'Live official source',
+   moreSourceExcerpt:'more source excerpt',
+   moreSourceExcerpts:'more source excerpts',
+   notWrongFallback:'This does not mean the detail is wrong.',
+   originalSource:'Original source',
+   unsupportedNextEyebrow:'What to do next',
+   unsupportedNextTitle:'Check this with the court directly.',
+   locationNamed:'Location named',
+   detailsUnconfirmed:'Those details come from the message itself. They do not confirm that the case exists or that the sender is connected to the court.',
+   avoidMessageRoutes:'Do not use a payment link, QR code, phone number, or reply address from the message until you reach the court independently.',
+   startHere:'Start here',
+   notVerified:'Not verified',
+   timeDateStated:'Time/date stated',
+   obligationNote:'Dates and instructions here come from the message unless a row explicitly says it matches a public source.',
+   explanationLanguagePrefix:'Explanation follows display language',
+   detectedDocumentLanguage:'detected document language',
+   unknownLanguage:'Unknown',
+   lowConfidence:'low confidence',
+   explanationDisclaimer:'This explains what SEAL extracted and verified. It is not legal advice.',
+   noLegalAid:'No reviewed legal-aid directory is linked for this jurisdiction yet.',
+   courtContactHeading:'Court contact from an official source',
+   courtContactFallback:'Court contact',
+   contactSourcePrefix:'This contact came from the court source, not from the message.',
+   snapshotChecked:'Source snapshot checked',
+   liveChecked:'Live source checked',
+   pdfLabel:'PDF',
+   imageLabel:'Image',
+   textLabel:'Text'
   };
   (verification.signals||[]).forEach((signal,index)=>{
    strings['signalTitle'+index]=signal.title;
@@ -839,6 +884,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    const claim=claims.find(candidate=>candidate.id===result.claim_id);
    if(claim)strings['resultLabel'+index]=claim.label;
   });
+  obligations.forEach((item,index)=>{strings['obligationStatus'+index]=item.statusLabel});
   if(verification.safe_action){
    strings.safeTitle=verification.safe_action.title;
    strings.safeSummary=verification.safe_action.summary;
