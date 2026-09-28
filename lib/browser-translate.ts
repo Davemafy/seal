@@ -3,7 +3,10 @@ export type NativeTranslator={
  destroy?:()=>void;
 };
 
+type TranslatorAvailability='available'|'downloadable'|'downloading'|'unavailable'|'readily'|'after-download'|'no'|string;
+
 type TranslatorFactory={
+ availability?:(options:{sourceLanguage:string;targetLanguage:string})=>Promise<TranslatorAvailability>;
  create:(options:{
   sourceLanguage:string;
   targetLanguage:string;
@@ -30,9 +33,8 @@ export function primeBrowserTranslator(targetLanguage:string){
  const existing=translators.get(key);
  if(existing)return existing;
 
- // Call create immediately. When this function is invoked from the language
- // picker, the browser still has the user activation some implementations
- // require to download/instantiate the on-device model.
+ // Called from the language picker so browsers can download/instantiate their
+ // on-device model while user activation is still available.
  const pending=api.create({
   sourceLanguage:'en',
   targetLanguage
@@ -50,29 +52,56 @@ const translatable=(value:string)=>Boolean(
  &&!/^https?:\/\//i.test(value.trim())
 );
 
+const nativeReady=async(api:TranslatorFactory,targetLanguage:string)=>{
+ if(!api.availability)return true;
+ try{
+  const state=await api.availability({sourceLanguage:'en',targetLanguage});
+  return state==='available'||state==='readily';
+ }catch{
+  // Older implementations expose create() without a reliable availability().
+  // Let the short timeout below decide whether native translation is usable.
+  return true;
+ }
+};
+
 export async function translateRecordWithBrowser(
  strings:Record<string,string>,
  targetLanguage:string,
- signal?:AbortSignal
+ signal?:AbortSignal,
+ maxWaitMs=1400
 ):Promise<Record<string,string>|null>{
- const translator=await primeBrowserTranslator(targetLanguage);
- if(!translator)return null;
- if(signal?.aborted)throw new DOMException('Aborted','AbortError');
+ const api=factory();
+ if(!api)return null;
 
- const entries=Object.entries(strings);
- const translated:Record<string,string>={};
- const concurrency=4;
+ const work=(async()=>{
+  if(!(await nativeReady(api,targetLanguage)))return null;
 
- for(let index=0;index<entries.length;index+=concurrency){
+  const translator=await primeBrowserTranslator(targetLanguage);
+  if(!translator)return null;
   if(signal?.aborted)throw new DOMException('Aborted','AbortError');
-  const batch=entries.slice(index,index+concurrency);
-  const values=await Promise.all(batch.map(async([key,value])=>{
-   if(!translatable(value))return [key,value] as const;
-   const output=await translator.translate(value);
-   return [key,output?.trim()||value] as const;
-  }));
-  for(const [key,value] of values)translated[key]=value;
- }
 
- return translated;
+  const entries=Object.entries(strings);
+  const translated:Record<string,string>={};
+  const concurrency=6;
+
+  for(let index=0;index<entries.length;index+=concurrency){
+   if(signal?.aborted)throw new DOMException('Aborted','AbortError');
+   const batch=entries.slice(index,index+concurrency);
+   const values=await Promise.all(batch.map(async([key,value])=>{
+    if(!translatable(value))return [key,value] as const;
+    const output=await translator.translate(value);
+    return [key,output?.trim()||value] as const;
+   }));
+   for(const [key,value] of values)translated[key]=value;
+  }
+
+  return translated;
+ })();
+
+ if(maxWaitMs<=0)return work;
+
+ return Promise.race([
+  work,
+  new Promise<null>(resolve=>window.setTimeout(()=>resolve(null),maxWaitMs))
+ ]);
 }

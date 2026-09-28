@@ -16,7 +16,7 @@ import {officialCourtDirectoryFor} from '@/lib/official-directories';
 import {detectDocumentContext,type DetectedDocumentLanguage} from '@/lib/document-context';
 import {justiceSupportFor} from '@/lib/justice-support';
 import {buildCaseReality,buildCourtQuestionScript,buildHandoffSummary,buildObligationMap,buildPlainLanguageSummary,buildRiskSummary} from '@/lib/user-guidance';
-import {DISPLAY_LANGUAGES,UI_COPY,displayLocaleFor,type DisplayLocale,type UiCopyKey} from '@/lib/ui-locales';
+import {DISPLAY_LANGUAGES,displayLocaleFor,type DisplayLocale,type UiCopyKey} from '@/lib/ui-locales';
 import {persistUiLocale,useStoredUiLocale,useUiText} from '@/lib/use-ui-text';
 import {primeBrowserTranslator,translateRecordWithBrowser} from '@/lib/browser-translate';
 import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
@@ -91,7 +91,6 @@ const cinematicExcerpt=(value:string,max=220)=>{
  return clean.slice(0,max).replace(/\s+\S*$/,'')+'…';
 };
 
-const RESULT_UI_KEYS=["backToResult","caseReference","checkActions","checkAgain","checkLiveSources","checkSnapshot","claimsFederalCourt","courtClaimed","courtRecoveryLegalAid","demoSynthetic","displayLanguage","documentLanguage","evidence","evidencePanel","evidenceRecord","evidenceRecordHint","evidenceReviewHint","explainNotice","fictionalNotice","fromMessage","getHelpResolving","independentCheck","independentEvidence","input","inspectEachDetail","jumpResultSection","jurisdiction","knownPattern","messageAsks","messageInstructions","nextHelpCopy","nextStep","noCourtDetails","notRealPerson","officialDirectory","officialProcess","officialSourceConflict","officialSourceMatch","officialWarning","openCourtWebsite","openCourtWebsiteIndependently","openOfficialCourtWebsite","openOfficialSource","openPublicSource","openServiceNote","openSource","original","originalMessage","originalText","pastedMessage","paymentStatement","plainLanguageTranslation","publicSourcesSay","replayCheck","resolve","resolvePanel","retryTranslation","reviewPlaybackControls","reviewTime","reviewTimeline","safestNextStep","sampleDocument","scheduleStated","sealVerificationReview","seeHowChecked","sourceConflict","sourceEvidence","sourceMode","source","sourcePlural","sources","sourcesAttached","summary","technicalRecord","theCase","thisMessage","translatedNote","translatingResult","translationUnavailable","underlyingMatter","unknownSender","verificationRecordActions","verificationReviewStarting","whatMessageAsks","whatSealFound","whatToDoNext","whyResult"] as const satisfies readonly UiCopyKey[];
 
 const STORY_CHAPTERS=[
  {label:'Message',start:0},
@@ -823,18 +822,64 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   }
 
   synthesis.cancel();
-  const title=translatedResult.decisionTitle||(file?.sample?'This is a sample form.':conciseDecisionTitle);
-  const summary=translatedResult.decisionSummary||humanDecisionSummary;
-  const parts=[
-   title,
-   summary,
-   primaryRoute?('Next step. '+primaryRoute.label):'',
-   riskSummary&&!file?.sample&&instructionStatus!==matterStatus
-    ?('This message. '+(translatedResult.instructionStatus||instructionStatus)+'. The case. '+(translatedResult.matterStatus||matterStatus)+'.')
-    :''
-  ].filter(Boolean);
-  const utterance=new SpeechSynthesisUtterance(parts.join(' '));
-  utterance.lang=displayLocale!=='en'&&resultTranslationState==='translated'?displayLocale:'en';
+  const parts:string[]=[];
+
+  if(activeResultSection==='summary'){
+   const title=translatedResult.decisionTitle||(file?.sample?'This is a sample form.':conciseDecisionTitle);
+   const summary=translatedResult.decisionSummary||humanDecisionSummary;
+   parts.push(
+    translatedResult.resultStatus||resultStatusLabel,
+    title,
+    summary
+   );
+   if(primaryRoute)parts.push((resultUi('nextStep')||'Next step')+'. '+primaryRoute.label);
+   if(riskSummary&&!file?.sample&&instructionStatus!==matterStatus){
+    parts.push(
+     (translatedResult.messageStatusLabel||resultUi('thisMessage'))+'. '+(translatedResult.instructionStatus||instructionStatus)+'.',
+     (translatedResult.caseStatusLabel||resultUi('theCase'))+'. '+(translatedResult.matterStatus||matterStatus)+'.'
+    );
+   }
+  }else if(activeResultSection==='message'){
+   parts.push(resultUi('originalMessage'),cleanDisplayText(text).slice(0,5000));
+  }else if(activeResultSection==='evidence'){
+   parts.push(resultUi('independentEvidence'));
+   (verification.signals||[]).forEach((signal,index)=>{
+    parts.push(
+     translatedResult['signalTitle'+index]||signal.title,
+     translatedResult['signalSummary'+index]||signal.summary
+    );
+   });
+   verification.results.slice(0,8).forEach((result,index)=>{
+    const claim=claims.find(candidate=>candidate.id===result.claim_id);
+    const label=translatedResult['resultLabel'+index]||claim?.label||'Checked detail';
+    const explanation=translatedResult['resultExplain'+index]||result.explanation;
+    parts.push(label+'. '+stateWord(result.verdict)+'. '+explanation);
+   });
+  }else{
+   parts.push(resultUi('whatToDoNext'));
+   if(verification.safe_action){
+    parts.push(
+     translatedResult.safeTitle||verification.safe_action.title,
+     translatedResult.safeSummary||verification.safe_action.summary,
+     ...verification.safe_action.steps.map((step,index)=>translatedResult[`safeStep${index}`]||step)
+    );
+   }else if(caseReality){
+    parts.push(
+     translatedResult.caseRealityTitle||caseReality.title,
+     translatedResult.caseRealityDetail||caseReality.detail
+    );
+   }
+   obligations.slice(0,6).forEach((item,index)=>{
+    parts.push(cleanDisplayText(item.text)+'. '+(translatedResult['obligationStatus'+index]||item.statusLabel)+'.');
+   });
+  }
+
+  const speech=parts.filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+  if(!speech)return;
+  const utterance=new SpeechSynthesisUtterance(speech);
+  utterance.lang=activeResultSection==='message'
+   ?(documentLanguage?.code||'en')
+   :(displayLocale!=='en'&&resultTranslationState==='translated'?displayLocale:'en');
   utterance.rate=.96;
   utterance.pitch=1;
   utterance.onend=()=>setResultSpeaking(false);
@@ -842,8 +887,9 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   setResultSpeaking(true);
   synthesis.speak(utterance);
  },[
-  verification,voiceSupported,resultSpeaking,translatedResult,file?.sample,conciseDecisionTitle,
-  humanDecisionSummary,primaryRoute,riskSummary,instructionStatus,matterStatus,displayLocale,resultTranslationState
+  verification,voiceSupported,resultSpeaking,activeResultSection,translatedResult,file?.sample,conciseDecisionTitle,
+  humanDecisionSummary,resultStatusLabel,primaryRoute,riskSummary,instructionStatus,matterStatus,displayLocale,
+  resultTranslationState,resultUi,text,documentLanguage,claims,caseReality,obligations
  ]);
 
  const resultTranslationSource=useMemo(()=>{
@@ -949,7 +995,6 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
    verification.safe_action.steps.forEach((step,index)=>{strings[`safeStep${index}`]=step});
    strings.safePrimary=verification.safe_action.primary_label;
   }
-  RESULT_UI_KEYS.forEach(key=>{strings['ui_'+key]=UI_COPY[key]});
   strings.affiliationNote='Independent tool · Not affiliated with any court.';
   strings.obligationMessageOnly='Message only — not confirmed';
   strings.obligationMatches='Matches a public source';
@@ -2280,8 +2325,8 @@ async function upload(uploaded:File){
          type="button"
          className={`result-voice-trigger${resultSpeaking?' is-speaking':''}`}
          aria-pressed={resultSpeaking}
-         aria-label={resultSpeaking?'Stop reading result aloud':'Read result aloud'}
-         title={resultSpeaking?'Stop reading result aloud':'Read result aloud'}
+         aria-label={resultSpeaking?'Stop reading result aloud':`Read ${activeResultSection==='next'?'Resolve':activeResultSection==='message'?'Original':activeResultSection.charAt(0).toUpperCase()+activeResultSection.slice(1)} aloud`}
+         title={resultSpeaking?'Stop reading result aloud':`Read ${activeResultSection==='next'?'Resolve':activeResultSection==='message'?'Original':activeResultSection.charAt(0).toUpperCase()+activeResultSection.slice(1)} aloud`}
          onClick={toggleResultSpeech}
         ><SealUiIcon name="voice"/><span>{resultSpeaking?(translatedResult.voiceStop||'Stop'):(translatedResult.voiceListen||'Listen')}</span></button>}
         {documentJurisdictionLabel&&<span className="meta-jurisdiction" data-testid="document-jurisdiction">{documentJurisdictionLabel}</span>}
