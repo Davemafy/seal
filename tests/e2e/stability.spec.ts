@@ -791,7 +791,7 @@ test('landing keeps the checker above the fold and exposes Dallas provenance',as
  await page.reload();
  const uploadBox=await page.getByTestId('upload-file').boundingBox();
  expect(uploadBox).not.toBeNull();
- expect(uploadBox!.top,'mobile checker should begin inside the opening viewport').toBeLessThan(844);
+ expect(uploadBox!.y,'mobile checker should begin inside the opening viewport').toBeLessThan(844);
  overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
  expect(overflow).toBeLessThanOrEqual(1);
  assertNoRuntimeErrors();
