@@ -16,7 +16,7 @@ import {officialCourtDirectoryFor} from '@/lib/official-directories';
 import {detectDocumentContext,type DetectedDocumentLanguage} from '@/lib/document-context';
 import {justiceSupportFor} from '@/lib/justice-support';
 import {buildCaseReality,buildCourtQuestionScript,buildHandoffSummary,buildObligationMap,buildPlainLanguageSummary,buildRiskSummary} from '@/lib/user-guidance';
-import {DISPLAY_LANGUAGES,UI_COPY,displayLocaleFor,type DisplayLocale,type UiCopyKey} from '@/lib/ui-locales';
+import {DISPLAY_LANGUAGES,displayLocaleFor,type DisplayLocale,type UiCopyKey} from '@/lib/ui-locales';
 import {persistUiLocale,useStoredUiLocale,useUiText} from '@/lib/use-ui-text';
 import {primeBrowserTranslator,translateRecordWithBrowser} from '@/lib/browser-translate';
 import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
@@ -306,7 +306,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const [translationRetry,setTranslationRetry]=useState(0);
  const translationCacheRef=useRef<Map<string,Record<string,string>>>(new Map());
  const translatedResult=useMemo(()=>displayLocale==='en'?{}:translatedResultData,[displayLocale,translatedResultData]);
- const resultUi=useCallback((key:UiCopyKey)=>translatedResult['ui_'+key]||ui(key),[translatedResult,ui]);
+ const resultUi=useCallback((key:UiCopyKey)=>ui(key),[ui]);
  const [documentLanguage,setDocumentLanguage]=useState<DetectedDocumentLanguage|null>(null);
  const [jurisdiction,setJurisdiction]=useState('');
  const [workspaceTitle,setWorkspaceTitle]=useState('New check');
@@ -1048,29 +1048,6 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
    ['safeTitle','safeSummary','safePrimary'].forEach(take);
   }
 
-  const uiKeys:Record<typeof activeResultSection,UiCopyKey[]>={
-   summary:[
-    'summary','nextStep','whyResult','thisMessage','theCase','messageAsks','fromMessage',
-    'publicSourcesSay','openPublicSource','independentCheck','checkSnapshot','originalMessage','sampleDocument'
-   ],
-   message:[
-    'original','originalMessage','pastedMessage','originalText','demoSynthetic','notRealPerson',
-    'unknownSender','claimsFederalCourt','fictionalNotice','openFullDocumentPreview'
-   ],
-   evidence:[
-    'evidence','independentEvidence','whatSealFound','officialProcess','officialDirectory','sourceConflict',
-    'knownPattern','officialWarning','officialSourceMatch','officialSourceConflict','sourceEvidence',
-    'independentCheck','publicSourcesOnly','publicSourcesNote','openOfficialSource','technicalRecord'
-   ],
-   next:[
-    'resolve','whatToDoNext','nextHelpCopy','theCase','courtClaimed','caseReference',
-    'openCourtWebsiteIndependently','whatMessageAsks','explainNotice','plainLanguageTranslation',
-    'notLegalAdvice','getHelpResolving','courtRecoveryLegalAid','courtContactOfficial',
-    'openCourtWebsite','scheduleStated','paymentStatement','noCourtDetails'
-   ]
-  };
-
-  uiKeys[activeResultSection].forEach(key=>{source['ui_'+key]=UI_COPY[key]});
   return source;
  },[verification,displayLocale,activeResultSection,resultTranslationSource]);
 
