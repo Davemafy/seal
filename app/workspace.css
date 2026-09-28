@@ -8847,3 +8847,140 @@
   text-align:left!important
  }
 }
+
+
+/* Emergency entry layout reset — single stable composer. */
+@media(min-width:901px){
+ .entry-shell:not(.is-processing){
+  width:min(100%,900px)!important;
+  max-width:900px!important;
+  min-height:calc(100dvh - 24px)!important;
+  margin:0 auto!important;
+  padding:36px 34px 42px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-areas:
+   "intro"
+   "form"!important;
+  grid-auto-rows:max-content!important;
+  column-gap:0!important;
+  row-gap:24px!important;
+  justify-content:stretch!important;
+  align-content:start!important;
+  align-items:start!important;
+  box-sizing:border-box!important
+ }
+
+ .entry-shell:not(.is-processing) .entry-copy{
+  grid-area:intro!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important
+ }
+ .entry-shell:not(.is-processing) .entry-copy h1{
+  max-width:760px!important;
+  margin:0!important;
+  font-size:46px!important;
+  line-height:51px!important;
+  letter-spacing:-.032em!important
+ }
+ .entry-shell:not(.is-processing) .entry-copy>p{
+  max-width:720px!important;
+  margin:10px 0 0!important;
+  font-size:16px!important;
+  line-height:24px!important
+ }
+
+ .entry-shell:not(.is-processing) .entry-intake-heading{
+  display:none!important
+ }
+
+ .entry-shell:not(.is-processing) .intake{
+  grid-area:form!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  align-self:start!important
+ }
+
+ /* Examples belong in Browse; never let them compete with the primary task. */
+ .entry-shell:not(.is-processing) .entry-demo-rail{
+  display:none!important
+ }
+
+ .entry-shell:not(.is-processing) .upload-row{
+  width:100%!important;
+  min-height:190px!important;
+  margin:0!important;
+  padding:28px 30px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  border:1px solid #deded9!important;
+  border-radius:14px!important;
+  background:#f7f7f4!important;
+  box-sizing:border-box!important
+ }
+ .entry-shell:not(.is-processing) .upload-group{
+  width:100%!important;
+  max-width:none!important;
+  display:grid!important;
+  grid-template-columns:58px minmax(0,1fr) auto!important;
+  gap:18px!important;
+  align-items:center!important
+ }
+ .entry-shell:not(.is-processing) .upload-copy{
+  min-width:0!important
+ }
+ .entry-shell:not(.is-processing) .upload-browse{
+  margin:0!important
+ }
+
+ .entry-shell:not(.is-processing) .intake-secondary-actions{
+  width:100%!important;
+  min-height:40px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:20px!important;
+  margin:12px 0 0!important;
+  padding:0 2px!important;
+  box-sizing:border-box!important
+ }
+ .entry-shell:not(.is-processing) .privacy-note{
+  max-width:390px!important;
+  margin:0!important;
+  text-align:right!important
+ }
+}
+
+@media(min-width:901px) and (max-width:1100px){
+ .entry-shell:not(.is-processing){
+  width:min(100%,760px)!important;
+  max-width:760px!important;
+  padding:32px 28px 38px!important
+ }
+ .entry-shell:not(.is-processing) .entry-copy h1{
+  font-size:42px!important;
+  line-height:47px!important
+ }
+}
+
+@media(max-width:900px){
+ .entry-shell:not(.is-processing){
+  display:block!important
+ }
+ .entry-shell:not(.is-processing) .entry-copy{
+  margin-bottom:20px!important
+ }
+ .entry-shell:not(.is-processing) .entry-demo-rail{
+  display:none!important
+ }
+}
