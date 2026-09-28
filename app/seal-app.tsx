@@ -1771,7 +1771,6 @@ async function upload(uploaded:File){
     <span className="mobile-nav-divider" aria-hidden="true"/>
     <button className="icon-control mobile-nav-icon mobile-workspace-trigger" type="button" aria-label={`Open checks, ${workspaces.length} open`} title="Open checks" aria-haspopup="dialog" aria-expanded={workspaceDrawerOpen} onClick={()=>{setLanguageMenuOpen(false);setWorkspaceDrawerOpen(true)}}>
      <SealUiIcon name="workspaces"/>
-     {workspaces.length>1&&<span className="mobile-workspace-count" aria-hidden="true">{workspaces.length}</span>}
     </button>
     <button className="icon-control mobile-nav-icon mobile-new-check" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} onClick={()=>{setWorkspaceDrawerOpen(false);onNewWorkspace()}}><SealUiIcon name="add"/></button>
    </div>
@@ -2803,6 +2802,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    </div>
   </div>}
   <div className={`seal-workspace-stack ${workspaces.length>1?'has-multiple':''}`} data-workspace-count={workspaces.length}>
+   {workspaces.length>1&&<div className="workspace-page-edges" aria-hidden="true"><span/><span/></div>}
    {registryReady&&workspaces.map((workspace,index)=>{
     const active=workspace.id===activeWorkspace;
     const leaving=workspaceTransition?.from===workspace.id;
