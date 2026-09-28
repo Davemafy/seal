@@ -2890,3 +2890,91 @@
   padding-right:20px!important
  }
 }
+
+
+/* Evidence source pills + desktop result type floor. */
+@media(min-width:901px){
+ .result-slide-evidence .signal-links{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  align-items:center!important;
+  gap:7px!important;
+  margin-top:12px!important
+ }
+ .result-slide-evidence .signal-links-label{
+  flex:0 0 100%!important;
+  margin:0 0 1px!important;
+  color:#777771!important;
+  font-size:13px!important;
+  line-height:18px!important;
+  font-weight:560!important
+ }
+ .result-slide-evidence .signal-links a{
+  min-height:30px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  padding:6px 10px!important;
+  border:1px solid #111!important;
+  border-radius:999px!important;
+  background:#111!important;
+  color:#fff!important;
+  font-size:12.5px!important;
+  line-height:17px!important;
+  font-weight:600!important;
+  text-decoration:none!important;
+  white-space:normal!important;
+  transition:background .14s ease,border-color .14s ease,transform .14s ease!important
+ }
+ .result-slide-evidence .signal-links a::after{
+  content:"↗";
+  flex:0 0 auto!important;
+  font-size:11px!important;
+  line-height:1!important;
+  opacity:.72!important;
+  transform:translateY(-.5px)!important
+ }
+ .result-slide-evidence .signal-links a:hover{
+  background:#2a2a27!important;
+  border-color:#2a2a27!important;
+  transform:translateY(-1px)!important
+ }
+
+ .result-masthead-title,
+ .check-object-meta,
+ .result-slide-summary .decision-status,
+ .result-slide-summary .decision-primary-route>span,
+ .result-slide-summary .decision-primary-route>small,
+ .result-slide-summary .decision-at-a-glance span,
+ .result-slide-summary .decision-details>summary,
+ .result-slide-evidence .signal-kind,
+ .result-slide-evidence .resolution-disclaimer,
+ .result-slide-evidence .record-disclosure>summary small,
+ .result-slide-original small,
+ .result-slide-resolve small,
+ .evidence-source-meta,
+ .evidence-source-note,
+ .record-subheading>small,
+ .check-record-details dt,
+ .check-record-details dd{
+  font-size:13.5px!important;
+  line-height:19px!important
+ }
+
+ .result-slide-evidence .source-signal>p:not(.signal-kind),
+ .result-slide-resolve .journey-content>p,
+ .result-slide-resolve .safe-route p{
+  font-size:14.5px!important;
+  line-height:21px!important
+ }
+
+ .result-slide-evidence .source-signal h3{
+  font-size:18.5px!important;
+  line-height:25px!important
+ }
+
+ .result-chapters a{
+  font-size:14px!important;
+  line-height:20px!important
+ }
+}
