@@ -8109,3 +8109,226 @@
   bottom:14%!important
  }
 }
+
+
+/* Demo-ready processing stage — active screen, not an idle upload page. */
+@media(min-width:901px){
+ .seal-app:has(.entry-shell.is-processing)>.seal-footer{
+  display:none!important
+ }
+
+ .entry-shell.is-processing{
+  width:min(100%,1100px)!important;
+  max-width:1100px!important;
+  min-height:calc(100dvh - 24px)!important;
+  margin:0 auto!important;
+  padding:40px 42px!important;
+  display:grid!important;
+  grid-template-columns:minmax(280px,340px) minmax(0,1fr)!important;
+  grid-template-areas:"copy intake"!important;
+  gap:54px!important;
+  align-items:center!important;
+  justify-content:center!important
+ }
+ .entry-shell.is-processing .entry-copy{
+  grid-area:copy!important;
+  align-self:center!important;
+  max-width:340px!important;
+  opacity:1!important
+ }
+ .processing-entry-kicker{
+  display:block!important;
+  margin:0 0 10px!important;
+  color:#6f6f6a!important;
+  font-size:13px!important;
+  line-height:19px!important;
+  font-weight:620!important
+ }
+ .entry-shell.is-processing .entry-copy h1{
+  max-width:330px!important;
+  margin:0!important;
+  font-size:40px!important;
+  line-height:45px!important;
+  letter-spacing:-.03em!important;
+  font-weight:670!important
+ }
+ .entry-shell.is-processing .entry-copy>p{
+  max-width:330px!important;
+  margin:14px 0 0!important;
+  color:#53534f!important;
+  font-size:16px!important;
+  line-height:24px!important
+ }
+
+ .entry-shell.is-processing .intake{
+  grid-area:intake!important;
+  width:100%!important;
+  max-width:650px!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:16px!important;
+  border:1px solid #e2e2dd!important;
+  border-radius:14px!important;
+  background:#f6f6f3!important;
+  box-shadow:0 12px 36px rgba(0,0,0,.035)!important
+ }
+ .entry-shell.is-processing .upload-row.is-busy{
+  width:100%!important;
+  min-height:390px!important;
+  padding:16px!important;
+  border:0!important;
+  border-radius:10px!important;
+  background:transparent!important;
+  text-align:left!important
+ }
+ .entry-shell.is-processing .upload-process{
+  width:100%!important;
+  display:grid!important;
+  grid-template-columns:210px minmax(0,1fr)!important;
+  gap:24px!important;
+  align-items:stretch!important
+ }
+ .entry-shell.is-processing .upload-process-media{
+  width:210px!important;
+  min-width:210px!important;
+  height:100%!important;
+  min-height:350px!important;
+  max-height:390px!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:10px!important;
+  overflow:hidden!important;
+  border:1px solid #deded9!important;
+  border-radius:10px!important;
+  background:#ecece8!important;
+  box-sizing:border-box!important
+ }
+ .entry-shell.is-processing .upload-process-media>img{
+  width:auto!important;
+  height:auto!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  object-fit:contain!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.08)!important
+ }
+ .entry-shell.is-processing .upload-process-body{
+  min-width:0!important;
+  min-height:350px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-start!important;
+  padding:6px 2px 2px!important
+ }
+ .entry-shell.is-processing .upload-process-body>strong{
+  font-size:22px!important;
+  line-height:28px!important;
+  font-weight:650!important;
+  letter-spacing:-.018em!important
+ }
+ .entry-shell.is-processing .process-live-meta{
+  margin-top:5px!important;
+  color:#777772!important;
+  font-size:12.5px!important;
+  line-height:18px!important
+ }
+ .entry-shell.is-processing .process-stage-list{
+  display:grid!important;
+  margin:20px 0 0 17px!important
+ }
+ .entry-shell.is-processing .process-stage-row{
+  min-height:52px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:14px!important;
+  align-items:center!important;
+  padding:9px 0!important;
+  border-bottom:1px solid #e3e3df!important
+ }
+ .entry-shell.is-processing .process-stage-row:last-child{
+  border-bottom:0!important
+ }
+ .entry-shell.is-processing .process-stage-row b{
+  font-size:13.5px!important;
+  line-height:19px!important;
+  font-weight:610!important
+ }
+ .entry-shell.is-processing .process-stage-row small{
+  max-width:300px!important;
+  margin-top:2px!important;
+  color:#777772!important;
+  font-size:11.5px!important;
+  line-height:17px!important
+ }
+ .entry-shell.is-processing .process-stage-row em{
+  color:#767671!important;
+  font-size:11px!important;
+  line-height:16px!important;
+  font-style:normal!important;
+  font-weight:600!important
+ }
+ .entry-shell.is-processing .process-stage-row.is-current em{
+  color:#111!important
+ }
+
+ .entry-shell.is-processing .process-wait-note{
+  display:grid!important;
+  gap:4px!important;
+  margin-top:16px!important;
+  padding:12px 14px!important;
+  border:0!important;
+  border-radius:9px!important;
+  background:#fff!important
+ }
+ .entry-shell.is-processing .process-wait-note>small{
+  color:#777772!important;
+  font-size:11px!important;
+  line-height:16px!important;
+  font-weight:620!important
+ }
+ .entry-shell.is-processing .process-wait-note>span{
+  max-width:none!important;
+  color:#444440!important;
+  font-size:12.5px!important;
+  line-height:18px!important
+ }
+ .entry-shell.is-processing .upload-file-name{
+  margin-top:10px!important;
+  color:#888883!important;
+  font-size:10.5px!important;
+  line-height:16px!important
+ }
+ .entry-shell.is-processing .process-device-note{
+  margin-top:auto!important;
+  padding-top:12px!important
+ }
+ .entry-shell.is-processing .process-device-note>span{
+  font-size:11.5px!important;
+  line-height:17px!important
+ }
+ .entry-shell.is-processing .process-device-note>small{
+  font-size:10.5px!important;
+  line-height:16px!important
+ }
+}
+
+@media(min-width:901px) and (max-width:1180px){
+ .entry-shell.is-processing{
+  max-width:930px!important;
+  grid-template-columns:minmax(230px,280px) minmax(0,1fr)!important;
+  gap:32px!important;
+  padding-inline:28px!important
+ }
+ .entry-shell.is-processing .entry-copy h1{
+  font-size:36px!important;
+  line-height:41px!important
+ }
+ .entry-shell.is-processing .upload-process{
+  grid-template-columns:180px minmax(0,1fr)!important;
+  gap:20px!important
+ }
+ .entry-shell.is-processing .upload-process-media{
+  width:180px!important;
+  min-width:180px!important;
+  min-height:330px!important
+ }
+}
