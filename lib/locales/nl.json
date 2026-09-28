@@ -201,5 +201,15 @@
   "fullDocumentPreview": "Full document preview",
   "closeDocumentPreview": "Close document preview",
   "courtNoticeShort": "Gerechtelijke kennisgeving",
-  "courtMessageShort": "Gerechtelijk bericht"
+  "courtMessageShort": "Gerechtelijk bericht",
+  "curatedScamTitle": "Scan de QR-code niet en betaal niet via dit bericht",
+  "curatedScamSummary": "De uitgevende instantie heeft precies dit voorbeeld als fraude gepubliceerd. SEAL heeft voldoende bewijs om de hier getoonde QR-/betaalroute af te wijzen.",
+  "curatedScamPrimary": "Gepubliceerde bron openen",
+  "curatedScamStep1": "Scan de QR-code niet en verstuur geen betaling via dit bericht.",
+  "curatedScamStep2": "Bewaar de gepubliceerde bron van de instantie als je moet aantonen waarom deze route is afgewezen.",
+  "curatedScamRelationship": "De uitgevende instantie heeft dit materiaal als fraudevoorbeeld gepubliceerd.",
+  "curatedRiskInstructionsTitle": "Gebruik de gemarkeerde route in dit bericht niet.",
+  "curatedRiskInstructionsDetail": "De uitgevende instantie heeft precies dit voorbeeld als fraude gepubliceerd. Gebruik de QR-code of betaalroute niet.",
+  "curatedRiskMatterTitle": "De onderliggende zaak is niet onafhankelijk bevestigd.",
+  "curatedRiskMatterDetail": "Het afwijzen van de route in dit gepubliceerde fraudevoorbeeld bewijst niet dat er een onderliggende zaak bestaat."
 }

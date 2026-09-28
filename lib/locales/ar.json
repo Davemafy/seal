@@ -201,5 +201,15 @@
   "fullDocumentPreview": "Full document preview",
   "closeDocumentPreview": "Close document preview",
   "courtNoticeShort": "إشعار قضائي",
-  "courtMessageShort": "رسالة قضائية"
+  "courtMessageShort": "رسالة قضائية",
+  "curatedScamTitle": "لا تمسح رمز QR ولا تدفع من خلال هذه الرسالة",
+  "curatedScamSummary": "نشرت الجهة المُصدرة هذا المثال نفسه باعتباره عملية احتيال. لدى SEAL أدلة كافية لرفض مسار QR/الدفع الظاهر هنا.",
+  "curatedScamPrimary": "فتح المصدر المنشور",
+  "curatedScamStep1": "لا تمسح رمز QR ولا ترسل أي دفعة عبر هذه الرسالة.",
+  "curatedScamStep2": "احتفظ بالمصدر المنشور من الجهة إذا احتجت إلى توضيح سبب رفض هذا المسار.",
+  "curatedScamRelationship": "نشرت الجهة المُصدرة هذه المادة كمثال على الاحتيال.",
+  "curatedRiskInstructionsTitle": "لا تستخدم المسار المشار إليه في هذه الرسالة.",
+  "curatedRiskInstructionsDetail": "نشرت الجهة المُصدرة هذا المثال نفسه باعتباره عملية احتيال. لا تستخدم رمز QR أو مسار الدفع الخاص به.",
+  "curatedRiskMatterTitle": "القضية الأساسية غير مؤكدة بشكل مستقل.",
+  "curatedRiskMatterDetail": "رفض المسار الظاهر في مثال الاحتيال المنشور هذا لا يثبت وجود قضية أساسية."
 }

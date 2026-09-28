@@ -201,5 +201,15 @@
   "fullDocumentPreview": "Full document preview",
   "closeDocumentPreview": "Close document preview",
   "courtNoticeShort": "Gerichtliche Mitteilung",
-  "courtMessageShort": "Gerichtsnachricht"
+  "courtMessageShort": "Gerichtsnachricht",
+  "curatedScamTitle": "Scannen Sie den QR-Code nicht und zahlen Sie nicht über diese Nachricht",
+  "curatedScamSummary": "Die herausgebende Behörde hat genau dieses Beispiel als Betrug veröffentlicht. SEAL verfügt über genügend Belege, um den hier gezeigten QR-/Zahlungsweg abzulehnen.",
+  "curatedScamPrimary": "Veröffentlichte Quelle öffnen",
+  "curatedScamStep1": "Scannen Sie den QR-Code nicht und senden Sie keine Zahlung über diese Nachricht.",
+  "curatedScamStep2": "Bewahren Sie die veröffentlichte Behördenquelle auf, falls Sie belegen müssen, warum dieser Weg abgelehnt wurde.",
+  "curatedScamRelationship": "Die herausgebende Behörde hat dieses Dokument als Betrugsbeispiel veröffentlicht.",
+  "curatedRiskInstructionsTitle": "Verwenden Sie den markierten Weg in dieser Nachricht nicht.",
+  "curatedRiskInstructionsDetail": "Die herausgebende Behörde hat genau dieses Beispiel als Betrug veröffentlicht. Verwenden Sie weder den QR-Code noch den Zahlungsweg.",
+  "curatedRiskMatterTitle": "Der zugrunde liegende Fall ist nicht unabhängig bestätigt.",
+  "curatedRiskMatterDetail": "Die Ablehnung des in diesem veröffentlichten Betrugsbeispiel gezeigten Weges belegt nicht, dass ein zugrunde liegender Fall existiert."
 }

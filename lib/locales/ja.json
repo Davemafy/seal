@@ -201,5 +201,15 @@
   "fullDocumentPreview": "Full document preview",
   "closeDocumentPreview": "Close document preview",
   "courtNoticeShort": "裁判所通知",
-  "courtMessageShort": "裁判所メッセージ"
+  "courtMessageShort": "裁判所メッセージ",
+  "curatedScamTitle": "このメッセージのQRコードを読み取ったり、支払ったりしないでください",
+  "curatedScamSummary": "発行機関はこの同一の例を詐欺として公開しています。SEALには、ここに示されたQR／支払い経路を否定する十分な根拠があります。",
+  "curatedScamPrimary": "公開された出典を開く",
+  "curatedScamStep1": "QRコードを読み取らず、このメッセージ経由で支払いを送らないでください。",
+  "curatedScamStep2": "この経路を否定した理由を示す必要がある場合は、発行機関が公開した出典を保存してください。",
+  "curatedScamRelationship": "発行機関はこの資料を詐欺の例として公開しています。",
+  "curatedRiskInstructionsTitle": "このメッセージで示された経路を使用しないでください。",
+  "curatedRiskInstructionsDetail": "発行機関はこの同一の例を詐欺として公開しています。QRコードや支払い経路を使用しないでください。",
+  "curatedRiskMatterTitle": "基礎となる事件は独立に確認されていません。",
+  "curatedRiskMatterDetail": "この公開された詐欺例の経路を否定しても、基礎となる事件が存在することの証明にはなりません。"
 }

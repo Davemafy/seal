@@ -2079,16 +2079,19 @@ async function upload(uploaded:File){
     <Link className="rail-nav-item" href="/browse"><span>{ui('browse')}</span></Link>
    </nav>
    <div className="rail-section-head"><span>{ui('checks')}</span><small>{workspaces.length}</small></div>
-   <div className="rail-check-list" aria-label="Open checks">
+   <div className="rail-check-list" aria-label={ui('openChecks')}>
     {workspaces.map((item,index)=>{
      const rawTitle=cleanDisplayText(item.title||'');
-     const blankTitle=!rawTitle||/^new check(?: \d+)?$/i.test(rawTitle);
-     const title=blankTitle?(workspaces.length===1?'New check':`Check ${index+1}`):(rawTitle.length>=3?rawTitle:`Check ${index+1}`);
+     const genericTitle=!rawTitle||/^(?:new check|check)(?: \d+)?$/i.test(rawTitle);
+     const safeTitle=safeWorkspaceTitle(rawTitle);
+     const title=genericTitle||!safeTitle
+      ?(workspaces.length===1?ui('newCheck'):`${ui('check')} ${index+1}`)
+      :safeTitle;
      const usefulPreview=cleanDisplayText(item.preview||'');
-     const statusLabel=item.status==='verifying'?'Checking sources':item.status==='reading'?'Reading':item.status==='done'?'Checked':item.status==='error'?'Needs attention':'';
+     const statusLabel=item.status==='verifying'?ui('checkingSources'):item.status==='reading'?ui('reading'):item.status==='done'?ui('checked'):item.status==='error'?ui('needsAttention'):'';
      const secondary=item.status==='reading'||item.status==='verifying'||item.status==='error'
       ?[item.jurisdiction||item.language,statusLabel].filter(Boolean).join(' · ')
-      :(usefulPreview.length>=8?usefulPreview:[item.jurisdiction||item.language,item.status==='done'?'Checked':''].filter(Boolean).join(' · '));
+      :(usefulPreview.length>=8?usefulPreview:[item.jurisdiction||item.language,item.status==='done'?ui('checked'):''].filter(Boolean).join(' · '));
      return <div className={`rail-check-row ${item.id===workspaceId?'is-current':''}`} key={item.id}>
       <button
        type="button"
@@ -2099,7 +2102,7 @@ async function upload(uploaded:File){
        <span className={`rail-check-state is-${item.status}`} aria-hidden="true"/>
        <span className="rail-check-copy"><strong>{title}</strong>{secondary&&<small>{secondary}</small>}</span>
       </button>
-      <button className="rail-check-delete icon-control" type="button" aria-label={`Delete check ${index+1}: ${title}`} title={`Delete ${title}`} onClick={()=>onDeleteWorkspace(item.id)}><SealUiIcon name="delete"/></button>
+      <button className="rail-check-delete icon-control" type="button" aria-label={`${ui('deleteCheck')}: ${title}`} title={`${ui('deleteCheck')}: ${title}`} onClick={()=>onDeleteWorkspace(item.id)}><SealUiIcon name="delete"/></button>
      </div>;
     })}
    </div>
@@ -2158,9 +2161,9 @@ async function upload(uploaded:File){
 
   <div className={`workspace-drawer-layer ${workspaceDrawerOpen?'is-open':''}`} data-testid="workspace-drawer-layer" aria-hidden={!workspaceDrawerOpen}>
    <button className="workspace-drawer-backdrop" type="button" aria-label={ui('closeChecks')} onClick={()=>setWorkspaceDrawerOpen(false)}/>
-   <aside className="workspace-drawer" role={workspaceDrawerOpen?'dialog':undefined} aria-modal={workspaceDrawerOpen?'true':undefined} aria-label={workspaceDrawerOpen?'Checks':undefined}>
+   <aside className="workspace-drawer" role={workspaceDrawerOpen?'dialog':undefined} aria-modal={workspaceDrawerOpen?'true':undefined} aria-label={workspaceDrawerOpen?ui('checks'):undefined}>
     <div className="workspace-drawer-head">
-     <div className="workspace-drawer-title"><strong>Checks</strong><span>{workspaces.length}</span></div>
+     <div className="workspace-drawer-title"><strong>{ui('checks')}</strong><span>{workspaces.length}</span></div>
      <div className="workspace-drawer-head-actions">
       <button className="icon-control drawer-icon-button" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} onClick={()=>{
        setWorkspaceDrawerOpen(false);
@@ -2169,11 +2172,13 @@ async function upload(uploaded:File){
       <button className="icon-control drawer-icon-button" type="button" aria-label={ui('closeChecks')} title={ui('closeChecks')} onClick={()=>setWorkspaceDrawerOpen(false)}><SealUiIcon name="close"/></button>
      </div>
     </div>
-    <div className="workspace-drawer-list" aria-label="Open checks">
+    <div className="workspace-drawer-list" aria-label={ui('openChecks')}>
      {workspaces.map((item,index)=>{
       const rawTitle=cleanDisplayText(item.title||'');
-      const title=!rawTitle||/^new check(?: \d+)?$/i.test(rawTitle)?(workspaces.length===1?'New check':`Check ${index+1}`):rawTitle;
-      const statusLabel=item.status==='verifying'?'Checking sources':item.status==='reading'?'Reading':item.status==='done'?'Checked':item.status==='error'?'Needs attention':'';
+      const genericTitle=!rawTitle||/^(?:new check|check)(?: \d+)?$/i.test(rawTitle);
+      const safeTitle=safeWorkspaceTitle(rawTitle);
+      const title=genericTitle||!safeTitle?(workspaces.length===1?ui('newCheck'):`${ui('check')} ${index+1}`):safeTitle;
+      const statusLabel=item.status==='verifying'?ui('checkingSources'):item.status==='reading'?ui('reading'):item.status==='done'?ui('checked'):item.status==='error'?ui('needsAttention'):'';
       return <div className={`workspace-drawer-row ${item.id===workspaceId?'is-current':''}`} key={item.id}>
        <button className="workspace-drawer-select" type="button" aria-current={item.id===workspaceId?'page':undefined} onClick={()=>{
         setWorkspaceDrawerOpen(false);
@@ -2184,7 +2189,7 @@ async function upload(uploaded:File){
        </button>
        <div className="workspace-drawer-row-actions">
         {item.status!=='idle'&&<span className={`workspace-drawer-status is-${item.status}`} aria-label={statusLabel}/>}
-        <button className="icon-control workspace-drawer-delete" type="button" aria-label={`Delete check ${index+1}: ${title}`} title={`Delete ${title}`} onClick={()=>{if(item.id===workspaceId)setWorkspaceDrawerOpen(false);onDeleteWorkspace(item.id)}}><SealUiIcon name="delete"/></button>
+        <button className="icon-control workspace-drawer-delete" type="button" aria-label={`${ui('deleteCheck')}: ${title}`} title={`${ui('deleteCheck')}: ${title}`} onClick={()=>{if(item.id===workspaceId)setWorkspaceDrawerOpen(false);onDeleteWorkspace(item.id)}}><SealUiIcon name="delete"/></button>
        </div>
       </div>;
      })}

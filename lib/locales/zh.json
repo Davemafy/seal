@@ -201,5 +201,15 @@
   "fullDocumentPreview": "Full document preview",
   "closeDocumentPreview": "Close document preview",
   "courtNoticeShort": "法院通知",
-  "courtMessageShort": "法院消息"
+  "courtMessageShort": "法院消息",
+  "curatedScamTitle": "不要扫描此消息中的二维码，也不要通过它付款",
+  "curatedScamSummary": "发布机构已将这一确切示例公开为诈骗。SEAL 有足够证据否定此处展示的二维码/付款路径。",
+  "curatedScamPrimary": "打开已发布的来源",
+  "curatedScamStep1": "不要扫描二维码，也不要通过此消息发送付款。",
+  "curatedScamStep2": "如果需要说明为何否定此路径，请保留发布机构的原始来源。",
+  "curatedScamRelationship": "发布机构已将此材料公开为诈骗示例。",
+  "curatedRiskInstructionsTitle": "不要使用此消息中被标记的路径。",
+  "curatedRiskInstructionsDetail": "发布机构已将这一确切示例公开为诈骗。不要使用其中的二维码或付款路径。",
+  "curatedRiskMatterTitle": "底层案件尚未得到独立确认。",
+  "curatedRiskMatterDetail": "否定这一已发布诈骗示例中的路径，并不能证明底层案件确实存在。"
 }

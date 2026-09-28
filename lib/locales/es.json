@@ -201,5 +201,15 @@
   "fullDocumentPreview": "Full document preview",
   "closeDocumentPreview": "Close document preview",
   "courtNoticeShort": "Aviso judicial",
-  "courtMessageShort": "Mensaje judicial"
+  "courtMessageShort": "Mensaje judicial",
+  "curatedScamTitle": "No escanees el código QR ni pagues desde este mensaje",
+  "curatedScamSummary": "La autoridad emisora publicó este ejemplo exacto como una estafa. SEAL tiene pruebas suficientes para rechazar la vía de pago por QR que aparece aquí.",
+  "curatedScamPrimary": "Abrir la fuente publicada",
+  "curatedScamStep1": "No escanees el código QR ni envíes pagos a través de este mensaje.",
+  "curatedScamStep2": "Conserva la fuente publicada por la autoridad si necesitas mostrar por qué se rechazó esta vía.",
+  "curatedScamRelationship": "La autoridad emisora publicó este material como ejemplo de estafa.",
+  "curatedRiskInstructionsTitle": "No utilices la vía señalada en este mensaje.",
+  "curatedRiskInstructionsDetail": "La autoridad emisora publicó este ejemplo exacto como una estafa. No utilices su código QR ni su vía de pago.",
+  "curatedRiskMatterTitle": "El caso subyacente no está confirmado de forma independiente.",
+  "curatedRiskMatterDetail": "Rechazar la vía mostrada en este ejemplo de estafa publicado no demuestra que exista un caso subyacente."
 }

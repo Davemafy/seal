@@ -201,5 +201,15 @@
   "fullDocumentPreview": "Full document preview",
   "closeDocumentPreview": "Close document preview",
   "courtNoticeShort": "Avviso giudiziario",
-  "courtMessageShort": "Messaggio giudiziario"
+  "courtMessageShort": "Messaggio giudiziario",
+  "curatedScamTitle": "Non scansionare il codice QR e non pagare da questo messaggio",
+  "curatedScamSummary": "L’autorità emittente ha pubblicato questo esatto esempio come truffa. SEAL dispone di prove sufficienti per respingere il percorso QR/pagamento mostrato qui.",
+  "curatedScamPrimary": "Apri la fonte pubblicata",
+  "curatedScamStep1": "Non scansionare il codice QR e non inviare pagamenti tramite questo messaggio.",
+  "curatedScamStep2": "Conserva la fonte pubblicata dall’autorità se devi mostrare perché questo percorso è stato respinto.",
+  "curatedScamRelationship": "L’autorità emittente ha pubblicato questo materiale come esempio di truffa.",
+  "curatedRiskInstructionsTitle": "Non usare il percorso segnalato in questo messaggio.",
+  "curatedRiskInstructionsDetail": "L’autorità emittente ha pubblicato questo esatto esempio come truffa. Non usare il suo codice QR o il percorso di pagamento.",
+  "curatedRiskMatterTitle": "Il caso sottostante non è confermato in modo indipendente.",
+  "curatedRiskMatterDetail": "Respingere il percorso mostrato in questo esempio di truffa pubblicato non dimostra che esista un caso sottostante."
 }
