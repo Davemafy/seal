@@ -2276,7 +2276,6 @@ async function upload(uploaded:File){
           style={{left:`${(chapter.start/STORY_TOTAL)*100}%`}}
           onClick={()=>seekStory(chapter.start)}
           aria-label={`Jump to ${chapter.label}`}
-          title={chapter.label}
          />)}
         </div>
        </div>
