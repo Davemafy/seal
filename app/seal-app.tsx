@@ -761,6 +761,17 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
    :caseReality?.status==='CONFLICT'
     ?resultUi('instructionMismatch')
     :resultUi('notConfirmed');
+ const proofEvidenceStatus=curatedAuthorityMatch
+  ?resultUi('statusOfficialWarning')
+  :decisionRelationshipConflict
+   ?resultUi('sourceConflict')
+   :verification?.results.some(result=>result.verdict==='MATCH')
+    ?resultUi('officialSourceMatch')
+    :storySignal?.kind==='OFFICIAL_PROCESS'
+     ?resultUi('officialProcess')
+     :officialDirectory
+      ?resultUi('officialDirectory')
+      :resultUi('notConfirmed');
  const safeActionCopy=verification?.safe_action
   ?curatedAuthorityMatch
    ?{
@@ -1125,7 +1136,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const plausibleCourtTitle=safeWorkspaceTitle(reliableCourtTitle||'');
  const safeCurrentWorkspaceTitle=safeWorkspaceTitle(workspaceTitle&&workspaceTitle!=='New check'?workspaceTitle:'');
  const safeJurisdictionTitle=safeWorkspaceTitle(jurisdiction);
- const checkObjectTitle=cleanDisplayText(plausibleCourtTitle||safeCurrentWorkspaceTitle||safeJurisdictionTitle||resultUi('courtMessageShort'));
+ const contextualResultTitle=safeJurisdictionTitle?`${safeJurisdictionTitle} · ${resultUi('courtNoticeShort')}`:'';
+ const checkObjectTitle=cleanDisplayText(plausibleCourtTitle||contextualResultTitle||safeCurrentWorkspaceTitle||resultUi('courtMessageShort'));
  const checkObjectDisplayTitle=humanizeDisplayName(checkObjectTitle)
   .replace(/^United States District Court\s*/i,'U.S. District Court · ')
   .replace(/\s{2,}/g,' ')
@@ -2042,6 +2054,9 @@ async function upload(uploaded:File){
 
  const processingStage=status==='Checking independent sources'?2:status==='Reading requested actions'?1:0;
  const processingTitle=processingStage===2?'Checking public sources':processingStage===1?'Finding the instructions':'Reading your document';
+ const processingContextTitle=[jurisdiction,ui('courtNoticeShort')].filter(Boolean).join(' · ')
+  ||safeWorkspaceTitle(workspaceTitle||'')
+  ||ui('courtMessageShort');
  const processingTextRegionsVisible=useMemo(()=>file?.tokens?processingTextRegions(file.tokens):[],[file]);
  const processingRegionCount=processingTextRegionsVisible.length;
  const processingMeta=[documentLanguage?.label,jurisdiction].filter(Boolean).join(' · ');
@@ -2224,9 +2239,8 @@ async function upload(uploaded:File){
    :busy||!verification?
    <section className={`entry-shell ${busy?'is-processing':''}`} data-testid="entry-shell">
    <div className="entry-copy">
-     {busy&&<span className="processing-entry-kicker">Independent check</span>}
-     <h1>{busy?'Checking this message':ui('checkCourtMessage')}</h1>
-     <p>{busy?'SEAL is separating what the message asks you to do from what independent public sources can actually establish.':ui('entrySummary')}</p>
+     <h1>{busy?processingContextTitle:ui('checkCourtMessage')}</h1>
+     {!busy&&<p>{ui('entrySummary')}</p>}
     </div>
 
     {!busy&&<div className="entry-intake-heading">
@@ -2530,7 +2544,7 @@ async function upload(uploaded:File){
        </div>
        :
        <div className="decision">
-        <div className="decision-overview">
+        <div className={`decision-overview${primaryRoute?' has-primary-route':''}`}>
          <div className="decision-copy">
         <p className="decision-status" data-testid="result-status">{translatedResult.resultStatus||resultStatusLabel}</p>
         <h1>{translatedResult.decisionTitle||(file?.sample?'This is a sample form.':conciseDecisionTitle)}</h1>
@@ -2538,20 +2552,24 @@ async function upload(uploaded:File){
         {displayLocale!=='en'&&resultTranslationState==='translated'&&<p className="translation-note">{resultUi('translatedNote')}</p>}
          </div>
 
-         <div className="decision-summary-side">
-          {primaryRoute&&<div className="decision-primary-route" data-testid="primary-next-step">
+         {primaryRoute&&<div className="decision-summary-side">
+          <div className="decision-primary-route" data-testid="primary-next-step">
            <span>{resultUi('nextStep')}</span>
            <a href={primaryRoute.url} target="_blank" rel="noopener noreferrer">{primaryRoute.label}</a>
            <small>{resultUi('openServiceNote')}</small>
-          </div>}
-
-          {riskSummary&&!file?.sample&&instructionStatus!==matterStatus&&<div className="decision-at-a-glance" data-testid="two-risk-result">
-           <div><span>{resultUi('thisMessage')}</span><strong>{translatedResult.instructionStatus||instructionStatus}</strong></div>
-           <div><span>{resultUi('theCase')}</span><strong>{translatedResult.matterStatus||matterStatus}</strong></div>
-          </div>}
-         </div>
+          </div>
+         </div>}
 
         </div>
+
+        {riskSummary&&!file?.sample&&<section className="decision-proof-digest" aria-label={resultUi('whatSealFound')} data-testid="decision-proof-digest">
+         <span className="decision-proof-heading">{resultUi('whatSealFound')}</span>
+         <div className="decision-proof-grid">
+          <div className="decision-proof-item"><span>{resultUi('messageInstructions')}</span><strong>{translatedResult.instructionStatus||instructionStatus}</strong></div>
+          <div className="decision-proof-item"><span>{resultUi('underlyingMatter')}</span><strong>{translatedResult.matterStatus||matterStatus}</strong></div>
+          <div className="decision-proof-item"><span>{resultUi('sourceEvidence')}</span><strong>{proofEvidenceStatus}</strong></div>
+         </div>
+        </section>}
 
         <details className="decision-details">
          <summary><span>{translatedResult.whyResult||resultUi('whyResult')}</span><SealGuideIcon/></summary>

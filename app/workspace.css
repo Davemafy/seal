@@ -10391,3 +10391,37 @@
   padding:0
  }
 }
+
+
+/* Final processing hierarchy: object context on the left, progress on the right. */
+@media(min-width:901px){
+ .entry-shell.is-processing{
+  max-width:980px!important;
+  grid-template-columns:minmax(210px,260px) minmax(0,1fr)!important;
+  gap:34px!important;
+  align-items:start!important
+ }
+ .entry-shell.is-processing .entry-copy{
+  max-width:260px!important;
+  padding-top:12px!important
+ }
+ .entry-shell.is-processing .entry-copy h1{
+  max-width:260px!important;
+  margin:0!important;
+  font-size:30px!important;
+  line-height:34px!important;
+  letter-spacing:-.03em!important;
+  font-weight:660!important
+ }
+ .entry-shell.is-processing .intake{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important
+ }
+}
+@media(max-width:900px){
+ .entry-shell.is-processing .entry-copy h1{
+  font-size:29px!important;
+  line-height:33px!important
+ }
+}
