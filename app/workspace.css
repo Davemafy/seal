@@ -8556,3 +8556,294 @@
   line-height:16px
  }
 }
+
+
+/* Demo intake deck — one surface, no form-inside-form. */
+@media(min-width:901px){
+ .entry-shell:not(.is-processing){
+  width:min(100%,1120px)!important;
+  max-width:1120px!important;
+  padding:34px 38px 36px!important;
+  grid-template-columns:minmax(0,760px) 280px!important;
+  grid-template-areas:
+   "intro context"
+   "form context"!important;
+  column-gap:42px!important;
+  row-gap:22px!important;
+  justify-content:center!important;
+  align-content:start!important
+ }
+
+ .entry-shell:not(.is-processing) .entry-copy{
+  max-width:760px!important
+ }
+ .entry-shell:not(.is-processing) .entry-copy h1{
+  max-width:760px!important;
+  font-size:46px!important;
+  line-height:51px!important;
+  letter-spacing:-.032em!important
+ }
+ .entry-shell:not(.is-processing) .entry-copy>p{
+  max-width:720px!important;
+  margin-top:10px!important;
+  color:#454541!important;
+  font-size:16px!important;
+  line-height:24px!important
+ }
+
+ /* The page title already asks the question. Don't wrap the action in another form header. */
+ .entry-shell:not(.is-processing) .entry-intake-heading{
+  display:none!important
+ }
+
+ .entry-shell:not(.is-processing) .intake{
+  width:100%!important;
+  max-width:none!important;
+  min-height:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important
+ }
+
+ .entry-shell:not(.is-processing) .upload-row{
+  width:100%!important;
+  min-height:188px!important;
+  display:flex!important;
+  align-items:center!important;
+  padding:26px 28px!important;
+  border:1px solid #dfdfda!important;
+  border-radius:14px!important;
+  background:#f7f7f4!important;
+  color:#111!important;
+  overflow:visible!important;
+  box-shadow:0 1px 0 rgba(0,0,0,.02)!important;
+  transition:border-color .16s ease,background .16s ease,box-shadow .16s ease,transform .16s ease!important
+ }
+ .entry-shell:not(.is-processing) .upload-row:hover,
+ .entry-shell:not(.is-processing) .upload-row.is-dragging{
+  border-color:#bdbdb7!important;
+  background:#f3f3ef!important;
+  box-shadow:0 12px 32px rgba(0,0,0,.045)!important;
+  transform:translateY(-1px)!important
+ }
+
+ .entry-shell:not(.is-processing) .upload-group{
+  width:100%!important;
+  max-width:none!important;
+  display:grid!important;
+  grid-template-columns:58px minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:18px!important
+ }
+
+ /* Small document stack: recognizable input affordance without another generic icon. */
+ .entry-shell:not(.is-processing) .upload-group::before{
+  content:""!important;
+  width:44px!important;
+  height:56px!important;
+  display:block!important;
+  border:1px solid #cfcfc9!important;
+  border-radius:7px!important;
+  background:
+   linear-gradient(#d8d8d2,#d8d8d2) 11px 16px/22px 2px no-repeat,
+   linear-gradient(#deded8,#deded8) 11px 23px/17px 2px no-repeat,
+   linear-gradient(#e4e4de,#e4e4de) 11px 30px/21px 2px no-repeat,
+   #fff!important;
+  box-shadow:7px 7px 0 -3px #f7f7f4,7px 7px 0 -2px #d7d7d1!important;
+  transform:rotate(-1.5deg)!important
+ }
+
+ .entry-shell:not(.is-processing) .upload-copy{
+  min-width:0!important
+ }
+ .entry-shell:not(.is-processing) .upload-copy strong{
+  display:block!important;
+  color:#171715!important;
+  font-size:18px!important;
+  line-height:24px!important;
+  font-weight:640!important;
+  letter-spacing:-.012em!important
+ }
+ .entry-shell:not(.is-processing) .upload-copy small{
+  display:block!important;
+  max-width:420px!important;
+  margin-top:5px!important;
+  color:#6f6f6a!important;
+  font-size:13px!important;
+  line-height:19px!important
+ }
+
+ .entry-shell:not(.is-processing) .upload-browse{
+  min-height:42px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  margin:0!important;
+  padding:10px 15px!important;
+  border-radius:8px!important;
+  background:#111!important;
+  color:#fff!important;
+  font-size:13.5px!important;
+  line-height:20px!important;
+  font-weight:620!important;
+  box-shadow:none!important
+ }
+ .entry-shell:not(.is-processing) .upload-row:hover .upload-browse{
+  background:#252523!important
+ }
+
+ .entry-shell:not(.is-processing) .intake-secondary-actions{
+  min-height:44px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:18px!important;
+  margin-top:12px!important;
+  padding:0 2px!important
+ }
+ .entry-shell:not(.is-processing) .paste-mode-switch{
+  min-height:34px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  margin:0!important;
+  padding:0!important;
+  color:#22221f!important;
+  font-size:13.5px!important;
+  line-height:20px!important;
+  font-weight:600!important;
+  text-decoration:none!important
+ }
+ .entry-shell:not(.is-processing) .paste-mode-switch:hover{
+  color:#000!important
+ }
+ .entry-shell:not(.is-processing) .privacy-note{
+  max-width:380px!important;
+  margin:0!important;
+  color:#777772!important;
+  font-size:12.5px!important;
+  line-height:18px!important;
+  text-align:right!important
+ }
+
+ /* Paste mode gets one clean panel of its own, not the old nested intake card. */
+ .entry-shell:not(.is-processing) .paste-mode-panel{
+  min-height:0!important;
+  padding:20px!important;
+  border:1px solid #dfdfda!important;
+  border-radius:14px!important;
+  background:#f7f7f4!important
+ }
+ .entry-shell:not(.is-processing) .paste-mode-back{
+  margin-bottom:16px!important
+ }
+ .entry-shell:not(.is-processing) .paste-field textarea{
+  min-height:170px!important;
+  height:170px!important;
+  border:1px solid #d9d9d4!important;
+  border-radius:9px!important;
+  background:#fff!important
+ }
+
+ /* Never let the optional demo rail squeeze the primary action surface. */
+ .entry-demo-rail{
+  grid-area:context!important;
+  align-self:start!important
+ }
+}
+
+@media(min-width:901px) and (max-width:1280px){
+ .entry-shell:not(.is-processing){
+  width:min(100%,820px)!important;
+  max-width:820px!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-areas:
+   "intro"
+   "form"!important;
+  padding:32px 30px 34px!important;
+  column-gap:0!important;
+  row-gap:22px!important
+ }
+ .entry-demo-rail{
+  display:none!important
+ }
+ .entry-shell:not(.is-processing) .entry-copy h1{
+  max-width:720px!important;
+  font-size:42px!important;
+  line-height:47px!important
+ }
+ .entry-shell:not(.is-processing) .upload-row{
+  min-height:180px!important
+ }
+}
+
+@media(max-width:900px){
+ .entry-shell:not(.is-processing) .entry-intake-heading{
+  display:none!important
+ }
+ .entry-shell:not(.is-processing) .intake{
+  padding:0!important;
+  border:0!important;
+  background:transparent!important
+ }
+ .entry-shell:not(.is-processing) .upload-row{
+  min-height:174px!important;
+  padding:20px!important;
+  border:1px solid #dfdfda!important;
+  border-radius:12px!important;
+  background:#f7f7f4!important
+ }
+ .entry-shell:not(.is-processing) .upload-group{
+  width:100%!important;
+  max-width:none!important;
+  display:grid!important;
+  grid-template-columns:46px minmax(0,1fr)!important;
+  gap:14px!important;
+  align-items:center!important
+ }
+ .entry-shell:not(.is-processing) .upload-group::before{
+  content:""!important;
+  width:38px!important;
+  height:48px!important;
+  border:1px solid #cfcfc9!important;
+  border-radius:6px!important;
+  background:
+   linear-gradient(#d8d8d2,#d8d8d2) 9px 14px/19px 2px no-repeat,
+   linear-gradient(#dfdfd9,#dfdfd9) 9px 21px/15px 2px no-repeat,
+   linear-gradient(#e5e5df,#e5e5df) 9px 28px/18px 2px no-repeat,
+   #fff!important;
+  box-shadow:6px 6px 0 -3px #f7f7f4,6px 6px 0 -2px #d7d7d1!important
+ }
+ .entry-shell:not(.is-processing) .upload-copy strong{
+  font-size:16px!important;
+  line-height:22px!important
+ }
+ .entry-shell:not(.is-processing) .upload-copy small{
+  margin-top:4px!important;
+  font-size:12px!important;
+  line-height:18px!important
+ }
+ .entry-shell:not(.is-processing) .upload-browse{
+  grid-column:1 / -1!important;
+  justify-self:start!important;
+  min-height:40px!important;
+  margin-top:4px!important;
+  padding:9px 14px!important;
+  border-radius:8px!important;
+  background:#111!important;
+  color:#fff!important
+ }
+ .entry-shell:not(.is-processing) .intake-secondary-actions{
+  display:grid!important;
+  gap:8px!important;
+  margin-top:12px!important
+ }
+ .entry-shell:not(.is-processing) .privacy-note{
+  margin:0!important;
+  font-size:12px!important;
+  line-height:18px!important;
+  text-align:left!important
+ }
+}
