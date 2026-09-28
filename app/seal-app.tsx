@@ -1243,7 +1243,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    return;
   }
   // A Browse handoff is a one-shot action, not persistent app state.
-  // Consume the query immediately so refresh/back-to-home never re-runs a file.
+  // Consume the query immediately so refresh/back-to-home never re-runs a case.
   window.history.replaceState(null,'',window.location.pathname);
   initialRunStarted.current=true;
   void (async()=>{
@@ -1255,46 +1255,121 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    let browsePreview='';
    try{
     setBusy(true);
+    setError('');
     setStatus('Opening the source document');
-    const [caseResponse,assetResponse]=await Promise.all([
+
+    const [caseResponse,thumbnailResponse]=await Promise.all([
      fetch(`/api/browse-case?id=${encodeURIComponent(caseId)}`,{signal:controller.signal}),
-     fetch(`/api/browse-asset?id=${encodeURIComponent(caseId)}`,{signal:controller.signal})
+     fetch(`/browse-assets/${encodeURIComponent(caseId)}.jpg`,{signal:controller.signal})
     ]);
     if(controller.signal.aborted||runId.current!==handoffId)return;
     if(!caseResponse.ok)throw new Error('Case unavailable');
-    const payload=await caseResponse.json() as {runText?:string;assetType?:'pdf'|'image';ocrLanguage?:OcrLanguage;title?:string};
+
+    const payload=await caseResponse.json() as {
+     runText?:string;
+     assetType?:'pdf'|'image';
+     ocrLanguage?:OcrLanguage;
+     title?:string;
+    };
     const seededText=payload.runText?.trim()||'';
 
-    if(assetResponse.ok&&payload.assetType){
-     const blob=await assetResponse.blob();
-     const isPdf=payload.assetType==='pdf';
-     const type=isPdf?'application/pdf':blob.type.startsWith('image/')?blob.type:'image/jpeg';
-     const extension=isPdf?'pdf':type.includes('png')?'png':'jpg';
-     const sourceFile=new File([blob],`${caseId}.${extension}`,{type});
-     sourceBlobRef.current=sourceFile;
-     browsePreview=URL.createObjectURL(sourceFile);
-     uploadPreviewRef.current=browsePreview;
-     setUploadPreview({url:browsePreview,name:payload.title||`${caseId}.${extension}`,kind:isPdf?'pdf':'image'});
-     setStatus('Opening the source document');
-     const doc:BrowserDocument=seededText&&!isPdf
-      ?{text:seededText,tokens:[],preview:URL.createObjectURL(sourceFile),kind:'image',uncertain:false,sample:false,unreadableFields:[]}
-      :await readInBrowser(sourceFile,next=>{if(!controller.signal.aborted&&runId.current===handoffId)setStatus(next)},payload.ocrLanguage||ocrLanguage,controller.signal);
-     if(controller.signal.aborted||runId.current!==handoffId){URL.revokeObjectURL(doc.preview);return}
-     const analysisText=seededText||doc.text;
-     if(!analysisText.trim())throw new Error('Case text unavailable');
-     setFile(doc);
-     setStoryArtifactReady(false);
-     setText(analysisText);
-     const openingWait=Math.max(0,300-(performance.now()-busyStartedAt));
+    // Curated Browse cases should never depend on the authority server during
+    // the demo path. Use the cached authority thumbnail as the visible document
+    // and the source-checked transcript as the analysis input.
+    if(seededText){
+     let doc:BrowserDocument|null=null;
+
+     if(thumbnailResponse.ok){
+      const thumbnailBlob=await thumbnailResponse.blob();
+      const thumbnailFile=new File([thumbnailBlob],`${caseId}.jpg`,{type:'image/jpeg'});
+      sourceBlobRef.current=thumbnailFile;
+
+      browsePreview=URL.createObjectURL(thumbnailFile);
+      uploadPreviewRef.current=browsePreview;
+      setUploadPreview({
+       url:browsePreview,
+       name:payload.title||`${caseId}.jpg`,
+       kind:'image'
+      });
+
+      doc={
+       text:seededText,
+       tokens:[],
+       preview:URL.createObjectURL(thumbnailFile),
+       kind:'image',
+       uncertain:false,
+       sample:false,
+       unreadableFields:[]
+      };
+      setFile(doc);
+      setStoryArtifactReady(false);
+     }else{
+      sourceBlobRef.current=null;
+      setFile(null);
+      setStoryArtifactReady(true);
+     }
+
+     setWorkspaceTitle(payload.title||'Court message');
+     setText(seededText);
+     setStatus('Reading requested actions');
+
+     const openingWait=Math.max(0,180-(performance.now()-busyStartedAt));
      if(openingWait)await new Promise(resolve=>window.setTimeout(resolve,openingWait));
-     await run('SNAPSHOT',{text:analysisText,file:doc,curated:!!seededText,curatedCaseId:caseId,browse:true});
+
+     await run('SNAPSHOT',{
+      text:seededText,
+      file:doc,
+      curated:true,
+      curatedCaseId:caseId,
+      browse:true
+     });
      return;
     }
 
-    throw new Error('Case asset unavailable');
+    // Non-curated entries may need the original asset so OCR can establish the
+    // requested action. Keep the cached thumbnail visible while that happens.
+    if(thumbnailResponse.ok){
+     const thumbnailBlob=await thumbnailResponse.blob();
+     const thumbnailFile=new File([thumbnailBlob],`${caseId}.jpg`,{type:'image/jpeg'});
+     browsePreview=URL.createObjectURL(thumbnailFile);
+     uploadPreviewRef.current=browsePreview;
+     setUploadPreview({
+      url:browsePreview,
+      name:payload.title||`${caseId}.jpg`,
+      kind:'image'
+     });
+    }
+
+    const assetResponse=await fetch(`/api/browse-asset?id=${encodeURIComponent(caseId)}`,{signal:controller.signal});
+    if(controller.signal.aborted||runId.current!==handoffId)return;
+    if(!assetResponse.ok||!payload.assetType)throw new Error('Case asset unavailable');
+
+    const blob=await assetResponse.blob();
+    const isPdf=payload.assetType==='pdf';
+    const type=isPdf?'application/pdf':blob.type.startsWith('image/')?blob.type:'image/jpeg';
+    const extension=isPdf?'pdf':type.includes('png')?'png':'jpg';
+    const sourceFile=new File([blob],`${caseId}.${extension}`,{type});
+    sourceBlobRef.current=sourceFile;
+
+    const doc=await readInBrowser(
+     sourceFile,
+     next=>{if(!controller.signal.aborted&&runId.current===handoffId)setStatus(next)},
+     payload.ocrLanguage||ocrLanguage,
+     controller.signal
+    );
+    if(controller.signal.aborted||runId.current!==handoffId){
+     URL.revokeObjectURL(doc.preview);
+     return;
+    }
+
+    if(!doc.text.trim())throw new Error('Case text unavailable');
+    setFile(doc);
+    setStoryArtifactReady(false);
+    setText(doc.text);
+    await run('SNAPSHOT',{text:doc.text,file:doc,curatedCaseId:caseId,browse:true});
    }catch{
     if(controller.signal.aborted||runId.current!==handoffId)return;
-    const openingWait=Math.max(0,300-(performance.now()-busyStartedAt));
+    const openingWait=Math.max(0,180-(performance.now()-busyStartedAt));
     if(openingWait)await new Promise(resolve=>window.setTimeout(resolve,openingWait));
     setBusy(false);
     setStatus('');
