@@ -16,8 +16,8 @@ const filters:{id:BrowseFilter;labelKey:'all'|'scamWarnings'|'officialNotices'|'
  {id:'international',labelKey:'outsideUS'},
 ];
 
-function CaseMedia({item,priority=false}:{item:BrowseCase;priority?:boolean}){
- return <a className={`case-visual ${item.preview.type==='image'?'is-image':'is-pdf'}`} href={item.sourceUrl} target="_blank" rel="noopener noreferrer" aria-label={`Open original source for ${item.title}`}>
+function CaseMedia({item,priority=false,openSourceLabel}:{item:BrowseCase;priority?:boolean;openSourceLabel:string}){
+ return <a className={`case-visual ${item.preview.type==='image'?'is-image':'is-pdf'}`} href={item.sourceUrl} target="_blank" rel="noopener noreferrer" aria-label={`${openSourceLabel}: ${item.title}`}>
   {item.preview.type==='pdf'
    ?<PdfThumb id={item.id} alt={item.preview.alt} priority={priority}/>
    :<ImageThumb id={item.id} alt={item.preview.alt} sourceUrl={item.preview.url} priority={priority}/>}
@@ -58,7 +58,7 @@ export default function BrowseGrid({items}:{items:BrowseCase[]}){
 
   {featured&&<article className="case-feature" key={featured.id}>
    <div className="case-feature-media">
-    <CaseMedia item={featured} priority/>
+    <CaseMedia item={featured} priority openSourceLabel={ui('openSource')}/>
    </div>
    <div className="case-feature-copy">
     <span className="case-feature-label">{ui('featuredSource')}</span>
@@ -66,7 +66,7 @@ export default function BrowseGrid({items}:{items:BrowseCase[]}){
     <h2>{featured.title}</h2>
     <p className="case-context"><span>{featured.classification}</span><span aria-hidden="true">·</span><strong>{ui('originalSourceAttached')}</strong></p>
     <p className="case-note">{featured.visualNote}</p>
-    <p className="case-source">Source: {featured.sourceTitle}</p>
+    <p className="case-source">{ui('source')}: {featured.sourceTitle}</p>
     <div className="case-actions">
      <Link className="case-run-action" href={`/?case=${featured.id}`}>{ui('checkInSeal')}</Link>
      <a className="case-source-action" href={featured.sourceUrl} target="_blank" rel="noopener noreferrer">{ui('openSource')}</a>
@@ -76,7 +76,7 @@ export default function BrowseGrid({items}:{items:BrowseCase[]}){
 
   {!!library.length&&<div className="case-library-grid">
    {library.map((item,index)=><article className="case-library-card" key={item.id}>
-    <CaseMedia item={item} priority={index<1}/>
+    <CaseMedia item={item} priority={index<1} openSourceLabel={ui('openSource')}/>
     <div className="case-copy">
      <p className="case-kicker"><span>{item.jurisdiction}</span><span>{item.language||'English'}</span></p>
      <h2>{item.title}</h2>
