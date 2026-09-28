@@ -32,8 +32,8 @@ jobs:
           node-version: '24'
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Install PDF renderer
-        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+      - name: Install thumbnail renderers
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils imagemagick
       - name: Refresh official-source thumbnails
         run: node --import tsx scripts/sync-browse-assets.ts
       - name: Commit changed source snapshots
