@@ -7,7 +7,7 @@ const request=z.object({
 });
 
 const MAX_STRINGS=96;
-const BATCH_SIZE=28;
+const BATCH_SIZE=32;
 
 const delay=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 
@@ -51,7 +51,7 @@ export async function POST(req:Request){
    const strings=Object.fromEntries(chunk);
    let lastStatus=0;
 
-   for(let attempt=0;attempt<2;attempt++){
+   for(let attempt=0;attempt<3;attempt++){
     const response=await fetch(base+'/chat/completions',{
      method:'POST',
      headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},
@@ -64,23 +64,30 @@ export async function POST(req:Request){
       temperature:0,
       response_format:{type:'json_object'}
      }),
-     signal:AbortSignal.timeout(15000)
+     signal:AbortSignal.timeout(20000)
     });
 
     lastStatus=response.status;
     if(response.ok){
-     const body=await response.json() as {choices?:{message?:{content?:string}}[]};
-     const translated=JSON.parse(body.choices?.[0]?.message?.content||'{}') as Record<string,unknown>;
-     const normalized:Record<string,string>={};
-     for(const [name,source] of chunk){
-      const value=translated[name];
-      normalized[name]=typeof value==='string'&&value.trim()?value:source;
+     try{
+      const body=await response.json() as {choices?:{message?:{content?:string}}[]};
+      const translated=JSON.parse(body.choices?.[0]?.message?.content||'{}') as Record<string,unknown>;
+      const normalized:Record<string,string>={};
+      for(const [name,source] of chunk){
+       const value=translated[name];
+       normalized[name]=typeof value==='string'&&value.trim()?value:source;
+      }
+      return normalized;
+     }catch{
+      if(attempt<2){
+       await delay(350*(attempt+1));
+       continue;
+      }
      }
-     return normalized;
     }
 
-    if(attempt===0&&(response.status===429||response.status>=500)){
-     await delay(250);
+    if(attempt<2&&(response.status===429||response.status>=500)){
+     await delay(400*(attempt+1));
      continue;
     }
     break;
@@ -89,9 +96,12 @@ export async function POST(req:Request){
    throw new Error(`Translation provider status ${lastStatus||'unknown'}`);
   };
 
-  const translatedChunks=await Promise.all(chunks.map(chunk=>translateChunk(chunk)));
   const strings={...sourceStrings};
-  for(const chunk of translatedChunks)Object.assign(strings,chunk);
+  // Run chunks sequentially to avoid rate-limit bursts during a user-triggered translation.
+  for(const chunk of chunks){
+   const translated=await translateChunk(chunk);
+   Object.assign(strings,translated);
+  }
 
   return NextResponse.json({strings,mode:'TRANSLATED'});
  }catch{
