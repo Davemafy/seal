@@ -976,3 +976,48 @@
   display:inline-flex!important
  }
 }
+
+
+/* Mobile result masthead stays flat — no desktop glass card. */
+@media(max-width:900px){
+ .result-masthead{
+  margin:0!important;
+  padding:8px 16px 0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:#fff!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+  box-shadow:none!important;
+  overflow:visible!important
+ }
+
+ .result-masthead-row{
+  min-height:0!important;
+  padding:0!important;
+  align-items:flex-start!important
+ }
+
+ .check-object-identity{
+  min-width:0!important;
+  padding-right:12px!important
+ }
+
+ .check-object-identity h1{
+  margin:0!important
+ }
+
+ .check-object-actions{
+  margin:0!important;
+  padding:0!important
+ }
+
+ .result-chapters{
+  margin-top:10px!important;
+  padding:3px!important
+ }
+
+ .result-carousel{
+  padding-top:14px!important
+ }
+}
