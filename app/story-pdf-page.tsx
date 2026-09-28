@@ -114,10 +114,10 @@ export default function StoryPdfPage({url,focusBox,onReady}:Props){
   };
  },[url]);
 
- return <div className="story-pdf-wrap" style={{transformOrigin:focusBox?`${(focusBox.x+focusBox.width/2)*100}% ${(focusBox.y+focusBox.height/2)*100}%`:'50% 50%'}}>
+ return <span className="story-pdf-wrap" style={{transformOrigin:focusBox?`${(focusBox.x+focusBox.width/2)*100}% ${(focusBox.y+focusBox.height/2)*100}%`:'50% 50%'}}>
   {!preview&&!error&&<span className="story-pdf-loading">Opening document…</span>}
   {preview&&<img data-story-artifact src={preview} alt="Your uploaded PDF, first page"/>}
   {focusBox&&preview&&<span className="story-highlight"/>}
   {error&&<span className="story-pdf-error">PDF preview unavailable. The checked text remains available in Full evidence.</span>}
- </div>;
+ </span>;
 }
