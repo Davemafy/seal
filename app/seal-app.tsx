@@ -1770,7 +1770,7 @@ async function upload(uploaded:File){
  return <main ref={workspaceRootRef} className="seal-app" data-testid="seal-app">
   <aside className="workspace-rail" aria-label={ui('workspace')}>
    <div className="rail-topbar">
-    <Link href="/" className="rail-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
+    <Link href="/" className="rail-brand" aria-label={ui('sealHome')} onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/><span className="rail-brand-word">SEAL</span><span className="rail-brand-reg">®</span></Link>
     <button className="icon-control rail-icon-control rail-new-check" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} data-tooltip={ui('newCheck')} onClick={onNewWorkspace}><SealUiIcon name="add"/></button>
    </div>
    <nav className="rail-primary-nav" aria-label={ui('primary')}>
@@ -1804,7 +1804,7 @@ async function upload(uploaded:File){
    <div className="rail-spacer"/>
   </aside>
   <header className="seal-nav mobile-only-nav">
-   <Link href="/" className="mobile-brand" aria-label="SEAL home" onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/></Link>
+   <Link href="/" className="mobile-brand" aria-label={ui('sealHome')} onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/></Link>
    <div className="mobile-nav-tools">
     <div className="mobile-language-menu">
      <button type="button" className="icon-control mobile-language-trigger" aria-label={ui('displayLanguage')} title={ui('displayLanguage')} aria-haspopup="listbox" aria-expanded={languageMenuOpen} onClick={()=>{setWorkspaceDrawerOpen(false);setLanguageMenuOpen(open=>!open)}}>
@@ -1816,7 +1816,7 @@ async function upload(uploaded:File){
      </div>}
     </div>
     <span className="mobile-nav-divider" aria-hidden="true"/>
-    <button className="icon-control mobile-nav-icon mobile-workspace-trigger" type="button" aria-label={`Open checks, ${workspaces.length} open`} title={ui('openChecks')} aria-haspopup="dialog" aria-expanded={workspaceDrawerOpen} onClick={()=>{setLanguageMenuOpen(false);setWorkspaceDrawerOpen(true)}}>
+    <button className="icon-control mobile-nav-icon mobile-workspace-trigger" type="button" aria-label={`${ui('openChecks')}, ${workspaces.length}`} title={ui('openChecks')} aria-haspopup="dialog" aria-expanded={workspaceDrawerOpen} onClick={()=>{setLanguageMenuOpen(false);setWorkspaceDrawerOpen(true)}}>
      <SealUiIcon name="workspaces"/>
     </button>
     <button className="icon-control mobile-nav-icon mobile-new-check" type="button" aria-label={ui('newCheck')} title={ui('newCheck')} onClick={()=>{setWorkspaceDrawerOpen(false);onNewWorkspace()}}><SealUiIcon name="add"/></button>
@@ -1885,7 +1885,7 @@ async function upload(uploaded:File){
         onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
         {busy?
          <span className="upload-process" role="status" aria-live="polite" aria-label={processingTitle}>
-          <span className={`upload-process-media ${uploadPreview?.kind==='pdf'?'is-pdf':''}`} data-testid="processing-preview" aria-label="Open full document preview">
+          <span className={`upload-process-media ${uploadPreview?.kind==='pdf'?'is-pdf':''}`} data-testid="processing-preview" aria-label={ui('openFullDocumentPreview')}>
            {uploadPreview?.kind==='image'
             ?<img src={uploadPreview.url} alt="Selected court message"/>
             :<span className="upload-pdf-preview" aria-hidden="true"><b>PDF</b><i/></span>}
@@ -1895,7 +1895,7 @@ async function upload(uploaded:File){
           <span className="upload-process-body">
            <strong>{processingTitle}</strong>
            {processingMeta&&<span className="process-live-meta">{processingMeta}</span>}
-           <span className="process-stage-list" aria-label="Check progress">
+           <span className="process-stage-list" aria-label={ui('checkProgress')}>
             {processingStages.map((stage,index)=>{
              const state=index<processingStage?'done':index===processingStage?'current':'pending';
              return <span className={`process-stage-row is-${state}`} key={stage.label} aria-current={state==='current'?'step':undefined}>
@@ -1909,7 +1909,7 @@ async function upload(uploaded:File){
             <span key={processingTipIndex}>{PROCESSING_WAIT_NOTES[processingTipIndex]}</span>
            </span>
            {processingFileName&&<span className="upload-file-name" title={processingFileName}>{processingFileName}</span>}
-           <span className="process-device-note"><span>Original stays on this device</span><small>Extracted text may be sent for checking</small></span>
+           <span className="process-device-note"><span>{ui('originalStays')}</span><small>Extracted text may be sent for checking</small></span>
           </span>
          </span>
          :<span className="upload-group">
@@ -1930,7 +1930,7 @@ async function upload(uploaded:File){
        <button className="paste-mode-switch paste-mode-back" type="button" onClick={()=>setPasteMode(false)}><SealGuideIcon direction="left"/> {ui('uploadInstead')}</button>
        <label className="paste-field">
         <span className="field-label">{ui('messageText')}</span>
-        <textarea autoFocus aria-label="Paste the court message" value={draft} onChange={event=>setDraft(event.target.value)} placeholder={ui('messagePlaceholder')}/>
+        <textarea autoFocus aria-label={ui('pasteCourtMessage')} value={draft} onChange={event=>setDraft(event.target.value)} placeholder={ui('messagePlaceholder')}/>
        </label>
        <div className="intake-actions">
         <button className="check-message" type="button" disabled={!draft.trim()||!hydrated} onClick={submitPaste}>{ui('checkMessage')}</button>
@@ -1941,10 +1941,10 @@ async function upload(uploaded:File){
      {error&&<div role="alert" className="inspection-error">{error}</div>}
     </div>
 
-    {!busy&&<aside className="entry-context-rail entry-demo-rail" aria-label="Try SEAL with an example">
+    {!busy&&<aside className="entry-context-rail entry-demo-rail" aria-label={ui('trySealExample')}>
      <div className="entry-demo-head">
-      <span>Try an example</span>
-      <small>No upload needed. Each example is synthetic.</small>
+      <span>{ui('tryExample')}</span>
+      <small>{ui('noUploadNeeded')}</small>
      </div>
 
      <button className="entry-demo-feature" type="button" onClick={()=>runEntryExample('action-message-demo')}>
@@ -2003,12 +2003,12 @@ async function upload(uploaded:File){
         {documentJurisdictionLabel&&<span className="meta-jurisdiction" data-testid="document-jurisdiction">{documentJurisdictionLabel}</span>}
        </div>
       </div>
-      <div className="check-object-actions" aria-label="Check actions">
+      <div className="check-object-actions" aria-label={ui('checkActions')}>
        <button type="button" className="icon-control result-icon-action" aria-label={ui('checkAgain')} title={ui('checkAgain')} data-tooltip={ui('checkAgain')} onClick={()=>run('LIVE')} disabled={busy}><SealUiIcon name="refresh"/></button>
       </div>
      </div>
 
-     <nav className="result-chapters" aria-label="Jump to result section">
+     <nav className="result-chapters" aria-label={ui('jumpResultSection')}>
       <a href={`#${sectionId('review-summary')}`} className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={event=>jumpToResultSection(event,'summary','review-summary')}>{ui('summary')}</a>
       <a href={`#${sectionId('original-message')}`} className={activeResultSection==='message'?'is-current':''} aria-current={activeResultSection==='message'?'location':undefined} onClick={event=>jumpToResultSection(event,'message','original-message')}>{ui('original')}</a>
       <a href={`#${sectionId('source-checks')}`} className={activeResultSection==='evidence'?'is-current':''} aria-current={activeResultSection==='evidence'?'location':undefined} onClick={event=>jumpToResultSection(event,'evidence','source-checks')}>{ui('evidence')}</a>
@@ -2016,9 +2016,9 @@ async function upload(uploaded:File){
      </nav>
     </header>
 
-    {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button></div>}
+    {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>{ui('checkLiveSources')}</button></div>}
 
-    {verification&&ready&&reviewOffer==='counting'&&createPortal(<div className="review-autoplay-overlay" data-review-offer role="dialog" aria-modal="true" aria-label="Verification review starting">
+    {verification&&ready&&reviewOffer==='counting'&&createPortal(<div className="review-autoplay-overlay" data-review-offer role="dialog" aria-modal="true" aria-label={ui('verificationReviewStarting')}>
      <button type="button" className="review-autoplay-skip" onClick={skipReviewOffer}>{shellUi('skip')}</button>
      <div className="review-autoplay-center">
       <div className="review-autoplay-timer" aria-live="polite" aria-label={`Verification review starts in ${reviewCountdown}`}>
@@ -2031,12 +2031,12 @@ async function upload(uploaded:File){
      </div>
     </div>,document.body)}
 
-    {verification&&ready&&storyOpen&&createPortal(<div className={`story-overlay ${storyClosing?'is-closing':''}`} data-testid="evidence-review" role="dialog" aria-modal="true" aria-label="SEAL verification review">
+    {verification&&ready&&storyOpen&&createPortal(<div className={`story-overlay ${storyClosing?'is-closing':''}`} data-testid="evidence-review" role="dialog" aria-modal="true" aria-label={ui('sealVerificationReview')}>
      <div ref={storyPlayerRef} className={`story-player ${storyPlaying?'is-playing':'is-paused'} ${storyFocusBox?'has-story-focus':'no-story-focus'}`}>
       <div className="story-topbar">
        <span className="story-brand"><img src="/brand/seal-mark-white.svg" alt=""/><span>SEAL</span></span>
        <span className="story-chapter-label" aria-live="polite">{STORY_CHAPTERS[storyStep].label}</span>
-       <button className="story-exit-button" type="button" onClick={closeStory} aria-label="Back to result">
+       <button className="story-exit-button" type="button" onClick={closeStory} aria-label={ui('backToResult')}>
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 5.5 8 10l4.5 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
         <span>Result</span>
        </button>
@@ -2058,7 +2058,7 @@ async function upload(uploaded:File){
            :file?.kind==='pdf'?
             <StoryPdfPage url={file.preview} focusBox={storyFocusBox} onReady={handleStoryArtifactReady}/>
            :<div className="story-text-document">
-            <span>Pasted message</span>
+            <span>{ui('pastedMessage')}</span>
             <p>{cleanDisplayText(text.slice(0,900))}</p>
            </div>}
          </div>
@@ -2068,7 +2068,7 @@ async function upload(uploaded:File){
            <span>{storySourceLabel}</span>
            <strong>{storyEvidence?.title||'No supported public source available'}</strong>
            <p>{storySourceDisplay}</p>
-           {storyEvidence&&<a href={storyEvidence.url} target="_blank" rel="noopener noreferrer" tabIndex={storyStep>=2&&storyStep<=3?0:-1}>Open source</a>}
+           {storyEvidence&&<a href={storyEvidence.url} target="_blank" rel="noopener noreferrer" tabIndex={storyStep>=2&&storyStep<=3?0:-1}>{ui('openSource')}</a>}
           </div>
          </div>
         </div>
@@ -2084,19 +2084,19 @@ async function upload(uploaded:File){
         </div>
 
         <div className="story-action-panel" aria-hidden={storyStep!==4}>
-         <span>Safest next step</span>
+         <span>{ui('safestNextStep')}</span>
          <strong>{storyFinalTitle}</strong>
          <p>{storyFinalSummary}</p>
          {verification.contact?.name&&<small>{verification.contact.name}{verification.contact.phone?` · ${verification.contact.phone}`:''}</small>}
          <div className="story-final-actions">
-          {verification.contact?.website&&<a href={verification.contact.website} target="_blank" rel="noopener noreferrer" tabIndex={storyStep===4?0:-1}>Open official court website</a>}
+          {verification.contact?.website&&<a href={verification.contact.website} target="_blank" rel="noopener noreferrer" tabIndex={storyStep===4?0:-1}>{ui('openOfficialCourtWebsite')}</a>}
           {!verification.contact?.website&&verification.safe_action&&<a href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer" tabIndex={storyStep===4?0:-1}>{translatedResult.safePrimary||verification.safe_action.primary_label}</a>}
          </div>
         </div>
        </div>
       </div>
 
-      <div className="story-transport" aria-label="Review playback controls">
+      <div className="story-transport" aria-label={ui('reviewPlaybackControls')}>
        <button
         ref={storyPauseButton}
         type="button"
@@ -2125,7 +2125,7 @@ async function upload(uploaded:File){
          max={STORY_TOTAL}
          step="0.01"
          defaultValue="0"
-         aria-label="Review timeline"
+         aria-label={ui('reviewTimeline')}
          onChange={event=>seekStory(Number(event.currentTarget.value))}
         />
         <div className="story-chapter-buttons" aria-hidden="false">
@@ -2141,7 +2141,7 @@ async function upload(uploaded:File){
         </div>
        </div>
 
-       <span className="story-timecode" aria-label="Review time">
+       <span className="story-timecode" aria-label={ui('reviewTime')}>
         <span ref={storyTimeLabelRef}>0:00</span>
         <span aria-hidden="true"> / </span>
         <span>{formatStoryTime(STORY_TOTAL)}</span>
@@ -2196,7 +2196,7 @@ async function upload(uploaded:File){
           </div>}
          </div>
 
-         <aside className="decision-visual" aria-label="Check snapshot">
+         <aside className="decision-visual" aria-label={ui('checkSnapshot')}>
           <div className="decision-artifact">
            {file?.kind==='image'
             ?<img src={file.preview} alt="Original message preview"/>
@@ -2254,24 +2254,24 @@ async function upload(uploaded:File){
       <div className={`document-paper ${!file?'is-text-document':''}`}>
        {isActionDemo?
         <div className="message-card">
-         <div className="message-card-head"><span>DEMO / SYNTHETIC MESSAGE</span><span>NOT A REAL PERSON</span></div>
-         <div className="message-sender"><span>Unknown sender</span><strong>Claims to be a federal court</strong></div>
+         <div className="message-card-head"><span>{ui('demoSynthetic')}</span><span>{ui('notRealPerson')}</span></div>
+         <div className="message-sender"><span>{ui('unknownSender')}</span><strong>{ui('claimsFederalCourt')}</strong></div>
          {renderTextLines(text.split('\n').slice(1))}
          <div className="notice-end">Synthetic engineering example based on published jury-scam patterns. It does not prove real-world accuracy or demand. SEAL is not affiliated with any court.</div>
         </div>
         :isDemo?
         <div className="message-card">
-         <div className="message-card-head"><span>Fictional notice</span><span>Product demonstration only</span></div>
+         <div className="message-card-head"><span>{ui('fictionalNotice')}</span><span>Product demonstration only</span></div>
          {renderTextLines(text.split('\n').slice(1))}
          <div className="notice-end">This example uses fictional personal details. SEAL is not affiliated with any court.</div>
         </div>
         :!file?
         <div className="message-card pasted-message">
-         <div className="message-card-head"><span>Pasted message</span><span>Original text</span></div>
+         <div className="message-card-head"><span>{ui('pastedMessage')}</span><span>{ui('originalText')}</span></div>
          {renderTextLines(text.split('\n'))}
         </div>
         :file.kind==='image'?
-        <div className="preview-box is-expandable" role="button" tabIndex={0} aria-label="Open full document preview"
+        <div className="preview-box is-expandable" role="button" tabIndex={0} aria-label={ui('openFullDocumentPreview')}
          onClick={event=>openDocumentPreview(event.currentTarget)}
          onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openDocumentPreview(event.currentTarget)}}}>
          <img src={file.preview} alt="Uploaded notice"/>
@@ -2293,12 +2293,12 @@ async function upload(uploaded:File){
      </div>
     </div>
 
-    <section className="result-slide result-slide-evidence" data-result-section="evidence" aria-label="Evidence panel">
+    <section className="result-slide result-slide-evidence" data-result-section="evidence" aria-label={ui('evidencePanel')}>
      {reviewWorthWatching&&!storyOpen&&<button type="button" className="evidence-review-entry" data-testid="mobile-evidence-review" onClick={replayStory}>
       <span className="evidence-review-icon" aria-hidden="true"><DesignPlayIcon/></span>
       <span><strong>{ui('seeHowChecked')}</strong><small>{ui('evidenceReviewHint')}</small></span>
      </button>}
-     {ready&&verification&&<section className="source-resolution" id={sectionId('source-checks')} aria-label="What SEAL found">
+     {ready&&verification&&<section className="source-resolution" id={sectionId('source-checks')} aria-label={ui('whatSealFound')}>
      <div className="section-heading evidence-heading">
       <h2>{ui('independentEvidence')}</h2>
      </div>
@@ -2346,7 +2346,7 @@ async function upload(uploaded:File){
 
      <p className="resolution-disclaimer">{translatedResult.resolutionDisclaimer||(curatedSignal?'This finding is about this published example only. It does not label other messages.':'These sources help with the check, but they still cannot tell us who sent the message.')}</p>
     </section>}
-     <details className="record-disclosure" aria-label="Evidence record">
+     <details className="record-disclosure" aria-label={ui('evidenceRecord')}>
       <summary><span>{ui('evidenceRecord')}</span><small>{ui('evidenceRecordHint')}</small><SealGuideIcon/></summary>
       <div className="record-disclosure-body">
        {ready&&verification&&<section className="check-metadata-section" aria-label="Check context">
@@ -2409,7 +2409,7 @@ async function upload(uploaded:File){
          {currentResult.evidence.slice(1).map((evidence,index)=><div key={index}>
           <div>{evidence.title}</div>
           <blockquote>{evidence.excerpt}</blockquote>
-          <a href={evidence.url} target="_blank" rel="noopener noreferrer">Open source</a>
+          <a href={evidence.url} target="_blank" rel="noopener noreferrer">{ui('openSource')}</a>
           <div className="source-timestamp">{evidence.source_mode} · {new Date(evidence.checked_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'})}</div>
          </div>)}
         </details>}
@@ -2439,12 +2439,12 @@ async function upload(uploaded:File){
      </details>
     </section>
 
-    <section className="result-slide result-slide-resolve" data-result-section="next" aria-label="Resolve panel">
+    <section className="result-slide result-slide-resolve" data-result-section="next" aria-label={ui('resolvePanel')}>
      {ready&&verification&&<div className="resolve-primary" data-testid="resolve-primary">
      {verification&&!verification.safe_action&&decisionClaim?.action&&!verification.contact&&<div className="unsupported-next-step" id={sectionId('next-step')}>
       <span>What to do next</span>
       <h2>Check this with the court directly.</h2>
-      {messageDetails.length>0||scheduleQuote||noPaymentQuote?<dl className="message-detail-list">{messageDetails.map(claim=><div key={claim.id}><dt>{claim.type==='location'?'Location named':claim.label}</dt><dd>{cleanDisplayText(claim.value)}</dd></div>)}{scheduleQuote&&<div><dt>Schedule stated</dt><dd>{cleanDisplayText(scheduleQuote)}</dd></div>}{noPaymentQuote&&<div><dt>Payment statement</dt><dd>{cleanDisplayText(noPaymentQuote)}</dd></div>}</dl>:<p>No court or case details could be read reliably.</p>}
+      {messageDetails.length>0||scheduleQuote||noPaymentQuote?<dl className="message-detail-list">{messageDetails.map(claim=><div key={claim.id}><dt>{claim.type==='location'?'Location named':claim.label}</dt><dd>{cleanDisplayText(claim.value)}</dd></div>)}{scheduleQuote&&<div><dt>{ui('scheduleStated')}</dt><dd>{cleanDisplayText(scheduleQuote)}</dd></div>}{noPaymentQuote&&<div><dt>{ui('paymentStatement')}</dt><dd>{cleanDisplayText(noPaymentQuote)}</dd></div>}</dl>:<p>{ui('noCourtDetails')}</p>}
       <p>Those details come from the message itself. They do not confirm that the case exists or that the sender is connected to the court.</p>
       <p>Do not use a payment link, QR code, phone number, or reply address from the message until you reach the court independently.</p>
       {officialDirectory&&<div className="official-directory-route">
@@ -2461,7 +2461,7 @@ async function upload(uploaded:File){
       <div>
        <ol className="safe-steps">{verification.safe_action.steps.map((step,index)=><li key={index}>{translatedResult[`safeStep${index}`]||step}</li>)}</ol>
        <div className="safe-route-actions">
-        {verification.contact?.website&&<a className="safe-primary" href={verification.contact.website} target="_blank" rel="noopener noreferrer">Open official court website</a>}
+        {verification.contact?.website&&<a className="safe-primary" href={verification.contact.website} target="_blank" rel="noopener noreferrer">{ui('openOfficialCourtWebsite')}</a>}
         {verification.safe_action.primary_url&&verification.safe_action.primary_url!==verification.contact?.website&&<a className="safe-source-link" href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{verification.safe_action.primary_label}</a>}
        </div>
       </div>
@@ -2503,7 +2503,7 @@ async function upload(uploaded:File){
         <strong>{translatedResult.handoffTitle||'Ask the court without relying on the message'}</strong>
         <p>{translatedResult.handoffCopy||'Use this wording with an independently sourced court channel. It carries the case reference and the exact instructions SEAL recovered without treating them as genuine.'}</p>
         <blockquote>{translatedResult.courtQuestionScript||courtQuestionScript}</blockquote>
-        <div className="handoff-actions" aria-label="Verification record actions">
+        <div className="handoff-actions" aria-label={ui('verificationRecordActions')}>
          <button type="button" className="icon-control" aria-label={translatedResult.copyQuestion||'Copy what to ask'} title={translatedResult.copyQuestion||'Copy what to ask'} data-tooltip={translatedResult.copyQuestion||'Copy what to ask'} onClick={()=>void copyCourtQuestion()}><SealUiIcon name="message"/></button>
          <button type="button" className="icon-control" aria-label={translatedResult.copyRecord||'Copy verification record'} title={translatedResult.copyRecord||'Copy verification record'} data-tooltip={translatedResult.copyRecord||'Copy verification record'} onClick={()=>void copyHandoff()}><SealUiIcon name="copy"/></button>
          <button type="button" className="icon-control" aria-label={translatedResult.saveRecord||'Save verification record'} title={translatedResult.saveRecord||'Save verification record'} data-tooltip={translatedResult.saveRecord||'Save verification record'} onClick={saveHandoff}><SealUiIcon name="download"/></button>
@@ -2523,7 +2523,7 @@ async function upload(uploaded:File){
        <a className="contact-phone" href={`tel:${verification.contact.phone}`}>{verification.contact.phone}</a>
        <div className="contact-actions">
         <a href={verification.contact.website} target="_blank" rel="noopener noreferrer">{ui('openCourtWebsite')}</a>
-        <button onClick={()=>run('LIVE')} disabled={busy}>Check live sources</button>
+        <button onClick={()=>run('LIVE')} disabled={busy}>{ui('checkLiveSources')}</button>
        </div>
        <p className="contact-source">This contact came from the court source, not from the message. {verification.contact.source.source_mode==='SNAPSHOT'?'Source snapshot checked '+new Date(verification.contact.source.checked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.':'Live source checked '+new Date(verification.contact.source.checked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.'}</p>
       </div>
@@ -2533,12 +2533,12 @@ async function upload(uploaded:File){
     </div>
    </section>}
 
-  {documentPreviewOpen&&documentPreviewAsset&&createPortal(<div className={`document-preview-layer ${documentPreviewClosing?'is-closing':''}`} data-testid="document-preview" role="dialog" aria-modal="true" aria-label="Full document preview">
-   <button className="document-preview-backdrop" type="button" aria-label="Close document preview" onClick={closeDocumentPreview}/>
+  {documentPreviewOpen&&documentPreviewAsset&&createPortal(<div className={`document-preview-layer ${documentPreviewClosing?'is-closing':''}`} data-testid="document-preview" role="dialog" aria-modal="true" aria-label={ui('fullDocumentPreview')}>
+   <button className="document-preview-backdrop" type="button" aria-label={ui('closeDocumentPreview')} onClick={closeDocumentPreview}/>
    <div ref={documentPreviewPanelRef} className={`document-preview-panel is-${documentPreviewAsset.kind}`}>
     <header className="document-preview-topbar">
      <div><span>Document</span><strong>{documentPreviewAsset.name}</strong></div>
-     <button type="button" className="document-preview-close" aria-label="Close document preview" onClick={closeDocumentPreview}><SealUiIcon name="close"/></button>
+     <button type="button" className="document-preview-close" aria-label={ui('closeDocumentPreview')} onClick={closeDocumentPreview}><SealUiIcon name="close"/></button>
     </header>
     <div className="document-preview-stage">
      {documentPreviewAsset.kind==='image'
@@ -2803,8 +2803,8 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
          <span/>
          <span/>
          <span/>
-         <strong>COURT NOTICE</strong>
-         <small>Payment requested today</small>
+         <strong>{shellUi('courtNotice')}</strong>
+         <small>{shellUi('paymentRequestedToday')}</small>
         </div>
         <div className="onboarding-input-dock">
          <div><span>{shellUi('screenshot')}</span><small>PNG · JPG</small></div>
