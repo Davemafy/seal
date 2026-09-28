@@ -52,7 +52,7 @@ export default function BrowseGrid({items}:{items:BrowseCase[]}){
   </div>
 
   <div className="case-library-head">
-   <p className="case-filter-count" aria-live="polite">{visible.length} {visible.length===1?ui('source'):ui('sources')}</p>
+   <p className="case-filter-count" aria-live="polite">{visible.length} {visible.length===1?ui('source'):ui('sourcePlural')}</p>
    <span>{ui('originalCourtMaterial')}</span>
   </div>
 
