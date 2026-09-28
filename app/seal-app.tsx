@@ -411,6 +411,11 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
   :file
    ?{url:file.preview,name:workspaceTitle||'Court message',kind:file.kind}
    :null;
+ const processingPreview=uploadPreview
+  ?uploadPreview
+  :file
+   ?{url:file.preview,name:workspaceTitle||'Court message',kind:file.kind}
+   :null;
 
  useEffect(()=>()=> {
   activeReadRef.current?.abort();
@@ -1247,6 +1252,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
    activeReadRef.current=controller;
    const handoffId=runId.current;
    const busyStartedAt=performance.now();
+   let browsePreview='';
    try{
     setBusy(true);
     setStatus('Opening the source document');
@@ -1266,6 +1272,9 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
      const extension=isPdf?'pdf':type.includes('png')?'png':'jpg';
      const sourceFile=new File([blob],`${caseId}.${extension}`,{type});
      sourceBlobRef.current=sourceFile;
+     browsePreview=URL.createObjectURL(sourceFile);
+     uploadPreviewRef.current=browsePreview;
+     setUploadPreview({url:browsePreview,name:payload.title||`${caseId}.${extension}`,kind:isPdf?'pdf':'image'});
      setStatus('Opening the source document');
      const doc:BrowserDocument=seededText&&!isPdf
       ?{text:seededText,tokens:[],preview:URL.createObjectURL(sourceFile),kind:'image',uncertain:false,sample:false,unreadableFields:[]}
@@ -1293,6 +1302,11 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
     setError('This browse case could not be opened. You can still upload or paste a message.');
    }finally{
     if(activeReadRef.current===controller)activeReadRef.current=null;
+    if(browsePreview&&uploadPreviewRef.current===browsePreview){
+     URL.revokeObjectURL(browsePreview);
+     uploadPreviewRef.current=null;
+     setUploadPreview(null);
+    }
    }
   })();
  // This is a one-shot URL handoff. Adding run/ocrLanguage would replay the
@@ -1891,10 +1905,12 @@ async function upload(uploaded:File){
         onDrop={event=>{event.preventDefault();setDragging(false);if(event.dataTransfer.files[0])upload(event.dataTransfer.files[0])}}>
         {busy?
          <span className="upload-process" role="status" aria-live="polite" aria-label={processingTitle}>
-          <span className={`upload-process-media ${uploadPreview?.kind==='pdf'?'is-pdf':''}`} data-testid="processing-preview" aria-label={ui('openFullDocumentPreview')}>
-           {uploadPreview?.kind==='image'
-            ?<img src={uploadPreview.url} alt="Selected court message"/>
-            :<span className="upload-pdf-preview" aria-hidden="true"><b>PDF</b><i/></span>}
+          <span className={`upload-process-media ${processingPreview?.kind==='pdf'?'is-pdf':''}`} data-testid="processing-preview" aria-label={ui('openFullDocumentPreview')}>
+           {processingPreview?.kind==='image'
+            ?<img src={processingPreview.url} alt="Selected court message"/>
+            :processingPreview?.kind==='pdf'
+             ?<StoryPdfPage url={processingPreview.url}/>
+             :<span className="upload-pdf-preview" aria-hidden="true"><b>PDF</b><i/></span>}
            <span className="processing-scanner" aria-hidden="true"><i/></span>
            <span className="processing-scan-label" aria-hidden="true"><i/>Scanning</span>
           </span>
