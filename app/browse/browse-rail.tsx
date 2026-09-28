@@ -3,7 +3,6 @@
 import {useEffect,useMemo,useState} from 'react';
 import {useRouter} from 'next/navigation';
 import Link from 'next/link';
-import BrowseLanguage from './browse-language';
 
 type WorkspaceRunStatus='idle'|'reading'|'verifying'|'done'|'error';
 type WorkspaceMeta={id:string;title:string;status:WorkspaceRunStatus;language?:string;jurisdiction?:string;preview?:string};
@@ -112,6 +111,5 @@ export default function BrowseRail(){
    </div>)}
   </div>
   <div className="rail-spacer"/>
-  <div className="rail-bottom"><BrowseLanguage/></div>
  </aside>;
 }
