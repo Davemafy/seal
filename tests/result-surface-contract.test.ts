@@ -40,7 +40,7 @@ describe('result surface design contract',()=>{
   expect(css).toContain('font-size:37px!important');
   expect(app).toContain('data-testid="first-run-onboarding"');
   expect(app).toContain('window.localStorage.getItem(ONBOARDING_KEY)');
-  expect(app).toContain('aria-label="Check progress"');
+  expect(app).toContain("aria-label={ui('checkProgress')}");
   expect(app).toContain("label:'Read document'");
   expect(app).toContain("label:'Find instructions'");
   expect(app).toContain("label:'Check public sources'");
