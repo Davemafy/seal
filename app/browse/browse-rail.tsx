@@ -5,6 +5,7 @@ import {useRouter} from 'next/navigation';
 import Link from 'next/link';
 import BrowseLanguage from './browse-language';
 import {useStoredUiLocale,useUiText} from '@/lib/use-ui-text';
+import {safeWorkspaceTitle} from '@/lib/workspace-title';
 
 type WorkspaceRunStatus='idle'|'reading'|'verifying'|'done'|'error';
 type WorkspaceMeta={id:string;title:string;status:WorkspaceRunStatus;language?:string;jurisdiction?:string;preview?:string};
@@ -87,7 +88,11 @@ export default function BrowseRail(){
  const rows=useMemo(()=>workspaces.map((item,index)=>{
   const raw=clean(item.title);
   const blank=!raw||/^new check(?: \d+)?$/i.test(raw);
-  const title=blank?(workspaces.length===1?ui('newCheck'):`${ui('check')} ${index+1}`):(raw.length>=3?raw:`${ui('check')} ${index+1}`);
+  const safe=safeWorkspaceTitle(raw);
+  const region=safeWorkspaceTitle(item.jurisdiction||'');
+  const title=blank
+   ?(workspaces.length===1?ui('newCheck'):`${ui('check')} ${index+1}`)
+   :safe||[region,ui('courtNoticeShort')].filter(Boolean).join(' · ')||ui('courtMessageShort');
   const preview=clean(item.preview||'');
   const status=item.status==='verifying'?ui('checkingSources'):item.status==='reading'?ui('reading'):item.status==='done'?ui('checked'):item.status==='error'?ui('needsAttention'):'';
   const secondary=item.status==='reading'||item.status==='verifying'||item.status==='error'

@@ -250,5 +250,7 @@
   "listen": "Listen",
   "stopReading": "Stop",
   "fileTypeImage": "Image",
-  "fileTypeText": "Text"
+  "fileTypeText": "Text",
+  "courtNoticeShort": "Court notice",
+  "courtMessageShort": "Court message"
 }

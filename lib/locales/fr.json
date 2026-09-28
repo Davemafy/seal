@@ -148,10 +148,10 @@
   "seeRealCourtMessages": "Voir à quoi ressemblent de vrais messages judiciaires",
   "browseDeck": "Parcourez des avis et alertes à l’arnaque publiés par des tribunaux et des organismes publics. Ouvrez la source originale ou vérifiez un exemple dans SEAL.",
   "browseScope": "Si un détail ne peut pas être confirmé indépendamment, SEAL le laisse non confirmé.",
-  "all": "All",
-  "scamWarnings": "Scam warnings",
-  "officialNotices": "Official notices",
-  "outsideUS": "Outside U.S.",
+  "all": "Tous",
+  "scamWarnings": "Alertes à l’arnaque",
+  "officialNotices": "Avis officiels",
+  "outsideUS": "Hors des États-Unis",
   "filterSourceDocuments": "Filtrer les documents sources",
   "originalCourtMaterial": "Documents originaux des tribunaux et organismes",
   "featuredSource": "Source mise en avant",
@@ -250,5 +250,7 @@
   "listen": "Écouter",
   "stopReading": "Arrêter",
   "fileTypeImage": "Image",
-  "fileTypeText": "Texte"
+  "fileTypeText": "Texte",
+  "courtNoticeShort": "Avis judiciaire",
+  "courtMessageShort": "Message judiciaire"
 }

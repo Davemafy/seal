@@ -18,6 +18,7 @@ import {justiceSupportFor} from '@/lib/justice-support';
 import {buildCaseReality,buildCourtQuestionScript,buildHandoffSummary,buildObligationMap,buildPlainLanguageSummary,buildRiskSummary} from '@/lib/user-guidance';
 import {DISPLAY_LANGUAGES,displayLocaleFor,type DisplayLocale,type UiCopyKey} from '@/lib/ui-locales';
 import {persistUiLocale,useStoredUiLocale,useUiText} from '@/lib/use-ui-text';
+import {safeWorkspaceTitle} from '@/lib/workspace-title';
 import {primeBrowserTranslator,translateRecordWithBrowser} from '@/lib/browser-translate';
 import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
 import './workspace.css';
@@ -1103,10 +1104,10 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   :'';
 
  const reliableCourtTitle=claims.find(claim=>claim.type==='court'&&claimReliable(claim)&&cleanDisplayText(claim.value))?.value;
- const plausibleCourtTitle=reliableCourtTitle&&/[A-Za-zÀ-ÿ]{4}/.test(reliableCourtTitle)&&!/[^A-Za-zÀ-ÿ0-9\s.,'’&()\-]/.test(reliableCourtTitle)
-  ?reliableCourtTitle
-  :'';
- const checkObjectTitle=cleanDisplayText(plausibleCourtTitle||(workspaceTitle&&workspaceTitle!=='New check'?workspaceTitle:jurisdiction)||'Court message');
+ const plausibleCourtTitle=safeWorkspaceTitle(reliableCourtTitle||'');
+ const safeCurrentWorkspaceTitle=safeWorkspaceTitle(workspaceTitle&&workspaceTitle!=='New check'?workspaceTitle:'');
+ const safeJurisdictionTitle=safeWorkspaceTitle(jurisdiction);
+ const checkObjectTitle=cleanDisplayText(plausibleCourtTitle||safeCurrentWorkspaceTitle||safeJurisdictionTitle||resultUi('courtMessageShort'));
  const checkObjectDisplayTitle=humanizeDisplayName(checkObjectTitle)
   .replace(/^United States District Court\s*/i,'U.S. District Court · ')
   .replace(/\s{2,}/g,' ')
@@ -1400,7 +1401,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
      setRevealed(restored.claims.length);
      setDocumentLanguage(restoredContext.language);
      setJurisdiction(restoredContext.jurisdiction);
-     setWorkspaceTitle(cleanDisplayText(restoredCourt||registryTitle||'Court message'));
+     setWorkspaceTitle(safeWorkspaceTitle(restoredCourt)||safeWorkspaceTitle(registryTitle)||'Court message');
      setFile(restored.browserFile);
      sourceBlobRef.current=restored.sourceBlob;
      setStoryArtifactReady(!restored.browserFile);
@@ -1885,7 +1886,10 @@ async function upload(uploaded:File){
     ||inferredContext?.jurisdiction
     ||cleanDisplayText(extraction.court_location);
    if(routedJurisdiction)setJurisdiction(routedJurisdiction);
-   if(extraction.court_name)setWorkspaceTitle(cleanDisplayText(extraction.court_name));
+   if(extraction.court_name&&!sourceBrowse){
+    const extractedTitle=safeWorkspaceTitle(extraction.court_name);
+    if(extractedTitle)setWorkspaceTitle(extractedTitle);
+   }
 
    // Curated cases use a source-checked transcript for analysis. OCR tokens from
    // the pictured artifact may help display it, but must not invent new claims.
@@ -1993,7 +1997,7 @@ async function upload(uploaded:File){
  useEffect(()=>{
   if(!hydrated)return;
   const courtTitle=claims.find(claim=>claim.type==='court'&&claimReliable(claim))?.value;
-  const title=cleanDisplayText(courtTitle||workspaceTitle||'New check');
+  const title=safeWorkspaceTitle(courtTitle||'')||safeWorkspaceTitle(workspaceTitle||'')||'';
   const firstAction=claims.find(claim=>Boolean(claim.action)&&claimReliable(claim));
   const firstUsefulLine=text.split(/\n+/).map(cleanDisplayText).find(line=>line.length>=12&&!/^new check$/i.test(line));
   const preview=cleanDisplayText(firstAction?.action?.source_text||firstAction?.value||firstUsefulLine||'').slice(0,84);

@@ -148,10 +148,10 @@
   "seeRealCourtMessages": "실제 법원 메시지가 어떻게 생겼는지 확인하세요",
   "browseDeck": "법원과 공공기관이 공개한 통지와 사기 경고를 살펴보세요. 원본 출처를 열거나 SEAL에서 예시를 확인할 수 있습니다.",
   "browseScope": "독립적으로 확인할 수 없는 정보는 SEAL이 확인되지 않은 상태로 남깁니다.",
-  "all": "All",
-  "scamWarnings": "Scam warnings",
-  "officialNotices": "Official notices",
-  "outsideUS": "Outside U.S.",
+  "all": "전체",
+  "scamWarnings": "사기 경고",
+  "officialNotices": "공식 통지",
+  "outsideUS": "미국 외",
   "filterSourceDocuments": "출처 문서 필터",
   "originalCourtMaterial": "법원 및 기관 원본 자료",
   "featuredSource": "주요 출처",
@@ -250,5 +250,7 @@
   "listen": "듣기",
   "stopReading": "중지",
   "fileTypeImage": "이미지",
-  "fileTypeText": "텍스트"
+  "fileTypeText": "텍스트",
+  "courtNoticeShort": "법원 통지",
+  "courtMessageShort": "법원 메시지"
 }
