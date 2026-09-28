@@ -64,9 +64,7 @@
  overflow:hidden;
  border-top:1px solid rgba(0,0,0,.025);
  border-bottom:1px solid #e8e7e1;
- background:
-  radial-gradient(circle at 74% 20%,rgba(255,255,255,.95),rgba(255,255,255,.28) 36%,rgba(255,255,255,0) 64%),
-  linear-gradient(180deg,#fbfaf7 0%,#f7f6f1 100%);
+ background:#f8f7f2;
 }
 .landing-architecture{
  position:absolute;
@@ -109,15 +107,10 @@
  max-width:590px;
  margin:0;
  color:#0c0c0c;
- font-size:66px;
- line-height:66px;
+ font-size:58px;
+ line-height:60px;
  font-weight:700;
- letter-spacing:-.045em;
-}
-.landing-hero-copy h1 em{
- font:inherit;
- font-style:normal;
- color:#57554f;
+ letter-spacing:-.038em;
 }
 .landing-hero-summary{
  max-width:510px;
@@ -126,27 +119,12 @@
  font-size:18px;
  line-height:28px;
 }
-.landing-hero-notes{
- display:flex;
- flex-wrap:wrap;
- gap:8px 18px;
- margin-top:30px;
- padding-top:18px;
- border-top:1px solid rgba(0,0,0,.09);
- color:#73716b;
+.landing-hero-principle{
+ max-width:500px;
+ margin:24px 0 0;
+ color:#77746e;
  font-size:11px;
  line-height:17px;
-}
-.landing-hero-notes span{position:relative}
-.landing-hero-notes span+span::before{
- content:"";
- position:absolute;
- left:-10px;
- top:6px;
- width:3px;
- height:3px;
- border-radius:50%;
- background:#aaa7a0;
 }
 
 .landing-checker{
@@ -313,17 +291,7 @@
  max-width:760px;
  margin-bottom:48px;
 }
-.landing-section-heading>span,
-.landing-method-intro>span,
-.landing-browse-head>div>span,
-.landing-boundary>div>span{
- display:block;
- margin-bottom:9px;
- color:#77746e;
- font-size:11px;
- line-height:16px;
- font-weight:600;
-}
+
 .landing-section-heading h2,
 .landing-method-intro h2,
 .landing-browse-head h2,
@@ -497,12 +465,18 @@
 }
 .landing-method-intro{
  display:grid;
- grid-template-columns:.65fr 1.35fr;
- gap:40px;
- align-items:start;
- margin-bottom:56px;
+ grid-template-columns:minmax(0,1.08fr) minmax(280px,.92fr);
+ gap:70px;
+ align-items:end;
+ margin-bottom:46px;
 }
-.landing-method-intro>span{padding-top:8px}
+.landing-method-intro>p{
+ max-width:430px;
+ margin:0;
+ color:#65625c;
+ font-size:14px;
+ line-height:22px;
+}
 .landing-method-grid{
  display:grid;
  grid-template-columns:repeat(3,1fr);
@@ -510,23 +484,18 @@
  border-bottom:1px solid #dcdad3;
 }
 .landing-method-grid article{
- min-height:230px;
+ min-height:176px;
  padding:28px 30px 30px 0;
 }
 .landing-method-grid article+article{
  padding-left:30px;
  border-left:1px solid #e2e0da;
 }
-.landing-method-grid small{
- color:#98958e;
- font-size:10px;
- line-height:14px;
-}
 .landing-method-grid h3{
- margin:58px 0 8px;
- font-size:22px;
- line-height:27px;
- letter-spacing:-.025em;
+ margin:20px 0 8px;
+ font-size:21px;
+ line-height:26px;
+ letter-spacing:-.022em;
 }
 .landing-method-grid p{
  max-width:290px;
@@ -680,7 +649,7 @@
   padding-top:64px;
  }
  .landing-hero-copy{max-width:650px}
- .landing-hero-copy h1{font-size:58px;line-height:60px}
+ .landing-hero-copy h1{font-size:52px;line-height:54px}
  .landing-architecture{width:100vw;right:-34vw;opacity:.09}
  .landing-checker{max-width:680px}
  .landing-proof-stage{grid-template-columns:1fr;gap:24px}
@@ -688,7 +657,7 @@
  .landing-proof-bridge>span{grid-column:1/4}
  .landing-proof-bridge small{grid-column:2}
  .landing-document-frame{height:440px}
- .landing-method-intro{grid-template-columns:1fr;gap:10px}
+ .landing-method-intro{grid-template-columns:1fr;gap:14px}
  .landing-case-media{height:200px}
  .landing-boundary{gap:46px}
 }
@@ -720,14 +689,11 @@
   font-size:15px;
   line-height:23px;
  }
- .landing-hero-notes{
-  display:grid;
-  gap:5px;
-  margin-top:22px;
-  padding-top:14px;
-  font-size:9.5px;
+ .landing-hero-principle{
+  margin-top:18px;
+  font-size:10.5px;
+  line-height:16px;
  }
- .landing-hero-notes span+span::before{display:none}
  .landing-checker{border-radius:14px}
  .landing-checker-head{min-height:58px;padding-inline:14px}
  .landing-checker-head>.landing-checker-state{display:none}
@@ -767,7 +733,7 @@
   border-left:0!important;
  }
  .landing-method-grid article+article{border-top:1px solid #e2e0da}
- .landing-method-grid h3{margin-top:28px}
+ .landing-method-grid h3{margin-top:0}
  .landing-browse{padding-top:76px;padding-bottom:78px}
  .landing-browse-head{align-items:start;display:grid;gap:16px}
  .landing-browse-head h2{font-size:30px;line-height:34px}
