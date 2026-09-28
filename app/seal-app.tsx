@@ -296,6 +296,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const [pasteMode,setPasteMode]=useState(false);
  const [ocrLanguage,setOcrLanguage]=useState<OcrLanguage>('eng');
  const [displayLocale,setDisplayLocale]=useState<DisplayLocale>('en');
+ const ui=useUiText(displayLocale);
  const [languageMenuOpen,setLanguageMenuOpen]=useState(false);
  const [resultLanguageMenuOpen,setResultLanguageMenuOpen]=useState(false);
  const [workspaceDrawerOpen,setWorkspaceDrawerOpen]=useState(false);
@@ -414,7 +415,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const input=useRef<HTMLInputElement>(null);
  const anchors=useRef<Record<string,HTMLElement|null>>({});
  const runId=useRef(0);
- const ui=useUiText(displayLocale);
+
  const documentPreviewAsset=uploadPreview
   ?uploadPreview
   :file
