@@ -19,7 +19,7 @@ describe('result surface design contract',()=>{
   expect(app).toContain("resultStatusLabel=file?.sample");
   expect(app).toContain("{workspaces.map((item,index)=>{");
   expect(app).not.toContain('<select value={displayLocale}');
-  expect(app).toContain("setWorkspaceTransition({from:activeWorkspace,to:id,direction,snapshot:workspaces.map(item=>({...item}))})");
+  expect(app).toContain("setWorkspaceTransition({from:activeWorkspace,to:id,direction})");
   expect(app).toContain("},[activeWorkspace,workspaces]);");
   expect(app).toContain('data-workspace-id={workspace.id}');
   expect(app).toContain("workspaceTransition?.to===workspace.id");
