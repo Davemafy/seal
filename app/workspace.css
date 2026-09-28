@@ -9137,3 +9137,164 @@
 .upload-process-media.is-pdf .upload-pdf-preview{
  display:none!important
 }
+
+
+/* Onboarding viewport rhythm repair — keep the composition out of the footer. */
+@media(min-width:901px){
+ .onboarding-shell{
+  grid-template-rows:64px 16px minmax(0,1fr) 64px!important
+ }
+
+ .onboarding-topbar{
+  min-height:64px!important;
+  padding:14px 24px!important
+ }
+
+ .onboarding-progress{
+  width:100%!important;
+  box-sizing:border-box!important;
+  gap:8px!important;
+  padding:12px 24px 0!important;
+  align-self:start!important
+ }
+ .onboarding-progress span{
+  height:4px!important;
+  border-radius:999px!important
+ }
+
+ .onboarding-stage{
+  width:min(100%,1080px)!important;
+  min-height:0!important;
+  margin:0 auto!important;
+  padding:18px 48px 20px!important;
+  gap:58px!important;
+  align-items:center!important;
+  box-sizing:border-box!important
+ }
+
+ .onboarding-visual{
+  width:100%!important;
+  min-height:0!important;
+  height:min(410px,calc(100svh - 180px))!important;
+  max-height:410px!important;
+  border-radius:16px!important
+ }
+
+ .onboarding-upload-card{
+  width:min(80%,470px)!important;
+  gap:12px!important
+ }
+
+ .onboarding-file-sheet{
+  min-height:220px!important;
+  padding:26px!important
+ }
+
+ .onboarding-input-dock{
+  gap:8px!important
+ }
+ .onboarding-input-dock>div{
+  min-height:58px!important
+ }
+
+ .onboarding-copy{
+  align-self:center!important;
+  transform:translateY(-4px)!important
+ }
+
+ .onboarding-kicker{
+  margin-bottom:8px!important
+ }
+
+ .onboarding-copy h1{
+  font-size:40px!important;
+  line-height:45px!important
+ }
+
+ .onboarding-copy p{
+  margin-top:14px!important
+ }
+
+ .onboarding-controls{
+  min-height:64px!important;
+  padding:10px 24px!important;
+  box-sizing:border-box!important
+ }
+}
+
+/* Typical 720p/short laptop demo viewport. */
+@media(min-width:901px) and (max-height:700px){
+ .onboarding-shell{
+  grid-template-rows:60px 14px minmax(0,1fr) 58px!important
+ }
+
+ .onboarding-topbar{
+  min-height:60px!important;
+  padding:12px 24px!important
+ }
+
+ .onboarding-progress{
+  padding-top:10px!important
+ }
+
+ .onboarding-stage{
+  width:min(100%,1040px)!important;
+  padding:12px 44px 14px!important;
+  gap:54px!important
+ }
+
+ .onboarding-visual{
+  height:min(360px,calc(100svh - 160px))!important;
+  max-height:360px!important
+ }
+
+ .onboarding-upload-card{
+  width:min(82%,440px)!important;
+  gap:10px!important
+ }
+
+ .onboarding-file-sheet{
+  min-height:190px!important;
+  padding:24px!important
+ }
+
+ .onboarding-file-sheet>span{
+  left:24px!important;
+  right:24px!important
+ }
+ .onboarding-file-sheet>span:nth-child(1){top:30px!important;right:40%!important}
+ .onboarding-file-sheet>span:nth-child(2){top:49px!important;right:24%!important}
+ .onboarding-file-sheet>span:nth-child(3){top:68px!important;right:52%!important}
+
+ .onboarding-input-dock>div{
+  min-height:54px!important;
+  padding:9px 11px!important
+ }
+
+ .onboarding-copy{
+  transform:none!important
+ }
+
+ .onboarding-copy h1{
+  font-size:38px!important;
+  line-height:43px!important
+ }
+
+ .onboarding-copy p{
+  max-width:400px!important;
+  margin-top:12px!important;
+  font-size:14px!important;
+  line-height:21px!important
+ }
+
+ .onboarding-controls{
+  min-height:58px!important;
+  padding:8px 24px!important
+ }
+
+ .onboarding-next{
+  min-height:40px!important;
+  min-width:110px!important;
+  padding:8px 18px!important
+ }
+}
