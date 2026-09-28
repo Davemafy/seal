@@ -34,18 +34,28 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Install thumbnail renderers
         run: sudo apt-get update && sudo apt-get install -y poppler-utils imagemagick
+      - name: Sync to latest branch head
+        run: |
+          git fetch origin cloudflare-preview
+          git reset --hard origin/cloudflare-preview
       - name: Refresh official-source thumbnails
         run: node --import tsx scripts/sync-browse-assets.ts
       - name: Commit changed source snapshots
         run: |
           git config user.name "seal-source-sync"
           git config user.email "actions@users.noreply.github.com"
-          git fetch origin cloudflare-preview
-          git rebase origin/cloudflare-preview
           git add public/browse-assets
           if git diff --cached --quiet; then
             echo "No source snapshots changed."
             exit 0
           fi
           git commit -m "Refresh Browse source snapshots"
-          git push origin HEAD:cloudflare-preview
+          for attempt in 1 2 3; do
+            git pull --rebase origin cloudflare-preview
+            if git push origin HEAD:cloudflare-preview; then
+              exit 0
+            fi
+            echo "Push raced with another branch update; retrying ($attempt/3)."
+            sleep 2
+          done
+          exit 1
