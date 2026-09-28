@@ -17,7 +17,7 @@ const productDescription='Before you call, click, pay, or reply: check what a co
 export const metadata:Metadata={
  metadataBase:new URL('https://seal.imafidondavid1.workers.dev'),
  title:{
-  default:'SEAL — Check a court message before you act',
+  default:'SEAL',
   template:'%s | SEAL'
  },
  description:productDescription,
