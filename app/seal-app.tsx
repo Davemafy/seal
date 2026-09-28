@@ -2525,8 +2525,8 @@ async function upload(uploaded:File){
       :<div className="source-signals source-evidence-empty">
        <article className="source-signal is-primary">
         <p className="signal-kind">{ui('independentCheck')}</p>
-        <h3>{directCourtUnavailable?'This court is not in SEAL’s direct-check network yet.':'No independent source evidence was available for this result.'}</h3>
-        <p>{directCourtUnavailable?'SEAL can still show exactly what the message asks you to do, but it will not guess whether the case or sender is genuine.':'The inspection below shows what SEAL could and could not establish from its supported sources.'}</p>
+        <h3>{directCourtUnavailable?(translatedResult.emptyEvidenceTitleDirect||'This court is not in SEAL’s direct-check network yet.'):(translatedResult.emptyEvidenceTitle||'No independent source evidence was available for this result.')}</h3>
+        <p>{directCourtUnavailable?(translatedResult.emptyEvidenceCopyDirect||'SEAL can still show exactly what the message asks you to do, but it will not guess whether the case or sender is genuine.'):(translatedResult.emptyEvidenceCopy||'The inspection below shows what SEAL could and could not establish from its supported sources.')}</p>
        </article>
       </div>}
 
@@ -2535,23 +2535,23 @@ async function upload(uploaded:File){
      <details className="record-disclosure" aria-label={ui('evidenceRecord')}>
       <summary><span>{ui('evidenceRecord')}</span><small>{ui('evidenceRecordHint')}</small><SealGuideIcon/></summary>
       <div className="record-disclosure-body">
-       {ready&&verification&&<section className="check-metadata-section" aria-label="Check context">
+       {ready&&verification&&<section className="check-metadata-section" aria-label={translatedResult.checkContext||'Check context'}>
      <div className="check-record-details" data-testid="check-details">
-      <div className="record-subheading"><span>Check context</span><small>Provenance for this result</small></div>
+      <div className="record-subheading"><span>{translatedResult.checkContext||'Check context'}</span><small>{translatedResult.checkContextHint||'Provenance for this result'}</small></div>
       <dl>
        <div><dt>{ui('input')}</dt><dd>{checkInputLabel}</dd></div>
-       <div><dt>{ui('documentLanguage')}</dt><dd>{documentLanguage?.label||'Not resolved'}</dd></div>
-       <div><dt>{ui('jurisdiction')}</dt><dd>{jurisdiction||'Not resolved'}</dd></div>
-       <div><dt>{ui('sourceMode')}</dt><dd>{mode==='LIVE'?'Live public sources':'Source snapshot'}</dd></div>
+       <div><dt>{ui('documentLanguage')}</dt><dd>{documentLanguage?.label||(translatedResult.notResolved||'Not resolved')}</dd></div>
+       <div><dt>{ui('jurisdiction')}</dt><dd>{jurisdiction||(translatedResult.notResolved||'Not resolved')}</dd></div>
+       <div><dt>{ui('sourceMode')}</dt><dd>{mode==='LIVE'?(translatedResult.livePublicSources||'Live public sources'):(translatedResult.sourceSnapshot||'Source snapshot')}</dd></div>
        <div><dt>{ui('sourcesAttached')}</dt><dd>{String(checkSourceCount)}</dd></div>
-       {checkDateLabel&&<div><dt>Checked</dt><dd>{checkDateLabel}</dd></div>}
+       {checkDateLabel&&<div><dt>{translatedResult.checkedLabel||'Checked'}</dt><dd>{checkDateLabel}</dd></div>}
       </dl>
-      <p>Original files stay in this browser. Source quotations remain attached to the check so the result can be inspected later.</p>
+      <p>{translatedResult.recordPrivacy||'Original files stay in this browser. Source quotations remain attached to the check so the result can be inspected later.'}</p>
      </div>
     </section>}
        {ready&&!directCourtUnavailable&&<section className="record-section" id={sectionId('checked-details')}>
      <div className="section-heading record-heading">
-      <h2>What was checked</h2>
+      <h2>{translatedResult.whatWasChecked||'What was checked'}</h2>
       <p>{ui('inspectEachDetail')}</p>
      </div>
 
@@ -2559,7 +2559,7 @@ async function upload(uploaded:File){
       <div className="claim-index">
        <div className="index-title">
         <span>Checked details</span>
-        <button type="button" className="mobile-index-toggle" onClick={()=>setShowIndex(value=>!value)}>{showIndex?'Hide list':'Show list'}</button>
+        <button type="button" className="mobile-index-toggle" onClick={()=>setShowIndex(value=>!value)}>{showIndex?(translatedResult.hideList||'Hide list'):(translatedResult.showList||'Show list')}</button>
        </div>
        <div className={`claim-index-list ${showIndex?'mobile-open':''}`}>
         {claims.map((claim,index)=>{
@@ -2578,11 +2578,11 @@ async function upload(uploaded:File){
         <span>{current.label}</span>
         <span className={`state-text ${currentResult.verdict.toLowerCase()}`}>{verdictLabel(currentResult.verdict)}</span>
        </div>
-       <div className="from-label">In the message</div>
+       <div className="from-label">{translatedResult.inMessage||'In the message'}</div>
        <div className="claim-value">{cleanDisplayText(current.value)}</div>
        {cleanDisplayText(current.exact_source_text)!==cleanDisplayText(current.value)&&<p className="exact-source">“{cleanDisplayText(current.exact_source_text)}”</p>}
        <div className="focus-rule"/>
-       <div className="source-label">{currentResult.evidence.length?'Official source evidence':'What we can establish'}</div>
+       <div className="source-label">{currentResult.evidence.length?(translatedResult.officialSourceEvidence||'Official source evidence'):(translatedResult.whatCanEstablish||'What we can establish')}</div>
        {currentResult.evidence.length?<>
         {(currentResult.explanation==='Official sources currently disagree.'?currentResult.evidence:currentResult.evidence.slice(0,1)).map((evidence,index)=><div className="evidence-excerpt" key={`${evidence.url}-${index}`}>
          <div className="source-name">{evidence.title}</div>
@@ -2600,7 +2600,7 @@ async function upload(uploaded:File){
          </div>)}
         </details>}
        </>:<div className="no-source">{currentResult.explanation}</div>}
-       <div className="why-line">{currentResult.evidence.length?currentResult.explanation:'This does not mean the detail is wrong.'}</div>
+       <div className="why-line">{currentResult.evidence.length?currentResult.explanation:(translatedResult.notWrongFallback||'This does not mean the detail is wrong.')}</div>
       </div>}
      </div>
 
@@ -2616,7 +2616,7 @@ async function upload(uploaded:File){
         </div>
        </div>)}
       </div>}
-      {technicalEvidence.map((evidence,index)=><p key={evidence.url||index}>{evidence.title} · {evidence.source_mode} · {evidence.checked_at} · <a href={evidence.url} target="_blank" rel="noopener noreferrer">Original source</a></p>)}
+      {technicalEvidence.map((evidence,index)=><p key={evidence.url||index}>{evidence.title} · {evidence.source_mode} · {evidence.checked_at} · <a href={evidence.url} target="_blank" rel="noopener noreferrer">{translatedResult.originalSource||'Original source'}</a></p>)}
      </details>
 
      {isDemo&&<button className="replay-button" onClick={()=>run('SNAPSHOT')}>{ui('replayCheck')}</button>}
