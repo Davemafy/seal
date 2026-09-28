@@ -106,3 +106,26 @@
   line-height:18px!important
  }
 }
+
+
+/* Result utility row separation */
+.check-object-meta{
+ display:flex!important;
+ align-items:center!important;
+ gap:8px!important;
+ flex-wrap:wrap!important
+}
+.result-voice-trigger{flex:0 0 auto!important}
+.meta-jurisdiction{
+ flex:0 0 auto!important;
+ margin-left:2px!important
+}
+.meta-jurisdiction::before{
+ content:"·"!important;
+ margin-right:8px!important;
+ color:#aaa!important
+}
+@media(max-width:599px){
+ .check-object-meta{gap:6px!important}
+ .meta-jurisdiction::before{margin-right:6px!important}
+}
