@@ -1106,7 +1106,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const plausibleCourtTitle=reliableCourtTitle&&/[A-Za-zÀ-ÿ]{4}/.test(reliableCourtTitle)&&!/[^A-Za-zÀ-ÿ0-9\s.,'’&()\-]/.test(reliableCourtTitle)
   ?reliableCourtTitle
   :'';
- const checkObjectTitle=cleanDisplayText(plausibleCourtTitle||workspaceTitle||'Court message');
+ const checkObjectTitle=cleanDisplayText(plausibleCourtTitle||(workspaceTitle&&workspaceTitle!=='New check'?workspaceTitle:jurisdiction)||'Court message');
  const checkObjectDisplayTitle=humanizeDisplayName(checkObjectTitle)
   .replace(/^United States District Court\s*/i,'U.S. District Court · ')
   .replace(/\s{2,}/g,' ')
