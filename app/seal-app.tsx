@@ -1480,6 +1480,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
    const handoffId=runId.current;
    const busyStartedAt=performance.now();
    let browsePreview='';
+   let cachedThumbnailBlob:Blob|null=null;
    try{
     setBusy(true);
     setError('');
@@ -1499,6 +1500,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
      title?:string;
     };
     const seededText=payload.runText?.trim()||'';
+    if(payload.title)setWorkspaceTitle(payload.title);
 
     // Curated Browse cases should never depend on the authority server during
     // the demo path. Use the cached authority thumbnail as the visible document
@@ -1557,6 +1559,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
     // requested action. Keep the cached thumbnail visible while that happens.
     if(thumbnailResponse.ok){
      const thumbnailBlob=await thumbnailResponse.blob();
+     cachedThumbnailBlob=thumbnailBlob;
      const thumbnailFile=new File([thumbnailBlob],`${caseId}.jpg`,{type:'image/jpeg'});
      browsePreview=URL.createObjectURL(thumbnailFile);
      uploadPreviewRef.current=browsePreview;
@@ -1567,15 +1570,29 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
      });
     }
 
-    const assetResponse=await fetch(`/api/browse-asset?id=${encodeURIComponent(caseId)}`,{signal:controller.signal});
-    if(controller.signal.aborted||runId.current!==handoffId)return;
-    if(!assetResponse.ok||!payload.assetType)throw new Error('Case asset unavailable');
+    let sourceFile:File|null=null;
+    if(payload.assetType){
+     try{
+      const assetResponse=await fetch(`/api/browse-asset?id=${encodeURIComponent(caseId)}`,{signal:controller.signal});
+      if(controller.signal.aborted||runId.current!==handoffId)return;
+      if(assetResponse.ok){
+       const blob=await assetResponse.blob();
+       const isPdf=payload.assetType==='pdf';
+       const type=isPdf?'application/pdf':blob.type.startsWith('image/')?blob.type:'image/jpeg';
+       const extension=isPdf?'pdf':type.includes('png')?'png':'jpg';
+       sourceFile=new File([blob],`${caseId}.${extension}`,{type});
+      }
+     }catch(error){
+      if(controller.signal.aborted)throw error;
+     }
+    }
 
-    const blob=await assetResponse.blob();
-    const isPdf=payload.assetType==='pdf';
-    const type=isPdf?'application/pdf':blob.type.startsWith('image/')?blob.type:'image/jpeg';
-    const extension=isPdf?'pdf':type.includes('png')?'png':'jpg';
-    const sourceFile=new File([blob],`${caseId}.${extension}`,{type});
+    // Checked-in Browse thumbnails are derivatives of the official source.
+    // Use one for OCR if the authority origin/CDN is temporarily unavailable.
+    if(!sourceFile&&cachedThumbnailBlob){
+     sourceFile=new File([cachedThumbnailBlob],`${caseId}-cached.jpg`,{type:'image/jpeg'});
+    }
+    if(!sourceFile)throw new Error('Case asset unavailable');
     sourceBlobRef.current=sourceFile;
 
     const doc=await readInBrowser(
@@ -1601,7 +1618,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
     setBusy(false);
     setStatus('');
     initialRunStarted.current=false;
-    setError('This browse case could not be opened. You can still upload or paste a message.');
+    setError('This source could not be prepared for checking. You can retry this Browse item without creating another check.');
    }finally{
     if(activeReadRef.current===controller)activeReadRef.current=null;
     if(browsePreview&&uploadPreviewRef.current===browsePreview){

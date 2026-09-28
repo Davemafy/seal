@@ -32,7 +32,7 @@ function matchesFilter(item:BrowseCase,filter:BrowseFilter){
 }
 
 const openCaseInFreshCheck=(caseId:string)=>{
- const id=`browse-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
+ const id=`browse-${caseId}`;
  window.location.assign(`/check/${encodeURIComponent(id)}?case=${encodeURIComponent(caseId)}`);
 };
 
