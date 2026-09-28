@@ -893,7 +893,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
    strings.safePrimary=verification.safe_action.primary_label;
   }
   return strings;
- },[verification,claims,file?.sample,conciseDecisionTitle,humanDecisionSummary,decisionRelationship,plainExplanation,riskSummary,caseReality,courtQuestionScript,resultStatusLabel,instructionStatus,matterStatus,curatedSignal]);
+ },[verification,claims,file?.sample,conciseDecisionTitle,humanDecisionSummary,decisionRelationship,plainExplanation,riskSummary,caseReality,courtQuestionScript,resultStatusLabel,instructionStatus,matterStatus,curatedSignal,obligations]);
 
  useEffect(()=>{
   if(!verification||displayLocale==='en')return;
@@ -979,7 +979,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const checkDateLabel=latestCheckTimestamp
   ?new Date(latestCheckTimestamp).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})
   :'';
- const checkInputLabel=file?(file.kind==='pdf'?'PDF':'Image'):'Text';
+ const checkInputLabel=file?(file.kind==='pdf'?(translatedResult.pdfLabel||'PDF'):(translatedResult.imageLabel||'Image')):(translatedResult.textLabel||'Text');
  const liveFailed=mode==='LIVE'&&['riverside','connecticut'].includes(verification?.resolver_id||'')&&verification?.results.some(result=>result.explanation==='Official source could not be reached during this check.');
 
  const syncStoryTime=useCallback((time:number)=>{
@@ -2588,10 +2588,10 @@ async function upload(uploaded:File){
          <div className="source-name">{evidence.title}</div>
          <div className="source-quote">“{evidence.excerpt}”</div>
          <a className="official-link" href={evidence.url} target="_blank" rel="noopener noreferrer">{ui('openOfficialSource')}</a>
-         <div className="source-timestamp">{evidence.source_mode==='LIVE'?'Live official source':'Source snapshot'} · {new Date(evidence.checked_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'})}</div>
+         <div className="source-timestamp">{evidence.source_mode==='LIVE'?(translatedResult.liveOfficialSource||'Live official source'):(translatedResult.sourceSnapshot||'Source snapshot')} · {new Date(evidence.checked_at).toLocaleDateString(displayLocale,{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'})}</div>
         </div>)}
         {currentResult.evidence.length>1&&currentResult.explanation!=='Official sources currently disagree.'&&<details className="additional-sources">
-         <summary><span>{currentResult.evidence.length-1} more source excerpt{currentResult.evidence.length>2?'s':''}</span><SealGuideIcon/></summary>
+         <summary><span>{currentResult.evidence.length-1} {currentResult.evidence.length>2?(translatedResult.moreSourceExcerpts||'more source excerpts'):(translatedResult.moreSourceExcerpt||'more source excerpt')}</span><SealGuideIcon/></summary>
          {currentResult.evidence.slice(1).map((evidence,index)=><div key={index}>
           <div>{evidence.title}</div>
           <blockquote>{evidence.excerpt}</blockquote>
@@ -2703,7 +2703,7 @@ async function upload(uploaded:File){
      <div className="court-contact">
       <div>
        <h3>{translatedResult.courtContactHeading||'Court contact from an official source'}</h3>
-       <p>{verification.contact.name||(verification.resolver_id==='connecticut'?'District of Connecticut Jury Office':'Court contact')}</p>
+       <p>{verification.contact.name||(verification.resolver_id==='connecticut'?'District of Connecticut Jury Office':(translatedResult.courtContactFallback||'Court contact'))}</p>
       </div>
       <div>
        <a className="contact-phone" href={`tel:${verification.contact.phone}`}>{verification.contact.phone}</a>
@@ -2711,7 +2711,7 @@ async function upload(uploaded:File){
         <a href={verification.contact.website} target="_blank" rel="noopener noreferrer">{ui('openCourtWebsite')}</a>
         <button onClick={()=>run('LIVE')} disabled={busy}>{ui('checkLiveSources')}</button>
        </div>
-       <p className="contact-source">This contact came from the court source, not from the message. {verification.contact.source.source_mode==='SNAPSHOT'?'Source snapshot checked '+new Date(verification.contact.source.checked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.':'Live source checked '+new Date(verification.contact.source.checked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.'}</p>
+       <p className="contact-source">{translatedResult.contactSourcePrefix||'This contact came from the court source, not from the message.'} {verification.contact.source.source_mode==='SNAPSHOT'?(translatedResult.snapshotChecked||'Source snapshot checked')+' '+new Date(verification.contact.source.checked_at).toLocaleDateString(displayLocale,{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.':(translatedResult.liveChecked||'Live source checked')+' '+new Date(verification.contact.source.checked_at).toLocaleDateString(displayLocale,{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.'}</p>
       </div>
      </div>
     </section>}
