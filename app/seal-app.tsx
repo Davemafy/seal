@@ -23,6 +23,7 @@ import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
 import './workspace.css';
 import './result-mobile-repair.css';
 import './result-desktop-final.css';
+import './result-tabs-final.css';
 
 type Mode='SNAPSHOT'|'LIVE';
 type WorkspaceRunStatus='idle'|'reading'|'verifying'|'done'|'error';
@@ -630,6 +631,15 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const justiceSupport=useMemo(()=>justiceSupportFor(text),[text]);
  const riskSummary=useMemo(()=>verification?buildRiskSummary(claims,verification):null,[claims,verification]);
  const caseReality=useMemo(()=>verification?buildCaseReality(claims,verification):null,[claims,verification]);
+ const caseRealityCopy=caseReality
+  ?caseReality.status==='NO_IDENTIFIER'
+   ?{title:resultUi('caseNoIdentifierTitle'),detail:resultUi('caseNoIdentifierDetail')}
+   :caseReality.status==='FOUND'
+    ?{title:resultUi('caseFoundTitle'),detail:resultUi('caseFoundDetail')}
+    :caseReality.status==='CONFLICT'
+     ?{title:resultUi('caseConflictTitle'),detail:resultUi('caseConflictDetail')}
+     :{title:resultUi('caseUnconfirmedTitle'),detail:resultUi('caseUnconfirmedDetail')}
+  :null;
  const obligations=useMemo(()=>verification?buildObligationMap(claims,verification):[],[claims,verification]);
  const plainExplanation=useMemo(()=>verification?buildPlainLanguageSummary(claims,verification):null,[claims,verification]);
  const courtQuestionScript=useMemo(()=>verification?buildCourtQuestionScript(claims,verification):'',[claims,verification]);
@@ -685,64 +695,79 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const hasPaymentAction=groundedActions.some(claim=>claim.action?.kind==='pay')||decisionClaim?.action?.kind==='pay';
  const primaryActionKind=decisionClaim?.action?.kind||groundedActions[0]?.action?.kind;
  const conciseDecisionTitle=curatedAuthorityMatch
-  ?decision.title
+  ?(translatedResult.decisionTitle||decision.title)
   :verification?.safe_action&&primaryActionKind==='pay'
-   ?'Check it independently before you pay.'
+   ?resultUi('decisionPayTitle')
    :verification?.safe_action&&primaryActionKind==='contact'
-    ?'Check the number before you call.'
+    ?resultUi('decisionContactTitle')
     :verification?.safe_action&&primaryActionKind==='navigate'
-     ?'Check the link before you open it.'
+     ?resultUi('decisionNavigateTitle')
      :verification?.safe_action&&primaryActionKind==='disclose'
-      ?'Verify the request before you share anything.'
+      ?resultUi('decisionDiscloseTitle')
       :verification?.safe_action&&primaryActionKind==='appear'
-       ?'Confirm the case before you go.'
+       ?resultUi('decisionAppearTitle')
        :verification?.safe_action
-        ?'Check this before you act.'
+        ?resultUi('decisionActTitle')
         :decision.title;
  const humanDecisionSummary=file?.sample
-  ?'This is an example form, not a notice you need to act on.'
+  ?resultUi('decisionSampleSummary')
   :curatedAuthorityMatch
-   ?decision.summary
+   ?(translatedResult.decisionSummary||decision.summary)
    :decisionRelationshipConflict
-    ?'Something in this message does not line up with the public source we checked. Use an official route before you act.'
+    ?resultUi('decisionConflictSummary')
     :verification?.safe_action&&hasPaymentAction
-     ?'We found an official process that fits parts of this notice, but not enough to confirm this notice or the case. Use the official route below before paying.'
+     ?resultUi('decisionPaymentSummary')
      :verification?.safe_action
-      ?'We found official guidance, but not enough to confirm this message. Use the official route below before you act.'
+      ?resultUi('decisionGuidanceSummary')
       :directCourtUnavailable
-       ?'We could read the message, but we could not confirm the court or case from an independent source yet.'
+       ?resultUi('decisionUnverifiedSummary')
        :decision.summary;
  const resultStatusLabel=file?.sample
-  ?'Example document'
+  ?resultUi('statusExampleDocument')
   :curatedAuthorityMatch
-   ?'Official warning found'
+   ?resultUi('statusOfficialWarning')
    :decisionRelationshipConflict
-    ?'Something does not line up'
+    ?resultUi('statusConflict')
     :directCourtUnavailable
-     ?'We could not confirm this notice'
+     ?resultUi('statusUnconfirmedNotice')
      :verification?.results.some(result=>result.verdict==='MATCH')
-      ?'Some details check out'
-      :'Check finished';
+      ?resultUi('statusSomeDetails')
+      :resultUi('statusCheckFinished');
  const instructionStatus=file?.sample
-  ?'Example only'
+  ?resultUi('instructionExample')
   :curatedAuthorityMatch
-   ?'Do not use this route'
+   ?resultUi('instructionDoNotUse')
    :verification?.results.some(result=>result.verdict==='MISMATCH'&&claims.find(claim=>claim.id===result.claim_id)?.action)
-    ?'Does not match the source'
+    ?resultUi('instructionMismatch')
     :verification?.results.some(result=>result.verdict==='MATCH'&&claims.find(claim=>claim.id===result.claim_id)?.action)
-     ?'Some details match'
-     :'Not confirmed';
+     ?resultUi('instructionSomeMatch')
+     :resultUi('notConfirmed');
  const matterStatus=file?.sample
-  ?'No action needed'
+  ?resultUi('matterNoAction')
   :caseReality?.status==='FOUND'
-   ?'Case found'
+   ?resultUi('matterCaseFound')
    :caseReality?.status==='CONFLICT'
-    ?'Does not match the source'
-    :'Not confirmed';
+    ?resultUi('instructionMismatch')
+    :resultUi('notConfirmed');
+ const safeActionCopy=verification?.safe_action
+  ?/ezpassnh\.com/i.test(verification.safe_action.primary_url)
+   ?{
+     title:resultUi('nhSafeTitle'),
+     summary:resultUi('nhSafeSummary'),
+     primaryLabel:resultUi('nhSafePrimary'),
+     steps:[resultUi('nhSafeStep1'),resultUi('nhSafeStep2'),resultUi('nhSafeStep3')]
+    }
+   :{
+     title:translatedResult.safeTitle||verification.safe_action.title,
+     summary:translatedResult.safeSummary||verification.safe_action.summary,
+     primaryLabel:translatedResult.safePrimary||verification.safe_action.primary_label,
+     steps:verification.safe_action.steps.map((step,index)=>translatedResult[`safeStep${index}`]||step)
+    }
+  :null;
  const primaryRoute=file?.sample
   ?null
   :verification?.safe_action?.primary_url
-   ?{url:verification.safe_action.primary_url,label:translatedResult.safePrimary||verification.safe_action.primary_label}
+   ?{url:verification.safe_action.primary_url,label:safeActionCopy?.primaryLabel||verification.safe_action.primary_label}
    :verification?.contact?.website
     ?{url:verification.contact.website,label:translatedResult.openCourtWebsite||'Open official court website'}
     :officialLookup
@@ -798,18 +823,18 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
    parts.push(resultUi('whatToDoNext'));
    if(verification.safe_action){
     parts.push(
-     translatedResult.safeTitle||verification.safe_action.title,
-     translatedResult.safeSummary||verification.safe_action.summary,
-     ...verification.safe_action.steps.map((step,index)=>translatedResult[`safeStep${index}`]||step)
+     safeActionCopy?.title||verification.safe_action.title,
+     safeActionCopy?.summary||verification.safe_action.summary,
+     ...(safeActionCopy?.steps||verification.safe_action.steps)
     );
    }else if(caseReality){
     parts.push(
-     translatedResult.caseRealityTitle||caseReality.title,
-     translatedResult.caseRealityDetail||caseReality.detail
+     caseRealityCopy?.title||caseReality.title,
+     caseRealityCopy?.detail||caseReality.detail
     );
    }
    obligations.slice(0,6).forEach((item,index)=>{
-    parts.push(cleanDisplayText(item.text)+'. '+(translatedResult['obligationStatus'+index]||item.statusLabel)+'.');
+    parts.push(cleanDisplayText(item.text)+'. '+(item.status==='MATCH'?resultUi('obligationMatches'):item.status==='MISMATCH'?resultUi('obligationConflicts'):resultUi('obligationMessageOnly'))+'.');
    });
   }
 
@@ -964,10 +989,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   };
 
   if(activeResultSection==='summary'){
-   [
-    'decisionTitle','decisionSummary','resultStatus','instructionStatus','matterStatus',
-    'relationship','safePrimary'
-   ].forEach(take);
+   ['relationship','riskInstructionsTitle','riskInstructionsDetail','riskMatterTitle','riskMatterDetail'].forEach(take);
+   if(curatedAuthorityMatch)['decisionTitle','decisionSummary'].forEach(take);
   }else if(activeResultSection==='evidence'){
    ['emptyEvidenceTitleDirect','emptyEvidenceTitle','emptyEvidenceCopyDirect','emptyEvidenceCopy'].forEach(take);
    takeIndexed('signalTitle',6);
@@ -976,15 +999,14 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
    takeIndexed('resultLabel',8);
   }else if(activeResultSection==='next'){
    [
-    'caseRealityTitle','caseRealityDetail','plainTitle','plainSummary',
-    'safeTitle','safeSummary','safePrimary'
+    'plainTitle','plainSummary','safeTitle','safeSummary','safePrimary'
    ].forEach(take);
    takeIndexed('safeStep',5);
    takeIndexed('obligationStatus',6);
   }
 
   return source;
- },[verification,displayLocale,activeResultSection,resultTranslationSource]);
+ },[verification,displayLocale,activeResultSection,resultTranslationSource,curatedAuthorityMatch]);
 
  useEffect(()=>{
   if(!verification||displayLocale==='en'){
@@ -1085,7 +1107,10 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   :'';
 
  const reliableCourtTitle=claims.find(claim=>claim.type==='court'&&claimReliable(claim)&&cleanDisplayText(claim.value))?.value;
- const checkObjectTitle=cleanDisplayText(reliableCourtTitle||workspaceTitle||'Court message');
+ const plausibleCourtTitle=reliableCourtTitle&&/[A-Za-z]{4}/.test(reliableCourtTitle)&&!/[^p{L}p{N}s.,'’&()\-]/u.test(reliableCourtTitle)
+  ?reliableCourtTitle
+  :'';
+ const checkObjectTitle=cleanDisplayText(plausibleCourtTitle||workspaceTitle||'Court message');
  const checkObjectDisplayTitle=humanizeDisplayName(checkObjectTitle)
   .replace(/^United States District Court\s*/i,'U.S. District Court · ')
   .replace(/\s{2,}/g,' ')
@@ -2274,9 +2299,8 @@ async function upload(uploaded:File){
    </section>
    :
    <section className="review-shell" data-testid="result-shell"
-    onPointerDownCapture={event=>{if(reviewOffer==='counting'&&!(event.target as Element).closest('[data-review-offer]'))skipReviewOffer()}}
     onDragOver={event=>{if(event.dataTransfer.types.includes('Files'))event.preventDefault()}}
-    onDrop={event=>{if(event.dataTransfer.files.length){event.preventDefault();skipReviewOffer();upload(event.dataTransfer.files[0])}}}>
+    onDrop={event=>{if(event.dataTransfer.files.length){event.preventDefault();upload(event.dataTransfer.files[0])}}}>
     <header className="result-masthead" id={sectionId('result-top')} data-testid="check-object-header">
      <div className="result-masthead-row">
       <div className="check-object-identity">
@@ -2305,7 +2329,7 @@ async function upload(uploaded:File){
          aria-label={resultSpeaking?'Stop reading result aloud':`Read ${activeResultSection==='next'?'Resolve':activeResultSection==='message'?'Original':activeResultSection.charAt(0).toUpperCase()+activeResultSection.slice(1)} aloud`}
          title={resultSpeaking?'Stop reading result aloud':`Read ${activeResultSection==='next'?'Resolve':activeResultSection==='message'?'Original':activeResultSection.charAt(0).toUpperCase()+activeResultSection.slice(1)} aloud`}
          onClick={toggleResultSpeech}
-        ><SealUiIcon name="voice"/><span>{resultSpeaking?(translatedResult.voiceStop||'Stop'):(translatedResult.voiceListen||'Listen')}</span></button>}
+        ><SealUiIcon name="voice"/><span>{resultSpeaking?resultUi('stopReading'):resultUi('listen')}</span></button>}
         {documentJurisdictionLabel&&<span className="meta-jurisdiction" data-testid="document-jurisdiction">{documentJurisdictionLabel}</span>}
        </div>
       </div>
@@ -2384,7 +2408,7 @@ async function upload(uploaded:File){
          {verification.contact?.name&&<small>{verification.contact.name}{verification.contact.phone?` · ${verification.contact.phone}`:''}</small>}
          <div className="story-final-actions">
           {verification.contact?.website&&<a href={verification.contact.website} target="_blank" rel="noopener noreferrer" tabIndex={storyStep===4?0:-1}>{resultUi('openOfficialCourtWebsite')}</a>}
-          {!verification.contact?.website&&verification.safe_action&&<a href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer" tabIndex={storyStep===4?0:-1}>{translatedResult.safePrimary||verification.safe_action.primary_label}</a>}
+          {!verification.contact?.website&&verification.safe_action&&<a href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer" tabIndex={storyStep===4?0:-1}>{safeActionCopy?.primaryLabel||verification.safe_action.primary_label}</a>}
          </div>
         </div>
        </div>
@@ -2498,7 +2522,7 @@ async function upload(uploaded:File){
           </div>
           <div className="decision-artifact-caption">
            <strong>{file?.sample?resultUi('sampleDocument'):resultUi('originalMessage')}</strong>
-           <span>{file?.kind==='pdf'?'PDF':file?.kind==='image'?(translatedResult.fileTypeImage||'Image'):(translatedResult.fileTypeText||'Text')}</span>
+           <span>{file?.kind==='pdf'?'PDF':file?.kind==='image'?(resultUi('fileTypeImage')):(resultUi('fileTypeText'))}</span>
           </div>
           <div className="decision-source-brief">
            <span>{resultUi('independentCheck')}</span>
@@ -2602,8 +2626,8 @@ async function upload(uploaded:File){
         const evidenceTitles=signal.evidence.map(evidence=>evidence.title);
         return <article className={`source-signal ${primary?'is-primary':'is-secondary'}`} key={signal.id}>
          <p className="signal-kind">{signal.kind==='OFFICIAL_PROCESS'?resultUi('officialProcess'):signal.kind==='OFFICIAL_DIRECTORY'?resultUi('officialDirectory'):signal.kind==='SOURCE_CONFLICT'?resultUi('sourceConflict'):signal.kind==='KNOWN_PATTERN'?resultUi('knownPattern'):resultUi('officialWarning')}</p>
-         <h3>{translatedResult['signalTitle'+signalIndex]||signal.title}</h3>
-         <p>{translatedResult['signalSummary'+signalIndex]||signal.summary}</p>
+         <h3>{signal.id==='nh-toll-process'?resultUi('nhSignalTitle'):signal.id==='reused-case-pattern'?resultUi('reusedCaseSignalTitle'):(translatedResult['signalTitle'+signalIndex]||signal.title)}</h3>
+         <p>{signal.id==='nh-toll-process'?resultUi('nhSignalSummary'):signal.id==='reused-case-pattern'?resultUi('reusedCaseSignalSummary'):(translatedResult['signalSummary'+signalIndex]||signal.summary)}</p>
          {signal.evidence.length>0&&<div className="signal-links">
           {signal.evidence.length>1&&<span className="signal-links-label">{resultUi('sources')}</span>}
           {signal.evidence.map((evidence,index)=><a href={evidence.url} target="_blank" rel="noopener noreferrer" key={`${signal.id}-${index}`}>{compactEvidenceTitle(evidence.title,index,evidenceTitles)}</a>)}
@@ -2747,11 +2771,11 @@ async function upload(uploaded:File){
      </div>}
      {verification?.safe_action&&<div className="safe-route" id={sectionId('next-step')}>
       <div>
-       <h2>{translatedResult.safeTitle||verification.safe_action.title}</h2>
-       <p>{translatedResult.safeSummary||verification.safe_action.summary}</p>
+       <h2>{safeActionCopy?.title||verification.safe_action.title}</h2>
+       <p>{safeActionCopy?.summary||verification.safe_action.summary}</p>
       </div>
       <div>
-       <ol className="safe-steps">{verification.safe_action.steps.map((step,index)=><li key={index}>{translatedResult[`safeStep${index}`]||step}</li>)}</ol>
+       <ol className="safe-steps">{(safeActionCopy?.steps||verification.safe_action.steps).map((step,index)=><li key={index}>{step}</li>)}</ol>
        <div className="safe-route-actions">
         {verification.contact?.website&&<a className="safe-primary" href={verification.contact.website} target="_blank" rel="noopener noreferrer">{resultUi('openOfficialCourtWebsite')}</a>}
         {verification.safe_action.primary_url&&verification.safe_action.primary_url!==verification.contact?.website&&<a className="safe-source-link" href={verification.safe_action.primary_url} target="_blank" rel="noopener noreferrer">{translatedResult.safePrimary||verification.safe_action.primary_label}</a>}
@@ -2765,7 +2789,7 @@ async function upload(uploaded:File){
      <div className="journey-block case-reality-block" data-testid="case-reality-check">
       <div className="journey-label">{resultUi('theCase')}</div>
       <div className="journey-content">
-       <h3>{translatedResult.caseRealityTitle||caseReality.title}</h3><p>{translatedResult.caseRealityDetail||caseReality.detail}</p>
+       <h3>{caseRealityCopy?.title||caseReality.title}</h3><p>{caseRealityCopy?.detail||caseReality.detail}</p>
        <dl className="case-reality-facts"><div><dt>{resultUi('courtClaimed')}</dt><dd>{caseReality.court}</dd></div><div><dt>{resultUi('caseReference')}</dt><dd>{caseReality.reference||(translatedResult.notVerified||'Not verified')}</dd></div></dl>
        {verification.contact?.website?<a className="journey-link" href={verification.contact.website} target="_blank" rel="noopener noreferrer">{resultUi('openCourtWebsiteIndependently')}</a>:officialLookup&&<a className="journey-link" href={officialLookup.url} target="_blank" rel="noopener noreferrer">{officialLookup.label}</a>}
        {officialLookup&&<small className="journey-note">{officialLookup.note}</small>}
@@ -2773,7 +2797,7 @@ async function upload(uploaded:File){
      </div>
      {obligations.length>0&&<div className="journey-block obligation-block" data-testid="obligation-map">
       <div className="journey-label">{resultUi('whatMessageAsks')}</div>
-      <div className="journey-content"><div className="obligation-list">{obligations.map((item,index)=><div className="obligation-row" key={item.id}><div><strong>{cleanDisplayText(item.text)}</strong>{item.deadline&&<small>{translatedResult.timeDateStated||'Time/date stated'}: {item.deadline}</small>}</div><span className={item.status==='MISMATCH'?'is-conflict':item.status==='MATCH'?'is-match':''}>{translatedResult['obligationStatus'+index]||item.statusLabel}</span></div>)}</div><p className="journey-note">{translatedResult.obligationNote||'Dates and instructions here come from the message unless a row explicitly says it matches a public source.'}</p></div>
+      <div className="journey-content"><div className="obligation-list">{obligations.map((item,index)=><div className="obligation-row" key={item.id}><div><strong>{cleanDisplayText(item.text)}</strong>{item.deadline&&<small>{translatedResult.timeDateStated||'Time/date stated'}: {item.deadline}</small>}</div><span className={item.status==='MISMATCH'?'is-conflict':item.status==='MATCH'?'is-match':''}>{item.status==='MATCH'?resultUi('obligationMatches'):item.status==='MISMATCH'?resultUi('obligationConflicts'):resultUi('obligationMessageOnly')}</span></div>)}</div><p className="journey-note">{resultUi('obligationDatesNote')}</p></div>
      </div>}
      <details className="journey-details" data-testid="plain-language-explanation">
       <summary><span>{resultUi('explainNotice')}</span><small>{resultUi('plainLanguageTranslation')}</small><SealGuideIcon/></summary>

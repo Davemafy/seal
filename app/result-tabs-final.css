@@ -1,0 +1,108 @@
+/* Final result architecture: one explicit tab = one visible result surface.
+   This intentionally overrides earlier carousel/vertical-flow experiments. */
+.review-shell{
+ min-height:0!important;
+ overflow:hidden!important
+}
+.result-tabs-stage{
+ grid-row:2!important;
+ width:min(100%,1120px)!important;
+ max-width:1120px!important;
+ min-height:0!important;
+ height:100%!important;
+ margin:0 auto!important;
+ overflow:hidden!important;
+ background:#fff!important
+}
+.result-tabs-stage .review-hero{display:contents!important}
+.result-tabs-stage .result-slide[hidden]{display:none!important}
+.result-tabs-stage .result-slide:not([hidden]){
+ box-sizing:border-box!important;
+ width:100%!important;
+ max-width:100%!important;
+ min-width:0!important;
+ height:100%!important;
+ min-height:0!important;
+ margin:0!important;
+ overflow-x:hidden!important;
+ overflow-y:auto!important;
+ overscroll-behavior-y:contain!important;
+ scrollbar-gutter:stable!important;
+ scroll-snap-align:none!important;
+ contain:none!important
+}
+.result-tabs-stage .result-slide-summary:not([hidden]),
+.result-tabs-stage .result-slide-original:not([hidden]){display:block!important}
+.result-tabs-stage .result-slide-evidence:not([hidden]),
+.result-tabs-stage .result-slide-resolve:not([hidden]){
+ display:flex!important;
+ flex-direction:column!important
+}
+.result-chapters button{
+ position:relative!important;
+ flex:0 0 auto!important;
+ min-height:36px!important;
+ display:inline-flex!important;
+ align-items:center!important;
+ justify-content:center!important;
+ padding:7px 12px!important;
+ border:0!important;
+ border-radius:8px!important;
+ color:#666661!important;
+ background:transparent!important;
+ font:inherit!important;
+ font-size:13.5px!important;
+ line-height:20px!important;
+ font-weight:560!important;
+ text-align:center!important;
+ white-space:nowrap!important;
+ cursor:pointer!important;
+ transition:background .14s ease,color .14s ease,box-shadow .14s ease!important
+}
+.result-chapters button:hover{
+ color:#111!important;
+ background:rgba(255,255,255,.62)!important
+}
+.result-chapters button.is-current{
+ color:#111!important;
+ background:#fff!important;
+ box-shadow:0 1px 3px rgba(0,0,0,.08)!important
+}
+.result-chapters button:focus-visible{
+ outline:2px solid currentColor!important;
+ outline-offset:2px!important
+}
+@media(min-width:901px){
+ .review-shell{
+  height:100dvh!important;
+  min-height:100dvh!important;
+  display:grid!important;
+  grid-template-rows:auto minmax(0,1fr)!important
+ }
+}
+@media(max-width:900px){
+ .review-shell{
+  height:100dvh!important;
+  min-height:100dvh!important;
+  display:flex!important;
+  flex-direction:column!important
+ }
+ .result-masthead{flex:0 0 auto!important}
+ .result-tabs-stage{
+  flex:1 1 auto!important;
+  width:100%!important;
+  max-width:none!important;
+  min-height:0!important;
+  height:auto!important
+ }
+ .result-tabs-stage .result-slide:not([hidden]){
+  height:100%!important;
+  min-height:0!important
+ }
+ .result-chapters button{
+  min-height:34px!important;
+  padding:6px 10px!important;
+  font-size:12px!important;
+  line-height:18px!important
+ }
+}

@@ -30,7 +30,7 @@ export const displayLocaleFor=(locale:string):DisplayLocale=>{
 export const UI_COPY=en;
 export type UiCopyKey=keyof typeof UI_COPY;
 
-const LOCALES:Record<DisplayLocale,Record<UiCopyKey,string>>={
+const LOCALES:Record<DisplayLocale,Partial<Record<UiCopyKey,string>>>={
  en,es,pt,fr,de,it,hi,ar,zh,ja,ko,ru,tr,nl
 };
 
