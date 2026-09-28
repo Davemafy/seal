@@ -2837,3 +2837,56 @@
   padding-right:18px!important
  }
 }
+
+
+/* Final desktop content rail — all result sections share the masthead left edge. */
+@media(min-width:901px){
+ .result-carousel{
+  padding-left:24px!important;
+  padding-right:24px!important;
+  box-sizing:border-box!important
+ }
+
+ .result-slide-summary,
+ .result-slide-original,
+ .result-slide-evidence,
+ .result-slide-resolve{
+  padding-left:0!important;
+  padding-right:0!important
+ }
+
+ /* Summary */
+ .result-slide-summary .decision{
+  margin-left:0!important;
+  margin-right:auto!important
+ }
+
+ /* Original */
+ .result-slide-original .document-heading,
+ .result-slide-original .document-paper{
+  margin-left:0!important;
+  margin-right:auto!important
+ }
+
+ /* Evidence */
+ .result-slide-evidence .source-resolution,
+ .result-slide-evidence .resolution-disclaimer,
+ .result-slide-evidence .record-disclosure{
+  margin-left:0!important;
+  margin-right:auto!important
+ }
+
+ /* Resolve */
+ .result-slide-resolve .resolve-primary,
+ .result-slide-resolve .user-actions{
+  margin-left:0!important;
+  margin-right:auto!important
+ }
+}
+
+@media(min-width:901px) and (max-width:1180px){
+ .result-carousel{
+  padding-left:20px!important;
+  padding-right:20px!important
+ }
+}
