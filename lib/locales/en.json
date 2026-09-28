@@ -248,5 +248,7 @@
   "nhSafePrimary": "Open NH E-ZPass",
   "translationPendingQuiet": "Translating this section…",
   "listen": "Listen",
-  "stopReading": "Stop"
+  "stopReading": "Stop",
+  "fileTypeImage": "Image",
+  "fileTypeText": "Text"
 }

@@ -248,5 +248,7 @@
   "nhSafePrimary": "NH E-ZPass 열기",
   "translationPendingQuiet": "이 섹션 번역 중…",
   "listen": "듣기",
-  "stopReading": "중지"
+  "stopReading": "중지",
+  "fileTypeImage": "이미지",
+  "fileTypeText": "텍스트"
 }
