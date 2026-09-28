@@ -9298,3 +9298,127 @@
   padding:8px 18px!important
  }
 }
+
+
+/* Finished onboarding masthead — compact product chrome. */
+.onboarding-topbar{
+ width:min(calc(100% - 48px),1120px)!important;
+ min-height:72px!important;
+ margin:0 auto!important;
+ padding:18px 0 10px!important;
+ display:grid!important;
+ grid-template-columns:1fr auto 1fr!important;
+ align-items:center!important;
+ border-bottom:0!important;
+ box-sizing:border-box!important;
+ background:transparent!important
+}
+
+.onboarding-brand{
+ justify-self:start!important;
+ gap:8px!important
+}
+.onboarding-brand img{
+ width:21px!important;
+ height:21px!important
+}
+.onboarding-brand span{
+ font-size:16px!important;
+ line-height:20px!important;
+ font-weight:690!important;
+ letter-spacing:-.025em!important
+}
+
+.onboarding-step-count{
+ justify-self:center!important;
+ color:#7a7a75!important;
+ font-size:11px!important;
+ line-height:16px!important;
+ font-weight:600!important;
+ letter-spacing:.02em!important;
+ font-variant-numeric:tabular-nums!important
+}
+
+.onboarding-skip,
+.onboarding-skip-spacer{
+ justify-self:end!important
+}
+.onboarding-skip{
+ min-height:32px!important;
+ padding:6px 10px!important;
+ border-radius:7px!important;
+ color:#5f5f5a!important;
+ font-size:12px!important;
+ line-height:18px!important;
+ font-weight:600!important;
+ transition:background .14s ease,color .14s ease!important
+}
+.onboarding-skip:hover{
+ background:#f1f1ee!important;
+ color:#111!important
+}
+.onboarding-skip-spacer{
+ width:44px!important;
+ height:32px!important
+}
+
+.onboarding-progress{
+ width:184px!important;
+ display:grid!important;
+ grid-template-columns:repeat(3,1fr)!important;
+ gap:6px!important;
+ margin:0 auto!important;
+ padding:0!important;
+ align-self:center!important
+}
+.onboarding-progress span{
+ height:3px!important;
+ border-radius:999px!important;
+ background:#dfdfda!important
+}
+.onboarding-progress span.is-active,
+.onboarding-progress span.is-complete{
+ background:#111!important
+}
+
+/* Reclaim the space the old full-width wizard chrome used. */
+@media(min-width:901px){
+ .onboarding-shell{
+  grid-template-rows:72px 12px minmax(0,1fr) 58px!important
+ }
+ .onboarding-stage{
+  padding-top:14px!important
+ }
+}
+
+@media(min-width:901px) and (max-height:700px){
+ .onboarding-shell{
+  grid-template-rows:66px 10px minmax(0,1fr) 56px!important
+ }
+ .onboarding-topbar{
+  min-height:66px!important;
+  padding-top:14px!important;
+  padding-bottom:8px!important
+ }
+ .onboarding-stage{
+  padding-top:10px!important
+ }
+}
+
+@media(max-width:900px){
+ .onboarding-topbar{
+  width:calc(100% - 32px)!important;
+  min-height:60px!important;
+  padding:12px 0 8px!important
+ }
+ .onboarding-step-count{
+  font-size:10.5px!important
+ }
+ .onboarding-progress{
+  width:144px!important;
+  gap:5px!important
+ }
+ .onboarding-progress span{
+  height:3px!important
+ }
+}
