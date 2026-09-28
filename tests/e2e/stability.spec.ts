@@ -321,7 +321,7 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  await checks.nth(0).click();
  active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
  await expect(active.locator('.pasted-message')).toContainText('1-866-388-2430');
- await active.locator('.result-chapters').getByRole('link',{name:'Original'}).click();
+ await active.locator('.result-chapters').getByRole('tab',{name:'Original'}).click();
  await expect(active.locator('#original-message')).toBeVisible();
 
  await active.locator('.rail-check-list .rail-check').nth(1).click();

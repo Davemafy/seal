@@ -9,13 +9,16 @@ test('international message gets a safe resolution path without an authenticity 
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.getByTestId('check-object-header')).toContainText('DISTRICT COURT');
+ await page.getByRole('tablist').getByRole('tab',{name:'Resolve'}).click();
  await expect(page.getByTestId('case-reality-check')).toContainText('DL-2026-4821');
  await expect(page.getByTestId('two-risk-result')).toContainText('Not confirmed');
  await expect(page.getByTestId('two-risk-result')).toContainText('Not confirmed');
+ await page.getByRole('tablist').getByRole('tab',{name:'Summary'}).click();
  await expect(page.getByTestId('primary-next-step').getByRole('link',{name:'Search India eCourts'})).toBeVisible();
  await page.locator('.decision-details').locator('summary').click();
  await expect(page.locator('.decision-details')).toContainText('instructions remain unverified');
  await expect(page.locator('.decision-details')).toContainText('underlying case is not independently confirmed');
+ await page.getByRole('tablist').getByRole('tab',{name:'Resolve'}).click();
  await expect(page.getByTestId('case-reality-check')).toContainText('Case not independently confirmed');
  await expect(page.getByTestId('case-reality-check').getByRole('link',{name:'Search India eCourts'})).toBeVisible();
  await expect(page.getByTestId('obligation-map')).toContainText('Call +91 11 5555 0199');
