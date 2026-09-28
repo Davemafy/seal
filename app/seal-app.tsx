@@ -1891,6 +1891,37 @@ async function upload(uploaded:File){
     })}
    </div>
    <div className="rail-spacer"/>
+   <div className="rail-bottom">
+    <div className="rail-language">
+     <div className="rail-language-menu">
+      <button
+       type="button"
+       className="rail-language-trigger"
+       aria-label={ui('displayLanguage')}
+       aria-haspopup="listbox"
+       aria-expanded={languageMenuOpen}
+       onClick={()=>{setWorkspaceDrawerOpen(false);setResultLanguageMenuOpen(false);setLanguageMenuOpen(open=>!open)}}
+      >
+       <SealUiIcon name="globe"/>
+       <span>{displayLocale.toUpperCase()}</span>
+       <SealGuideIcon/>
+      </button>
+      {languageMenuOpen&&<div className="rail-language-popover" role="listbox" aria-label={ui('displayLanguage')}>
+       <div className="rail-language-popover-head">
+        <strong>{ui('displayLanguage')}</strong>
+       </div>
+       {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><button
+        type="button"
+        role="option"
+        aria-selected={code===displayLocale}
+        className={code===displayLocale?'is-selected':''}
+        key={code}
+        onClick={()=>{changeDisplayLanguage(code as DisplayLocale);setLanguageMenuOpen(false)}}
+       ><span>{label}</span><small>{code.toUpperCase()}</small></button>)}
+      </div>}
+     </div>
+    </div>
+   </div>
   </aside>
   <header className="seal-nav mobile-only-nav">
    <Link href="/" className="mobile-brand" aria-label={ui('sealHome')} onClick={event=>{if(verification||busy||file||text||draft){event.preventDefault();clear()}}}><img src="/brand/seal-mark-black.svg" alt=""/></Link>
