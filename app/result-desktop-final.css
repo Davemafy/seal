@@ -2978,3 +2978,27 @@
   line-height:20px!important
  }
 }
+
+
+/* Evidence source alignment repair — keep source tokens on the content rail. */
+@media(min-width:901px){
+ .result-slide-evidence .signal-links{
+  width:100%!important;
+  max-width:720px!important;
+  justify-content:flex-start!important;
+  align-items:flex-start!important;
+  align-self:stretch!important;
+  text-align:left!important;
+  margin-left:0!important;
+  margin-right:auto!important
+ }
+ .result-slide-evidence .signal-links-label{
+  width:100%!important;
+  flex-basis:100%!important;
+  text-align:left!important;
+  align-self:flex-start!important
+ }
+ .result-slide-evidence .signal-links a{
+  align-self:flex-start!important
+ }
+}
