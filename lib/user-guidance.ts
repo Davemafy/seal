@@ -59,12 +59,17 @@ function deadlineFor(claim:Claim,reportingDate:string){
 
 export function buildObligationMap(claims:Claim[],verification:Verification):ObligationItem[]{
  const byId=resultMap(verification);const reportingDate=reportingClaim(claims)?.value||'';
- return claims.flatMap(claim=>{
-  if(!claim.action||claim.verification_eligible===false)return [];
+ const unique=new Map<string,ObligationItem>();
+ for(const claim of claims){
+  if(!claim.action||claim.verification_eligible===false)continue;
   const result=byId.get(claim.id);const status=result?.verdict||'COULD_NOT_VERIFY';
   const statusLabel=status==='MATCH'?'Matches a public source':status==='MISMATCH'?'Conflicts with a public source':'Message only — not confirmed';
-  return [{id:claim.id,text:claim.action.source_text||claim.exact_source_text||claim.value,deadline:deadlineFor(claim,reportingDate),status,statusLabel}];
- });
+  const text=claim.action.source_text||claim.exact_source_text||claim.value;
+  const key=text.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  if(!key||unique.has(key))continue;
+  unique.set(key,{id:claim.id,text,deadline:deadlineFor(claim,reportingDate),status,statusLabel});
+ }
+ return [...unique.values()];
 }
 
 export function buildPlainLanguageSummary(claims:Claim[],verification:Verification):{title:string;summary:string}{
