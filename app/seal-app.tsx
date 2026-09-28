@@ -1424,6 +1424,15 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
 
  function submitPaste(){const value=draft.trim();if(!value)return;clear();setText(value);void run('SNAPSHOT',{text:value,file:null})}
 
+ function runEntryExample(key:keyof typeof fixtures){
+  const example=fixtures[key];
+  clear();
+  setWorkspaceTitle(example.title);
+  setText(example.text);
+  setPasteMode(false);
+  void run('SNAPSHOT',{text:example.text,file:null});
+ }
+
 async function upload(uploaded:File){
   const origin=processingIntakeRef.current?.getBoundingClientRect();
   uploadOriginRectRef.current=origin?{left:origin.left,top:origin.top,width:origin.width,height:origin.height}:null;
@@ -1894,20 +1903,36 @@ async function upload(uploaded:File){
      {error&&<div role="alert" className="inspection-error">{error}</div>}
     </div>
 
-    {!busy&&<aside className="entry-context-rail" aria-label="What SEAL can help check">
-     <span>Questions this can help answer</span>
-     <div className="entry-context-item">
-      <strong>Is this payment request consistent with court guidance?</strong>
-      <small>Checks the action the message asks you to take.</small>
+    {!busy&&<aside className="entry-context-rail entry-demo-rail" aria-label="Try SEAL with an example">
+     <div className="entry-demo-head">
+      <span>Try an example</span>
+      <small>No upload needed. Each example is synthetic.</small>
      </div>
-     <div className="entry-context-item">
-      <strong>Can this court or process be confirmed independently?</strong>
-      <small>Uses public court and agency sources where available.</small>
+
+     <button className="entry-demo-feature" type="button" onClick={()=>runEntryExample('action-message-demo')}>
+      <span className="entry-demo-preview">
+       <small>Text message</small>
+       <strong>“To avoid arrest, pay $750 today using Cash App.”</strong>
+      </span>
+      <span className="entry-demo-feature-copy">
+       <span>Jury-duty payment demand</span>
+       <small>Connecticut · synthetic</small>
+       <b>Run this check <SealGuideIcon direction="right"/></b>
+      </span>
+     </button>
+
+     <div className="entry-demo-list">
+      <button type="button" onClick={()=>runEntryExample('riverside-mismatch-demo')}>
+       <span><strong>Mixed court notice</strong><small>California · payment route</small></span>
+       <SealGuideIcon direction="right"/>
+      </button>
+      <button type="button" onClick={()=>runEntryExample('unsupported-court-demo')}>
+       <span><strong>Coverage boundary</strong><small>India · safe abstention</small></span>
+       <SealGuideIcon direction="right"/>
+      </button>
      </div>
-     <div className="entry-context-item">
-      <strong>Where should I verify this safely?</strong>
-      <small>Points to an independently sourced official route.</small>
-     </div>
+
+     <p className="entry-demo-note">Examples use fictional personal details and published scam patterns.</p>
     </aside>}
 
    </section>
