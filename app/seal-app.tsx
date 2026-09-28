@@ -2717,7 +2717,7 @@ const workspaceIdFromPath=(pathname:string)=>{
  }catch{return ''}
 };
 
-export default function SealApp({initialDemo=false,initialText='',initialRun=false,initialWorkspaceId}:{initialDemo?:boolean;initialText?:string;initialRun?:boolean;initialWorkspaceId?:string}){
+export default function SealApp({initialDemo=false,initialText='',initialRun=false,initialWorkspaceId,suppressOnboarding=false}:{initialDemo?:boolean;initialText?:string;initialRun?:boolean;initialWorkspaceId?:string;suppressOnboarding?:boolean}){
  const [workspaces,setWorkspaces]=useState<WorkspaceMeta[]>([{id:'primary',title:'New check',status:'idle'}]);
  const [activeWorkspace,setActiveWorkspace]=useState('primary');
  const [registryReady,setRegistryReady]=useState(false);
@@ -2748,7 +2748,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
       setWorkspaces(items.map(item=>({...item,status:(item.status==='reading'||item.status==='verifying'?'idle':item.status) as WorkspaceRunStatus})));
       const nextActive=(preservedActive&&items.some(item=>item.id===preservedActive)?preservedActive:items[0].id);
       setActiveWorkspace(nextActive);
-      if(initialWorkspaceId!==nextActive){
+      if(initialWorkspaceId&&initialWorkspaceId!==nextActive){
        window.history.replaceState({workspaceId:nextActive},'',checkRoute(nextActive));
       }
      }
@@ -2784,7 +2784,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
  },[registryReady]);
 
  useEffect(()=>{
-  if(!registryReady||initialDemo||initialText||initialRun)return;
+  if(!registryReady||initialDemo||initialText||initialRun||suppressOnboarding)return;
   const timer=window.setTimeout(()=>{
    try{
     if(!window.localStorage.getItem(ONBOARDING_KEY)){
@@ -2794,7 +2794,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    }catch{}
   },0);
   return()=>window.clearTimeout(timer);
- },[registryReady,initialDemo,initialText,initialRun]);
+ },[registryReady,initialDemo,initialText,initialRun,suppressOnboarding]);
 
  useEffect(()=>()=>{if(workspaceTransitionTimer.current!==null)window.clearTimeout(workspaceTransitionTimer.current)},[]);
 
