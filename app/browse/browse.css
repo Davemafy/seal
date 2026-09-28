@@ -1131,3 +1131,21 @@
   margin-top:10px!important
  }
 }
+
+
+/* Mobile Browse tabs: respect page gutters. */
+@media(max-width:900px){
+ .case-filter-row{
+  width:100%!important;
+  max-width:100%!important;
+  margin-inline:0!important;
+  padding:4px!important;
+  box-sizing:border-box!important;
+  overflow-x:auto!important;
+  overscroll-behavior-x:contain!important;
+  scroll-padding-inline:4px!important
+ }
+ .case-filter-row button{
+  flex:0 0 auto!important
+ }
+}
