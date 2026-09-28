@@ -58,7 +58,7 @@ export default function Home(){
       </div>
       <span className="landing-checker-state">Your message</span>
      </div>
-     <SealApp suppressOnboarding/>
+     <SealApp suppressOnboarding deferIdleOcr/>
     </div>
    </div>
   </section>
@@ -79,9 +79,10 @@ export default function Home(){
       <blockquote>“Scan the QR code to settle your unpaid balance.”</blockquote>
      </div>
 
-     <div className="landing-proof-bridge" aria-hidden="true">
-      <span/>
-      <small>checked independently</small>
+     <div className="landing-proof-hinge" aria-hidden="true">
+      <span>message</span>
+      <img src="/brand/seal-mark-white.svg" alt=""/>
+      <span>source</span>
      </div>
 
      <div className="landing-proof-result">
@@ -93,13 +94,13 @@ export default function Home(){
       <div className="landing-proof-result-body">
        <span className="landing-result-status">Official warning found</span>
        <h3>Do not scan or pay from this message.</h3>
-       <p>The City of Dallas published this exact example as a scam. The QR/payment route can be rejected from the authority’s own source.</p>
+       <p>The City of Dallas published this exact notice as a scam warning. That is enough to reject the QR-payment route without trusting anything inside the message.</p>
        <div className="landing-source-row">
         <span>
          <small>Independent source</small>
          <strong>City of Dallas — SCAM Notice</strong>
         </span>
-        <strong>Source attached</strong>
+        <a data-testid="dallas-official-source" href="https://dallascityhall.com/departments/courtdetentionservices/DCH%20Documents/4-1-26%20-%20SCAM%20Notice.pdf" target="_blank" rel="noopener noreferrer">Open city source</a>
        </div>
        <Link href="/check/dallas-proof?case=dallas-traffic-qr-scam">Open this check</Link>
       </div>
@@ -175,7 +176,7 @@ export default function Home(){
     </div>
     <div className="landing-footer-meta">
      <p>SEAL checks court-message claims against independent public sources. It does not authenticate a sender from appearance alone.</p>
-     <span>Not affiliated with any court.</span>
+     <span>© 2026 SEAL · Not affiliated with any court.</span>
     </div>
    </footer>
   </div>
