@@ -148,10 +148,10 @@
   "seeRealCourtMessages": "Gerçek mahkeme mesajlarının nasıl göründüğünü görün",
   "browseDeck": "Mahkemeler ve kamu kurumları tarafından yayımlanan bildirimleri ve dolandırıcılık uyarılarını inceleyin. Orijinal kaynağı açın veya bir örneği SEAL’de kontrol edin.",
   "browseScope": "Bir ayrıntı bağımsız olarak doğrulanamıyorsa SEAL onu doğrulanmamış bırakır.",
-  "all": "All",
-  "scamWarnings": "Scam warnings",
-  "officialNotices": "Official notices",
-  "outsideUS": "Outside U.S.",
+  "all": "Tümü",
+  "scamWarnings": "Dolandırıcılık uyarıları",
+  "officialNotices": "Resmî bildirimler",
+  "outsideUS": "ABD dışı",
   "filterSourceDocuments": "Kaynak belgeleri filtrele",
   "originalCourtMaterial": "Orijinal mahkeme ve kurum materyalleri",
   "featuredSource": "Öne çıkan kaynak",
@@ -159,7 +159,7 @@
   "checkInSeal": "SEAL’de kontrol et",
   "openSource": "Kaynağı aç",
   "source": "kaynak",
-  "sourcePlural": "kaynak",
+  "sourcePlural": "kaynaklar",
   "courtLiveFailed": "The court’s live pages didn’t respond. Affected claims remain unverified.",
   "checkLiveSources": "Canlı kaynakları kontrol et",
   "yourMessage": "Your message",
@@ -248,5 +248,7 @@
   "nhSignalTitle": "New Hampshire geçiş ücretleri ve mahkeme tahsilatları için belirli bir süreç yayımlar",
   "nhSignalSummary": "New Hampshire yasası işlem ayrıntılarını içeren geçiş ücreti bildirimlerini ve tanımlı bir yaptırım yolunu açıklar. Judicial Branch materyalleri ayrıca sunulan başvurular, tebligat, duruşmalar ve mahkeme emirleri yoluyla hüküm tahsilatını açıklar.",
   "reusedCaseSignalTitle": "Temel dava numarası resmî dolandırıcılık uyarısı örneklerinde geçiyor",
-  "reusedCaseSignalSummary": "Dallas ve Miami-Dade tarafından yayımlanan resmî dolandırıcılık uyarılarında sahte trafik bildirimlerinde aynı 26-TR-273196 temel dava numarası görülüyor."
+  "reusedCaseSignalSummary": "Dallas ve Miami-Dade tarafından yayımlanan resmî dolandırıcılık uyarılarında sahte trafik bildirimlerinde aynı 26-TR-273196 temel dava numarası görülüyor.",
+  "courtNoticeShort": "Mahkeme bildirimi",
+  "courtMessageShort": "Mahkeme mesajı"
 }
