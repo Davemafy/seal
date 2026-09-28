@@ -44,7 +44,8 @@ const verdictLabel=(value:Result['verdict'])=>value==='MATCH'?'Matches':value===
 const stateWord=verdictLabel;
 const compactEvidenceTitle=(title:string,index:number,allTitles:string[])=>{
  const allVirginia=allTitles.length>1&&allTitles.every(value=>/^Code of Virginia\s+/i.test(value));
- return allVirginia&&index>0?title.replace(/^Code of Virginia\s+/i,''):title;
+ const compact=allVirginia&&index>0?title.replace(/^Code of Virginia\s+/i,''):title;
+ return compact.replace(/\s+[—–]\s+/g,' ').replace(/\s{2,}/g,' ').trim();
 };
 const cleanDisplayText=(value:string)=>value
  .replace(/\[\s*=\s*\]/g,' ')
