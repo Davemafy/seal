@@ -60,7 +60,7 @@ export default function Home(){
        <span>Check a court message</span>
        <small>Screenshot, PDF, or message text</small>
       </div>
-      <span className="landing-checker-state">Private input</span>
+      <span className="landing-checker-state">Your message</span>
      </div>
      <SealApp suppressOnboarding/>
     </div>
