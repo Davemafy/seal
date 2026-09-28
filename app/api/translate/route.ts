@@ -7,7 +7,7 @@ const request=z.object({
 });
 
 const MAX_STRINGS=256;
-const BATCH_SIZE=32;
+const BATCH_SIZE=128;
 
 const delay=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 
@@ -87,7 +87,7 @@ export async function POST(req:Request){
     }
 
     if(attempt<2&&(response.status===429||response.status>=500)){
-     await delay(400*(attempt+1));
+     await delay(700*(attempt+1));
      continue;
     }
     break;
