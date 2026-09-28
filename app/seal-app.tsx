@@ -1349,27 +1349,9 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,worksp
  function replayStory(){startStory()}
 
  useEffect(()=>{
-  if(!ready||!reviewWorthWatching||file?.sample||storyOpen||reviewOffer!=='idle')return;
-  if(file?.kind==='image'&&!storyArtifactReady)return;
-  const timer=window.setTimeout(()=>{
-   setReviewCountdown(3);
-   setReviewOfferPaused(false);
-   setReviewOffer('counting');
-  },0);
-  return()=>window.clearTimeout(timer);
- },[ready,reviewWorthWatching,file?.sample,file?.kind,storyArtifactReady,storyOpen,reviewOffer]);
-
- useEffect(()=>{
-  if(reviewOffer!=='counting'||reviewOfferPaused)return;
-  if(reviewCountdown<=0){
-   const timer=window.setTimeout(()=>startStory(),240);
-   return()=>window.clearTimeout(timer);
-  }
-  const timer=window.setTimeout(()=>setReviewCountdown(value=>Math.max(0,value-1)),680);
-  return()=>window.clearTimeout(timer);
- // startStory is a local command over the current result state.
- // eslint-disable-next-line react-hooks/exhaustive-deps
- },[reviewOffer,reviewOfferPaused,reviewCountdown]);
+  if(!ready||!reviewWorthWatching||file?.sample||reviewOffer!=='idle')return;
+  setReviewOffer('skipped');
+ },[ready,reviewWorthWatching,file?.sample,reviewOffer]);
 
  function changeDisplayLanguage(locale:DisplayLocale){
   setTranslatedResult({});
@@ -1841,9 +1823,9 @@ async function upload(uploaded:File){
    :busy||!verification?
    <section className={`entry-shell ${busy?'is-processing':''}`} data-testid="entry-shell">
    <div className="entry-copy">
-     <h1>{ui('checkCourtMessage')}</h1>
-     <p>{ui('entrySummary')}</p>
-
+     {busy&&<span className="processing-entry-kicker">Independent check</span>}
+     <h1>{busy?'Checking this message':ui('checkCourtMessage')}</h1>
+     <p>{busy?'SEAL is separating what the message asks you to do from what independent public sources can actually establish.':ui('entrySummary')}</p>
     </div>
 
     {!busy&&<div className="entry-intake-heading">
@@ -1883,7 +1865,7 @@ async function upload(uploaded:File){
             })}
            </span>
            <span className="process-wait-note" aria-live="polite">
-            <small>Quick fact</small>
+            <small>While we check</small>
             <span key={processingTipIndex}>{PROCESSING_WAIT_NOTES[processingTipIndex]}</span>
            </span>
            {processingFileName&&<span className="upload-file-name" title={processingFileName}>{processingFileName}</span>}
