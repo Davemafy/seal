@@ -1989,10 +1989,11 @@ async function upload(uploaded:File){
      <div ref={storyPlayerRef} className={`story-player ${storyPlaying?'is-playing':'is-paused'} ${storyFocusBox?'has-story-focus':'no-story-focus'}`}>
       <div className="story-topbar">
        <span className="story-brand"><img src="/brand/seal-mark-white.svg" alt=""/><span>SEAL</span></span>
-       <div className="story-top-actions">
-        <span className="story-chapter-label" aria-live="polite">{STORY_CHAPTERS[storyStep].label}</span>
-        <button type="button" onClick={closeStory}>Back to result</button>
-       </div>
+       <span className="story-chapter-label" aria-live="polite">{STORY_CHAPTERS[storyStep].label}</span>
+       <button className="story-exit-button" type="button" onClick={closeStory} aria-label="Back to result">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 5.5 8 10l4.5 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        <span>Result</span>
+       </button>
       </div>
 
       <div className="story-stage">
