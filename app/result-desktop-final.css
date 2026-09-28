@@ -2739,3 +2739,101 @@
   padding:0 14px!important
  }
 }
+
+
+/* FINAL mobile vertical rhythm — masthead breathes, body starts deliberately. */
+@media(max-width:900px){
+ /* One consistent 20px content gutter across masthead + result body. */
+ .review-shell .result-masthead{
+  padding:16px 20px 0!important
+ }
+
+ /* Give the object title, language control, and tabs distinct breathing room. */
+ .review-shell .result-masthead-row{
+  padding:0!important
+ }
+ .review-shell .check-object-identity{
+  width:100%!important;
+  padding-right:8px!important
+ }
+ .review-shell .check-object-identity h1{
+  margin:0!important
+ }
+ .review-shell .check-object-meta{
+  margin-top:14px!important
+ }
+ .review-shell .result-chapters{
+  margin-top:18px!important;
+  gap:0!important;
+  justify-content:space-between!important
+ }
+ .review-shell .result-chapters a{
+  padding:0 0 10px!important
+ }
+
+ /* Remove stacked padding between masthead and the first result section. */
+ .review-shell .result-carousel{
+  padding-top:0!important
+ }
+
+ /* Summary uses a simple 8 / 12 / 24 / 28 rhythm. */
+ .review-shell .result-slide-summary{
+  padding:24px 20px 36px!important
+ }
+ .review-shell .result-slide-summary .decision-status{
+  margin:0 0 10px!important
+ }
+ .review-shell .result-slide-summary .decision-copy>h1{
+  margin:0!important
+ }
+ .review-shell .result-slide-summary .decision-summary{
+  margin-top:14px!important
+ }
+ .review-shell .result-slide-summary .translation-note{
+  margin-top:10px!important
+ }
+
+ .review-shell .result-slide-summary .decision-primary-route{
+  margin-top:28px!important;
+  gap:7px!important
+ }
+ .review-shell .result-slide-summary .decision-primary-route>small{
+  margin-top:2px!important
+ }
+
+ .review-shell .result-slide-summary .decision-at-a-glance{
+  margin-top:24px!important;
+  padding-top:18px!important
+ }
+
+ .review-shell .result-slide-summary .decision-details{
+  margin-top:26px!important
+ }
+ .review-shell .result-slide-summary .decision-details>summary{
+  min-height:48px!important
+ }
+
+ /* Other result pages begin on the same vertical beat. */
+ .review-shell .result-slide-original,
+ .review-shell .result-slide-evidence,
+ .review-shell .result-slide-resolve{
+  padding-top:24px!important;
+  padding-left:20px!important;
+  padding-right:20px!important;
+  padding-bottom:34px!important
+ }
+}
+
+@media(max-width:360px){
+ .review-shell .result-masthead{
+  padding-left:18px!important;
+  padding-right:18px!important
+ }
+ .review-shell .result-slide-summary,
+ .review-shell .result-slide-original,
+ .review-shell .result-slide-evidence,
+ .review-shell .result-slide-resolve{
+  padding-left:18px!important;
+  padding-right:18px!important
+ }
+}
