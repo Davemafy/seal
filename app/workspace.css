@@ -9422,3 +9422,321 @@
   height:3px!important
  }
 }
+
+
+/* Onboarding → product continuity layer. */
+@media(min-width:901px){
+ /* The working app keeps the same warm, quiet canvas as first run. */
+ .seal-app{
+  grid-template-columns:216px minmax(0,1fr)!important;
+  background:#fdfdfb!important
+ }
+
+ .workspace-rail{
+  width:216px!important;
+  max-width:216px!important;
+  padding:20px 14px 14px!important;
+  background:#f8f8f5!important;
+  border-right:0!important;
+  box-shadow:inset -1px 0 0 #ecece7!important
+ }
+
+ .rail-topbar{
+  min-height:40px!important;
+  padding:0 10px 22px!important
+ }
+ .rail-brand{
+  gap:8px!important
+ }
+ .rail-brand img{
+  width:21px!important;
+  height:21px!important
+ }
+ .rail-brand-word{
+  font-size:16px!important;
+  line-height:21px!important;
+  font-weight:680!important;
+  letter-spacing:-.025em!important
+ }
+ .rail-brand-reg{
+  font-size:7px!important;
+  transform:translateY(-4px)!important
+ }
+ .rail-new-check{
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  border-radius:7px!important;
+  background:transparent!important
+ }
+ .rail-new-check:hover{
+  background:#ecece8!important
+ }
+
+ .rail-primary-nav{
+  margin:0 0 18px!important
+ }
+ .rail-nav-item{
+  min-height:38px!important;
+  padding:8px 12px!important;
+  border-radius:8px!important;
+  background:transparent!important;
+  color:#44443f!important;
+  font-size:13.5px!important;
+  line-height:20px!important;
+  font-weight:560!important
+ }
+ .rail-nav-item:hover{
+  background:#efefeb!important;
+  color:#111!important
+ }
+ .browse-workspace-rail .rail-nav-item.is-current{
+  background:#ecece8!important;
+  color:#111!important;
+  font-weight:650!important
+ }
+
+ .rail-section-head{
+  padding:0 12px 8px!important
+ }
+ .rail-section-head>span{
+  color:#777771!important;
+  font-size:10.5px!important;
+  line-height:15px!important;
+  font-weight:650!important;
+  letter-spacing:.02em!important
+ }
+
+ .rail-check-list{
+  gap:4px!important
+ }
+ .rail-check-row,
+ .rail-check{
+  min-height:42px!important;
+  border-radius:8px!important
+ }
+ .rail-check{
+  padding:10px 34px 10px 12px!important
+ }
+ .rail-check:hover{
+  background:#efefeb!important
+ }
+ .rail-check.is-current,
+ .rail-check-row.is-current .rail-check{
+  background:#e9e9e5!important
+ }
+ .rail-check-copy strong{
+  font-size:13.5px!important;
+  line-height:20px!important;
+  font-weight:570!important
+ }
+ .rail-check-row.is-current .rail-check-copy strong{
+  font-weight:650!important
+ }
+
+ /* Same content frame / headline rhythm as onboarding. */
+ .entry-shell:not(.is-processing){
+  width:min(100%,1080px)!important;
+  max-width:1080px!important;
+  margin:0 auto!important;
+  padding:34px 46px 52px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-areas:
+   "intro"
+   "form"!important;
+  gap:24px!important;
+  align-content:start!important;
+  background:transparent!important
+ }
+
+ .entry-shell:not(.is-processing) .entry-copy{
+  grid-area:intro!important;
+  width:100%!important;
+  max-width:760px!important;
+  margin:0!important
+ }
+ .entry-shell:not(.is-processing) .entry-copy h1{
+  max-width:720px!important;
+  margin:0!important;
+  font-size:42px!important;
+  line-height:47px!important;
+  letter-spacing:-.035em!important;
+  font-weight:670!important
+ }
+ .entry-shell:not(.is-processing) .entry-copy>p{
+  max-width:720px!important;
+  margin:10px 0 0!important;
+  color:#555550!important;
+  font-size:16px!important;
+  line-height:24px!important
+ }
+
+ /* Functional continuation of the onboarding visual:
+    soft stage outside, crisp actionable surface inside. */
+ .entry-shell:not(.is-processing) .intake{
+  grid-area:form!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:18px!important;
+  border:1px solid #e6e6e1!important;
+  border-radius:18px!important;
+  background:#f5f5f2!important;
+  box-shadow:none!important;
+  box-sizing:border-box!important
+ }
+
+ .entry-shell:not(.is-processing) .upload-row{
+  width:100%!important;
+  min-height:184px!important;
+  margin:0!important;
+  padding:22px 24px!important;
+  display:flex!important;
+  align-items:center!important;
+  border:1px solid #ddddD8!important;
+  border-radius:11px!important;
+  background:#fff!important;
+  box-shadow:0 16px 40px rgba(0,0,0,.045)!important;
+  box-sizing:border-box!important
+ }
+ .entry-shell:not(.is-processing) .upload-row:hover,
+ .entry-shell:not(.is-processing) .upload-row.is-dragging{
+  border-color:#cdcdc7!important;
+  background:#fff!important;
+  box-shadow:0 18px 46px rgba(0,0,0,.065)!important;
+  transform:translateY(-1px)!important
+ }
+
+ .entry-shell:not(.is-processing) .upload-group{
+  width:100%!important;
+  max-width:none!important;
+  display:grid!important;
+  grid-template-columns:58px minmax(0,1fr) auto!important;
+  gap:20px!important;
+  align-items:center!important
+ }
+
+ .entry-shell:not(.is-processing) .upload-group::before{
+  width:46px!important;
+  height:58px!important;
+  border-radius:7px!important;
+  background:
+   linear-gradient(#ddddD8,#ddddD8) 11px 17px/23px 2px no-repeat,
+   linear-gradient(#e4e4df,#e4e4df) 11px 24px/18px 2px no-repeat,
+   linear-gradient(#e9e9e4,#e9e9e4) 11px 31px/21px 2px no-repeat,
+   #fff!important;
+  border:1px solid #d7d7d1!important;
+  box-shadow:6px 6px 0 -3px #fff,6px 6px 0 -2px #deded8!important
+ }
+
+ .entry-shell:not(.is-processing) .upload-copy strong{
+  color:#171715!important;
+  font-size:17px!important;
+  line-height:23px!important;
+  font-weight:650!important;
+  letter-spacing:-.012em!important
+ }
+ .entry-shell:not(.is-processing) .upload-copy small{
+  margin-top:4px!important;
+  color:#71716c!important;
+  font-size:12.5px!important;
+  line-height:18px!important
+ }
+
+ .entry-shell:not(.is-processing) .upload-browse{
+  min-height:42px!important;
+  margin:0!important;
+  padding:10px 15px!important;
+  border-radius:8px!important;
+  background:#111!important;
+  color:#fff!important;
+  font-size:13px!important;
+  line-height:19px!important;
+  font-weight:620!important
+ }
+
+ /* The secondary actions become the working equivalent of the onboarding dock. */
+ .entry-shell:not(.is-processing) .intake-secondary-actions{
+  width:100%!important;
+  min-height:44px!important;
+  display:grid!important;
+  grid-template-columns:auto minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:18px!important;
+  margin:12px 0 0!important;
+  padding:0 4px!important;
+  box-sizing:border-box!important
+ }
+ .entry-shell:not(.is-processing) .paste-mode-switch{
+  min-height:36px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  margin:0!important;
+  padding:7px 10px!important;
+  border-radius:8px!important;
+  background:#fff!important;
+  color:#22221f!important;
+  box-shadow:inset 0 0 0 1px #dfdfda!important;
+  font-size:13px!important;
+  line-height:20px!important;
+  font-weight:600!important;
+  text-decoration:none!important
+ }
+ .entry-shell:not(.is-processing) .paste-mode-switch:hover{
+  background:#fafaf8!important
+ }
+ .entry-shell:not(.is-processing) .privacy-note{
+  justify-self:end!important;
+  max-width:390px!important;
+  margin:0!important;
+  color:#777772!important;
+  font-size:12px!important;
+  line-height:18px!important;
+  text-align:right!important
+ }
+
+ /* Paste mode inherits the same inner-card language. */
+ .entry-shell:not(.is-processing) .paste-mode-panel{
+  padding:20px!important;
+  border:1px solid #ddddD8!important;
+  border-radius:11px!important;
+  background:#fff!important;
+  box-shadow:0 16px 40px rgba(0,0,0,.045)!important
+ }
+
+ /* Browse / results should feel like the same family, not a second skin. */
+ .browse-page{
+  background:#fdfdfb!important
+ }
+ .browse-shell{
+  background:transparent!important
+ }
+}
+
+/* Keep mobile lighter: same language, less chrome. */
+@media(max-width:900px){
+ .seal-app{
+  background:#fff!important
+ }
+ .entry-shell:not(.is-processing){
+  padding-top:22px!important
+ }
+ .entry-shell:not(.is-processing) .intake{
+  padding:12px!important;
+  border:1px solid #e7e7e2!important;
+  border-radius:14px!important;
+  background:#f6f6f3!important
+ }
+ .entry-shell:not(.is-processing) .upload-row{
+  border-radius:10px!important;
+  background:#fff!important
+ }
+ .entry-shell:not(.is-processing) .paste-mode-switch{
+  width:max-content!important;
+  padding:6px 8px!important;
+  border-radius:7px!important;
+  background:#fff!important;
+  box-shadow:inset 0 0 0 1px #dfdfda!important
+ }
+}
