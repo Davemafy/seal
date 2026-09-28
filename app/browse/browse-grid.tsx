@@ -3,6 +3,7 @@
 import {useState} from 'react';
 import {useStoredUiLocale,useUiText} from '@/lib/use-ui-text';
 import type {BrowseCase} from '@/lib/browse-cases';
+import {browseCaseCopy} from '@/lib/browse-copy';
 import PdfThumb from './pdf-thumb';
 import ImageThumb from './image-thumb';
 
@@ -42,6 +43,7 @@ export default function BrowseGrid({items}:{items:BrowseCase[]}){
  const visible=items.filter(item=>matchesFilter(item,filter));
 
  const featured=visible[0];
+ const featuredCopy=featured?browseCaseCopy(featured,locale):null;
  const library=visible.slice(1);
 
  return <>
@@ -67,9 +69,9 @@ export default function BrowseGrid({items}:{items:BrowseCase[]}){
    <div className="case-feature-copy">
     <span className="case-feature-label">{ui('featuredSource')}</span>
     <p className="case-kicker"><span>{featured.jurisdiction}</span><span>{featured.language||'English'}</span></p>
-    <h2>{featured.title}</h2>
-    <p className="case-context"><span>{featured.classification}</span><span aria-hidden="true">·</span><strong>{ui('originalSourceAttached')}</strong></p>
-    <p className="case-note">{featured.visualNote}</p>
+    <h2>{featuredCopy?.title||featured.title}</h2>
+    <p className="case-context"><span>{featuredCopy?.classification||featured.classification}</span><span aria-hidden="true">·</span><strong>{ui('originalSourceAttached')}</strong></p>
+    <p className="case-note">{featuredCopy?.visualNote||featured.visualNote}</p>
     <p className="case-source">{ui('source')}: {featured.sourceTitle}</p>
     <div className="case-actions">
      <a className="case-run-action" href={`/check/new?case=${featured.id}`} onClick={event=>{event.preventDefault();openCaseInFreshCheck(featured.id)}}>{ui('checkInSeal')}</a>
@@ -79,19 +81,19 @@ export default function BrowseGrid({items}:{items:BrowseCase[]}){
   </article>}
 
   {!!library.length&&<div className="case-library-grid">
-   {library.map((item,index)=><article className="case-library-card" key={item.id}>
+   {library.map((item,index)=>{const copy=browseCaseCopy(item,locale);return <article className="case-library-card" key={item.id}>
     <CaseMedia item={item} priority={index<1} openSourceLabel={ui('openSource')}/>
     <div className="case-copy">
      <p className="case-kicker"><span>{item.jurisdiction}</span><span>{item.language||'English'}</span></p>
-     <h2>{item.title}</h2>
-     <p className="case-context"><span>{item.classification}</span><span aria-hidden="true">·</span><strong>{ui('originalSourceAttached')}</strong></p>
-     <p className="case-note">{item.visualNote}</p>
+     <h2>{copy.title}</h2>
+     <p className="case-context"><span>{copy.classification}</span><span aria-hidden="true">·</span><strong>{ui('originalSourceAttached')}</strong></p>
+     <p className="case-note">{copy.visualNote}</p>
      <div className="case-actions">
       <a className="case-run-action" href={`/check/new?case=${item.id}`} onClick={event=>{event.preventDefault();openCaseInFreshCheck(item.id)}}>{ui('checkInSeal')}</a>
       <a className="case-source-action" href={item.sourceUrl} target="_blank" rel="noopener noreferrer">{ui('openSource')}</a>
      </div>
     </div>
-   </article>)}
+   </article>})}
   </div>}
  </>;
 }
