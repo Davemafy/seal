@@ -305,7 +305,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const [resultTranslationState,setResultTranslationState]=useState<'idle'|'translating'|'translated'|'unavailable'>('idle');
  const [translationRetry,setTranslationRetry]=useState(0);
  const translationCacheRef=useRef<Map<string,Record<string,string>>>(new Map());
- const translatedResult=displayLocale==='en'?{}:translatedResultData;
+ const translatedResult=useMemo(()=>displayLocale==='en'?{}:translatedResultData,[displayLocale,translatedResultData]);
  const resultUi=useCallback((key:UiCopyKey)=>translatedResult['ui_'+key]||ui(key),[translatedResult,ui]);
  const [documentLanguage,setDocumentLanguage]=useState<DetectedDocumentLanguage|null>(null);
  const [jurisdiction,setJurisdiction]=useState('');
@@ -315,7 +315,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const [hovered,setHovered]=useState('');
  const [showIndex,setShowIndex]=useState(false);
  const [activeResultSection,setActiveResultSection]=useState<'summary'|'message'|'evidence'|'next'>('summary');
- const [voiceSupported,setVoiceSupported]=useState(false);
+ const voiceSupported=typeof window==='undefined'||('speechSynthesis' in window&&typeof window.SpeechSynthesisUtterance!=='undefined');
  const [resultSpeaking,setResultSpeaking]=useState(false);
  const [technicalOpen,setTechnicalOpen]=useState(false);
  const [,setHandoffCopied]=useState(false);
@@ -328,17 +328,13 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   return()=>window.clearInterval(timer);
  },[busy]);
 
- useEffect(()=>{
-  setVoiceSupported('speechSynthesis' in window&&typeof window.SpeechSynthesisUtterance!=='undefined');
-  return()=>{
-   window.speechSynthesis?.cancel();
-  };
- },[]);
+ useEffect(()=>()=>{window.speechSynthesis?.cancel()},[]);
 
  useEffect(()=>{
   if(workspaceActive||!resultSpeaking)return;
   window.speechSynthesis?.cancel();
-  setResultSpeaking(false);
+  const timer=window.setTimeout(()=>setResultSpeaking(false),0);
+  return()=>window.clearTimeout(timer);
  },[workspaceActive,resultSpeaking]);
  const [,setQuestionCopied]=useState(false);
  const workspaceRootRef=useRef<HTMLElement>(null);
@@ -1080,20 +1076,20 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
 
  useEffect(()=>{
   if(!verification||displayLocale==='en'){
-   setResultTranslationState('idle');
-   return;
+   const timer=window.setTimeout(()=>setResultTranslationState('idle'),0);
+   return()=>window.clearTimeout(timer);
   }
 
   const entries=Object.entries(resultTranslationSectionSource);
   if(!entries.length){
-   setResultTranslationState('translated');
-   return;
+   const timer=window.setTimeout(()=>setResultTranslationState('translated'),0);
+   return()=>window.clearTimeout(timer);
   }
 
   const alreadyTranslated=entries.every(([key])=>Object.prototype.hasOwnProperty.call(translatedResultData,key));
   if(alreadyTranslated){
-   setResultTranslationState('translated');
-   return;
+   const timer=window.setTimeout(()=>setResultTranslationState('translated'),0);
+   return()=>window.clearTimeout(timer);
   }
 
   const sourceKey=JSON.stringify(resultTranslationSectionSource);

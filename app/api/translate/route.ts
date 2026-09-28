@@ -7,7 +7,7 @@ const request=z.object({
 });
 
 const MAX_STRINGS=256;
-const BATCH_SIZE=40;
+const BATCH_SIZE=24;
 
 const delay=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 
@@ -47,63 +47,83 @@ export async function POST(req:Request){
    chunks.push(translatableEntries.slice(index,index+BATCH_SIZE));
   }
 
-  const translateChunk=async(chunk:Array<[string,string]>)=>{
-   const strings=Object.fromEntries(chunk);
+  const translateChunk=async(chunk:Array<[string,string]>):Promise<{strings:Record<string,string>;translated:number}>=>{
+   const sourceObject=Object.fromEntries(chunk);
    let lastStatus=0;
 
    for(let attempt=0;attempt<2;attempt++){
-    const response=await fetch(base+'/chat/completions',{
-     method:'POST',
-     headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},
-     body:JSON.stringify({
-      model:process.env.GROQ_MODEL||'openai/gpt-oss-20b',
-      messages:[
-       {role:'system',content:instruction},
-       {role:'user',content:JSON.stringify(strings)}
-      ],
-      temperature:0,
-      response_format:{type:'json_object'}
-     }),
-     signal:AbortSignal.timeout(12000)
-    });
+    try{
+     const response=await fetch(base+'/chat/completions',{
+      method:'POST',
+      headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},
+      body:JSON.stringify({
+       model:process.env.GROQ_MODEL||'openai/gpt-oss-20b',
+       messages:[
+        {role:'system',content:instruction},
+        {role:'user',content:JSON.stringify(sourceObject)}
+       ],
+       temperature:0,
+       response_format:{type:'json_object'}
+      }),
+      signal:AbortSignal.timeout(15000)
+     });
 
-    lastStatus=response.status;
-    if(response.ok){
-     try{
+     lastStatus=response.status;
+     if(response.ok){
       const body=await response.json() as {choices?:{message?:{content?:string}}[]};
       const translated=JSON.parse(body.choices?.[0]?.message?.content||'{}') as Record<string,unknown>;
       const normalized:Record<string,string>={};
+      let translatedCount=0;
       for(const [name,source] of chunk){
        const value=translated[name];
-       normalized[name]=typeof value==='string'&&value.trim()?value:source;
+       const next=typeof value==='string'&&value.trim()?value.trim():source;
+       normalized[name]=next;
+       if(next!==source)translatedCount++;
       }
-      return normalized;
-     }catch{
-      if(attempt<1){
-       await delay(350*(attempt+1));
-       continue;
-      }
+      return {strings:normalized,translated:translatedCount};
      }
-    }
 
-    if(attempt<1&&(response.status===429||response.status>=500)){
-     await delay(700*(attempt+1));
-     continue;
+     if(attempt<1&&(response.status===429||response.status>=500)){
+      await delay(600);
+      continue;
+     }
+    }catch{
+     if(attempt<1){
+      await delay(350);
+      continue;
+     }
     }
     break;
    }
 
-   throw new Error(`Translation provider status ${lastStatus||'unknown'}`);
+   // A single bad provider response should not discard the rest of a section.
+   if(chunk.length>4){
+    const midpoint=Math.ceil(chunk.length/2);
+    const left=await translateChunk(chunk.slice(0,midpoint));
+    const right=await translateChunk(chunk.slice(midpoint));
+    return {
+     strings:{...left.strings,...right.strings},
+     translated:left.translated+right.translated
+    };
+   }
+
+   return {strings:sourceObject,translated:0};
   };
 
   const strings={...sourceStrings};
-  // Run chunks sequentially to avoid rate-limit bursts during a user-triggered translation.
+  let translatedCount=0;
+  // Active-section requests are deliberately small, so sequential chunks avoid rate-limit bursts.
   for(const chunk of chunks){
    const translated=await translateChunk(chunk);
-   Object.assign(strings,translated);
+   Object.assign(strings,translated.strings);
+   translatedCount+=translated.translated;
   }
 
-  return NextResponse.json({strings,mode:'TRANSLATED'});
+  if(translatedCount===0){
+   return NextResponse.json({error:'Translation provider did not return translated text.',mode:'UNAVAILABLE'},{status:503});
+  }
+
+  return NextResponse.json({strings,mode:'TRANSLATED',translatedCount});
  }catch{
   return NextResponse.json({error:'Translation unavailable.',mode:'UNAVAILABLE'},{status:503});
  }
