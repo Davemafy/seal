@@ -16,7 +16,7 @@ import {officialCourtDirectoryFor} from '@/lib/official-directories';
 import {detectDocumentContext,type DetectedDocumentLanguage} from '@/lib/document-context';
 import {justiceSupportFor} from '@/lib/justice-support';
 import {buildCaseReality,buildCourtQuestionScript,buildHandoffSummary,buildObligationMap,buildPlainLanguageSummary,buildRiskSummary} from '@/lib/user-guidance';
-import {DISPLAY_LANGUAGES,displayLocaleFor,type DisplayLocale,type UiCopyKey} from '@/lib/ui-locales';
+import {DISPLAY_LANGUAGES,UI_COPY,displayLocaleFor,type DisplayLocale,type UiCopyKey} from '@/lib/ui-locales';
 import {persistUiLocale,useStoredUiLocale,useUiText} from '@/lib/use-ui-text';
 import {primeBrowserTranslator,translateRecordWithBrowser} from '@/lib/browser-translate';
 import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
@@ -305,7 +305,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const [resultTranslationState,setResultTranslationState]=useState<'idle'|'translating'|'translated'|'unavailable'>('idle');
  const [translationRetry,setTranslationRetry]=useState(0);
  const translationCacheRef=useRef<Map<string,Record<string,string>>>(new Map());
- const translatedResult=displayLocale==='en'||resultTranslationState!=='translated'?{}:translatedResultData;
+ const translatedResult=displayLocale==='en'?{}:translatedResultData;
  const resultUi=useCallback((key:UiCopyKey)=>translatedResult['ui_'+key]||ui(key),[translatedResult,ui]);
  const [documentLanguage,setDocumentLanguage]=useState<DetectedDocumentLanguage|null>(null);
  const [jurisdiction,setJurisdiction]=useState('');
@@ -1009,31 +1009,113 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   return strings;
  },[verification,claims,file?.sample,conciseDecisionTitle,humanDecisionSummary,decisionRelationship,plainExplanation,riskSummary,caseReality,courtQuestionScript,resultStatusLabel,instructionStatus,matterStatus,curatedSignal,obligations]);
 
+ const resultTranslationSectionSource=useMemo(()=>{
+  if(!verification||displayLocale==='en')return {};
+  const source:Record<string,string>={};
+  const take=(key:string)=>{
+   const value=resultTranslationSource[key];
+   if(typeof value==='string'&&value.trim())source[key]=value;
+  };
+  const takePrefix=(prefix:string)=>{
+   Object.keys(resultTranslationSource).forEach(key=>{if(key.startsWith(prefix))take(key)});
+  };
+
+  if(activeResultSection==='summary'){
+   [
+    'decisionTitle','decisionSummary','resultStatus','instructionStatus','matterStatus',
+    'openServiceNote','openCourtWebsite','messageStatusLabel','caseStatusLabel','whyResult',
+    'resolutionDisclaimer','relationship','riskInstructionsTitle','riskInstructionsDetail',
+    'riskMatterTitle','riskMatterDetail','affiliationNote','directCourtUnavailableTitle',
+    'directCourtUnavailableBody','fileTypeImage','fileTypeText'
+   ].forEach(take);
+  }else if(activeResultSection==='evidence'){
+   [
+    'emptyEvidenceTitleDirect','emptyEvidenceTitle','emptyEvidenceCopyDirect','emptyEvidenceCopy',
+    'checkContext','checkContextHint','notResolved','livePublicSources','sourceSnapshot','checkedLabel',
+    'recordPrivacy','whatWasChecked','hideList','showList','inMessage','officialSourceEvidence',
+    'whatCanEstablish','liveOfficialSource','moreSourceExcerpt','moreSourceExcerpts','notWrongFallback',
+    'originalSource','obligationMessageOnly','obligationMatches','obligationConflicts','obligationDatesNote'
+   ].forEach(take);
+   ['signalTitle','signalSummary','resultExplain','resultLabel'].forEach(takePrefix);
+  }else if(activeResultSection==='next'){
+   [
+    'caseRealityTitle','caseRealityDetail','supportHaventTitle','supportHaventCopy','supportPaidTitle',
+    'supportPaidCopy','supportSharedTitle','supportSharedCopy','supportLegalTitle','supportLegalCopy',
+    'handoffEyebrow','handoffTitle','handoffCopy','courtQuestionScript','copyQuestion','copyRecord',
+    'saveRecord','handoffNote','unsupportedNextEyebrow','unsupportedNextTitle','locationNamed',
+    'detailsUnconfirmed','avoidMessageRoutes','startHere','notVerified','timeDateStated','obligationNote',
+    'plainTitle','plainSummary','explanationLanguagePrefix','detectedDocumentLanguage','unknownLanguage',
+    'lowConfidence','explanationDisclaimer','noLegalAid','courtContactHeading','courtContactFallback',
+    'contactSourcePrefix','snapshotChecked','liveChecked','openCourtWebsite'
+   ].forEach(take);
+   ['safeStep','obligationStatus'].forEach(takePrefix);
+   ['safeTitle','safeSummary','safePrimary'].forEach(take);
+  }
+
+  const uiKeys:Record<typeof activeResultSection,UiCopyKey[]>={
+   summary:[
+    'summary','nextStep','whyResult','thisMessage','theCase','messageAsks','fromMessage',
+    'publicSourcesSay','openPublicSource','independentCheck','checkSnapshot','originalMessage','sampleDocument'
+   ],
+   message:[
+    'original','originalMessage','pastedMessage','originalText','demoSynthetic','notRealPerson',
+    'unknownSender','claimsFederalCourt','fictionalNotice','openFullDocumentPreview'
+   ],
+   evidence:[
+    'evidence','independentEvidence','whatSealFound','officialProcess','officialDirectory','sourceConflict',
+    'knownPattern','officialWarning','officialSourceMatch','officialSourceConflict','sourceEvidence',
+    'independentCheck','publicSourcesOnly','publicSourcesNote','openOfficialSource','technicalRecord'
+   ],
+   next:[
+    'resolve','whatToDoNext','nextHelpCopy','theCase','courtClaimed','caseReference',
+    'openCourtWebsiteIndependently','whatMessageAsks','explainNotice','plainLanguageTranslation',
+    'notLegalAdvice','getHelpResolving','courtRecoveryLegalAid','courtContactOfficial',
+    'openCourtWebsite','scheduleStated','paymentStatement','noCourtDetails'
+   ]
+  };
+
+  uiKeys[activeResultSection].forEach(key=>{source['ui_'+key]=UI_COPY[key]});
+  return source;
+ },[verification,displayLocale,activeResultSection,resultTranslationSource]);
+
  useEffect(()=>{
-  if(!verification||displayLocale==='en')return;
-  const sourceKey=JSON.stringify(resultTranslationSource);
-  const cacheKey=displayLocale+'|'+sourceKey;
+  if(!verification||displayLocale==='en'){
+   setResultTranslationState('idle');
+   return;
+  }
+
+  const entries=Object.entries(resultTranslationSectionSource);
+  if(!entries.length){
+   setResultTranslationState('translated');
+   return;
+  }
+
+  const alreadyTranslated=entries.every(([key])=>Object.prototype.hasOwnProperty.call(translatedResultData,key));
+  if(alreadyTranslated){
+   setResultTranslationState('translated');
+   return;
+  }
+
+  const sourceKey=JSON.stringify(resultTranslationSectionSource);
+  const cacheKey=displayLocale+'|'+activeResultSection+'|'+sourceKey;
   const cached=translationCacheRef.current.get(cacheKey);
   if(cached){
    const timer=window.setTimeout(()=>{
-    setTranslatedResult(cached);
+    setTranslatedResult(previous=>({...previous,...cached}));
     setResultTranslationState('translated');
    },0);
    return()=>window.clearTimeout(timer);
   }
 
   const controller=new AbortController();
-  const stateTimer=window.setTimeout(()=>{
-   setTranslatedResult({});
-   setResultTranslationState('translating');
-  },0);
+  const stateTimer=window.setTimeout(()=>setResultTranslationState('translating'),0);
 
   void (async()=>{
    try{
-    const nativeStrings=await translateRecordWithBrowser(resultTranslationSource,displayLocale,controller.signal);
+    const nativeStrings=await translateRecordWithBrowser(resultTranslationSectionSource,displayLocale,controller.signal,900);
     if(nativeStrings&&!controller.signal.aborted){
      translationCacheRef.current.set(cacheKey,nativeStrings);
-     setTranslatedResult(nativeStrings);
+     setTranslatedResult(previous=>({...previous,...nativeStrings}));
      setResultTranslationState('translated');
      return;
     }
@@ -1047,7 +1129,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
     const response=await fetch('/api/translate',{
      method:'POST',
      headers:{'Content-Type':'application/json'},
-     body:JSON.stringify({locale:displayLocale,strings:resultTranslationSource}),
+     body:JSON.stringify({locale:displayLocale,strings:resultTranslationSectionSource}),
      signal:controller.signal
     });
     if(!response.ok){
@@ -1061,7 +1143,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
     }
     if(controller.signal.aborted)return;
     translationCacheRef.current.set(cacheKey,payload.strings);
-    setTranslatedResult(payload.strings);
+    setTranslatedResult(previous=>({...previous,...payload.strings}));
     setResultTranslationState('translated');
    }catch{
     if(!controller.signal.aborted)setResultTranslationState('unavailable');
@@ -1072,7 +1154,10 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
    window.clearTimeout(stateTimer);
    controller.abort();
   };
- },[verification,displayLocale,resultTranslationSource,translationRetry]);
+ },[
+  verification,displayLocale,activeResultSection,resultTranslationSectionSource,
+  translatedResultData,translationRetry
+ ]);
 
  const technicalEvidence=useMemo(()=>{
   if(!verification)return [];

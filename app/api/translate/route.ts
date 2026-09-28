@@ -7,7 +7,7 @@ const request=z.object({
 });
 
 const MAX_STRINGS=256;
-const BATCH_SIZE=128;
+const BATCH_SIZE=40;
 
 const delay=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 
@@ -51,7 +51,7 @@ export async function POST(req:Request){
    const strings=Object.fromEntries(chunk);
    let lastStatus=0;
 
-   for(let attempt=0;attempt<3;attempt++){
+   for(let attempt=0;attempt<2;attempt++){
     const response=await fetch(base+'/chat/completions',{
      method:'POST',
      headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},
@@ -64,7 +64,7 @@ export async function POST(req:Request){
       temperature:0,
       response_format:{type:'json_object'}
      }),
-     signal:AbortSignal.timeout(20000)
+     signal:AbortSignal.timeout(12000)
     });
 
     lastStatus=response.status;
@@ -79,14 +79,14 @@ export async function POST(req:Request){
       }
       return normalized;
      }catch{
-      if(attempt<2){
+      if(attempt<1){
        await delay(350*(attempt+1));
        continue;
       }
      }
     }
 
-    if(attempt<2&&(response.status===429||response.status>=500)){
+    if(attempt<1&&(response.status===429||response.status>=500)){
      await delay(700*(attempt+1));
      continue;
     }
