@@ -45,13 +45,9 @@ export default function Home(){
    <div className="landing-hero-inner">
     <div className="landing-hero-copy">
      <p className="landing-kicker">Before you call, click, pay, or reply.</p>
-     <h1>The seal can be faked.<br/><em>The source can’t.</em></h1>
+     <h1>The seal can be faked.<br/>The source can’t.</h1>
      <p className="landing-hero-summary">Check what a court message is asking you to do against independent public sources.</p>
-     <div className="landing-hero-notes" aria-label="SEAL principles">
-      <span>Independent public sources</span>
-      <span>Unconfirmed stays unconfirmed</span>
-      <span>Not affiliated with any court</span>
-     </div>
+     <p className="landing-hero-principle">If a source cannot establish it, SEAL leaves it unconfirmed. SEAL is not affiliated with any court.</p>
     </div>
 
     <div className="landing-checker" aria-label="Check a court message">
@@ -70,7 +66,6 @@ export default function Home(){
   <div className="landing-marketing">
    <section className="landing-proof" aria-labelledby="landing-proof-title">
     <div className="landing-section-heading">
-     <span>One real example</span>
      <h2 id="landing-proof-title">Official-looking details are not the same thing as an official message.</h2>
      <p>The City of Dallas published this court-looking QR-payment notice as a scam example. SEAL checks the requested action against that independent source.</p>
     </div>
@@ -106,7 +101,7 @@ export default function Home(){
         </span>
         <strong>Source attached</strong>
        </div>
-       <Link href="/check/dallas-proof?case=dallas-traffic-qr-scam">Open this check <span aria-hidden="true">→</span></Link>
+       <Link href="/check/dallas-proof?case=dallas-traffic-qr-scam">Open this check</Link>
       </div>
      </div>
     </div>
@@ -114,24 +109,21 @@ export default function Home(){
 
    <section className="landing-method" aria-labelledby="landing-method-title">
     <div className="landing-method-intro">
-     <span>How SEAL thinks</span>
      <h2 id="landing-method-title">The message and the evidence stay separate.</h2>
+     <p>SEAL reads the action first, checks outside the message, then gives you an official route forward without pretending the sender has been authenticated.</p>
     </div>
     <div className="landing-method-grid">
      <article>
-      <small>01</small>
       <h3>Read the request</h3>
-      <p>SEAL isolates what the message asks you to call, click, pay, share, or do.</p>
+      <p>What is this message actually asking you to call, click, pay, share, or do?</p>
      </article>
      <article>
-      <small>02</small>
-      <h3>Check independently</h3>
-      <p>It uses public court and government sources outside the message itself.</p>
+      <h3>Check outside the message</h3>
+      <p>Public court and government sources are opened independently of the message.</p>
      </article>
      <article>
-      <small>03</small>
-      <h3>Leave with a next step</h3>
-      <p>See what is confirmed, what remains unknown, and where to verify safely.</p>
+      <h3>Know what follows</h3>
+      <p>Confirmed facts stay distinct from unknowns, with a safer official next step.</p>
      </article>
     </div>
    </section>
@@ -139,10 +131,9 @@ export default function Home(){
    <section className="landing-browse" aria-labelledby="landing-browse-title">
     <div className="landing-browse-head">
      <div>
-      <span>Real examples</span>
       <h2 id="landing-browse-title">Source material, not mockups.</h2>
      </div>
-     <Link href="/browse">Browse all examples <span aria-hidden="true">→</span></Link>
+     <Link href="/browse">Browse all examples</Link>
     </div>
     <div className="landing-case-grid">
      {featuredCases.map(item=><Link href={item.href} className="landing-case" key={item.title}>
@@ -158,7 +149,6 @@ export default function Home(){
 
    <section className="landing-boundary">
     <div>
-     <span>Trust boundary</span>
      <h2>Matching details do not authenticate a message.</h2>
     </div>
     <p>A real court name, address, phone number, or public case record can appear inside a fraudulent message. SEAL reports only what an independent source establishes.</p>
@@ -168,7 +158,7 @@ export default function Home(){
     <img src="/brand/seal-mark-black.svg" alt=""/>
     <h2>Got a court message you’re unsure about?</h2>
     <p>Check it before you act.</p>
-    <a href="#check">Check a court message <span aria-hidden="true">↑</span></a>
+    <a href="#check">Check a court message</a>
    </section>
 
    <footer className="landing-footer">
