@@ -12,11 +12,12 @@ const uberMove=localFont({
  display:'swap'
 });
 
-const productDescription='Check court messages against public sources before you act. See what is confirmed, what is not, and where the evidence came from.';
+const productDescription='Before you call, click, pay, or reply: check what a court message asks you to do against independent public sources.';
 
 export const metadata:Metadata={
+ metadataBase:new URL('https://seal.imafidondavid1.workers.dev'),
  title:{
-  default:'SEAL',
+  default:'SEAL — Check a court message before you act',
   template:'%s | SEAL'
  },
  description:productDescription,
@@ -30,14 +31,14 @@ export const metadata:Metadata={
   apple:'/favicon-seal-v3.svg'
  },
  openGraph:{
-  title:'SEAL',
+  title:'SEAL — The seal can be faked. The source can’t.',
   description:productDescription,
   siteName:'SEAL',
   type:'website'
  },
  twitter:{
-  card:'summary',
-  title:'SEAL',
+  card:'summary_large_image',
+  title:'SEAL — The seal can be faked. The source can’t.',
   description:productDescription
  },
  formatDetection:{
