@@ -18,15 +18,6 @@ async function chooseFile(page:Page,path:string){
  await chooser.setFiles(path);
 }
 
-async function dismissAutoReview(page:Page){
- const overlay=page.getByTestId('evidence-review');
- await overlay.waitFor({state:'visible',timeout:2500}).catch(()=>{});
- if(await overlay.isVisible().catch(()=>false)){
-  await page.getByRole('button',{name:'Back to result'}).click();
-  await expect(overlay).toHaveCount(0,{timeout:5000});
- }
-}
-
 test('mobile interface language changes locally even when translation provider is unavailable',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:390,height:844});
@@ -110,7 +101,10 @@ Call +91 11 5555 0199 to confirm your attendance.`);
  await expect(page.getByTestId('document-jurisdiction')).toBeVisible();
  await expect(page.getByTestId('document-jurisdiction')).toContainText('India');
  await expect(page.getByTestId('two-risk-result')).toContainText('Not confirmed');
+ const tabs=page.getByRole('tablist');
+ await tabs.getByRole('tab',{name:'Evidence'}).click();
  await expect(page.getByText('Official directory',{exact:true})).toBeVisible();
+ await tabs.getByRole('tab',{name:'Resolve'}).click();
  const route=page.getByTestId('case-reality-check').getByRole('link',{name:'Search India eCourts'});
  await expect(route).toBeVisible();
  await expect(route).toHaveAttribute('href','https://services.ecourts.gov.in/ecourtindia_v6/');
@@ -119,7 +113,7 @@ Call +91 11 5555 0199 to confirm your attendance.`);
  assertNoRuntimeErrors();
 });
 
-test('mobile result keeps the decision first and scrolls result sections vertically',async({page})=>{
+test('mobile result keeps the decision first and switches explicit result tabs',async({page})=>{
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:390,height:844});
@@ -132,85 +126,31 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.getByTestId('result-status')).toHaveText('We could not confirm this notice');
  await expect(page.getByRole('heading',{level:1,name:'Check it independently before you pay.'})).toBeVisible();
- const visualLanguage=await page.evaluate(()=>{
-  const glance=document.querySelector('.decision-at-a-glance') as HTMLElement|null;
-  const metaSpans=document.querySelectorAll('.check-object-meta span');
-  const secondMeta=metaSpans.item(1) as HTMLElement|null;
-  const masthead=document.querySelector('.result-masthead-title') as HTMLElement|null;
-  return {
-   glanceTop:glance?getComputedStyle(glance).borderTopWidth:null,
-   glanceBottom:glance?getComputedStyle(glance).borderBottomWidth:null,
-   metaSeparator:secondMeta?getComputedStyle(secondMeta,'::before').content:null,
-   mastheadTransform:masthead?getComputedStyle(masthead).textTransform:null
-  };
- });
- expect(visualLanguage.glanceTop).toBe('0px');
- expect(visualLanguage.glanceBottom).toBe('0px');
- expect(['none','normal','""']).toContain(visualLanguage.metaSeparator);
- expect(visualLanguage.mastheadTransform).toBe('none');
 
- const chapters=page.locator('.result-chapters');
- const carousel=page.getByTestId('result-carousel');
- await expect(chapters).toBeVisible();
- await expect(chapters.getByRole('link')).toHaveCount(4);
- await expect(page.getByTestId('evidence-review'),'review must not auto-open over result navigation').toHaveCount(0);
- await expect(page.locator('.record-disclosure')).not.toHaveAttribute('open','');
- const metrics=await carousel.evaluate(node=>({
-  width:node.clientWidth,
-  height:node.clientHeight,
-  scrollWidth:node.scrollWidth,
-  scrollHeight:node.scrollHeight,
-  snap:getComputedStyle(node).scrollSnapType,
-  offsets:Array.from(node.querySelectorAll<HTMLElement>('.result-slide')).map(slide=>slide.offsetTop)
- }));
- expect(metrics.width).toBeGreaterThan(300);
- expect(metrics.scrollWidth-metrics.width,'result flow must not create horizontal overflow').toBeLessThanOrEqual(2);
- expect(metrics.scrollHeight).toBeGreaterThan(metrics.height*3);
- expect(metrics.offsets).toHaveLength(4);
- expect(metrics.snap).toContain('y');
+ const tabs=page.getByRole('tablist');
+ await expect(tabs.getByRole('tab')).toHaveCount(4);
+ await expect(tabs.getByRole('tab',{name:'Summary'})).toHaveAttribute('aria-selected','true');
+ await expect(page.locator('[data-result-section="summary"]')).toBeVisible();
+ await expect(page.locator('[data-result-section="message"]')).toBeHidden();
+ await expect(page.locator('[data-result-section="evidence"]')).toBeHidden();
+ await expect(page.locator('[data-result-section="next"]')).toBeHidden();
+ await expect(page.getByTestId('evidence-review'),'review must remain manual').toHaveCount(0);
 
- const calls=await carousel.evaluate(node=>{
-  const element=node as HTMLElement & {__sealScrollCalls?:Array<ScrollToOptions>};
-  element.__sealScrollCalls=[];
-  const original=element.scrollTo.bind(element);
-  element.scrollTo=((options?:ScrollToOptions|number,y?:number)=>{
-   if(typeof options==='object'&&options)element.__sealScrollCalls!.push(options);
-   if(typeof options==='number')return original(options,y??0);
-   return original(options||{});
-  }) as typeof element.scrollTo;
-  return true;
- });
- expect(calls).toBe(true);
+ await tabs.getByRole('tab',{name:'Original'}).click();
+ await expect(tabs.getByRole('tab',{name:'Original'})).toHaveAttribute('aria-selected','true');
+ await expect(page.locator('[data-result-section="message"]')).toBeVisible();
+ await expect(page.locator('[data-result-section="summary"]')).toBeHidden();
 
- await chapters.getByRole('link',{name:'Original'}).click();
- await expect.poll(()=>carousel.evaluate(node=>node.scrollTop),{timeout:5000}).toBeGreaterThan(metrics.offsets[1]-12);
- await expect(chapters.getByRole('link',{name:'Original'})).toHaveAttribute('aria-current','location');
+ await tabs.getByRole('tab',{name:'Evidence'}).click();
+ await expect(page.locator('[data-result-section="evidence"]')).toBeVisible();
+ await expect(page.getByText('New Hampshire publishes a specific process for toll and court collections')).toBeVisible();
 
- await chapters.getByRole('link',{name:'Evidence'}).click();
- await expect.poll(()=>carousel.evaluate(node=>node.scrollTop),{timeout:5000}).toBeGreaterThan(metrics.offsets[2]-12);
- await expect(chapters.getByRole('link',{name:'Evidence'})).toHaveAttribute('aria-current','location');
+ await tabs.getByRole('tab',{name:'Resolve'}).click();
+ await expect(page.locator('[data-result-section="next"]')).toBeVisible();
+ await expect(page.getByTestId('resolve-primary')).toBeVisible();
 
- await carousel.evaluate((node,top)=>node.scrollTo({top:top+180,behavior:'auto'}),metrics.offsets[2]);
- await expect(chapters.getByRole('link',{name:'Evidence'})).toHaveAttribute('aria-current','location');
-
- await chapters.getByRole('link',{name:'Resolve'}).click();
- await expect.poll(()=>carousel.evaluate(node=>node.scrollTop),{timeout:5000}).toBeGreaterThan(metrics.offsets[3]-12);
- await expect(chapters.getByRole('link',{name:'Resolve'})).toHaveAttribute('aria-current','location');
-
- await chapters.getByRole('link',{name:'Evidence'}).click();
- await expect.poll(()=>carousel.evaluate(node=>node.scrollTop),{timeout:5000}).toBeLessThanOrEqual(metrics.offsets[2]+8);
- await expect.poll(()=>carousel.evaluate(node=>node.scrollTop),{timeout:5000}).toBeGreaterThanOrEqual(metrics.offsets[2]-8);
-
- await chapters.getByRole('link',{name:'Summary'}).click();
- await expect.poll(()=>carousel.evaluate(node=>node.scrollTop),{timeout:3000}).toBeLessThan(4);
- const scrollCalls=await carousel.evaluate(node=>(node as HTMLElement & {__sealScrollCalls?:Array<ScrollToOptions>}).__sealScrollCalls||[]);
- expect(scrollCalls.some(call=>call.behavior==='smooth'),'adjacent tab moves should scroll vertically with continuity').toBe(true);
- expect(scrollCalls.at(-1)?.behavior,'far tab jumps must not sweep through every result section').toBe('auto');
- expect(scrollCalls.every(call=>call.left===undefined||call.left===0),'tab navigation must never move horizontally').toBe(true);
- expect(await page.evaluate(()=>window.scrollX)).toBe(0);
-
- await carousel.evaluate(node=>node.scrollTo({top:0,left:0,behavior:'auto'}));
- await expect(chapters.getByRole('link',{name:'Summary'})).toHaveAttribute('aria-current','location');
+ await tabs.getByRole('tab',{name:'Summary'}).click();
+ await expect(page.locator('[data-result-section="summary"]')).toBeVisible();
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
  expect(overflow).toBeLessThanOrEqual(1);
  assertNoRuntimeErrors();
@@ -236,30 +176,35 @@ test('sample result stays quiet and action-free',async({page})=>{
  assertNoRuntimeErrors();
 });
 
-test('desktop result keeps the vertical result flow contained without horizontal overflow',async({page})=>{
+test('desktop result keeps one contained tab panel without horizontal overflow',async({page})=>{
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:1440,height:900});
  await page.goto('/');
  await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await dismissAutoReview(page);
- const carousel=page.getByTestId('result-carousel');
- const metrics=await carousel.evaluate(node=>({
+ const stage=page.getByTestId('result-tabs-stage');
+ const tabs=page.getByRole('tablist');
+ const metrics=await stage.evaluate(node=>({
   width:node.clientWidth,
   height:node.clientHeight,
   scrollWidth:node.scrollWidth,
-  scrollHeight:node.scrollHeight,
   overflowX:getComputedStyle(node).overflowX,
   overflowY:getComputedStyle(node).overflowY
  }));
  expect(Math.abs(metrics.scrollWidth-metrics.width)).toBeLessThanOrEqual(2);
- expect(metrics.scrollHeight).toBeGreaterThan(metrics.height);
  expect(metrics.overflowX).toMatch(/hidden|clip/);
- expect(metrics.overflowY).toBe('auto');
- expect(metrics.height).toBeLessThanOrEqual(820);
- expect(metrics.height).toBeGreaterThanOrEqual(500);
+ expect(metrics.overflowY).toBe('hidden');
+ expect(metrics.height).toBeGreaterThan(500);
  await expect(page.locator('.record-disclosure')).not.toHaveAttribute('open','');
+
+ await tabs.getByRole('tab',{name:'Evidence'}).click();
+ await expect(page.locator('[data-result-section="evidence"]')).toBeVisible();
+ await expect(page.locator('[data-result-section="summary"]')).toBeHidden();
+
+ await tabs.getByRole('tab',{name:'Resolve'}).click();
+ await expect(page.locator('[data-result-section="next"]')).toBeVisible();
+
  const pageMetrics=await page.evaluate(()=>({widthOverflow:document.documentElement.scrollWidth-window.innerWidth,height:document.documentElement.scrollHeight,viewport:window.innerHeight}));
  expect(pageMetrics.widthOverflow).toBeLessThanOrEqual(1);
  expect(pageMetrics.height).toBeLessThan(pageMetrics.viewport*1.45);
@@ -276,14 +221,17 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  await page.getByRole('button',{name:'Check this message'}).click();
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.locator('#review-summary').getByRole('heading',{name:'Check it independently before you pay.'})).toBeVisible();
+ await page.locator('.decision-details').locator('summary').click();
+ await expect(page.locator('.decision-details').getByRole('link',{name:'Open public source'})).toHaveAttribute('href','https://www.gc.nh.gov/rsa/html/xx/236/236-mrg.htm');
+ await expect(page.getByTestId('primary-next-step').getByRole('link',{name:'Open NH E-ZPass'})).toHaveAttribute('href','https://www.ezpassnh.com/');
+ const tabs=page.getByRole('tablist');
+ await tabs.getByRole('tab',{name:'Evidence'}).click();
  await expect(page.getByText('Official process',{exact:true})).toBeVisible();
  await expect(page.getByText('New Hampshire publishes a specific process for toll and court collections')).toBeVisible();
  await expect(page.getByText(/These sources help with the check, but they still cannot tell us who sent the message/i)).toBeVisible();
  await expect(page.locator('[data-result-section="evidence"] .safe-route')).toHaveCount(0);
+ await tabs.getByRole('tab',{name:'Resolve'}).click();
  await expect(page.locator('[data-result-section="next"] .safe-route')).toHaveCount(1);
- await page.locator('.decision-details').locator('summary').click();
- await expect(page.locator('.decision-details').getByRole('link',{name:'Open public source'})).toHaveAttribute('href','https://www.gc.nh.gov/rsa/html/xx/236/236-mrg.htm');
- await expect(page.getByTestId('primary-next-step').getByRole('link',{name:'Open NH E-ZPass'})).toHaveAttribute('href','https://www.ezpassnh.com/');
  await expect(page.getByText('1-855-212-1234',{exact:true})).toBeVisible();
  assertNoRuntimeErrors();
 });
@@ -389,7 +337,6 @@ test('mobile SEAL brand returns a result to the clean entry state',async({page})
  await page.goto('/');
  await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await dismissAutoReview(page);
 
  await page.locator('.mobile-brand').click();
  await expect(page.getByTestId('entry-shell')).toBeVisible();
@@ -476,7 +423,7 @@ test('multi-page PDF can be paged repeatedly without losing the application',asy
  await page.goto('/');
  await chooseFile(page,fixture);
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
- await dismissAutoReview(page);
+ await page.getByRole('tablist').getByRole('tab',{name:'Original'}).click();
  await expect(page.getByText('Page 1 of 2')).toBeVisible({timeout:15000});
 
  const next=page.getByRole('button',{name:'Next'});
@@ -501,11 +448,11 @@ test('mobile result has no horizontal overflow and keeps the review accessible',
  await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.getByTestId('evidence-review')).toHaveCount(0);
- await expect(page.getByTestId('play-evidence-review')).toBeVisible();
+ await page.getByRole('tablist').getByRole('tab',{name:'Evidence'}).click();
+ await expect(page.getByTestId('mobile-evidence-review')).toBeVisible();
 
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
  expect(overflow).toBeLessThanOrEqual(1);
- await expect(page.getByTestId('play-evidence-review')).toBeVisible();
  assertNoRuntimeErrors();
 });
 
@@ -570,7 +517,6 @@ test('curated Dallas example preserves its source-backed resolution',async({page
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.goto('/?case=dallas-traffic-qr-scam');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:60000});
- await dismissAutoReview(page);
  await expect(page.locator('#review-summary').getByRole('heading',{name:'Do not scan or pay from this message'})).toBeVisible();
  await expect(page.locator('#review-summary .decision-summary')).toContainText(/City of Dallas published this exact example as a scam/i);
  await expect(page.getByTestId('primary-next-step').getByRole('link',{name:/View the City of Dallas source/i})).toBeVisible();
