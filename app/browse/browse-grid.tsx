@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import {useState} from 'react';
 import {useStoredUiLocale,useUiText} from '@/lib/use-ui-text';
 import type {BrowseCase} from '@/lib/browse-cases';
@@ -30,6 +29,11 @@ function matchesFilter(item:BrowseCase,filter:BrowseFilter){
  if(filter==='international')return item.country!=='United States';
  return true;
 }
+
+const openCaseInFreshCheck=(caseId:string)=>{
+ const id=`browse-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
+ window.location.assign(`/check/${encodeURIComponent(id)}?case=${encodeURIComponent(caseId)}`);
+};
 
 export default function BrowseGrid({items}:{items:BrowseCase[]}){
  const [locale]=useStoredUiLocale();
@@ -68,7 +72,7 @@ export default function BrowseGrid({items}:{items:BrowseCase[]}){
     <p className="case-note">{featured.visualNote}</p>
     <p className="case-source">{ui('source')}: {featured.sourceTitle}</p>
     <div className="case-actions">
-     <Link className="case-run-action" href={`/?case=${featured.id}`}>{ui('checkInSeal')}</Link>
+     <a className="case-run-action" href={`/check/new?case=${featured.id}`} onClick={event=>{event.preventDefault();openCaseInFreshCheck(featured.id)}}>{ui('checkInSeal')}</a>
      <a className="case-source-action" href={featured.sourceUrl} target="_blank" rel="noopener noreferrer">{ui('openSource')}</a>
     </div>
    </div>
@@ -83,7 +87,7 @@ export default function BrowseGrid({items}:{items:BrowseCase[]}){
      <p className="case-context"><span>{item.classification}</span><span aria-hidden="true">·</span><strong>{ui('originalSourceAttached')}</strong></p>
      <p className="case-note">{item.visualNote}</p>
      <div className="case-actions">
-      <Link className="case-run-action" href={`/?case=${item.id}`}>{ui('checkInSeal')}</Link>
+      <a className="case-run-action" href={`/check/new?case=${item.id}`} onClick={event=>{event.preventDefault();openCaseInFreshCheck(item.id)}}>{ui('checkInSeal')}</a>
       <a className="case-source-action" href={item.sourceUrl} target="_blank" rel="noopener noreferrer">{ui('openSource')}</a>
      </div>
     </div>
