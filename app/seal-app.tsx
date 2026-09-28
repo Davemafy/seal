@@ -338,67 +338,15 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  },[workspaceActive,resultSpeaking]);
  const [,setQuestionCopied]=useState(false);
  const workspaceRootRef=useRef<HTMLElement>(null);
- const resultCarouselRef=useRef<HTMLDivElement>(null);
- const resultSectionStorageKey=`seal:result-section:${workspaceId}`;
  const sectionId=(base:string)=>workspaceId==='primary'?base:`${base}-${workspaceId}`;
- const jumpToResultSection=useCallback((event:React.MouseEvent<HTMLAnchorElement>,section:'summary'|'message'|'evidence'|'next',targetBase:string)=>{
-  event.preventDefault();
-  const carousel=resultCarouselRef.current;
-  const slides=carousel?Array.from(carousel.querySelectorAll<HTMLElement>('.result-slide')):[];
-  const slide=slides.find(candidate=>candidate.dataset.resultSection===section);
-  if(!carousel||!slide)return;
-  const sections=['summary','message','evidence','next'] as const;
-  const currentIndex=Math.max(0,sections.indexOf(activeResultSection));
-  const targetIndex=Math.max(0,sections.indexOf(section));
-  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const adjacent=Math.abs(targetIndex-currentIndex)===1;
+ const jumpToResultSection=useCallback((section:'summary'|'message'|'evidence'|'next')=>{
   setActiveResultSection(section);
-  try{window.sessionStorage.setItem(resultSectionStorageKey,section)}catch{}
-  carousel.scrollTo({top:slide.offsetTop,left:0,behavior:reduce||!adjacent?'auto':'smooth'});
-  const id=workspaceId==='primary'?targetBase:`${targetBase}-${workspaceId}`;
-  window.history.replaceState(null,'',`#${id}`);
- },[workspaceId,activeResultSection,resultSectionStorageKey]);
- const syncResultCarousel=useCallback((event:React.UIEvent<HTMLDivElement>)=>{
-  const carousel=event.currentTarget;
-  const slides=Array.from(carousel.querySelectorAll<HTMLElement>('.result-slide'));
-  if(!slides.length)return;
-  const probe=carousel.scrollTop+Math.min(160,carousel.clientHeight*.22);
-  let index=0;
-  for(let i=0;i<slides.length;i++){
-   if(slides[i].offsetTop<=probe)index=i;
-   else break;
+  if(resultSpeaking){
+   window.speechSynthesis?.cancel();
+   setResultSpeaking(false);
   }
-  if(carousel.scrollTop+carousel.clientHeight>=carousel.scrollHeight-4)index=slides.length-1;
-  const next=(['summary','message','evidence','next'] as const)[Math.min(3,index)];
-  setActiveResultSection(current=>{
-   if(current===next)return current;
-   try{window.sessionStorage.setItem(resultSectionStorageKey,next)}catch{}
-   return next;
-  });
- },[resultSectionStorageKey]);
-
- useLayoutEffect(()=>{
-  if(!workspaceActive||!verification)return;
-  const frame=window.requestAnimationFrame(()=>{
-   const carousel=resultCarouselRef.current;
-   if(!carousel)return;
-   let target:'summary'|'message'|'evidence'|'next'='summary';
-   try{
-    const stored=window.sessionStorage.getItem(resultSectionStorageKey);
-    if(stored==='summary'||stored==='message'||stored==='evidence'||stored==='next')target=stored;
-   }catch{}
-   const slide=carousel.querySelector<HTMLElement>(`[data-result-section="${target}"]`);
-   carousel.scrollTo({top:slide?.offsetTop||0,left:0,behavior:'auto'});
-   setActiveResultSection(target);
-   if(window.location.hash)window.history.replaceState(null,'',window.location.pathname+window.location.search);
-  });
-  return()=>window.cancelAnimationFrame(frame);
- },[workspaceActive,verification,resultSectionStorageKey]);
- const [reviewOffer,setReviewOffer]=useState<'idle'|'counting'|'skipped'|'watching'|'completed'>('idle');
- const [reviewCountdown,setReviewCountdown]=useState(3);
- const [,setReviewOfferPaused]=useState(false);
+ },[resultSpeaking]);
  const [storyArtifactReady,setStoryArtifactReady]=useState(true);
- const [,setStoryStartPending]=useState(false);
  const [storyOpen,setStoryOpen]=useState(false);
  const [storyStep,setStoryStep]=useState(0);
  const [storyPlaying,setStoryPlaying]=useState(true);
@@ -536,12 +484,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   };
  },[documentPreviewOpen,closeDocumentPreview]);
 
- const handleStoryArtifactReady=useCallback(()=>{
-  setStoryArtifactReady(true);
-  setStoryStartPending(false);
-  setReviewOfferPaused(false);
-  setReviewCountdown(3);
- },[]);
+ const handleStoryArtifactReady=useCallback(()=>setStoryArtifactReady(true),[]);
 
  useLayoutEffect(()=>{
   if(!busy||!uploadPreview?.url||!processingIntakeRef.current)return;
@@ -1141,7 +1084,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   ?`Court resolver: ${verification.resolver_id==='unsupported'?'unavailable':verification.resolver_id} · Source intelligence: ${verification.signals?.length||verification.safe_action?'active':'inactive'} · Mode: ${mode}`
   :'';
 
- const checkObjectTitle=caseReality?.court&&caseReality.court!=='Court not identified'?cleanDisplayText(caseReality.court):'Court message';
+ const reliableCourtTitle=claims.find(claim=>claim.type==='court'&&claimReliable(claim)&&cleanDisplayText(claim.value))?.value;
+ const checkObjectTitle=cleanDisplayText(reliableCourtTitle||workspaceTitle||'Court message');
  const checkObjectDisplayTitle=humanizeDisplayName(checkObjectTitle)
   .replace(/^United States District Court\s*/i,'U.S. District Court · ')
   .replace(/\s{2,}/g,' ')
@@ -1439,7 +1383,6 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
      setFile(restored.browserFile);
      sourceBlobRef.current=restored.sourceBlob;
      setStoryArtifactReady(!restored.browserFile);
-     setReviewOffer('completed');
     }else{
      void clearOrphanedResultArtifacts(workspaceId).catch(()=>{});
     }
@@ -1677,27 +1620,14 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  },[storyOpen,seekStoryBy,toggleStoryPlayback]);
 
  function startStory(){
-  if(!storyArtifactReady&&file?.kind!=='pdf'){
-   setStoryStartPending(true);
-   setReviewOfferPaused(true);
-   setReviewCountdown(1);
-   return;
-  }
+  if(!storyArtifactReady&&file?.kind!=='pdf')return;
   if(file?.kind==='pdf'&&!storyArtifactReady){
-   setStoryStartPending(true);
-   setReviewOfferPaused(true);
-   setReviewCountdown(1);
-   setReviewOffer('watching');
    setStoryPlaying(false);
    setStoryClosing(false);
    setStoryOpen(true);
    return;
   }
   if(storyCloseTimer.current){window.clearTimeout(storyCloseTimer.current);storyCloseTimer.current=undefined}
-  setStoryStartPending(false);
-  setReviewOfferPaused(false);
-  setReviewOffer('watching');
-  setReviewCountdown(3);
   storyTimelineRef.current?.kill();
   storyTimelineTime.current=0;
   storyPhaseRef.current=0;
@@ -1707,18 +1637,12 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   setStoryOpen(true);
   window.requestAnimationFrame(()=>storyPauseButton.current?.focus());
  }
- function skipReviewOffer(){
-  setReviewOffer('skipped');
-  setReviewCountdown(3);
-  setReviewOfferPaused(false);
- }
  function closeStory(){
   if(storyClosing)return;
   if(storyCloseTimer.current)window.clearTimeout(storyCloseTimer.current);
   storyTimelineRef.current?.pause();
   setStoryClosing(true);
   setStoryPlaying(false);
-  setReviewOffer('completed');
   storyCloseTimer.current=window.setTimeout(()=>{
    storyCloseTimer.current=undefined;
    setStoryOpen(false);
@@ -1805,7 +1729,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   storyPhaseRef.current=0;
   runId.current++;
   if(file)URL.revokeObjectURL(file.preview);
-  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setActiveResultSection('summary');setTechnicalOpen(false);setHandoffCopied(false);setQuestionCopied(false);setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);setStoryArtifactReady(true);setStoryStartPending(false);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);
+  setFile(null);setText('');setDraft('');setPasteMode(false);setClaims([]);setVerification(null);setStatus('');setError('');setBusy(false);setRevealed(0);setSelected('');setHovered('');setShowIndex(false);setActiveResultSection('summary');setTechnicalOpen(false);setHandoffCopied(false);setQuestionCopied(false);setStoryArtifactReady(true);setMode('SNAPSHOT');setStoryOpen(false);setStoryStep(0);setStoryPlaying(true);setStoryClosing(false);
  }
 
  function submitPaste(){const value=draft.trim();if(!value)return;clear();setText(value);void run('SNAPSHOT',{text:value,file:null})}
@@ -1881,10 +1805,9 @@ async function upload(uploaded:File){
   storyTimelineRef.current?.kill();
   storyTimelineTime.current=0;
   storyPhaseRef.current=0;
-  try{window.sessionStorage.removeItem(resultSectionStorageKey)}catch{}
   setBusy(true);setError('');setVerification(null);setRevealed(0);setSelected('');setTechnicalOpen(false);
-  setReviewOffer('idle');setReviewCountdown(3);setReviewOfferPaused(false);
-  setStoryStartPending(false);setStoryOpen(false);setStoryStep(0);setStoryPlaying(false);setStoryClosing(false);
+  setActiveResultSection('summary');
+  setStoryOpen(false);setStoryStep(0);setStoryPlaying(false);setStoryClosing(false);
   setStoryArtifactReady(!sourceFile);
   setMode(sourceMode);setStatus('Reading requested actions');
   try{
@@ -2391,28 +2314,16 @@ async function upload(uploaded:File){
       </div>
      </div>
 
-     <nav className="result-chapters" aria-label={resultUi('jumpResultSection')}>
-      <a href={`#${sectionId('review-summary')}`} className={activeResultSection==='summary'?'is-current':''} aria-current={activeResultSection==='summary'?'location':undefined} onClick={event=>jumpToResultSection(event,'summary','review-summary')}>{resultUi('summary')}</a>
-      <a href={`#${sectionId('original-message')}`} className={activeResultSection==='message'?'is-current':''} aria-current={activeResultSection==='message'?'location':undefined} onClick={event=>jumpToResultSection(event,'message','original-message')}>{resultUi('original')}</a>
-      <a href={`#${sectionId('source-checks')}`} className={activeResultSection==='evidence'?'is-current':''} aria-current={activeResultSection==='evidence'?'location':undefined} onClick={event=>jumpToResultSection(event,'evidence','source-checks')}>{resultUi('evidence')}</a>
-      <a href={`#${sectionId('user-actions')}`} className={activeResultSection==='next'?'is-current':''} aria-current={activeResultSection==='next'?'location':undefined} onClick={event=>jumpToResultSection(event,'next','user-actions')}>{resultUi('resolve')}</a>
+     <nav className="result-chapters" role="tablist" aria-label={resultUi('jumpResultSection')}>
+      <button id={sectionId('tab-summary')} type="button" role="tab" aria-selected={activeResultSection==='summary'} aria-controls={sectionId('review-summary')} className={activeResultSection==='summary'?'is-current':''} onClick={()=>jumpToResultSection('summary')}>{resultUi('summary')}</button>
+      <button id={sectionId('tab-original')} type="button" role="tab" aria-selected={activeResultSection==='message'} aria-controls={sectionId('original-message')} className={activeResultSection==='message'?'is-current':''} onClick={()=>jumpToResultSection('message')}>{resultUi('original')}</button>
+      <button id={sectionId('tab-evidence')} type="button" role="tab" aria-selected={activeResultSection==='evidence'} aria-controls={sectionId('source-checks-panel')} className={activeResultSection==='evidence'?'is-current':''} onClick={()=>jumpToResultSection('evidence')}>{resultUi('evidence')}</button>
+      <button id={sectionId('tab-resolve')} type="button" role="tab" aria-selected={activeResultSection==='next'} aria-controls={sectionId('user-actions-panel')} className={activeResultSection==='next'?'is-current':''} onClick={()=>jumpToResultSection('next')}>{resultUi('resolve')}</button>
      </nav>
     </header>
 
     {liveFailed&&<div className="source-retry-status" role="status"><span><strong>Live source unavailable</strong><small>The current result is preserved; claims that needed the live court page remain unverified.</small></span><button type="button" onClick={()=>run('LIVE')} disabled={busy}>{busy?'Checking…':resultUi('checkLiveSources')}</button></div>}
 
-    {verification&&ready&&reviewOffer==='counting'&&createPortal(<div className="review-autoplay-overlay" data-review-offer role="dialog" aria-modal="true" aria-label={resultUi('verificationReviewStarting')}>
-     <button type="button" className="review-autoplay-skip" onClick={skipReviewOffer}>{resultUi('skip')}</button>
-     <div className="review-autoplay-center">
-      <div className="review-autoplay-timer" aria-live="polite" aria-label={`Verification review starts in ${reviewCountdown}`}>
-       <svg viewBox="0 0 48 48" aria-hidden="true">
-        <circle className="review-autoplay-track" cx="24" cy="24" r="21"/>
-        <circle className="review-autoplay-progress" cx="24" cy="24" r="21"/>
-       </svg>
-       <span>{reviewCountdown}</span>
-      </div>
-     </div>
-    </div>,document.body)}
 
     {verification&&ready&&storyOpen&&createPortal(<div className={`story-overlay ${storyClosing?'is-closing':''}`} data-testid="evidence-review" role="dialog" aria-modal="true" aria-label={resultUi('sealVerificationReview')}>
      <div ref={storyPlayerRef} className={`story-player ${storyPlaying?'is-playing':'is-paused'} ${storyFocusBox?'has-story-focus':'no-story-focus'}`}>
@@ -2532,10 +2443,9 @@ async function upload(uploaded:File){
      </div>
     </div>,document.body)}
 
-    <div ref={resultCarouselRef} className="result-carousel" data-testid="result-carousel" onScroll={syncResultCarousel}>
-     {displayLocale!=='en'&&resultTranslationState!=='translated'&&resultTranslationState!=='unavailable'&&<div className="result-translation-pending" role="status" aria-live="polite"><span className="translation-pulse" aria-hidden="true"/><strong>{resultUi('translatingResult')}</strong></div>}
+    <div className="result-tabs-stage" data-testid="result-tabs-stage">
      <div className="review-hero">
-     <div className="decision-pane result-screen result-screen-summary result-slide result-slide-summary" data-result-section="summary" id={sectionId('review-summary')}>
+     <div className="decision-pane result-screen result-screen-summary result-slide result-slide-summary" data-result-section="summary" id={sectionId('review-summary')} role="tabpanel" aria-labelledby={sectionId('tab-summary')} hidden={activeResultSection!=='summary'}>
       {!verification?
        <div className={`precheck ${error?'has-error':''}`}>
         <h1>{busy?'Checking this message':error?(file?'We couldn’t check this image.':'We couldn’t check this message.'):'Ready to check this message.'}</h1>
@@ -2595,7 +2505,7 @@ async function upload(uploaded:File){
            <strong>{checkSourceCount?checkSourceCount+' public source'+(checkSourceCount===1?'':'s'):'No public source attached'}</strong>
            {storyEvidence&&<small>{storyEvidence.title}</small>}
           </div>
-          {reviewWorthWatching&&!storyOpen&&<button ref={replayButton} type="button" className="decision-review-player" data-testid="play-evidence-review" onClick={replayStory}>
+          {reviewWorthWatching&&!storyOpen&&<button ref={replayButton} type="button" className="decision-review-player" data-testid="play-evidence-review" onClick={replayStory} disabled={!storyArtifactReady&&file?.kind!=='pdf'}>
            <span className="decision-review-play" aria-hidden="true"><DesignPlayIcon/></span>
            <span><strong>{resultUi('seeHowChecked')}</strong><small>{resultUi('evidenceReviewHint')}</small></span>
           </button>}
@@ -2631,7 +2541,7 @@ async function upload(uploaded:File){
        </div>}
      </div>
 
-     <div className="document-zone result-screen result-screen-original result-slide result-slide-original" data-result-section="message" id={sectionId('original-message')}>
+     <div className="document-zone result-screen result-screen-original result-slide result-slide-original" data-result-section="message" id={sectionId('original-message')} role="tabpanel" aria-labelledby={sectionId('tab-original')} hidden={activeResultSection!=='message'}>
       <div className="document-heading"><span>{resultUi('originalMessage')}</span><span>{file?.kind==='pdf'?'PDF':file?'Image':'Text'}</span></div>
       <div className={`document-paper ${!file?'is-text-document':''}`}>
        {isActionDemo?
@@ -2675,8 +2585,8 @@ async function upload(uploaded:File){
      </div>
     </div>
 
-    <section className="result-slide result-slide-evidence" data-result-section="evidence" aria-label={resultUi('evidencePanel')}>
-     {reviewWorthWatching&&!storyOpen&&<button type="button" className="evidence-review-entry" data-testid="mobile-evidence-review" onClick={replayStory}>
+    <section className="result-slide result-slide-evidence" data-result-section="evidence" id={sectionId('source-checks-panel')} role="tabpanel" aria-labelledby={sectionId('tab-evidence')} aria-label={resultUi('evidencePanel')} hidden={activeResultSection!=='evidence'}>
+     {reviewWorthWatching&&!storyOpen&&<button type="button" className="evidence-review-entry" data-testid="mobile-evidence-review" onClick={replayStory} disabled={!storyArtifactReady&&file?.kind!=='pdf'}>
       <span className="evidence-review-icon" aria-hidden="true"><DesignPlayIcon/></span>
       <span><strong>{resultUi('seeHowChecked')}</strong><small>{resultUi('evidenceReviewHint')}</small></span>
      </button>}
@@ -2821,7 +2731,7 @@ async function upload(uploaded:File){
      </details>
     </section>
 
-    <section className="result-slide result-slide-resolve" data-result-section="next" aria-label={resultUi('resolvePanel')}>
+    <section className="result-slide result-slide-resolve" data-result-section="next" id={sectionId('user-actions-panel')} role="tabpanel" aria-labelledby={sectionId('tab-resolve')} aria-label={resultUi('resolvePanel')} hidden={activeResultSection!=='next'}>
      {ready&&verification&&<div className="resolve-primary" data-testid="resolve-primary">
      {verification&&!verification.safe_action&&decisionClaim?.action&&!verification.contact&&<div className="unsupported-next-step" id={sectionId('next-step')}>
       <span>{translatedResult.unsupportedNextEyebrow||'What to do next'}</span>
