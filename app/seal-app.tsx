@@ -30,6 +30,7 @@ type SealWorkspaceProps={
  initialDemo?:boolean;
  initialText?:string;
  initialRun?:boolean;
+ deferIdleOcr?:boolean;
  workspaceId:string;
  workspaceActive:boolean;
  workspaces:WorkspaceMeta[];
@@ -273,7 +274,7 @@ const PROCESSING_WAIT_NOTES=[
  'The safest next step comes from an independently sourced court or agency page.'
 ] as const;
 
-function SealWorkspace({initialDemo=false,initialText='',initialRun=false,workspaceId,workspaceActive,workspaces,onNewWorkspace,onSelectWorkspace,onDeleteWorkspace,onWorkspaceMeta}:SealWorkspaceProps){
+function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferIdleOcr=false,workspaceId,workspaceActive,workspaces,onNewWorkspace,onSelectWorkspace,onDeleteWorkspace,onWorkspaceMeta}:SealWorkspaceProps){
  const [hydrated,setHydrated]=useState(false);
  const [text,setText]=useState(initialText||(initialDemo?fixtures['action-message-demo'].text:''));
  const [draft,setDraft]=useState('');
@@ -3086,6 +3087,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
       initialDemo={index===0?initialDemo:false}
       initialText={index===0?initialText:''}
       initialRun={index===0?initialRun:false}
+      deferIdleOcr={deferIdleOcr}
       workspaceId={workspace.id}
       workspaceActive={active}
       workspaces={leaving&&workspaceTransition?.snapshot?workspaceTransition.snapshot:workspaces}
