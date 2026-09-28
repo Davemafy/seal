@@ -8984,3 +8984,51 @@
   display:none!important
  }
 }
+
+
+/* Entry uses the same page frame as Browse. */
+@media(min-width:901px){
+ .entry-shell:not(.is-processing){
+  width:min(100%,1180px)!important;
+  max-width:1180px!important;
+  min-height:calc(100dvh - 24px)!important;
+  margin:0 auto!important;
+  padding:28px 48px 54px!important;
+  justify-content:start!important;
+  align-content:start!important
+ }
+
+ /* Same left edge as Browse; content can stay comfortably readable. */
+ .entry-shell:not(.is-processing) .entry-copy,
+ .entry-shell:not(.is-processing) .intake{
+  width:100%!important;
+  max-width:840px!important;
+  margin-left:0!important;
+  margin-right:0!important
+ }
+
+ .entry-shell:not(.is-processing) .entry-copy h1{
+  max-width:840px!important
+ }
+ .entry-shell:not(.is-processing) .entry-copy>p{
+  max-width:760px!important
+ }
+}
+
+@media(min-width:901px) and (max-width:1180px){
+ .entry-shell:not(.is-processing){
+  max-width:940px!important;
+  padding:28px 30px 54px!important
+ }
+ .entry-shell:not(.is-processing) .entry-copy,
+ .entry-shell:not(.is-processing) .intake{
+  max-width:100%!important
+ }
+}
+
+@media(max-width:900px){
+ .entry-shell:not(.is-processing){
+  padding-top:20px!important;
+  padding-bottom:40px!important
+ }
+}
