@@ -11,7 +11,7 @@ describe('result surface design contract',()=>{
   expect(app).toContain('result-slide result-slide-original');
   expect(app).toContain('className="decision-visual"');
   expect(app).toContain('className="decision-artifact"');
-  expect(app).toContain('aria-label="Check snapshot"');
+  expect(app).toContain("aria-label={resultUi('checkSnapshot')}");
   expect(app).toContain('data-testid="play-evidence-review"');
   expect(app).not.toContain('setTimeout(()=>startStory(),260)');
   expect(css).toContain('Visual result composition: focused reading column + contextual artifact.');

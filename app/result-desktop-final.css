@@ -2926,14 +2926,6 @@
   white-space:normal!important;
   transition:background .14s ease,border-color .14s ease,transform .14s ease!important
  }
- .result-slide-evidence .signal-links a::after{
-  content:"↗";
-  flex:0 0 auto!important;
-  font-size:11px!important;
-  line-height:1!important;
-  opacity:.72!important;
-  transform:translateY(-.5px)!important
- }
  .result-slide-evidence .signal-links a:hover{
   background:#2a2a27!important;
   border-color:#2a2a27!important;

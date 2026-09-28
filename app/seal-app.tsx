@@ -831,8 +831,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
    if(primaryRoute)parts.push((resultUi('nextStep')||'Next step')+'. '+primaryRoute.label);
    if(riskSummary&&!file?.sample&&instructionStatus!==matterStatus){
     parts.push(
-     (translatedResult.messageStatusLabel||resultUi('thisMessage'))+'. '+(translatedResult.instructionStatus||instructionStatus)+'.',
-     (translatedResult.caseStatusLabel||resultUi('theCase'))+'. '+(translatedResult.matterStatus||matterStatus)+'.'
+     (resultUi('thisMessage'))+'. '+(translatedResult.instructionStatus||instructionStatus)+'.',
+     (resultUi('theCase'))+'. '+(translatedResult.matterStatus||matterStatus)+'.'
     );
    }
   }else if(activeResultSection==='message'){
@@ -1012,40 +1012,32 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
    const value=resultTranslationSource[key];
    if(typeof value==='string'&&value.trim())source[key]=value;
   };
-  const takePrefix=(prefix:string)=>{
-   Object.keys(resultTranslationSource).forEach(key=>{if(key.startsWith(prefix))take(key)});
+  const takeIndexed=(prefix:string,max:number)=>{
+   Object.keys(resultTranslationSource).forEach(key=>{
+    if(!key.startsWith(prefix))return;
+    const index=Number(key.slice(prefix.length));
+    if(Number.isFinite(index)&&index<max)take(key);
+   });
   };
 
   if(activeResultSection==='summary'){
    [
     'decisionTitle','decisionSummary','resultStatus','instructionStatus','matterStatus',
-    'openServiceNote','openCourtWebsite','messageStatusLabel','caseStatusLabel','whyResult',
-    'resolutionDisclaimer','relationship','riskInstructionsTitle','riskInstructionsDetail',
-    'riskMatterTitle','riskMatterDetail','affiliationNote','directCourtUnavailableTitle',
-    'directCourtUnavailableBody','fileTypeImage','fileTypeText'
+    'relationship','safePrimary'
    ].forEach(take);
   }else if(activeResultSection==='evidence'){
-   [
-    'emptyEvidenceTitleDirect','emptyEvidenceTitle','emptyEvidenceCopyDirect','emptyEvidenceCopy',
-    'checkContext','checkContextHint','notResolved','livePublicSources','sourceSnapshot','checkedLabel',
-    'recordPrivacy','whatWasChecked','hideList','showList','inMessage','officialSourceEvidence',
-    'whatCanEstablish','liveOfficialSource','moreSourceExcerpt','moreSourceExcerpts','notWrongFallback',
-    'originalSource','obligationMessageOnly','obligationMatches','obligationConflicts','obligationDatesNote'
-   ].forEach(take);
-   ['signalTitle','signalSummary','resultExplain','resultLabel'].forEach(takePrefix);
+   ['emptyEvidenceTitleDirect','emptyEvidenceTitle','emptyEvidenceCopyDirect','emptyEvidenceCopy'].forEach(take);
+   takeIndexed('signalTitle',6);
+   takeIndexed('signalSummary',6);
+   takeIndexed('resultExplain',8);
+   takeIndexed('resultLabel',8);
   }else if(activeResultSection==='next'){
    [
-    'caseRealityTitle','caseRealityDetail','supportHaventTitle','supportHaventCopy','supportPaidTitle',
-    'supportPaidCopy','supportSharedTitle','supportSharedCopy','supportLegalTitle','supportLegalCopy',
-    'handoffEyebrow','handoffTitle','handoffCopy','courtQuestionScript','copyQuestion','copyRecord',
-    'saveRecord','handoffNote','unsupportedNextEyebrow','unsupportedNextTitle','locationNamed',
-    'detailsUnconfirmed','avoidMessageRoutes','startHere','notVerified','timeDateStated','obligationNote',
-    'plainTitle','plainSummary','explanationLanguagePrefix','detectedDocumentLanguage','unknownLanguage',
-    'lowConfidence','explanationDisclaimer','noLegalAid','courtContactHeading','courtContactFallback',
-    'contactSourcePrefix','snapshotChecked','liveChecked','openCourtWebsite'
+    'caseRealityTitle','caseRealityDetail','plainTitle','plainSummary',
+    'safeTitle','safeSummary','safePrimary'
    ].forEach(take);
-   ['safeStep','obligationStatus'].forEach(takePrefix);
-   ['safeTitle','safeSummary','safePrimary'].forEach(take);
+   takeIndexed('safeStep',5);
+   takeIndexed('obligationStatus',6);
   }
 
   return source;
@@ -1085,7 +1077,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
 
   void (async()=>{
    try{
-    const nativeStrings=await translateRecordWithBrowser(resultTranslationSectionSource,displayLocale,controller.signal,900);
+    const nativeStrings=await translateRecordWithBrowser(resultTranslationSectionSource,displayLocale,controller.signal,400);
     if(nativeStrings&&!controller.signal.aborted){
      translationCacheRef.current.set(cacheKey,nativeStrings);
      setTranslatedResult(previous=>({...previous,...nativeStrings}));
@@ -1099,12 +1091,16 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
 
    if(controller.signal.aborted)return;
    try{
-    const response=await fetch('/api/translate',{
+    const request=fetch('/api/translate',{
      method:'POST',
      headers:{'Content-Type':'application/json'},
      body:JSON.stringify({locale:displayLocale,strings:resultTranslationSectionSource}),
      signal:controller.signal
     });
+    const response=await Promise.race([
+     request,
+     new Promise<Response>((_,reject)=>window.setTimeout(()=>reject(new Error('Translation timed out')),9000))
+    ]);
     if(!response.ok){
      if(!controller.signal.aborted)setResultTranslationState('unavailable');
      return;
@@ -2573,12 +2569,12 @@ async function upload(uploaded:File){
           {primaryRoute&&<div className="decision-primary-route" data-testid="primary-next-step">
            <span>{resultUi('nextStep')}</span>
            <a href={primaryRoute.url} target="_blank" rel="noopener noreferrer">{primaryRoute.label}</a>
-           <small>{translatedResult.openServiceNote||resultUi('openServiceNote')}</small>
+           <small>{resultUi('openServiceNote')}</small>
           </div>}
 
           {riskSummary&&!file?.sample&&instructionStatus!==matterStatus&&<div className="decision-at-a-glance" data-testid="two-risk-result">
-           <div><span>{translatedResult.messageStatusLabel||resultUi('thisMessage')}</span><strong>{translatedResult.instructionStatus||instructionStatus}</strong></div>
-           <div><span>{translatedResult.caseStatusLabel||resultUi('theCase')}</span><strong>{translatedResult.matterStatus||matterStatus}</strong></div>
+           <div><span>{resultUi('thisMessage')}</span><strong>{translatedResult.instructionStatus||instructionStatus}</strong></div>
+           <div><span>{resultUi('theCase')}</span><strong>{translatedResult.matterStatus||matterStatus}</strong></div>
           </div>}
          </div>
 
@@ -2631,7 +2627,7 @@ async function upload(uploaded:File){
 
          </div>
         </details>
-        <p className="result-affiliation-note">{translatedResult.affiliationNote||'Independent tool · Not affiliated with any court.'}</p>
+        <p className="result-affiliation-note">{resultUi('independentToolNote')}</p>
        </div>}
      </div>
 
