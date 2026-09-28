@@ -2019,7 +2019,7 @@ async function upload(uploaded:File){
     {liveFailed&&<div className="source-failure" role="status"><span>The court’s live pages didn’t respond. Affected claims remain unverified.</span><button onClick={()=>run('LIVE')} disabled={busy}>{ui('checkLiveSources')}</button></div>}
 
     {verification&&ready&&reviewOffer==='counting'&&createPortal(<div className="review-autoplay-overlay" data-review-offer role="dialog" aria-modal="true" aria-label={ui('verificationReviewStarting')}>
-     <button type="button" className="review-autoplay-skip" onClick={skipReviewOffer}>{shellUi('skip')}</button>
+     <button type="button" className="review-autoplay-skip" onClick={skipReviewOffer}>{ui('skip')}</button>
      <div className="review-autoplay-center">
       <div className="review-autoplay-timer" aria-live="polite" aria-label={`Verification review starts in ${reviewCountdown}`}>
        <svg viewBox="0 0 48 48" aria-hidden="true">
@@ -2788,7 +2788,7 @@ export default function SealApp({initialDemo=false,initialText='',initialRun=fal
    <div className="onboarding-shell" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
     <header className="onboarding-topbar">
      <div className="onboarding-brand"><img src="/brand/seal-mark-black.svg" alt=""/><span>SEAL</span></div>
-     {onboardingStep<2&&<button type="button" className="onboarding-skip" onClick={()=>dismissOnboarding(false)}>{shellUi('skip')}</button>}
+     {onboardingStep<2&&<button type="button" className="onboarding-skip" onClick={()=>dismissOnboarding(false)}>{ui('skip')}</button>}
     </header>
 
     <div className="onboarding-progress" aria-label={`Step ${onboardingStep+1} of 3`}>
