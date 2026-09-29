@@ -211,12 +211,13 @@
  position:absolute;
  z-index:1;
  pointer-events:none;
- border:1px solid rgba(39,110,241,.24);
+ box-sizing:border-box;
+ border:1px solid rgba(39,110,241,.46);
  border-radius:2px;
- background:rgba(39,110,241,.025);
+ background:transparent;
 }
 .ocr-coverage-box.is-low-confidence{
- border-color:rgba(39,110,241,.12);
+ border-color:rgba(39,110,241,.2);
  background:transparent;
 }
 .bbox{position:absolute;z-index:2;border:1px solid transparent;background:transparent;opacity:0}
