@@ -1,7 +1,8 @@
 'use client';
 
 import {useEffect,useRef,useState} from 'react';
-import type {Claim} from '@/lib/types';
+import {ocrLineRegions} from '@/lib/image-overlay';
+import type {Claim,Token} from '@/lib/types';
 
 type PdfModule=typeof import('pdfjs-dist');
 type LoadingTask=ReturnType<PdfModule['getDocument']>;
@@ -42,12 +43,13 @@ async function restoreInvisibleText(page:PdfPage,context:CanvasRenderingContext2
 type Props={
  url:string;
  claims:Claim[];
+ tokens?:Token[];
  active:string;
  anchors:React.RefObject<Record<string,HTMLElement|null>>;
  onSelect:(id:string)=>void;
 };
 
-export default function PDFPreview({url,claims,active,anchors,onSelect}:Props){
+export default function PDFPreview({url,claims,tokens=[],active,anchors,onSelect}:Props){
  const canvas=useRef<HTMLCanvasElement>(null);
  const documentRef=useRef<PdfDocument|null>(null);
  const loadingTaskRef=useRef<LoadingTask|null>(null);
@@ -180,6 +182,12 @@ export default function PDFPreview({url,claims,active,anchors,onSelect}:Props){
   <div className="preview-box">
    {rendering&&<span className="pdf-rendering-note" role="status">Preparing document preview…</span>}
    <canvas ref={canvas} style={{width:'100%',height:'auto',display:'block'}} aria-label={`Uploaded PDF page ${page}`}/>
+   {!rendering&&ocrLineRegions(tokens,page).map((region,index)=><span
+    aria-hidden="true"
+    className={`ocr-coverage-box ${region.confidence<55?'is-low-confidence':''}`}
+    key={`pdf-ocr-line-${page}-${index}`}
+    style={{left:`${region.x*100}%`,top:`${region.y*100}%`,width:`${region.width*100}%`,height:`${region.height*100}%`}}
+   />)}
    {!rendering&&claims.filter(claim=>claim.source_bbox&&claim.page===page).map(claim=><button
     type="button"
     aria-label={`Select ${claim.label}`}

@@ -1,4 +1,4 @@
-import type {Claim,Verification} from './types';
+import type {Claim,Token,Verification} from './types';
 import type {BrowserDocument} from './browser-file';
 
 const LEGACY_SESSION_KEY='seal:completed-check:v2';
@@ -18,6 +18,7 @@ export type StoredCheckOrigin={
 
 type StoredFileMeta={
  kind:BrowserDocument['kind'];
+ tokens?:Token[];
  uncertain:boolean;
  sample:boolean;
  ocrConfidence?:number;
@@ -230,7 +231,7 @@ export async function restoreResultSession(workspaceId='primary'):Promise<Restor
     sourceBlob=blob;
     browserFile={
      text:parsed.text,
-     tokens:[],
+     tokens:parsed.file.tokens||[],
      preview:URL.createObjectURL(blob),
      kind:parsed.file.kind,
      uncertain:parsed.file.uncertain,

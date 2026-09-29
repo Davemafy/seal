@@ -2064,6 +2064,7 @@ async function upload(uploaded:File){
     origin:sourceOrigin||undefined,
     file:sourceFile?{
      kind:sourceFile.kind,
+     tokens:sourceFile.tokens,
      uncertain:sourceFile.uncertain,
      sample:sourceFile.sample,
      ocrConfidence:sourceFile.ocrConfidence,
@@ -2148,6 +2149,7 @@ async function upload(uploaded:File){
     origin:checkOrigin||undefined,
     file:file?{
      kind:file.kind,
+     tokens:file.tokens,
      uncertain:file.uncertain,
      sample:file.sample,
      ocrConfidence:file.ocrConfidence,
@@ -2795,7 +2797,7 @@ async function upload(uploaded:File){
          })}
         </div>
         :
-        <PDFPreview url={file.preview} claims={claims} active={active} anchors={anchors} onSelect={select}/>}
+        <PDFPreview url={file.preview} claims={claims} tokens={file.tokens} active={active} anchors={anchors} onSelect={select}/>}
       </div>
      </div>
     </div>
