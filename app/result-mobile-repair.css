@@ -58,6 +58,8 @@
   font-size:12px!important;
   line-height:18px!important
  }
+ /* Mobile already has a persistent language control in the app bar. */
+ .seal-app .result-masthead .result-language-control{display:none!important}
 
  /* Tabs behave as real sibling pages, not anchors on one long report. */
  .seal-app .result-chapters{

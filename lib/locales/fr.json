@@ -215,7 +215,7 @@
   "statusOfficialWarning": "Avertissement officiel trouvé",
   "statusConflict": "Un élément ne correspond pas",
   "statusUnconfirmedNotice": "Nous n’avons pas pu confirmer cet avis",
-  "statusSomeDetails": "Certains détails correspondent",
+  "statusSomeDetails": "Vérification par source indépendante",
   "statusCheckFinished": "Vérification terminée",
   "instructionExample": "Exemple uniquement",
   "instructionDoNotUse": "N’utilisez pas cette voie",

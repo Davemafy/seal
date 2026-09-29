@@ -215,7 +215,7 @@
   "statusOfficialWarning": "Resmi uyarı bulundu",
   "statusConflict": "Bir şey uyuşmuyor",
   "statusUnconfirmedNotice": "Bu bildirimi doğrulayamadık",
-  "statusSomeDetails": "Bazı bilgiler doğrulandı",
+  "statusSomeDetails": "Bağımsız kaynak kontrolü",
   "statusCheckFinished": "Kontrol tamamlandı",
   "instructionExample": "Yalnızca örnek",
   "instructionDoNotUse": "Bu yolu kullanmayın",

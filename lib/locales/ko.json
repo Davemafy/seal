@@ -215,7 +215,7 @@
   "statusOfficialWarning": "공식 경고 확인됨",
   "statusConflict": "일치하지 않는 내용이 있습니다",
   "statusUnconfirmedNotice": "이 통지를 확인하지 못했습니다",
-  "statusSomeDetails": "일부 정보가 확인됨",
+  "statusSomeDetails": "독립 출처 확인",
   "statusCheckFinished": "확인 완료",
   "instructionExample": "예시만 해당",
   "instructionDoNotUse": "이 경로를 사용하지 마세요",

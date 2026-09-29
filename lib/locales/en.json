@@ -215,7 +215,7 @@
   "statusOfficialWarning": "Official warning found",
   "statusConflict": "Something does not line up",
   "statusUnconfirmedNotice": "We could not confirm this notice",
-  "statusSomeDetails": "Some details check out",
+  "statusSomeDetails": "Independent source check",
   "statusCheckFinished": "Check finished",
   "instructionExample": "Example only",
   "instructionDoNotUse": "Do not use this route",

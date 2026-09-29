@@ -1175,7 +1175,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const safeJurisdictionTitle=safeWorkspaceTitle(jurisdiction);
  const checkObjectTitle=cleanDisplayText(plausibleCourtTitle||safeCurrentWorkspaceTitle||safeJurisdictionTitle||resultUi('courtMessageShort'));
  const checkObjectDisplayTitle=humanizeDisplayName(checkObjectTitle)
-  .replace(/^United States District Court\s*/i,'U.S. District Court · ')
+  .replace(/^United States District Court\s*(?:(?:—|–|-)\s*|for\s+the\s+)?/i,'U.S. District Court · ')
+  .replace(/·\s*(?:—|–|-)\s*/g,'· ')
   .replace(/\s{2,}/g,' ')
   .replace(/·\s*·/g,'·')
   .replace(/·\s*$/,'');

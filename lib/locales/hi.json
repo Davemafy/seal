@@ -220,7 +220,7 @@
   "statusOfficialWarning": "आधिकारिक चेतावनी मिली",
   "statusConflict": "कुछ जानकारी मेल नहीं खाती",
   "statusUnconfirmedNotice": "हम इस नोटिस की पुष्टि नहीं कर सके",
-  "statusSomeDetails": "कुछ विवरण जाँचे गए",
+  "statusSomeDetails": "स्वतंत्र स्रोत जाँच",
   "statusCheckFinished": "जाँच पूरी हुई",
   "instructionExample": "केवल उदाहरण",
   "instructionDoNotUse": "इस रास्ते का उपयोग न करें",
