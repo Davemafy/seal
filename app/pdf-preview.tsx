@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useLayoutEffect,useRef,useState} from 'react';
 import {ocrLineRegions} from '@/lib/image-overlay';
 import type {Claim,Token} from '@/lib/types';
 
@@ -51,6 +51,7 @@ type Props={
 
 export default function PDFPreview({url,claims,tokens=[],active,anchors,onSelect}:Props){
  const canvas=useRef<HTMLCanvasElement>(null);
+ const preview=useRef<HTMLDivElement>(null);
  const documentRef=useRef<PdfDocument|null>(null);
  const loadingTaskRef=useRef<LoadingTask|null>(null);
  const renderTaskRef=useRef<RenderTask|null>(null);
@@ -59,6 +60,26 @@ export default function PDFPreview({url,claims,tokens=[],active,anchors,onSelect
  const [total,setTotal]=useState(1);
  const [error,setError]=useState('');
  const [rendering,setRendering]=useState(true);
+ const [renderedCanvasRect,setRenderedCanvasRect]=useState<{page:number;left:number;top:number;width:number;height:number}|null>(null);
+
+ const syncRenderedCanvasRect=useCallback(()=>{
+  const frame=preview.current;
+  const c=canvas.current;
+  if(!frame||!c)return;
+  const frameRect=frame.getBoundingClientRect();
+  const canvasRect=c.getBoundingClientRect();
+  if(canvasRect.width<=0||canvasRect.height<=0)return;
+  const next={page,left:canvasRect.left-frameRect.left,top:canvasRect.top-frameRect.top,width:canvasRect.width,height:canvasRect.height};
+  setRenderedCanvasRect(previous=>{
+   if(previous
+    &&previous.page===next.page
+    &&Math.abs(previous.left-next.left)<=.5
+    &&Math.abs(previous.top-next.top)<=.5
+    &&Math.abs(previous.width-next.width)<=.5
+    &&Math.abs(previous.height-next.height)<=.5)return previous;
+   return next;
+  });
+ },[page]);
 
  useEffect(()=>{
   let cancelled=false;
@@ -140,7 +161,10 @@ export default function PDFPreview({url,claims,tokens=[],active,anchors,onSelect
 
     if(cancelled||documentRef.current!==doc)return;
     await restoreInvisibleText(pdfPage,context,renderScale);
-    if(!cancelled&&documentRef.current===doc)setRendering(false);
+    if(!cancelled&&documentRef.current===doc){
+     setRendering(false);
+     window.requestAnimationFrame(syncRenderedCanvasRect);
+    }
    }catch(error){
     if(cancelled)return;
     const name=error&&typeof error==='object'&&'name' in error?String((error as {name?:unknown}).name):'';
@@ -158,7 +182,22 @@ export default function PDFPreview({url,claims,tokens=[],active,anchors,onSelect
    try{renderTaskRef.current?.cancel()}catch{}
    renderTaskRef.current=null;
   };
- },[page,documentVersion]);
+ },[page,documentVersion,syncRenderedCanvasRect]);
+
+ useLayoutEffect(()=>{
+  const frame=preview.current;
+  const c=canvas.current;
+  if(!frame||!c||rendering)return;
+  syncRenderedCanvasRect();
+  const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(syncRenderedCanvasRect):null;
+  observer?.observe(frame);
+  observer?.observe(c);
+  window.addEventListener('resize',syncRenderedCanvasRect);
+  return()=>{
+   observer?.disconnect();
+   window.removeEventListener('resize',syncRenderedCanvasRect);
+  };
+ },[rendering,page,documentVersion,syncRenderedCanvasRect]);
 
  useEffect(()=>()=> {
   const c=canvas.current;
@@ -168,6 +207,7 @@ export default function PDFPreview({url,claims,tokens=[],active,anchors,onSelect
  const changePage=(next:number)=>{
   const bounded=Math.max(1,Math.min(total,next));
   if(bounded===page)return;
+  setRenderedCanvasRect(null);
   setRendering(true);
   setError('');
   setPage(bounded);
@@ -179,22 +219,32 @@ export default function PDFPreview({url,claims,tokens=[],active,anchors,onSelect
    <span>Page {page} of {total}</span>
    <button type="button" disabled={page>=total||rendering} onClick={()=>changePage(page+1)}>Next</button>
   </div>}
-  <div className="preview-box">
+  <div className="preview-box" ref={preview}>
    {rendering&&<span className="pdf-rendering-note" role="status">Preparing document preview…</span>}
    <canvas ref={canvas} style={{width:'100%',height:'auto',display:'block'}} aria-label={`Uploaded PDF page ${page}`}/>
-   {!rendering&&ocrLineRegions(tokens,page).map((region,index)=><span
+   {!rendering&&renderedCanvasRect?.page===page&&ocrLineRegions(tokens,page).map((region,index)=><span
     aria-hidden="true"
     className={`ocr-coverage-box ${region.confidence<55?'is-low-confidence':''}`}
     key={`pdf-ocr-line-${page}-${index}`}
-    style={{left:`${region.x*100}%`,top:`${region.y*100}%`,width:`${region.width*100}%`,height:`${region.height*100}%`}}
+    style={{
+     left:`${renderedCanvasRect.left+region.x*renderedCanvasRect.width}px`,
+     top:`${renderedCanvasRect.top+region.y*renderedCanvasRect.height}px`,
+     width:`${region.width*renderedCanvasRect.width}px`,
+     height:`${region.height*renderedCanvasRect.height}px`
+    }}
    />)}
-   {!rendering&&claims.filter(claim=>claim.source_bbox&&claim.page===page).map(claim=><button
+   {!rendering&&renderedCanvasRect?.page===page&&claims.filter(claim=>claim.source_bbox&&claim.page===page).map(claim=><button
     type="button"
     aria-label={`Select ${claim.label}`}
     onClick={()=>onSelect(claim.id)}
     key={claim.id}
     className={`bbox ${active===claim.id?'focused':''}`}
-    style={{left:`${claim.source_bbox!.x*100}%`,top:`${claim.source_bbox!.y*100}%`,width:`${claim.source_bbox!.width*100}%`,height:`${claim.source_bbox!.height*100}%`}}
+    style={{
+     left:`${renderedCanvasRect.left+claim.source_bbox!.x*renderedCanvasRect.width}px`,
+     top:`${renderedCanvasRect.top+claim.source_bbox!.y*renderedCanvasRect.height}px`,
+     width:`${claim.source_bbox!.width*renderedCanvasRect.width}px`,
+     height:`${claim.source_bbox!.height*renderedCanvasRect.height}px`
+    }}
     ref={element=>{anchors.current[claim.id]=element}}
    />)}
   </div>
