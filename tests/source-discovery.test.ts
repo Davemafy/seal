@@ -85,7 +85,7 @@ describe('generic official-source discovery',()=>{
    const url=String(input);
    if(url.includes('api.groq.com'))return new Response('',{status:503});
    if(url.includes('duckduckgo.com/html/')||url.includes('bing.com/search')||url.includes('google.com/search')){
-    const decoded=decodeURIComponent(url);
+    const decoded=decodeURIComponent(url).replace(/\+/g,' ');
     const hasWrapper=decoded.includes('PUBLIC NOTICE')||decoded.includes('Jury Duty Email');
     return new Response(hasWrapper
      ?'<html><body><div class="result"><a class="result__a" href="'+warning+'">Jury Scam Alert</a><div class="result__snippet">U.S. District Court for the District of Columbia warns about fraudulent jury emails, texts, and phone calls.</div></div><li class="b_algo"><h2><a href="'+warning+'">Jury Scam Alert</a></h2><div class="b_caption"><p>District of Columbia jury scam alert.</p></div></li></body></html>'
