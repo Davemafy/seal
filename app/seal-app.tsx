@@ -9,7 +9,7 @@ import Link from 'next/link';
 import PDFPreview from './pdf-preview';
 import StoryPdfPage from './story-pdf-page';
 import {fixtures} from '@/lib/fixtures';
-import {fallbackExtract,claimsFromExtraction,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '@/lib/extract';
+import {fallbackExtract,claimsFromExtraction,preferGroundedCourtIdentity,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '@/lib/extract';
 import {readInBrowser,warmOcr,ocrLanguageForLocale,type OcrLanguage,type BrowserDocument} from '@/lib/browser-file';
 import {clearOrphanedResultArtifacts,clearResultSession,persistResultSession,restoreResultSession,type StoredCheckOrigin} from '@/lib/result-session';
 import {officialCourtDirectoryFor} from '@/lib/official-directories';
@@ -804,11 +804,13 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   ?resultUi('sourceConflict')
   :verification?.results.some(result=>result.verdict==='MATCH')
    ?resultUi('officialSourceMatch')
-   :verification?.signals?.some(signal=>signal.kind==='OFFICIAL_PROCESS')
-    ?resultUi('officialProcess')
-    :verification?.signals?.some(signal=>signal.kind==='OFFICIAL_DIRECTORY')
-     ?resultUi('officialDirectory')
-     :resultUi('notConfirmed');
+   :verification?.signals?.some(signal=>signal.kind==='OFFICIAL_WARNING')
+    ?resultUi('officialWarning')
+    :verification?.signals?.some(signal=>signal.kind==='OFFICIAL_PROCESS')
+     ?resultUi('officialProcess')
+     :verification?.signals?.some(signal=>signal.kind==='OFFICIAL_DIRECTORY')
+      ?resultUi('officialDirectory')
+      :resultUi('notConfirmed');
  const safeActionCopy=verification?.safe_action
   ?curatedAuthorityMatch
    ?{
@@ -1944,7 +1946,8 @@ async function upload(uploaded:File){
    // Do not use the document-level OCR flag as a kill switch. A globally noisy
    // transcript can still contain a clearly grounded action line that the
    // extractor and claim-level confidence checks can safely use.
-   let extraction:Extraction=fallbackExtract(sourceText);
+   const deterministicExtraction=fallbackExtract(sourceText);
+   let extraction:Extraction=deterministicExtraction;
    let extractor='DETERMINISTIC';
    const deterministicReady=Boolean(
     !sourceFile
@@ -1961,7 +1964,12 @@ async function upload(uploaded:File){
      const response=await fetch('/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:sourceText}),signal:extractController.signal});
      if(response.ok){
       const data=await response.json();
-      extraction=data.extraction;
+      const modelExtraction=data.extraction as Extraction;
+      extraction={
+       ...modelExtraction,
+       court_name:preferGroundedCourtIdentity(modelExtraction.court_name,deterministicExtraction.court_name,sourceText)||modelExtraction.court_name||deterministicExtraction.court_name,
+       requested_actions:modelExtraction.requested_actions?.length?modelExtraction.requested_actions:deterministicExtraction.requested_actions
+      };
       extractor=data.mode||'DETERMINISTIC';
      }else extractor='DETERMINISTIC_FALLBACK';
     }catch{

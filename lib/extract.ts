@@ -28,6 +28,29 @@ function plausibleCourtName(value:string){
  return letters>=(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(value)?4:8)&&digits<=1&&symbols<=1&&alphaRatio>=.7&&startsClean;
 }
 
+function courtIdentityGrounding(value:string){
+ return value.normalize('NFKC').toLowerCase().replace(/\s*&\s*/g,'&').replace(/\s+/g,' ').trim();
+}
+function courtIdentityScore(value:string){
+ const text=value.trim();if(!text)return -Infinity;
+ let score=0;
+ if(COURT_WORD.test(text))score+=5;
+ if(/\b(?:courts?\s*(?:&|and)\s*tribunals?|court\s+service|tribunal\s+service|judiciary|judicial\s+branch)\b/i.test(text))score+=5;
+ if(/\b(?:district|superior|circuit|supreme|municipal|magistrate|appeals?|bankruptcy|traffic|county|family)\b/i.test(text))score+=2;
+ if(/\b(?:service|registry|registrar|judiciary|judicial)\b/i.test(text))score+=1;
+ if(text.length>=8&&text.length<=120)score+=1;
+ return score;
+}
+export function preferGroundedCourtIdentity(modelValue:string,deterministicValue:string,sourceText:string){
+ const haystack=courtIdentityGrounding(sourceText);
+ const candidates=[modelValue,deterministicValue]
+  .map(value=>value?.replace(/\s*&\s*/g,' & ').replace(/\s+/g,' ').trim())
+  .filter((value):value is string=>Boolean(value))
+  .filter(value=>haystack.includes(courtIdentityGrounding(value)));
+ if(!candidates.length)return '';
+ return candidates.sort((a,b)=>courtIdentityScore(b)-courtIdentityScore(a)||b.length-a.length)[0];
+}
+
 function genericCourtName(value:string){
  return /^(?:in\s+the\s+)?(?:district|superior|circuit|municipal|traffic|county)\s+court\s*$/i.test(value.trim());
 }
@@ -39,7 +62,7 @@ function extractCourtName(lines:string[]){
  let index=-1,best=-Infinity;
  lines.forEach((line,i)=>{const score=courtLineScore(line);if(score>best){best=score;index=i}});
  if(index<0)return '';
- let value=lines[index];
+ let value=lines[index].replace(/\s*&\s*/g,' & ');
  const next=lines[index+1]||'';
  if(genericCourtName(value)){
   const context=lines.slice(Math.max(0,index-3),index).reverse().find(jurisdictionLine);
@@ -48,7 +71,7 @@ function extractCourtName(lines:string[]){
  const continuation=/\b(?:of|for|in|—|-)\s*$/i.test(value)||/^(?:district|division|county|circuit|for\b|of\b)/i.test(next);
  const institutionalContinuation=/\b(?:courts?|tribunals?)\s*$/i.test(value)
   &&/^(?:(?:&|and)\s*)?(?:courts?|tribunals?|service|judiciary|judicial\b)/i.test(next);
- if((continuation||institutionalContinuation)&&next.length<=90&&!/[.!?]$/.test(value))value=`${value} ${next}`.replace(/\s+/g,' ').trim();
+ if((continuation||institutionalContinuation)&&next.length<=90&&!/[.!?]$/.test(value))value=`${value} ${next}`.replace(/\s*&\s*/g,' & ').replace(/\s+/g,' ').trim();
  return plausibleCourtName(value)?value:'';
 }
 

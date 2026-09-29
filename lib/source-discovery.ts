@@ -5,8 +5,8 @@ import {officialCourtDirectoryFor} from './official-directories';
 type SearchCandidate={title:string;url:string;snippet:string};
 type OfficialPage={title:string;url:string;text:string;excerpt:string;warning:boolean;score:number};
 
-const USER_AGENT='SEAL/1.0 (+https://github.com/Davemafy/seal)';
-const SEARCH_ENDPOINT='https://html.duckduckgo.com/html/';
+const USER_AGENT='Mozilla/5.0 (compatible; SEAL/1.0; +https://github.com/Davemafy/seal)';
+const SEARCH_HEADERS={'User-Agent':USER_AGENT,'Accept':'text/html,application/xhtml+xml','Accept-Language':'en-GB,en;q=0.8'};
 
 function evidenceFor(title:string,url:string,excerpt:string,mode:'LIVE'|'SNAPSHOT'):Evidence{
  return {title,url,excerpt,checked_at:new Date().toISOString(),source_mode:mode};
@@ -77,35 +77,77 @@ export function buildOfficialDiscoveryQueries(rawText:string,courtName:string,ju
  return [...new Set([q1,q2].map(normalize).filter(query=>query.length>=8))].slice(0,2);
 }
 
-function unwrapSearchUrl(value:string){
+function unwrapSearchUrl(value:string,base='https://html.duckduckgo.com'){
  try{
-  const url=new URL(value,'https://html.duckduckgo.com');
-  if(/duckduckgo\.com$/i.test(url.hostname)){
+  const url=new URL(value,base);
+  if(/(?:^|\.)duckduckgo\.com$/i.test(url.hostname)){
    const target=url.searchParams.get('uddg');
    if(target)return decodeURIComponent(target);
+  }
+  if(/(?:^|\.)google\.[a-z.]+$/i.test(url.hostname)&&url.pathname==='/url'){
+   const target=url.searchParams.get('q')||url.searchParams.get('url');
+   if(target)return target;
   }
   return url.toString();
  }catch{return ''}
 }
 
-async function search(query:string):Promise<SearchCandidate[]>{
+function addCandidate(out:SearchCandidate[],title:string,href:string,snippet:string,base:string){
+ const target=unwrapSearchUrl(href,base);
+ if(!target||!isOfficialGovernmentHost(target)||out.some(item=>item.url===target))return;
+ out.push({title:normalize(title)||new URL(target).hostname,url:target,snippet:normalize(snippet)});
+}
+
+async function searchDuckDuckGo(query:string):Promise<SearchCandidate[]>{
  try{
-  const url=`${SEARCH_ENDPOINT}?q=${encodeURIComponent(query)}`;
-  const response=await fetch(url,{headers:{'User-Agent':USER_AGENT,'Accept':'text/html'},redirect:'follow',signal:AbortSignal.timeout(4500)});
+  const base='https://html.duckduckgo.com';
+  const response=await fetch(base+'/html/?q='+encodeURIComponent(query),{headers:SEARCH_HEADERS,redirect:'follow',signal:AbortSignal.timeout(5000)});
   if(!response.ok||!response.headers.get('content-type')?.includes('text/html'))return [];
   const html=await response.text();if(html.length>1_500_000)return [];
-  const $=cheerio.load(html);
-  const out:SearchCandidate[]=[];
+  const $=cheerio.load(html),out:SearchCandidate[]=[];
   $('.result').each((_,node)=>{
    const anchor=$(node).find('a.result__a').first();
-   const target=unwrapSearchUrl(anchor.attr('href')||'');
-   if(!target||!isOfficialGovernmentHost(target))return;
-   const title=normalize(anchor.text());
-   const snippet=normalize($(node).find('.result__snippet').first().text());
-   if(!out.some(item=>item.url===target))out.push({title:title||new URL(target).hostname,url:target,snippet});
+   addCandidate(out,anchor.text(),anchor.attr('href')||'',$(node).find('.result__snippet').first().text(),base);
   });
   return out.slice(0,6);
  }catch{return []}
+}
+
+async function searchBing(query:string):Promise<SearchCandidate[]>{
+ try{
+  const base='https://www.bing.com';
+  const response=await fetch(base+'/search?q='+encodeURIComponent(query)+'&count=10',{headers:SEARCH_HEADERS,redirect:'follow',signal:AbortSignal.timeout(5000)});
+  if(!response.ok||!response.headers.get('content-type')?.includes('text/html'))return [];
+  const html=await response.text();if(html.length>1_500_000)return [];
+  const $=cheerio.load(html),out:SearchCandidate[]=[];
+  $('li.b_algo').each((_,node)=>{
+   const anchor=$(node).find('h2 a').first();
+   addCandidate(out,anchor.text(),anchor.attr('href')||'',$(node).find('.b_caption p').first().text(),base);
+  });
+  return out.slice(0,6);
+ }catch{return []}
+}
+
+async function searchGoogle(query:string):Promise<SearchCandidate[]>{
+ try{
+  const base='https://www.google.com';
+  const response=await fetch(base+'/search?num=10&q='+encodeURIComponent(query),{headers:SEARCH_HEADERS,redirect:'follow',signal:AbortSignal.timeout(5000)});
+  if(!response.ok||!response.headers.get('content-type')?.includes('text/html'))return [];
+  const html=await response.text();if(html.length>1_500_000)return [];
+  const $=cheerio.load(html),out:SearchCandidate[]=[];
+  $('a').each((_,node)=>{
+   const anchor=$(node),heading=anchor.find('h3').first();
+   if(!heading.length)return;
+   addCandidate(out,heading.text(),anchor.attr('href')||'','',base);
+  });
+  return out.slice(0,6);
+ }catch{return []}
+}
+
+async function search(query:string):Promise<SearchCandidate[]>{
+ const settled=await Promise.allSettled([searchDuckDuckGo(query),searchBing(query),searchGoogle(query)]);
+ const merged=settled.flatMap(result=>result.status==='fulfilled'?result.value:[]);
+ return [...new Map(merged.map(item=>[item.url,item])).values()].slice(0,10);
 }
 
 function overlapScore(source:Set<string>,target:string){
@@ -128,7 +170,7 @@ function excerptAround(text:string,patterns:RegExp[]){
 
 async function inspectCandidate(candidate:SearchCandidate,institution:string,heading:string):Promise<OfficialPage|null>{
  try{
-  const response=await fetch(candidate.url,{headers:{'User-Agent':USER_AGENT,'Accept':'text/html,application/xhtml+xml,application/pdf;q=0.8'},redirect:'follow',signal:AbortSignal.timeout(5000)});
+  const response=await fetch(candidate.url,{headers:{...SEARCH_HEADERS,'Accept':'text/html,application/xhtml+xml,application/pdf;q=0.8'},redirect:'follow',signal:AbortSignal.timeout(5500)});
   if(!response.ok)return null;
   const finalUrl=response.url||candidate.url;
   if(!isOfficialGovernmentHost(finalUrl))return null;

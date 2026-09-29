@@ -1,4 +1,4 @@
-import {describe,it,expect,vi} from 'vitest';import {fallbackExtract,claimsFromExtraction,extractActionGraph,extractAuthorityCitations,locatePhrase,recoverLabeledJurorNumber,recoverLabeledReportingDate,sanitizeStructuredExtraction} from '../lib/extract';import {ocrScaleForSize,ocrLanguageForScript} from '../lib/browser-file';import {extractionSchema,type Token} from '../lib/types';import {verdict,verifyClaims,phoneDigits,domain,address,FederalCourtListenerResolver} from '../lib/resolver';import {fixtures} from '../lib/fixtures';
+import {describe,it,expect,vi} from 'vitest';import {fallbackExtract,claimsFromExtraction,extractActionGraph,extractAuthorityCitations,locatePhrase,preferGroundedCourtIdentity,recoverLabeledJurorNumber,recoverLabeledReportingDate,sanitizeStructuredExtraction} from '../lib/extract';import {ocrScaleForSize,ocrLanguageForScript} from '../lib/browser-file';import {extractionSchema,type Token} from '../lib/types';import {verdict,verifyClaims,phoneDigits,domain,address,FederalCourtListenerResolver} from '../lib/resolver';import {fixtures} from '../lib/fixtures';
 import {readFileSync} from 'node:fs';
 import {officialCourtDirectoryFor} from '../lib/official-directories';
 import {groundJurisdictionInference} from '../lib/jurisdiction-inference';
@@ -38,6 +38,11 @@ describe('court identity extraction',()=>{
  it('reconstructs a split institutional court-service name',()=>{
   const text='HM Courts\n& Tribunals Service\nNOTICE OF ENFORCEMENT\nA payment of £2560 is required immediately.';
   expect(fallbackExtract(text).court_name).toBe('HM Courts & Tribunals Service');
+ });
+ it('prefers a grounded court institution over a jurisdiction-only model value',()=>{
+  const text='HM Courts & Tribunals Service\nUnited Kingdom\nNOTICE OF ENFORCEMENT\nA payment of £2560 is required immediately.';
+  const deterministic=fallbackExtract(text).court_name;
+  expect(preferGroundedCourtIdentity('United Kingdom',deterministic,text)).toBe('HM Courts & Tribunals Service');
  });
 });
 
