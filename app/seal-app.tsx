@@ -1971,7 +1971,7 @@ async function upload(uploaded:File){
     const extractController=new AbortController();
     const cancelExtract=()=>extractController.abort();
     controller.signal.addEventListener('abort',cancelExtract,{once:true});
-    const extractTimeout=window.setTimeout(()=>extractController.abort(),12000);
+    const extractTimeout=window.setTimeout(()=>extractController.abort(),20000);
     try{
      const response=await fetch('/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:sourceText}),signal:extractController.signal});
      if(response.ok){
