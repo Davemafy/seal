@@ -379,15 +379,17 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const anchors=useRef<Record<string,HTMLElement|null>>({});
  const runId=useRef(0);
 
+ const genericWorkspaceTitle=/^(?:new check|check(?: \d+)?|court message|court notice)$/i.test(cleanDisplayText(workspaceTitle||''));
+ const localizedWorkspaceTitle=genericWorkspaceTitle?resultUi('courtMessageShort'):workspaceTitle;
  const documentPreviewAsset=uploadPreview
   ?uploadPreview
   :file
-   ?{url:file.preview,name:workspaceTitle||'Court message',kind:file.kind}
+   ?{url:file.preview,name:localizedWorkspaceTitle||resultUi('courtMessageShort'),kind:file.kind}
    :null;
  const processingPreview=uploadPreview
   ?uploadPreview
   :file
-   ?{url:file.preview,name:workspaceTitle||'Court message',kind:file.kind}
+   ?{url:file.preview,name:localizedWorkspaceTitle||resultUi('courtMessageShort'),kind:file.kind}
    :null;
 
  useEffect(()=>()=> {
@@ -789,7 +791,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
    :{
      title:translatedResult.safeTitle||verification.safe_action.title,
      summary:translatedResult.safeSummary||verification.safe_action.summary,
-     primaryLabel:translatedResult.safePrimary||verification.safe_action.primary_label,
+     primaryLabel:displayLocale==='en'?verification.safe_action.primary_label:(translatedResult.safePrimary||resultUi('openOfficialCourtService')),
      steps:verification.safe_action.steps.map((step,index)=>translatedResult[`safeStep${index}`]||step)
     }
   :null;
@@ -798,11 +800,11 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   :verification?.safe_action?.primary_url
    ?{url:verification.safe_action.primary_url,label:safeActionCopy?.primaryLabel||verification.safe_action.primary_label}
    :verification?.contact?.website
-    ?{url:verification.contact.website,label:translatedResult.openCourtWebsite||'Open official court website'}
+    ?{url:verification.contact.website,label:resultUi('openOfficialCourtWebsite')}
     :officialLookup
-     ?{url:officialLookup.url,label:officialLookup.label}
+     ?{url:officialLookup.url,label:resultUi('openOfficialCourtService')}
      :officialDirectory
-      ?{url:officialDirectory.url,label:officialDirectory.label}
+      ?{url:officialDirectory.url,label:resultUi('openOfficialCourtService')}
       :null;
 
  function toggleResultSpeech(){
@@ -1014,7 +1016,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   };
 
   if(activeResultSection==='summary'){
-   if(!curatedAuthorityMatch)['relationship','riskInstructionsTitle','riskInstructionsDetail','riskMatterTitle','riskMatterDetail'].forEach(take);
+   if(!curatedAuthorityMatch)['relationship','riskInstructionsTitle','riskInstructionsDetail','riskMatterTitle','riskMatterDetail','safePrimary'].forEach(take);
   }else if(activeResultSection==='evidence'){
    ['emptyEvidenceTitleDirect','emptyEvidenceTitle','emptyEvidenceCopyDirect','emptyEvidenceCopy'].forEach(take);
    takeIndexed('signalTitle',6);
@@ -1133,7 +1135,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
 
  const reliableCourtTitle=claims.find(claim=>claim.type==='court'&&claimReliable(claim)&&cleanDisplayText(claim.value))?.value;
  const plausibleCourtTitle=safeWorkspaceTitle(reliableCourtTitle||'');
- const safeCurrentWorkspaceTitle=safeWorkspaceTitle(workspaceTitle&&workspaceTitle!=='New check'?workspaceTitle:'');
+ const safeCurrentWorkspaceTitle=safeWorkspaceTitle(workspaceTitle&&!genericWorkspaceTitle?workspaceTitle:'');
  const safeJurisdictionTitle=safeWorkspaceTitle(jurisdiction);
  const checkObjectTitle=cleanDisplayText(plausibleCourtTitle||safeCurrentWorkspaceTitle||safeJurisdictionTitle||resultUi('courtMessageShort'));
  const checkObjectDisplayTitle=humanizeDisplayName(checkObjectTitle)
@@ -2217,10 +2219,10 @@ async function upload(uploaded:File){
    <div className="rail-check-list" aria-label={ui('openChecks')}>
     {workspaces.map((item,index)=>{
      const rawTitle=cleanDisplayText(item.title||'');
-     const genericTitle=!rawTitle||/^(?:new check|check)(?: \d+)?$/i.test(rawTitle);
+     const genericTitle=!rawTitle||/^(?:new check|check(?: \d+)?|court message|court notice)$/i.test(rawTitle);
      const safeTitle=safeWorkspaceTitle(rawTitle);
      const title=genericTitle||!safeTitle
-      ?(workspaces.length===1?ui('newCheck'):`${ui('check')} ${index+1}`)
+      ?(item.status==='done'?ui('courtMessageShort'):(workspaces.length===1?ui('newCheck'):`${ui('check')} ${index+1}`))
       :safeTitle;
      const usefulPreview=cleanDisplayText(item.preview||'');
      const statusLabel=item.status==='verifying'?ui('checkingSources'):item.status==='reading'?ui('reading'):item.status==='done'?ui('checked'):item.status==='error'?ui('needsAttention'):'';
@@ -2310,9 +2312,9 @@ async function upload(uploaded:File){
     <div className="workspace-drawer-list" aria-label={ui('openChecks')}>
      {workspaces.map((item,index)=>{
       const rawTitle=cleanDisplayText(item.title||'');
-      const genericTitle=!rawTitle||/^(?:new check|check)(?: \d+)?$/i.test(rawTitle);
+      const genericTitle=!rawTitle||/^(?:new check|check(?: \d+)?|court message|court notice)$/i.test(rawTitle);
       const safeTitle=safeWorkspaceTitle(rawTitle);
-      const title=genericTitle||!safeTitle?(workspaces.length===1?ui('newCheck'):`${ui('check')} ${index+1}`):safeTitle;
+      const title=genericTitle||!safeTitle?(item.status==='done'?ui('courtMessageShort'):(workspaces.length===1?ui('newCheck'):`${ui('check')} ${index+1}`)):safeTitle;
       const statusLabel=item.status==='verifying'?ui('checkingSources'):item.status==='reading'?ui('reading'):item.status==='done'?ui('checked'):item.status==='error'?ui('needsAttention'):'';
       return <div className={`workspace-drawer-row ${item.id===workspaceId?'is-current':''}`} key={item.id}>
        <button className="workspace-drawer-select" type="button" aria-current={item.id===workspaceId?'page':undefined} onClick={()=>{

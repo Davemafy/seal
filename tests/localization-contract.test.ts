@@ -14,7 +14,8 @@ const required=[
  'sourceConflict','knownPattern','officialWarning','sources','evidenceRecord',
  'nextHelpCopy','courtClaimed','caseReference','whatMessageAsks','explainNotice',
  'decisionActTitle','decisionGuidanceSummary','statusUnconfirmedNotice',
- 'caseNoIdentifierTitle','caseNoIdentifierDetail','caseUnconfirmedTitle','caseUnconfirmedDetail'
+ 'caseNoIdentifierTitle','caseNoIdentifierDetail','caseUnconfirmedTitle','caseUnconfirmedDetail',
+ 'courtMessageShort','openOfficialCourtService','openServiceNote'
 ] as const;
 
 describe('supported display locale coverage',()=>{
