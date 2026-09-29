@@ -132,7 +132,7 @@ function actionWindows(lines:string[]){
   // Layout PDFs often split a passive legal instruction across adjacent text
   // rows (for example, "a payment ... is" / "required immediately").
   // Reconstruct only short nearby payment/deontic windows before classification.
-  if(!passivePaymentDirective(line)&&/\b(?:payment|amount|balance|fine|fee|sum|required|due|payable)\b/i.test(line)){
+  if(!passivePaymentDirective(line)&&/\b(?:payment|amount|balance|fine|fee|sum)\b/i.test(line)){
    let passiveJoined=line;
    for(let j=1;j<=2&&i+j<lines.length;j++){
     const next=lines[i+j].trim();
