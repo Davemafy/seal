@@ -253,7 +253,7 @@ async function discoverLive(rawText:string,courtName:string,jurisdictionHint:str
  const unique=[...new Map(searched.map(item=>[item.url,item])).values()].slice(0,12);
  diagnostics.candidate_urls=unique.map(item=>item.url);
  if(!unique.length)return {semanticContext,diagnostics:{...diagnostics,fallback_reason:'no_official_candidates'}};
- const pages=(await Promise.all(unique.slice(0,8).map(candidate=>inspectCandidate(candidate,institution,heading||wrapperHeading))))
+ const pages=(await Promise.all(unique.slice(0,8).map(candidate=>inspectCandidate(candidate,institution,wrapperHeading||heading))))
   .filter((page):page is OfficialPage=>Boolean(page))
   .sort((a,b)=>b.score-a.score);
  diagnostics.fetched_urls=pages.map(page=>page.url);
