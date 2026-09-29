@@ -58,7 +58,7 @@ export default function Home(){
       {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><option key={code} value={code}>{label}</option>)}
      </select>
     </label>
-    <a className="landing-nav-check" href="#check">{ui('checkCourtMessage')}</a>
+    <Link className="landing-nav-check" href="/check/primary">{ui('checkCourtMessage')}</Link>
    </nav>
   </header>
 
@@ -181,7 +181,7 @@ export default function Home(){
     <img src="/brand/seal-mark-black.svg" alt=""/>
     <h2>{ui('landingFinalTitle')}</h2>
     <p>{ui('landingFinalCopy')}</p>
-    <a href="#check">{ui('checkCourtMessage')}</a>
+    <Link href="/check/primary">{ui('checkCourtMessage')}</Link>
    </section>
 
    <footer className="landing-footer">
@@ -192,7 +192,7 @@ export default function Home(){
      </div>
      <p className="landing-footer-thesis"><span>{ui('landingHeadlineFake')}</span><strong>{ui('landingHeadlineSource')}</strong></p>
      <nav aria-label={ui('landingFooterNavigation')}>
-      <a href="#check">{ui('checkCourtMessage')}</a>
+      <Link href="/check/primary">{ui('checkCourtMessage')}</Link>
       <Link href="/browse">{ui('browseCases')}</Link>
      </nav>
     </div>
