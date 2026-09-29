@@ -211,6 +211,10 @@
   max-width:1040px!important;
   margin:0 auto 10px!important
  }
+ .result-tabs-stage{
+  grid-column:auto!important;
+  grid-row:auto!important
+ }
  .result-masthead-row{
   display:flex!important;
   align-items:center!important;
@@ -250,11 +254,14 @@
   min-height:0!important;
   display:grid!important;
   grid-template-columns:132px minmax(0,1fr)!important;
+  grid-template-rows:minmax(0,1fr)!important;
   gap:24px!important;
   margin:0 auto!important;
   overflow:hidden!important
  }
  .result-chapters{
+  grid-column:1!important;
+  grid-row:1!important;
   position:sticky!important;
   top:0!important;
   align-self:start!important;
@@ -301,9 +308,12 @@
  .result-chapters button.is-current::after{display:none!important}
 
  .result-tabs-stage{
+  grid-column:2!important;
+  grid-row:1!important;
   width:100%!important;
   max-width:none!important;
   height:100%!important;
+  min-width:0!important;
   min-height:0!important;
   margin:0!important;
   overflow:hidden!important
@@ -324,6 +334,8 @@
   min-height:0!important
  }
  .result-chapters{
+  grid-column:auto!important;
+  grid-row:auto!important;
   width:100%!important;
   max-width:none!important;
   display:flex!important;
