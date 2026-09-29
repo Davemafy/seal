@@ -157,5 +157,5 @@ export async function interpretOfficialSource(claims:Claim[],sourceTitle:string,
  }));
  const properties={relations:{type:'array',items:{type:'object',additionalProperties:false,properties:{claim_id:{type:'string'},relation:{type:'string',enum:['SUPPORTS','CONTRADICTS','RELEVANT','NONE']},source_quote:{type:'string'},reason:{type:'string'},scope:{type:'string'}},required:['claim_id','relation','source_quote','reason','scope']}}};
  const user=JSON.stringify({source:{title:sourceTitle,url:sourceUrl,text:sourceText.slice(0,18000)},claims:claimPayload});
- return structuredCall(instruction,user,'seal_source_relations',{type:'object',additionalProperties:false,properties,required:['relations']},raw=>validateEvidenceRelations(sourceText,claims,raw),7000)||[];
+ return (await structuredCall(instruction,user,'seal_source_relations',{type:'object',additionalProperties:false,properties,required:['relations']},raw=>validateEvidenceRelations(sourceText,claims,raw),7000))||[];
 }
