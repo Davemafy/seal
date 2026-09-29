@@ -30,6 +30,17 @@ describe('grounded jurisdiction inference',()=>{
  });
 });
 
+describe('court identity extraction',()=>{
+ it('recognizes plural institutional court names without requiring a jurisdiction adapter',()=>{
+  const text='HM Courts & Tribunals Service\nNOTICE OF ENFORCEMENT\nA payment of £2560 is required immediately.';
+  expect(fallbackExtract(text).court_name).toBe('HM Courts & Tribunals Service');
+ });
+ it('reconstructs a split institutional court-service name',()=>{
+  const text='HM Courts\n& Tribunals Service\nNOTICE OF ENFORCEMENT\nA payment of £2560 is required immediately.';
+  expect(fallbackExtract(text).court_name).toBe('HM Courts & Tribunals Service');
+ });
+});
+
 describe('OCR script recovery',()=>{
  it('maps non-Latin scripts to an OCR model without guessing Latin language',()=>{
   expect(ocrLanguageForScript('Arabic')).toBe('ara');

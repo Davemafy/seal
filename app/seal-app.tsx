@@ -1190,6 +1190,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
        :'')
   :jurisdiction;
  const checkSourceCount=technicalEvidence.length;
+ const effectiveSourceMode=technicalEvidence.some(evidence=>evidence.source_mode==='LIVE')?'LIVE':mode;
  const latestCheckTimestamp=technicalEvidence.reduce((latest,evidence)=>{
   const value=Date.parse(evidence.checked_at);
   return Number.isFinite(value)&&value>latest?value:latest;
@@ -2865,7 +2866,7 @@ async function upload(uploaded:File){
        <div><dt>{resultUi('input')}</dt><dd>{checkInputLabel}</dd></div>
        <div><dt>{resultUi('documentLanguage')}</dt><dd>{documentLanguage?.label||(translatedResult.notResolved||'Not resolved')}</dd></div>
        <div><dt>{resultUi('jurisdiction')}</dt><dd>{jurisdiction||(translatedResult.notResolved||'Not resolved')}</dd></div>
-       <div><dt>{resultUi('sourceMode')}</dt><dd>{mode==='LIVE'?(translatedResult.livePublicSources||'Live public sources'):(translatedResult.sourceSnapshot||'Source snapshot')}</dd></div>
+       <div><dt>{resultUi('sourceMode')}</dt><dd>{effectiveSourceMode==='LIVE'?(translatedResult.livePublicSources||'Live public sources'):(translatedResult.sourceSnapshot||'Source snapshot')}</dd></div>
        <div><dt>{resultUi('sourcesAttached')}</dt><dd>{String(checkSourceCount)}</dd></div>
        {checkDateLabel&&<div><dt>{translatedResult.checkedLabel||'Checked'}</dt><dd>{checkDateLabel}</dd></div>}
       </dl>

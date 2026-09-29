@@ -7,15 +7,16 @@ const ACTION_VERBS=/\b(pay|remit|submit|transfer|settle|clear(?:ed)?|call|contac
 const FIELD_CONFIDENCE=80;
 
 function courtLineScore(line:string){
- if(!/\bcourt\b/i.test(line))return -Infinity;
+ if(!/\b(?:courts?|tribunals?)\b/i.test(line))return -Infinity;
  let score=2;
  if(/\b(?:district|superior|circuit|supreme|municipal|magistrate|appeals?|bankruptcy|traffic|county)\b/i.test(line))score+=3;
+ if(/\b(?:courts?\s*(?:&|and)\s*tribunals?|judiciary|judicial|court\s+service|tribunal\s+service)\b/i.test(line))score+=4;
  if(line.length<100)score+=1;
  if(/\b(?:pay|call|click|scan|provide|appear|required|failure|costs?|payment)\b/i.test(line))score-=3;
  return score;
 }
 
-const COURT_WORD=/(?:\b(?:court|tribunal|juzgado|gericht|tribunale|mahakama|mahkama|mahkeme|pengadilan|llys)\b|\bcour\b|न्यायालय|अदालत|محكمة|المحكمة|法院|裁判所|법원|\bсуд\b)/iu;
+const COURT_WORD=/(?:\b(?:courts?|tribunals?|juzgado|gericht|tribunale|mahakama|mahkama|mahkeme|pengadilan|llys)\b|\bcour\b|न्यायालय|अदालत|محكمة|المحكمة|法院|裁判所|법원|\bсуд\b)/iu;
 function plausibleCourtName(value:string){
  if(!COURT_WORD.test(value))return false;
  const compact=value.replace(/\s/g,'');
@@ -45,7 +46,9 @@ function extractCourtName(lines:string[]){
   if(context)value=`${context} ${value}`.replace(/\s+/g,' ').trim();
  }
  const continuation=/\b(?:of|for|in|—|-)\s*$/i.test(value)||/^(?:district|division|county|circuit|for\b|of\b)/i.test(next);
- if(continuation&&next.length<=90&&!/[.!?]$/.test(value))value=`${value} ${next}`.replace(/\s+/g,' ').trim();
+ const institutionalContinuation=/\b(?:courts?|tribunals?)\s*$/i.test(value)
+  &&/^(?:(?:&|and)\s*)?(?:courts?|tribunals?|service|judiciary|judicial\b)/i.test(next);
+ if((continuation||institutionalContinuation)&&next.length<=90&&!/[.!?]$/.test(value))value=`${value} ${next}`.replace(/\s+/g,' ').trim();
  return plausibleCourtName(value)?value:'';
 }
 
