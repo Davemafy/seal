@@ -47,7 +47,7 @@ export default function Home(){
      <p className="landing-kicker">Before you call, click, pay, or reply.</p>
      <h1><span>The seal can be faked.</span><span className="landing-headline-muted">The source can’t.</span></h1>
      <p className="landing-hero-summary">Check what a court message is asking you to do against independent public sources.</p>
-     <p className="landing-hero-principle">If a source cannot establish it, SEAL leaves it unconfirmed. SEAL is not affiliated with any court.</p>
+     <p className="landing-hero-principle">No independent source, no MATCH. If evidence cannot establish a claim, SEAL leaves it unconfirmed.</p>
     </div>
 
     <div className="landing-checker" aria-label="Check a court message">
@@ -111,20 +111,20 @@ export default function Home(){
    <section className="landing-method" aria-labelledby="landing-method-title">
     <div className="landing-method-intro">
      <h2 id="landing-method-title">The message and the evidence stay separate.</h2>
-     <p>SEAL reads the action first, checks outside the message, then gives you an official route forward without pretending the sender has been authenticated.</p>
+     <p>The model can structure what the message asks. It cannot decide the verdict. SEAL checks outside the message, then applies a fixed evidence boundary.</p>
     </div>
     <div className="landing-method-grid">
      <article>
-      <h3>Read the request</h3>
-      <p>What is this message actually asking you to call, click, pay, share, or do?</p>
+      <h3>Extract the request</h3>
+      <p>AI can help structure the exact action in the message, but the quote must stay grounded to the artifact.</p>
      </article>
      <article>
-      <h3>Check outside the message</h3>
-      <p>Public court and government sources are opened independently of the message.</p>
+      <h3>Resolve independently</h3>
+      <p>Reviewed court and government resolvers compare claims against sources the sender does not control.</p>
      </article>
      <article>
-      <h3>Know what follows</h3>
-      <p>Confirmed facts stay distinct from unknowns, with a safer official next step.</p>
+      <h3>Apply the verdict boundary</h3>
+      <p>MATCH or MISMATCH requires cited evidence. Without it, the result stays COULD NOT VERIFY.</p>
      </article>
     </div>
    </section>
@@ -150,9 +150,9 @@ export default function Home(){
 
    <section className="landing-boundary">
     <div>
-     <h2>Matching details do not authenticate a message.</h2>
+     <h2>No independent source, no MATCH.</h2>
     </div>
-    <p>A real court name, address, phone number, or public case record can appear inside a fraudulent message. SEAL reports only what an independent source establishes.</p>
+    <p>A real court name, address, phone number, or public case record can appear inside a fraudulent message. Matching details never authenticate the sender or requested action, and model output cannot promote a claim to a verdict.</p>
    </section>
 
    <section className="landing-final">

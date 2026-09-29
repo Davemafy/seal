@@ -9,7 +9,7 @@ const COURTISH=/\b(?:court|judiciary|tribunal|justice|clerk|magistrate)\b/i;
 
 export function safeWorkspaceTitle(value:string){
  const clean=cleanWorkspaceText(value)
-  .replace(/^[~≈·|:;,.-–—\s]+|[~≈·|:;,.-–—\s]+$/g,'');
+  .replace(/^[~≈·|:;,.\-–—\s]+|[~≈·|:;,.\-–—\s]+$/g,'');
  if(!clean)return '';
  const words=clean.split(/\s+/).filter(Boolean);
  const compact=clean.replace(/\s/g,'');

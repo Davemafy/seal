@@ -8,6 +8,7 @@ export const phoneDigits=(s:string)=>s.replace(/\D/g,'').replace(/^1(?=\d{10}$)/
 export const domain=(s:string)=>{try{return new URL(/^https?:\/\//i.test(s)?s:'https://'+s).hostname.toLowerCase().replace(/^www\./,'');}catch{return '';}};
 export const address=(s:string)=>s.toLowerCase().replace(/\bstreet\b/g,'st').replace(/[^a-z0-9]/g,'');
 export function verdict(claim:Claim,state:Result['verdict'],explanation:string,evidence:Evidence[]=[],resolver_id='riverside'):Result{if(state!=='COULD_NOT_VERIFY'&&!evidence.length)throw new Error('Decisive verdict requires official evidence');if(state==='MISMATCH'&&!explanation.trim())throw new Error('Mismatch requires direct contradiction');return {claim_id:claim.id,verdict:state,explanation,evidence,resolver_id};}
+export function assertVerdictBoundary(results:Result[]):Result[]{for(const result of results){if(result.verdict!=='COULD_NOT_VERIFY'&&!result.evidence.length)throw new Error(`Decisive verdict ${result.verdict} requires independent evidence`);if(result.verdict==='MISMATCH'&&!result.explanation.trim())throw new Error('Mismatch requires direct contradiction');}return results;}
 const unknown=(c:Claim,reason='No available public source independently verifies this detail.',id='riverside',evidence:Evidence[]=[])=>verdict(c,'COULD_NOT_VERIFY',reason,evidence,id);
 type Sources=Partial<Record<SourceKey,Source>>;
 function proof(s:Sources,key:SourceKey,phrase:string):Evidence|undefined{return s[key]&&cite(s[key],phrase);}
@@ -74,7 +75,7 @@ export async function verifyClaims(claims:Claim[],courtName:string,mode:'LIVE'|'
  const intelligence=analyzePublicIntelligence(text,claims,[...publicResults.values()]);
  const publicDuration=Date.now()-publicStarted;
  const [{value:base,duration:courtDuration},directory]=await Promise.all([courtPromise,directoryPromise]);
- const merged=base.results.map(result=>publicResults.get(result.claim_id)||result);
+ const merged=assertVerdictBoundary(base.results.map(result=>publicResults.get(result.claim_id)||result));
  const courtEvidence=[...new Map(base.results.flatMap(result=>result.evidence).map(evidence=>[evidence.url,evidence])).values()];
  const publicEvidence=[...new Map([...[...publicResults.values()].flatMap(result=>result.evidence),...intelligence.signals.flatMap(signal=>signal.evidence)].map(evidence=>[evidence.url,evidence])).values()];
  const lanes:NonNullable<Verification['lanes']>=[
