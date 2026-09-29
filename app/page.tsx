@@ -111,20 +111,20 @@ export default function Home(){
     </div>
 
     <aside className="landing-hero-evidence" aria-label={ui('landingPublishedArtifact')}>
-     <div className="landing-hero-artifact">
-      <span className="landing-hero-artifact-label">{ui('landingYourMessage')}</span>
+     <div className="landing-hero-evidence-head">
+      <span>{ui('landingPublishedArtifact')}</span>
+      <small>City of Dallas</small>
+     </div>
+     <div className="landing-hero-evidence-frame">
       <img src="/browse-assets/dallas-traffic-qr-scam.jpg" alt="City of Dallas published traffic QR scam example"/>
      </div>
-     <div className="landing-hero-source-anchor">
-      <div className="landing-hero-source-mark"><img src="/brand/seal-mark-white.svg" alt=""/></div>
-      <div className="landing-hero-source-copy">
-       <span>{ui('landingIndependentSource')}</span>
-       <strong>City of Dallas</strong>
-       <p>{ui('landingConfirmedScamExample')}</p>
+     <div className="landing-hero-evidence-foot">
+      <div>
+       <small>{ui('landingIndependentSource')}</small>
+       <strong>City of Dallas · SCAM Notice</strong>
       </div>
       <Link href="/check/dallas-proof?case=dallas-traffic-qr-scam">{ui('landingOpenThisCheck')}</Link>
      </div>
-     <div className="landing-hero-source-line" aria-hidden="true"/>
     </aside>
    </div>
   </section>
