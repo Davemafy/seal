@@ -126,7 +126,7 @@ describe('generic official-source discovery',()=>{
    return new Response('',{status:404,headers:{'content-type':'text/plain'}});
   }));
   const claim={id:'pay',type:'payment' as const,label:'Requested payment',value:'£2560',exact_source_text:'a payment of £2560 is required immediately',page:1,action:{verb:'pay',kind:'pay' as const,object:'a payment of £2560 is required immediately',target_type:'money' as const,target_value:'£2560',qualifiers:['required','immediately'],source_text:'a payment of £2560 is required immediately'}};
-  const verification=await verifyClaims([claim],'HM Courts & Tribunals Service','SNAPSHOT','United Kingdom','HM Courts & Tribunals Service\nNOTICE OF ENFORCEMENT\na payment of £2560 is required immediately');
+  const verification=await verifyClaims([claim],'HM Courts & Tribunals Service','SNAPSHOT','United Kingdom','HM Courts & Tribunals Service\nNOTICE OF ENFORCEMENT\na payment of £2560 is required immediately',true);
   expect(verification.results[0].verdict).toBe('COULD_NOT_VERIFY');
   expect(verification.signals?.some(signal=>signal.kind==='OFFICIAL_WARNING')).toBe(true);
   expect(verification.safe_action?.primary_url).toBe(warning);
