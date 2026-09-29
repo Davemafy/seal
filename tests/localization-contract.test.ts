@@ -6,6 +6,10 @@ import tr from '../lib/locales/tr.json';
 import hi from '../lib/locales/hi.json';
 
 const locales={fr,ko,tr,hi};
+const identicalLocalizedCopy=new Set([
+ 'fr:landingMessageLabel',
+ 'fr:landingSourceLabel'
+]);
 const landingRequired=Object.keys(en).filter(key=>key.startsWith('landing')) as Array<keyof typeof en>;
 const required=[
  'realExamples','seeRealCourtMessages','browseDeck','browseScope','filterSourceDocuments',
@@ -25,7 +29,7 @@ describe('supported display locale coverage',()=>{
   it(`${locale} has localized primary result and Browse copy`,()=>{
    for(const key of required){
     expect(copy[key],`${locale} missing ${key}`).toBeTruthy();
-    expect(copy[key],`${locale} fell back to English for ${key}`).not.toBe(en[key]);
+    if(!identicalLocalizedCopy.has(`${locale}:${String(key)}`))expect(copy[key],`${locale} fell back to English for ${key}`).not.toBe(en[key]);
    }
   });
  }
