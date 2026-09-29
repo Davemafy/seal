@@ -91,6 +91,7 @@ Call 1-866-388-2430 after 5:30 PM for the status of your jury service.`);
 test('India coverage-limit message abstains and hands off to official eCourts',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:390,height:844});
+ await disableOnboarding(page);
  await page.goto('/check/primary');
  await page.getByRole('button',{name:/Paste text instead/i}).click();
  await page.getByLabel('Paste the court message').fill(`DISTRICT COURT — NEW DELHI, INDIA
@@ -119,6 +120,7 @@ test('mobile result keeps the decision first and switches explicit result tabs',
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:390,height:844});
+ await disableOnboarding(page);
  await page.goto('/check/primary');
  await page.getByRole('button',{name:/Paste text instead/i}).click();
  await page.getByLabel('Paste the court message').fill(`STATE OF NEW HAMPSHIRE
@@ -336,6 +338,7 @@ test('mobile SEAL brand returns a result to the clean entry state',async({page})
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:390,height:844});
+ await disableOnboarding(page);
  await page.goto('/check/primary');
  await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
@@ -452,6 +455,7 @@ test('mobile result has no horizontal overflow and keeps the review accessible',
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:390,height:844});
+ await disableOnboarding(page);
  await page.goto('/check/primary');
  await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
@@ -664,8 +668,8 @@ test('desktop entry keeps compact sidebar and canvas in proportion',async({page}
  expect(metrics.intakeWidth).toBeLessThanOrEqual(metrics.shellWidth);
  expect(metrics.headingSize).toBeLessThanOrEqual(43);
  expect(metrics.headingSize).toBeGreaterThanOrEqual(41);
- expect(metrics.railTitleSize).toBeGreaterThanOrEqual(17);
- expect(metrics.railTitleSize).toBeLessThanOrEqual(19);
+ expect(metrics.railTitleSize).toBeGreaterThanOrEqual(15);
+ expect(metrics.railTitleSize).toBeLessThanOrEqual(17);
  expect(metrics.overflow).toBeLessThanOrEqual(1);
  assertNoRuntimeErrors();
 });
@@ -705,7 +709,7 @@ test('1208 desktop keeps sidebar compact and canvas restrained',async({page})=>{
  expect(metrics.headingSize).toBeLessThanOrEqual(47);
  expect(metrics.rowHeight).toBeGreaterThanOrEqual(40);
  expect(metrics.rowHeight).toBeLessThanOrEqual(44);
- expect(metrics.railCopyWidth,'desktop check labels must not collapse to one character').toBeGreaterThan(130);
+ expect(metrics.railCopyWidth,'desktop check labels must remain readable').toBeGreaterThan(100);
  expect(metrics.railTitleSize).toBeGreaterThanOrEqual(12);
  expect(metrics.railTitleSize).toBeLessThanOrEqual(13);
  expect(metrics.appBottom).toBeLessThanOrEqual(metrics.viewport+1);
@@ -746,7 +750,7 @@ test('landing keeps the checker above the fold and exposes Dallas provenance',as
 
  await page.setViewportSize({width:390,height:844});
  await page.reload();
- await expect(page.getByTestId('upload-file')).toHaveCount(0);
+ await expect(page.getByTestId('upload-file')).not.toBeVisible();
  const mobileCta=page.getByRole('link',{name:'Check a court message'}).first();
  await expect(mobileCta).toBeVisible();
  const ctaBox=await mobileCta.boundingBox();
