@@ -11,7 +11,7 @@ import StoryPdfPage from './story-pdf-page';
 import {fixtures} from '@/lib/fixtures';
 import {fallbackExtract,claimsFromExtraction,recoverLabeledJurorNumber,recoverLabeledReportingDate} from '@/lib/extract';
 import {readInBrowser,warmOcr,ocrLanguageForLocale,type OcrLanguage,type BrowserDocument} from '@/lib/browser-file';
-import {clearOrphanedResultArtifacts,clearResultSession,persistResultSession,restoreResultSession} from '@/lib/result-session';
+import {clearOrphanedResultArtifacts,clearResultSession,persistResultSession,restoreResultSession,type StoredCheckOrigin} from '@/lib/result-session';
 import {officialCourtDirectoryFor} from '@/lib/official-directories';
 import {detectDocumentContext,type DetectedDocumentLanguage} from '@/lib/document-context';
 import {justiceSupportFor} from '@/lib/justice-support';
@@ -312,6 +312,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const [documentLanguage,setDocumentLanguage]=useState<DetectedDocumentLanguage|null>(null);
  const [jurisdiction,setJurisdiction]=useState('');
  const [workspaceTitle,setWorkspaceTitle]=useState('New check');
+ const [checkOrigin,setCheckOrigin]=useState<StoredCheckOrigin|null>(null);
  const [revealed,setRevealed]=useState(0);
  const [selected,setSelected]=useState('');
  const [hovered,setHovered]=useState('');
@@ -1419,6 +1420,23 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
      const restoredContext=detectDocumentContext(restored.text);
      const restoredCourt=restored.claims.find(claim=>claim.type==='court'&&cleanDisplayText(claim.value))?.value;
      const registryTitle=workspaces.find(item=>item.id===workspaceId)?.title||'';
+     let restoredOrigin=restored.origin||null;
+     const legacyBrowseCaseId=browseCaseIdFromWorkspace(workspaceId);
+     if(!restoredOrigin&&legacyBrowseCaseId){
+      try{
+       const response=await fetch(`/api/browse-case?id=${encodeURIComponent(legacyBrowseCaseId)}`);
+       if(response.ok){
+        const payload=await response.json() as {title?:string;jurisdiction?:string;runText?:string};
+        restoredOrigin={
+         kind:'browse',
+         caseId:legacyBrowseCaseId,
+         title:payload.title,
+         jurisdiction:payload.jurisdiction,
+         curated:Boolean(payload.runText?.trim())
+        };
+       }
+      }catch{}
+     }
      setText(restored.text);
      setClaims(restored.claims);
      setVerification(restored.verification);
@@ -1427,8 +1445,9 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
      setSelected(restored.selected||restored.claims[0]?.id||'');
      setRevealed(restored.claims.length);
      setDocumentLanguage(restoredContext.language);
-     setJurisdiction(restoredContext.jurisdiction);
-     setWorkspaceTitle(safeWorkspaceTitle(restoredCourt||'')||safeWorkspaceTitle(registryTitle)||'Court message');
+     setCheckOrigin(restoredOrigin);
+     setJurisdiction(restoredOrigin?.jurisdiction||restoredContext.jurisdiction);
+     setWorkspaceTitle(restoredOrigin?.title||safeWorkspaceTitle(restoredCourt||'')||safeWorkspaceTitle(registryTitle)||'Court message');
      setFile(restored.browserFile);
      sourceBlobRef.current=restored.sourceBlob;
      setStoryArtifactReady(!restored.browserFile);
@@ -1507,6 +1526,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
      assetType?:'pdf'|'image';
      ocrLanguage?:OcrLanguage;
      title?:string;
+     jurisdiction?:string;
     };
     const seededText=payload.runText?.trim()||'';
     if(payload.title)setWorkspaceTitle(payload.title);
@@ -1559,7 +1579,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
       file:doc,
       curated:true,
       curatedCaseId:caseId,
-      browse:true
+      browse:true,
+      origin:{kind:'browse',caseId,title:payload.title,jurisdiction:payload.jurisdiction,curated:true}
      });
      return;
     }
@@ -1619,7 +1640,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
     setFile(doc);
     setStoryArtifactReady(false);
     setText(doc.text);
-    await run('SNAPSHOT',{text:doc.text,file:doc,curatedCaseId:caseId,browse:true});
+    await run('SNAPSHOT',{text:doc.text,file:doc,curatedCaseId:caseId,browse:true,origin:{kind:'browse',caseId,title:payload.title,jurisdiction:payload.jurisdiction,curated:false}});
    }catch{
     if(controller.signal.aborted||runId.current!==handoffId)return;
     const openingWait=Math.max(0,180-(performance.now()-busyStartedAt));
@@ -1787,6 +1808,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   setDocumentLanguage(null);
   setJurisdiction('');
   setWorkspaceTitle('New check');
+  setCheckOrigin(null);
   if(typeof window!=='undefined'&&(window.location.search||window.location.hash)){
    window.history.replaceState(null,'',window.location.pathname);
   }
@@ -1840,12 +1862,14 @@ async function upload(uploaded:File){
   }
  }
 
- async function run(sourceMode:Mode=mode,source?:{text:string;file:BrowserDocument|null;curated?:boolean;curatedCaseId?:string;browse?:boolean}){
+ async function run(sourceMode:Mode=mode,source?:{text:string;file:BrowserDocument|null;curated?:boolean;curatedCaseId?:string;browse?:boolean;origin?:StoredCheckOrigin}){
   const sourceText=source?.text??text;
   const sourceFile=source?source.file:file;
   const sourceCurated=Boolean(source?.curated);
   const sourceBrowse=Boolean(source?.browse);
   const curatedCaseId=source?.curatedCaseId;
+  const sourceOrigin=source?.origin||null;
+  setCheckOrigin(sourceOrigin);
   const sourceIsDemo=!sourceFile&&/^DEMO \/ (?:FICTIONAL NOTICE|SYNTHETIC MESSAGE)/.test(sourceText);
   const sourceContext=detectDocumentContext(sourceText);
   setDocumentLanguage(sourceContext.language);
@@ -1998,6 +2022,7 @@ async function upload(uploaded:File){
     mode:sourceMode,
     extractionMode:extractor,
     selected:selectedId,
+    origin:sourceOrigin||undefined,
     file:sourceFile?{
      kind:sourceFile.kind,
      uncertain:sourceFile.uncertain,
@@ -2013,6 +2038,90 @@ async function upload(uploaded:File){
    window.clearTimeout(requestTimeout);
    if(activeRequestRef.current===controller)activeRequestRef.current=null;
    const remaining=Math.max(0,300-(performance.now()-busyStartedAt));
+   if(remaining)await new Promise(resolve=>window.setTimeout(resolve,remaining));
+   if(runId.current===id){setBusy(false);setStatus('')}
+  }
+ }
+
+ async function recheckSources(){
+  if(busy||!verification||!claims.length||!text.trim())return;
+
+  activeRequestRef.current?.abort();
+  const controller=new AbortController();
+  activeRequestRef.current=controller;
+  const requestTimeout=window.setTimeout(()=>controller.abort(),30000);
+  const id=++runId.current;
+  const busyStartedAt=performance.now();
+
+  setBusy(true);
+  setError('');
+  setStatus('Checking independent sources');
+  setTechnicalOpen(false);
+  onWorkspaceMeta(workspaceId,{status:'verifying',language:documentLanguage?.label,jurisdiction});
+
+  try{
+   const verifiable=claims.filter(claim=>claim.verification_eligible!==false);
+   const courtClaim=claims.find(claim=>claim.type==='court');
+   const routingCourt=courtClaim?.verification_eligible===false?'':cleanDisplayText(courtClaim?.value||'');
+   const caseId=checkOrigin?.caseId||browseCaseIdFromWorkspace(workspaceId)||undefined;
+
+   const response=await fetch('/api/verify',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+     claims:verifiable,
+     court_name:routingCourt,
+     jurisdiction_hint:checkOrigin?.jurisdiction||jurisdiction,
+     mode:'LIVE',
+     text,
+     curated_case_id:caseId
+    }),
+    signal:controller.signal
+   });
+   if(!response.ok)throw new Error('The live source check could not finish.');
+
+   const checkedServer=await response.json() as Verification;
+   const checkedById=new Map(checkedServer.results.map(result=>[result.claim_id,result]));
+   const checked:Verification={
+    ...checkedServer,
+    results:claims.map(claim=>claim.verification_eligible===false
+     ?{claim_id:claim.id,verdict:'COULD_NOT_VERIFY',explanation:'We couldn’t read this field confidently.',evidence:[],resolver_id:'ocr'}
+     :checkedById.get(claim.id)||{claim_id:claim.id,verdict:'COULD_NOT_VERIFY',explanation:'No supported official-source check applies to this extracted action.',evidence:[],resolver_id:checkedServer.resolver_id})
+   };
+
+   if(runId.current!==id)return;
+   setVerification(checked);
+   setMode('LIVE');
+   setRevealed(claims.length);
+
+   const selectedId=selected&&claims.some(claim=>claim.id===selected)
+    ?selected
+    :chooseDecisionClaim(claims,checked)?.id||claims.find(claimReliable)?.id||'';
+   setSelected(selectedId);
+
+   void persistResultSession({
+    text,
+    claims,
+    verification:checked,
+    mode:'LIVE',
+    extractionMode,
+    selected:selectedId,
+    origin:checkOrigin||undefined,
+    file:file?{
+     kind:file.kind,
+     uncertain:file.uncertain,
+     sample:file.sample,
+     ocrConfidence:file.ocrConfidence,
+     unreadableFields:file.unreadableFields
+    }:undefined
+   },file?sourceBlobRef.current:null,workspaceId);
+  }catch(error){
+   const aborted=error instanceof DOMException&&error.name==='AbortError';
+   if(!aborted&&runId.current===id)setError('The live source check could not finish. The current result is unchanged.');
+  }finally{
+   window.clearTimeout(requestTimeout);
+   if(activeRequestRef.current===controller)activeRequestRef.current=null;
+   const remaining=Math.max(0,250-(performance.now()-busyStartedAt));
    if(remaining)await new Promise(resolve=>window.setTimeout(resolve,remaining));
    if(runId.current===id){setBusy(false);setStatus('')}
   }
@@ -2041,13 +2150,13 @@ async function upload(uploaded:File){
  useEffect(()=>{
   if(!hydrated)return;
   const courtTitle=claims.find(claim=>claim.type==='court'&&claimReliable(claim))?.value;
-  const title=safeWorkspaceTitle(courtTitle||'')||safeWorkspaceTitle(workspaceTitle||'')||'';
+  const title=checkOrigin?.title||safeWorkspaceTitle(courtTitle||'')||safeWorkspaceTitle(workspaceTitle||'')||'';
   const firstAction=claims.find(claim=>Boolean(claim.action)&&claimReliable(claim));
   const firstUsefulLine=text.split(/\n+/).map(cleanDisplayText).find(line=>line.length>=12&&!/^new check$/i.test(line));
   const preview=cleanDisplayText(firstAction?.action?.source_text||firstAction?.value||firstUsefulLine||'').slice(0,84);
   const state:WorkspaceRunStatus=error?'error':verification?'done':busy?(status==='Checking independent sources'?'verifying':'reading'):'idle';
   onWorkspaceMeta(workspaceId,{title,status:state,language:documentLanguage?.label,jurisdiction,preview});
- },[hydrated,workspaceId,workspaceTitle,claims,text,error,verification,busy,status,documentLanguage?.label,jurisdiction,onWorkspaceMeta]);
+ },[hydrated,workspaceId,workspaceTitle,checkOrigin,claims,text,error,verification,busy,status,documentLanguage?.label,jurisdiction,onWorkspaceMeta]);
 
  const processingStage=status==='Checking independent sources'?2:status==='Reading requested actions'?1:0;
  const processingTitle=processingStage===2?'Checking public sources':processingStage===1?'Finding the instructions':'Reading your document';
@@ -2383,14 +2492,14 @@ async function upload(uploaded:File){
        </div>
       </div>
       <div className="check-object-actions" aria-label={resultUi('checkActions')}>
-       <button type="button" className="icon-control result-icon-action" aria-label={resultUi('checkAgain')} data-tooltip={resultUi('checkAgain')} onClick={()=>run('LIVE')} disabled={busy}><SealUiIcon name="refresh"/></button>
+       <button type="button" className="icon-control result-icon-action" aria-label={resultUi('checkAgain')} data-tooltip={resultUi('checkAgain')} onClick={()=>void recheckSources()} disabled={busy}><SealUiIcon name="refresh"/></button>
       </div>
      </div>
 
 
     </header>
 
-    {liveFailed&&<div className="source-retry-status" role="status"><span><strong>Live source unavailable</strong><small>The current result is preserved; claims that needed the live court page remain unverified.</small></span><button type="button" onClick={()=>run('LIVE')} disabled={busy}>{busy?'Checking…':resultUi('checkLiveSources')}</button></div>}
+    {liveFailed&&<div className="source-retry-status" role="status"><span><strong>Live source unavailable</strong><small>The current result is preserved; claims that needed the live court page remain unverified.</small></span><button type="button" onClick={()=>void recheckSources()} disabled={busy}>{busy?'Checking…':resultUi('checkLiveSources')}</button></div>}
 
 
     {verification&&ready&&storyOpen&&createPortal(<div className={`story-overlay ${storyClosing?'is-closing':''}`} data-testid="evidence-review" role="dialog" aria-modal="true" aria-label={resultUi('sealVerificationReview')}>
@@ -2869,7 +2978,7 @@ async function upload(uploaded:File){
        <a className="contact-phone" href={`tel:${verification.contact.phone}`}>{verification.contact.phone}</a>
        <div className="contact-actions">
         <a href={verification.contact.website} target="_blank" rel="noopener noreferrer">{resultUi('openCourtWebsite')}</a>
-        <button onClick={()=>run('LIVE')} disabled={busy}>{resultUi('checkLiveSources')}</button>
+        <button onClick={()=>void recheckSources()} disabled={busy}>{resultUi('checkLiveSources')}</button>
        </div>
        <p className="contact-source">{translatedResult.contactSourcePrefix||'This contact came from the court source, not from the message.'} {verification.contact.source.source_mode==='SNAPSHOT'?(translatedResult.snapshotChecked||'Source snapshot checked')+' '+new Date(verification.contact.source.checked_at).toLocaleDateString(displayLocale,{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.':(translatedResult.liveChecked||'Live source checked')+' '+new Date(verification.contact.source.checked_at).toLocaleDateString(displayLocale,{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})+'.'}</p>
       </div>
@@ -2915,6 +3024,11 @@ const isDisposableBlankWorkspace=(item:WorkspaceMeta)=>item.status==='idle'
  &&!cleanDisplayText(item.preview||'')
  &&!item.language
  &&!item.jurisdiction;
+
+const browseCaseIdFromWorkspace=(workspaceId:string)=>{
+ const normalized=workspaceId.replace(/^check-/,'');
+ return normalized.startsWith('browse-')?normalized.slice('browse-'.length):'';
+};
 
 const workspaceIdFromPath=(pathname:string)=>{
  const match=pathname.match(/^\/check\/([^/?#]+)/);

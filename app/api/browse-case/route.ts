@@ -9,6 +9,7 @@ export async function GET(req:Request){
   assetType:item.preview.type,
   ocrLanguage:item.ocrLanguage||'eng',
   assetAlt:item.preview.alt,
-  title:item.title
+  title:item.title,
+  jurisdiction:item.jurisdiction
  });
 }

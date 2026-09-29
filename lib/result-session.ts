@@ -8,6 +8,14 @@ const DB_NAME='seal-local-session';
 const STORE_NAME='artifacts';
 const MAX_SESSION_AGE=6*60*60*1000;
 
+export type StoredCheckOrigin={
+ kind:'browse';
+ caseId:string;
+ title?:string;
+ jurisdiction?:string;
+ curated?:boolean;
+};
+
 type StoredFileMeta={
  kind:BrowserDocument['kind'];
  uncertain:boolean;
@@ -24,6 +32,7 @@ export type StoredResultSession={
  mode:'SNAPSHOT'|'LIVE';
  extractionMode:string;
  selected:string;
+ origin?:StoredCheckOrigin;
  file?:StoredFileMeta;
  blobKey?:string;
  savedAt:number;
