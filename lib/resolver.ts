@@ -69,7 +69,7 @@ export async function verifyClaims(claims:Claim[],courtName:string,mode:'LIVE'|'
  const text=rawText||claims.map(c=>c.context||c.exact_source_text||c.value).join('\n');
  const courtStarted=Date.now();
  const courtPromise=r.resolve(claims,mode,courtName).then(value=>({value,duration:Date.now()-courtStarted}));
- const discoveryMode=allowLiveDiscovery||r.id==='unsupported'?'LIVE':mode;
+ const discoveryMode=allowLiveDiscovery?'LIVE':mode;
  const discoveryText=documentText||text;
  const directoryPromise=discoverOfficialDirectory(discoveryText,courtName,jurisdictionHint,discoveryMode,claims,text);
  const publicStarted=Date.now();
@@ -86,6 +86,7 @@ export async function verifyClaims(claims:Claim[],courtName:string,mode:'LIVE'|'
   directory.lane
  ];
  const signals=[...intelligence.signals,...(directory.signal&&!intelligence.signals.some(signal=>signal.id===directory.signal!.id)?[directory.signal]:[])];
- const safeAction=intelligence.safe_action||(r.id==='unsupported'?directory.safeAction:undefined);
- return {...base,results:merged,signals,safe_action:safeAction,contact:base.contact||intelligence.contact,lanes,semantic_context:directory.semanticContext};
+ const discoveryActionEligible=directory.signal?.kind==='OFFICIAL_WARNING'||directory.signal?.kind==='OFFICIAL_PROCESS'||r.id==='unsupported';
+ const safeAction=intelligence.safe_action||(discoveryActionEligible?directory.safeAction:undefined);
+ return {...base,results:merged,signals,safe_action:safeAction,contact:base.contact||intelligence.contact,lanes,semantic_context:directory.semanticContext,discovery_debug:directory.diagnostics};
 }
