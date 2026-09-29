@@ -1431,7 +1431,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
      setRevealed(restored.claims.length);
      setDocumentLanguage(restoredContext.language);
      setJurisdiction(restoredContext.jurisdiction);
-     setWorkspaceTitle(safeWorkspaceTitle(restoredCourt)||safeWorkspaceTitle(registryTitle)||'Court message');
+     setWorkspaceTitle(safeWorkspaceTitle(restoredCourt||'')||safeWorkspaceTitle(registryTitle)||'Court message');
      setFile(restored.browserFile);
      sourceBlobRef.current=restored.sourceBlob;
      setStoryArtifactReady(!restored.browserFile);

@@ -51,9 +51,11 @@ const COPY:Partial<Record<Exclude<DisplayLocale,'en'>,Record<string,CardCopy>>>=
 };
 
 export function browseCaseCopy(item:BrowseCase,locale:DisplayLocale):CardCopy{
- return COPY[locale]?.[item.id]||{
+ const fallback={
   title:item.title,
   classification:item.classification,
   visualNote:item.visualNote
  };
+ if(locale==='en')return fallback;
+ return COPY[locale]?.[item.id]||fallback;
 }
