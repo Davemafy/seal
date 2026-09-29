@@ -3,6 +3,7 @@
 
 import {useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
+import SealApp from './seal-app';
 import {DISPLAY_LANGUAGES,type DisplayLocale,type UiCopyKey} from '@/lib/ui-locales';
 import {useStoredUiLocale,useUiText} from '@/lib/use-ui-text';
 import './landing.css';
@@ -98,34 +99,25 @@ export default function Home(){
   </header>
 
   <section className="landing-hero" id="check">
+   <div className="landing-architecture" aria-hidden="true"/>
    <div className="landing-hero-inner">
     <div className="landing-hero-copy">
      <p className="landing-kicker">{ui('landingBeforeAction')}</p>
      <h1><span>{ui('landingHeadlineFake')}</span><span className="landing-headline-muted">{ui('landingHeadlineSource')}</span></h1>
      <p className="landing-hero-summary">{ui('landingHeroSummary')}</p>
      <p className="landing-hero-principle">{ui('landingHeroPrinciple')}</p>
-     <div className="landing-hero-actions">
-      <Link className="landing-hero-primary" href="/check/primary">{ui('checkCourtMessage')}</Link>
-      <Link className="landing-hero-secondary" href="/browse">{ui('browse')}</Link>
-     </div>
     </div>
 
-    <aside className="landing-hero-evidence" aria-label={ui('landingPublishedArtifact')}>
-     <div className="landing-hero-evidence-head">
-      <span>{ui('landingPublishedArtifact')}</span>
-      <small>City of Dallas</small>
-     </div>
-     <div className="landing-hero-evidence-frame">
-      <img src="/browse-assets/dallas-traffic-qr-scam.jpg" alt="City of Dallas published traffic QR scam example"/>
-     </div>
-     <div className="landing-hero-evidence-foot">
+    <div className="landing-checker" aria-label={ui('checkCourtMessage')}>
+     <div className="landing-checker-head">
       <div>
-       <small>{ui('landingIndependentSource')}</small>
-       <strong>City of Dallas · SCAM Notice</strong>
+       <span>{ui('checkCourtMessage')}</span>
+       <small>{ui('landingCheckFormats')}</small>
       </div>
-      <Link href="/check/dallas-proof?case=dallas-traffic-qr-scam">{ui('landingOpenThisCheck')}</Link>
+      <span className="landing-checker-state">{ui('landingYourMessage')}</span>
      </div>
-    </aside>
+     <SealApp suppressOnboarding deferIdleOcr/>
+    </div>
    </div>
   </section>
 
