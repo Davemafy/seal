@@ -2387,12 +2387,7 @@ async function upload(uploaded:File){
       </div>
      </div>
 
-     <nav className="result-chapters" role="tablist" aria-label={resultUi('jumpResultSection')}>
-      <button id={sectionId('tab-summary')} type="button" role="tab" aria-selected={activeResultSection==='summary'} aria-controls={sectionId('review-summary')} className={activeResultSection==='summary'?'is-current':''} onClick={()=>jumpToResultSection('summary')}>{resultUi('summary')}</button>
-      <button id={sectionId('tab-original')} type="button" role="tab" aria-selected={activeResultSection==='message'} aria-controls={sectionId('original-message')} className={activeResultSection==='message'?'is-current':''} onClick={()=>jumpToResultSection('message')}>{resultUi('original')}</button>
-      <button id={sectionId('tab-evidence')} type="button" role="tab" aria-selected={activeResultSection==='evidence'} aria-controls={sectionId('source-checks-panel')} className={activeResultSection==='evidence'?'is-current':''} onClick={()=>jumpToResultSection('evidence')}>{resultUi('evidence')}</button>
-      <button id={sectionId('tab-resolve')} type="button" role="tab" aria-selected={activeResultSection==='next'} aria-controls={sectionId('user-actions-panel')} className={activeResultSection==='next'?'is-current':''} onClick={()=>jumpToResultSection('next')}>{resultUi('resolve')}</button>
-     </nav>
+
     </header>
 
     {liveFailed&&<div className="source-retry-status" role="status"><span><strong>Live source unavailable</strong><small>The current result is preserved; claims that needed the live court page remain unverified.</small></span><button type="button" onClick={()=>run('LIVE')} disabled={busy}>{busy?'Checking…':resultUi('checkLiveSources')}</button></div>}
@@ -2516,6 +2511,13 @@ async function upload(uploaded:File){
      </div>
     </div>,document.body)}
 
+    <div className="result-workspace-shell">
+     <nav className="result-chapters" role="tablist" aria-label={resultUi('jumpResultSection')}>
+      <button id={sectionId('tab-summary')} type="button" role="tab" aria-selected={activeResultSection==='summary'} aria-controls={sectionId('review-summary')} className={activeResultSection==='summary'?'is-current':''} onClick={()=>jumpToResultSection('summary')}>{resultUi('summary')}</button>
+      <button id={sectionId('tab-original')} type="button" role="tab" aria-selected={activeResultSection==='message'} aria-controls={sectionId('original-message')} className={activeResultSection==='message'?'is-current':''} onClick={()=>jumpToResultSection('message')}>{resultUi('original')}</button>
+      <button id={sectionId('tab-evidence')} type="button" role="tab" aria-selected={activeResultSection==='evidence'} aria-controls={sectionId('source-checks-panel')} className={activeResultSection==='evidence'?'is-current':''} onClick={()=>jumpToResultSection('evidence')}>{resultUi('evidence')}</button>
+      <button id={sectionId('tab-resolve')} type="button" role="tab" aria-selected={activeResultSection==='next'} aria-controls={sectionId('user-actions-panel')} className={activeResultSection==='next'?'is-current':''} onClick={()=>jumpToResultSection('next')}>{resultUi('resolve')}</button>
+     </nav>
     <div className="result-tabs-stage" data-testid="result-tabs-stage">
      <div className="review-hero">
      <div className="decision-pane result-screen result-screen-summary result-slide result-slide-summary" data-result-section="summary" id={sectionId('review-summary')} role="tabpanel" aria-labelledby={sectionId('tab-summary')} hidden={activeResultSection!=='summary'}>
@@ -2874,6 +2876,7 @@ async function upload(uploaded:File){
      </div>
     </section>}
     </section>
+    </div>
     </div>
    </section>}
 

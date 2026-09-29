@@ -201,3 +201,168 @@
   font-weight:620!important
  }
 }
+
+
+/* Desktop result navigation: local vertical rail; mobile keeps horizontal tabs.
+   One tab state model, two responsive presentations. */
+@media(min-width:901px){
+ .result-masthead{
+  width:min(100%,1040px)!important;
+  max-width:1040px!important;
+  margin:0 auto 10px!important
+ }
+ .result-masthead-row{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:18px!important;
+  min-height:52px!important;
+  padding:0!important
+ }
+ .check-object-identity{
+  display:flex!important;
+  align-items:center!important;
+  flex-wrap:wrap!important;
+  gap:8px 16px!important;
+  min-width:0!important
+ }
+ .check-object-identity h1{
+  flex:0 1 auto!important;
+  max-width:620px!important;
+  margin:0!important
+ }
+ .check-object-meta{
+  display:flex!important;
+  align-items:center!important;
+  flex-wrap:wrap!important;
+  gap:8px!important;
+  margin:0!important
+ }
+ .check-object-actions{
+  flex:0 0 auto!important;
+  padding:0!important
+ }
+
+ .result-workspace-shell{
+  width:min(100%,1040px)!important;
+  max-width:1040px!important;
+  height:clamp(430px,calc(100dvh - 112px),720px)!important;
+  min-height:0!important;
+  display:grid!important;
+  grid-template-columns:132px minmax(0,1fr)!important;
+  gap:24px!important;
+  margin:0 auto!important;
+  overflow:hidden!important
+ }
+ .result-chapters{
+  position:sticky!important;
+  top:0!important;
+  align-self:start!important;
+  width:132px!important;
+  max-width:132px!important;
+  min-height:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  gap:3px!important;
+  margin:18px 0 0!important;
+  padding:0!important;
+  overflow:visible!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important
+ }
+ .result-chapters button{
+  width:100%!important;
+  min-height:38px!important;
+  justify-content:flex-start!important;
+  padding:9px 11px!important;
+  border:0!important;
+  border-radius:7px!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:#6e6e69!important;
+  font-size:12.5px!important;
+  line-height:18px!important;
+  font-weight:560!important;
+  text-align:left!important;
+  white-space:normal!important
+ }
+ .result-chapters button:hover{
+  color:#111!important;
+  background:#f5f5f2!important
+ }
+ .result-chapters button.is-current{
+  color:#111!important;
+  background:#efefec!important;
+  box-shadow:none!important
+ }
+ .result-chapters button.is-current::after{display:none!important}
+
+ .result-tabs-stage{
+  width:100%!important;
+  max-width:none!important;
+  height:100%!important;
+  min-height:0!important;
+  margin:0!important;
+  overflow:hidden!important
+ }
+ .result-tabs-stage .result-slide:not([hidden]){
+  height:100%!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important
+ }
+}
+
+@media(max-width:900px){
+ .result-workspace-shell{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  min-height:0!important
+ }
+ .result-chapters{
+  width:100%!important;
+  max-width:none!important;
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  gap:4px!important;
+  margin:0!important;
+  padding:6px 16px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  border:0!important;
+  border-bottom:1px solid #e5e5e1!important;
+  border-radius:0!important;
+  background:#fff!important;
+  box-shadow:none!important;
+  scrollbar-width:none!important
+ }
+ .result-chapters::-webkit-scrollbar{display:none!important}
+ .result-chapters button{
+  flex:0 0 auto!important;
+  min-height:36px!important;
+  padding:7px 11px!important;
+  border:0!important;
+  border-radius:8px!important;
+  background:transparent!important;
+  color:#6e6e69!important;
+  white-space:nowrap!important
+ }
+ .result-chapters button.is-current{
+  color:#111!important;
+  background:#f1f1ee!important
+ }
+ .result-chapters button.is-current::after{display:none!important}
+
+ .result-masthead-row{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important
+ }
+ .check-object-identity{min-width:0!important}
+}
