@@ -48,7 +48,14 @@ export type SourceSignal={id:string;kind:'OFFICIAL_WARNING'|'OFFICIAL_PROCESS'|'
 export type VerificationLaneStatus='evidence_found'|'complete'|'unavailable'|'not_applicable';
 export type VerificationLane={id:'court-source'|'public-process'|'official-directory';label:string;status:VerificationLaneStatus;summary:string;evidence:Evidence[];resolver_id:string;duration_ms?:number};
 export type SafeAction={title:string;summary:string;primary_url:string;primary_label:string;steps:string[];evidence:Evidence[]};
-export type Verification={results:Result[];contact?:{name?:string;phone:string;website:string;source:Evidence};resolver_id:string;signals?:SourceSignal[];safe_action?:SafeAction;lanes?:VerificationLane[]};
+export type GroundedSemanticContext={
+ institution?:{value:string;quote:string};
+ document_type?:{value:string;quote:string};
+ jurisdiction?:{value:string;evidence_quote:string};
+ requested_actions?:Array<{kind:'pay'|'contact'|'navigate'|'disclose'|'appear'|'other';quote:string;target:string}>;
+ search_intents?:string[];
+};
+export type Verification={results:Result[];contact?:{name?:string;phone:string;website:string;source:Evidence};resolver_id:string;signals?:SourceSignal[];safe_action?:SafeAction;lanes?:VerificationLane[];semantic_context?:GroundedSemanticContext};
 
 export const claimSchema=z.object({
  id:z.string(),

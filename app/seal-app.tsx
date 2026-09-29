@@ -1172,10 +1172,12 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   :'';
 
  const reliableCourtTitle=claims.find(claim=>claim.type==='court'&&claimReliable(claim)&&cleanDisplayText(claim.value))?.value;
+ const semanticInstitutionTitle=safeWorkspaceTitle(verification?.semantic_context?.institution?.value||'');
  const plausibleCourtTitle=safeWorkspaceTitle(reliableCourtTitle||'');
  const safeCurrentWorkspaceTitle=safeWorkspaceTitle(workspaceTitle&&!genericWorkspaceTitle?workspaceTitle:'');
- const safeJurisdictionTitle=safeWorkspaceTitle(jurisdiction);
- const checkObjectTitle=cleanDisplayText(plausibleCourtTitle||safeCurrentWorkspaceTitle||safeJurisdictionTitle||resultUi('courtMessageShort'));
+ const semanticJurisdictionTitle=safeWorkspaceTitle(verification?.semantic_context?.jurisdiction?.value||'');
+ const safeJurisdictionTitle=safeWorkspaceTitle(semanticJurisdictionTitle||jurisdiction);
+ const checkObjectTitle=cleanDisplayText(semanticInstitutionTitle||plausibleCourtTitle||safeCurrentWorkspaceTitle||safeJurisdictionTitle||resultUi('courtMessageShort'));
  const checkObjectDisplayTitle=humanizeDisplayName(checkObjectTitle)
   .replace(/^United States District Court\s*(?:(?:—|–|-)\s*|for\s+the\s+)?/i,'U.S. District Court · ')
   .replace(/·\s*(?:—|–|-)\s*/g,'· ')
@@ -1183,14 +1185,15 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   .replace(/·\s*·/g,'·')
   .replace(/·\s*$/,'');
  const checkObjectReference=caseReality?.reference||'';
- const jurisdictionLooksLikeAddress=/\d|\b(?:street|st\.?|road|rd\.?|avenue|ave\.?|boulevard|blvd\.?|drive|dr\.?|lane|ln\.?|court|ct\.?)\b/i.test(jurisdiction);
+ const effectiveJurisdiction=cleanDisplayText(verification?.semantic_context?.jurisdiction?.value||jurisdiction);
+ const jurisdictionLooksLikeAddress=/\d|\b(?:street|st\.?|road|rd\.?|avenue|ave\.?|boulevard|blvd\.?|drive|dr\.?|lane|ln\.?|court|ct\.?)\b/i.test(effectiveJurisdiction);
  const documentJurisdictionLabel=jurisdictionLooksLikeAddress
   ?(/\bnew hampshire\b/i.test(text)?'United States · New Hampshire'
     :/\bconnecticut\b/i.test(text)?'United States · Connecticut'
      :/\b(?:dallas|texas)\b/i.test(text)?'United States · Texas'
       :/\b(?:riverside|california)\b/i.test(text)?'United States · California'
        :'')
-  :jurisdiction;
+  :effectiveJurisdiction;
  const checkSourceCount=technicalEvidence.length;
  const effectiveSourceMode=technicalEvidence.some(evidence=>evidence.source_mode==='LIVE')?'LIVE':mode;
  const latestCheckTimestamp=technicalEvidence.reduce((latest,evidence)=>{
@@ -2046,6 +2049,13 @@ async function upload(uploaded:File){
    if(!response.ok)throw new Error('The source check could not finish. Try again.');
 
    const checkedServer=await response.json() as Verification;
+   const semanticInstitution=cleanDisplayText(checkedServer.semantic_context?.institution?.value||'');
+   const semanticJurisdiction=cleanDisplayText(checkedServer.semantic_context?.jurisdiction?.value||'');
+   if(semanticInstitution&&!sourceBrowse){
+    const semanticTitle=safeWorkspaceTitle(semanticInstitution);
+    if(semanticTitle)setWorkspaceTitle(semanticTitle);
+   }
+   if(semanticJurisdiction)setJurisdiction(semanticJurisdiction);
    const checkedById=new Map(checkedServer.results.map(result=>[result.claim_id,result]));
    const checked:Verification={
     ...checkedServer,

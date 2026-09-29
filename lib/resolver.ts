@@ -70,7 +70,7 @@ export async function verifyClaims(claims:Claim[],courtName:string,mode:'LIVE'|'
  const courtStarted=Date.now();
  const courtPromise=r.resolve(claims,mode,courtName).then(value=>({value,duration:Date.now()-courtStarted}));
  const discoveryMode=r.id==='unsupported'?'LIVE':mode;
- const directoryPromise=discoverOfficialDirectory(text,courtName,jurisdictionHint,discoveryMode);
+ const directoryPromise=discoverOfficialDirectory(text,courtName,jurisdictionHint,discoveryMode,claims);
  const publicStarted=Date.now();
  const publicResults=resolvePublicClaims(claims,text);
  const intelligence=analyzePublicIntelligence(text,claims,[...publicResults.values()]);
@@ -86,5 +86,5 @@ export async function verifyClaims(claims:Claim[],courtName:string,mode:'LIVE'|'
  ];
  const signals=[...intelligence.signals,...(directory.signal&&!intelligence.signals.some(signal=>signal.id===directory.signal!.id)?[directory.signal]:[])];
  const safeAction=intelligence.safe_action||(r.id==='unsupported'?directory.safeAction:undefined);
- return {...base,results:merged,signals,safe_action:safeAction,contact:base.contact||intelligence.contact,lanes};
+ return {...base,results:merged,signals,safe_action:safeAction,contact:base.contact||intelligence.contact,lanes,semantic_context:directory.semanticContext};
 }
