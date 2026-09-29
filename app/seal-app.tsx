@@ -391,8 +391,9 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const anchors=useRef<Record<string,HTMLElement|null>>({});
  const runId=useRef(0);
 
- const genericWorkspaceTitle=/^(?:new check|check(?: \d+)?|court message|court notice)$/i.test(cleanDisplayText(workspaceTitle||''));
- const localizedWorkspaceTitle=genericWorkspaceTitle?resultUi('courtMessageShort'):workspaceTitle;
+ const sampleWorkspaceTitle=/^sample document$/i.test(cleanDisplayText(workspaceTitle||''));
+ const genericWorkspaceTitle=/^(?:new check|check(?: \d+)?|court message|court notice|sample document)$/i.test(cleanDisplayText(workspaceTitle||''));
+ const localizedWorkspaceTitle=sampleWorkspaceTitle?resultUi('sampleDocument'):genericWorkspaceTitle?resultUi('courtMessageShort'):workspaceTitle;
  const documentPreviewAsset=uploadPreview
   ?uploadPreview
   :file
@@ -1185,7 +1186,8 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const safeCurrentWorkspaceTitle=safeWorkspaceTitle(workspaceTitle&&!genericWorkspaceTitle?workspaceTitle:'');
  const semanticJurisdictionTitle=safeWorkspaceTitle(verification?.semantic_context?.jurisdiction?.value||'');
  const safeJurisdictionTitle=safeWorkspaceTitle(semanticJurisdictionTitle||jurisdiction);
- const checkObjectTitle=cleanDisplayText(semanticInstitutionTitle||plausibleCourtTitle||safeCurrentWorkspaceTitle||safeJurisdictionTitle||resultUi('courtMessageShort'));
+ const roleAwareTitle=sampleWorkspaceTitle?resultUi('sampleDocument'):'';
+ const checkObjectTitle=cleanDisplayText(roleAwareTitle||semanticInstitutionTitle||plausibleCourtTitle||safeCurrentWorkspaceTitle||safeJurisdictionTitle||resultUi('courtMessageShort'));
  const checkObjectDisplayTitle=humanizeDisplayName(checkObjectTitle)
   .replace(/^United States District Court\s*(?:(?:—|–|-)\s*|for\s+the\s+)?/i,'U.S. District Court · ')
   .replace(/·\s*(?:—|–|-)\s*/g,'· ')
@@ -2019,7 +2021,9 @@ async function upload(uploaded:File){
     ||inferredContext?.jurisdiction
     ||cleanDisplayText(extraction.court_location);
    if(routedJurisdiction)setJurisdiction(routedJurisdiction);
-   if(extraction.court_name&&!sourceBrowse){
+   if(extraction.document_role==='mixed_with_embedded_example'&&!sourceBrowse){
+    setWorkspaceTitle('Sample document');
+   }else if(extraction.court_name&&!sourceBrowse){
     const extractedTitle=safeWorkspaceTitle(extraction.court_name);
     if(extractedTitle)setWorkspaceTitle(extractedTitle);
    }
@@ -2065,7 +2069,7 @@ async function upload(uploaded:File){
    const checkedServer=await response.json() as Verification;
    const semanticInstitution=cleanDisplayText(checkedServer.semantic_context?.institution?.value||'');
    const semanticJurisdiction=cleanDisplayText(checkedServer.semantic_context?.jurisdiction?.value||'');
-   if(semanticInstitution&&!sourceBrowse){
+   if(semanticInstitution&&!sourceBrowse&&extraction.document_role!=='mixed_with_embedded_example'){
     const semanticTitle=safeWorkspaceTitle(semanticInstitution);
     if(semanticTitle)setWorkspaceTitle(semanticTitle);
    }
@@ -2963,6 +2967,15 @@ async function upload(uploaded:File){
      <details className="technical-record" open={technicalOpen} onToggle={event=>setTechnicalOpen(event.currentTarget.open)}>
       <summary><span>{resultUi('technicalRecord')}</span><SealGuideIcon/></summary>
       <p>Extractor: {extractionMode} · {resolverSummary}</p>
+      {verification.discovery_debug&&<div className="discovery-debug" data-testid="discovery-debug">
+       <strong>Source discovery</strong>
+       <small>Mode: {verification.discovery_debug.mode}{verification.discovery_debug.fallback_reason?` · ${verification.discovery_debug.fallback_reason}`:''}</small>
+       {verification.discovery_debug.wrapper_heading&&<small>Wrapper: {verification.discovery_debug.wrapper_heading}</small>}
+       {verification.discovery_debug.analysis_heading&&<small>Analysis: {verification.discovery_debug.analysis_heading}</small>}
+       {verification.discovery_debug.queries.length>0&&<details><summary>Queries ({verification.discovery_debug.queries.length})</summary><ul>{verification.discovery_debug.queries.map((query,index)=><li key={index}>{query}</li>)}</ul></details>}
+       {verification.discovery_debug.candidate_urls.length>0&&<details><summary>Official candidates ({verification.discovery_debug.candidate_urls.length})</summary><ul>{verification.discovery_debug.candidate_urls.map((url,index)=><li key={index}>{url}</li>)}</ul></details>}
+       {verification.discovery_debug.selected_url&&<small>Selected: {verification.discovery_debug.selected_url}</small>}
+      </div>}
       {!!verification.lanes?.length&&<div className="verification-lanes">
        {verification.lanes.map(lane=><div className="verification-lane" key={lane.id}>
         <span className={'verification-lane-state is-'+lane.status} aria-hidden="true"/>
