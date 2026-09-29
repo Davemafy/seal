@@ -19,6 +19,7 @@ import {buildCaseReality,buildCourtQuestionScript,buildHandoffSummary,buildOblig
 import {DISPLAY_LANGUAGES,displayLocaleFor,type DisplayLocale,type UiCopyKey} from '@/lib/ui-locales';
 import {persistUiLocale,useStoredUiLocale,useUiText} from '@/lib/use-ui-text';
 import {safeWorkspaceTitle} from '@/lib/workspace-title';
+import {mapNormalizedBoxToFrame,sameRenderedImageRect} from '@/lib/image-overlay';
 import {primeBrowserTranslator,translateRecordWithBrowser} from '@/lib/browser-translate';
 import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
 import './workspace.css';
@@ -376,6 +377,9 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const activeReadRef=useRef<AbortController|null>(null);
  const activeRequestRef=useRef<AbortController|null>(null);
  const input=useRef<HTMLInputElement>(null);
+ const originalPreviewRef=useRef<HTMLDivElement>(null);
+ const originalImageRef=useRef<HTMLImageElement>(null);
+ const [renderedImageRect,setRenderedImageRect]=useState<{preview:string;left:number;top:number;width:number;height:number}|null>(null);
  const anchors=useRef<Record<string,HTMLElement|null>>({});
  const runId=useRef(0);
 
@@ -408,6 +412,38 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   window.addEventListener('seal:locale-change',onLocale);
   return()=>window.removeEventListener('seal:locale-change',onLocale);
  },[displayLocale]);
+
+ const imagePreviewUrl=file?.kind==='image'?file.preview:'';
+ const syncRenderedImageRect=useCallback(()=>{
+  const frame=originalPreviewRef.current,image=originalImageRef.current;
+  if(!frame||!image||!imagePreviewUrl||!image.complete)return;
+  const frameRect=frame.getBoundingClientRect();
+  const imageRect=image.getBoundingClientRect();
+  if(imageRect.width<=0||imageRect.height<=0)return;
+  const next={
+   preview:imagePreviewUrl,
+   left:imageRect.left-frameRect.left,
+   top:imageRect.top-frameRect.top,
+   width:imageRect.width,
+   height:imageRect.height
+  };
+  setRenderedImageRect(previous=>sameRenderedImageRect(previous,next)?previous:next);
+ },[imagePreviewUrl]);
+
+ useLayoutEffect(()=>{
+  if(!imagePreviewUrl||activeResultSection!=='message')return;
+  const frame=originalPreviewRef.current,image=originalImageRef.current;
+  if(!frame||!image)return;
+  syncRenderedImageRect();
+  const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(syncRenderedImageRect):null;
+  observer?.observe(frame);
+  observer?.observe(image);
+  window.addEventListener('resize',syncRenderedImageRect);
+  return()=>{
+   observer?.disconnect();
+   window.removeEventListener('resize',syncRenderedImageRect);
+  };
+ },[imagePreviewUrl,activeResultSection,syncRenderedImageRect]);
 
  useEffect(()=>{
   if(!workspaceDrawerOpen)return;
@@ -2728,21 +2764,24 @@ async function upload(uploaded:File){
          {renderTextLines(text.split('\n'))}
         </div>
         :file.kind==='image'?
-        <div className="preview-box is-expandable" role="button" tabIndex={0} aria-label={resultUi('openFullDocumentPreview')}
+        <div ref={originalPreviewRef} className="preview-box is-expandable" role="button" tabIndex={0} aria-label={resultUi('openFullDocumentPreview')}
          onClick={event=>openDocumentPreview(event.currentTarget)}
          onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openDocumentPreview(event.currentTarget)}}}>
-         <img src={file.preview} alt="Uploaded notice"/>
-         {claims.filter(claim=>claim.source_bbox&&claim.page===1).map(claim=><button
-          type="button"
-          key={claim.id}
-          aria-label={`Select ${claim.label}`}
-          className={`bbox ${claim.source_bbox!.height<.012?'is-thin':''} ${active===claim.id?'focused':''}`}
-          style={{left:`${claim.source_bbox!.x*100}%`,top:`${claim.source_bbox!.y*100}%`,width:`${claim.source_bbox!.width*100}%`,height:`${claim.source_bbox!.height*100}%`}}
-          onClick={()=>select(claim.id)}
-          onMouseEnter={()=>setHovered(claim.id)}
-          onMouseLeave={()=>setHovered('')}
-          ref={element=>{anchors.current[claim.id]=element}}
-         />)}
+         <img ref={originalImageRef} src={file.preview} alt="Uploaded notice" onLoad={syncRenderedImageRect}/>
+         {renderedImageRect?.preview===file.preview&&claims.filter(claim=>claim.source_bbox&&claim.page===1).map(claim=>{
+          const box=mapNormalizedBoxToFrame(claim.source_bbox!,renderedImageRect,{left:0,top:0});
+          return <button
+           type="button"
+           key={claim.id}
+           aria-label={`Select ${claim.label}`}
+           className={`bbox ${claim.source_bbox!.height<.012?'is-thin':''} ${active===claim.id?'focused':''}`}
+           style={{left:box.left,top:box.top,width:box.width,height:box.height}}
+           onClick={event=>{event.stopPropagation();select(claim.id)}}
+           onMouseEnter={()=>setHovered(claim.id)}
+           onMouseLeave={()=>setHovered('')}
+           ref={element=>{anchors.current[claim.id]=element}}
+          />;
+         })}
         </div>
         :
         <PDFPreview url={file.preview} claims={claims} active={active} anchors={anchors} onSelect={select}/>}
