@@ -2781,7 +2781,7 @@ async function upload(uploaded:File){
 
      <div className="document-zone result-screen result-screen-original result-slide result-slide-original" data-result-section="message" id={sectionId('original-message')} role="tabpanel" aria-labelledby={sectionId('tab-original')} hidden={activeResultSection!=='message'}>
       <div className="document-heading"><span>{resultUi('originalMessage')}</span><span>{file?.kind==='pdf'?'PDF':file?'Image':'Text'}</span></div>
-      <div className={`document-paper ${!file?'is-text-document':''}`}>
+      <div className={`document-paper ${!file?'is-text-document':''} ${file?.kind==='pdf'?'is-pdf-document':''}`}>
        {isActionDemo?
         <div className="message-card">
          <div className="message-card-head"><span>{resultUi('demoSynthetic')}</span><span>{resultUi('notRealPerson')}</span></div>
