@@ -1023,3 +1023,61 @@
   padding-top:14px!important
  }
 }
+
+
+/* Keep the read-aloud control attached to the object title on phones. */
+@media(max-width:599px){
+ .seal-app .review-shell .check-object-identity{
+  width:100%!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  grid-template-rows:auto auto!important;
+  column-gap:12px!important;
+  align-items:start!important
+ }
+ .seal-app .review-shell .check-object-identity>h1{
+  grid-column:1!important;
+  grid-row:1!important;
+  max-width:none!important
+ }
+ .seal-app .review-shell .check-object-meta{
+  display:contents!important
+ }
+ .seal-app .review-shell .result-language-control{
+  display:none!important
+ }
+ .seal-app .review-shell .result-voice-trigger{
+  grid-column:2!important;
+  grid-row:1!important;
+  align-self:start!important;
+  width:42px!important;
+  min-width:42px!important;
+  height:42px!important;
+  min-height:42px!important;
+  display:inline-grid!important;
+  place-items:center!important;
+  padding:0!important;
+  margin:0!important;
+  border:1px solid #deded9!important;
+  border-radius:9px!important;
+  background:#fff!important;
+  color:#222!important
+ }
+ .seal-app .review-shell .result-voice-trigger>span{
+  display:none!important
+ }
+ .seal-app .review-shell .result-voice-trigger svg{
+  width:18px!important;
+  height:18px!important
+ }
+ .seal-app .review-shell .meta-jurisdiction{
+  grid-column:1 / -1!important;
+  grid-row:2!important;
+  margin:8px 0 0!important;
+  padding:0!important
+ }
+ .seal-app .review-shell .meta-jurisdiction::before{
+  display:none!important;
+  content:none!important
+ }
+}
