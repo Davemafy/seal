@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- Landing uses local source artifacts and the existing SEAL brand mark. */
 'use client';
 
-import {useEffect} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
 import {DISPLAY_LANGUAGES,type DisplayLocale,type UiCopyKey} from '@/lib/ui-locales';
 import {useStoredUiLocale,useUiText} from '@/lib/use-ui-text';
@@ -38,10 +38,26 @@ const featuredCases:[
 export default function Home(){
  const [locale,setLocale]=useStoredUiLocale();
  const ui=useUiText(locale);
+ const [languageOpen,setLanguageOpen]=useState(false);
+ const languageRef=useRef<HTMLDivElement>(null);
 
  useEffect(()=>{
   document.documentElement.lang=locale;
  },[locale]);
+
+ useEffect(()=>{
+  if(!languageOpen)return;
+  const close=(event:MouseEvent)=>{
+   if(languageRef.current&&!languageRef.current.contains(event.target as Node))setLanguageOpen(false);
+  };
+  const escape=(event:KeyboardEvent)=>{if(event.key==='Escape')setLanguageOpen(false)};
+  document.addEventListener('mousedown',close);
+  window.addEventListener('keydown',escape);
+  return()=>{
+   document.removeEventListener('mousedown',close);
+   window.removeEventListener('keydown',escape);
+  };
+ },[languageOpen]);
 
  return <div className="landing-page">
   <header className="landing-site-nav">
@@ -51,12 +67,32 @@ export default function Home(){
    </Link>
    <nav aria-label={ui('landingNavigation')}>
     <Link href="/browse">{ui('browse')}</Link>
-    <label className="landing-language">
-     <span className="sr-only">{ui('displayLanguage')}</span>
-     <select aria-label={ui('displayLanguage')} value={locale} onChange={event=>setLocale(event.target.value as DisplayLocale)}>
-      {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><option key={code} value={code}>{label}</option>)}
-     </select>
-    </label>
+    <div ref={languageRef} className="landing-language">
+     <button
+      type="button"
+      className="landing-language-trigger"
+      aria-label={ui('displayLanguage')}
+      aria-haspopup="listbox"
+      aria-expanded={languageOpen}
+      onClick={()=>setLanguageOpen(open=>!open)}
+     >
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.7 12h16.6M12 3.5c2.2 2.2 3.35 5.05 3.35 8.5S14.2 18.3 12 20.5M12 3.5C9.8 5.7 8.65 8.55 8.65 12S9.8 18.3 12 20.5"/></svg>
+      <span className="landing-language-name">{DISPLAY_LANGUAGES[locale]}</span>
+      <span className="landing-language-code">{locale.toUpperCase()}</span>
+      <svg className="landing-language-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7.5 9.5 4.5 4.5 4.5-4.5"/></svg>
+     </button>
+     {languageOpen&&<div className="landing-language-popover" role="listbox" aria-label={ui('displayLanguage')}>
+      <div className="landing-language-popover-title">{ui('displayLanguage')}</div>
+      {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><button
+       type="button"
+       role="option"
+       aria-selected={code===locale}
+       className={code===locale?'is-selected':''}
+       key={code}
+       onClick={()=>{setLocale(code as DisplayLocale);setLanguageOpen(false)}}
+      ><span>{label}</span><small>{code.toUpperCase()}</small></button>)}
+     </div>}
+    </div>
     <Link className="landing-nav-check" href="/check/primary" aria-label={ui('checkCourtMessage')}><span className="landing-nav-check-full">{ui('checkCourtMessage')}</span><span className="landing-nav-check-short">{ui('landingNavCheck')}</span></Link>
    </nav>
   </header>

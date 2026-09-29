@@ -378,3 +378,27 @@
  }
  .check-object-identity{min-width:0!important}
 }
+
+
+/* Mobile tabs need an inset rail and enough scroll runway to clear browser chrome. */
+@media(max-width:599px){
+ .seal-app .review-shell .result-chapters{
+  box-sizing:border-box!important;
+  width:100%!important;
+  padding:4px 12px 8px!important;
+  margin-top:8px!important;
+  gap:4px!important;
+ }
+ .seal-app .review-shell .result-chapters button{
+  min-width:0!important;
+  min-height:42px!important;
+  padding:9px 8px!important;
+  border-radius:9px!important;
+  font-size:13px!important;
+  line-height:20px!important;
+ }
+ .seal-app .result-tabs-stage .result-slide:not([hidden]){
+  padding-bottom:calc(96px + env(safe-area-inset-bottom))!important;
+  scroll-padding-bottom:calc(96px + env(safe-area-inset-bottom))!important;
+ }
+}
