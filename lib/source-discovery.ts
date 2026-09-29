@@ -206,7 +206,7 @@ async function inspectCandidate(candidate:SearchCandidate,institution:string,hea
 }
 
 async function discoverLive(rawText:string,courtName:string,jurisdictionHint:string,claims:Claim[]):Promise<LiveDiscovery>{
- const semanticContext=await understandDocumentSemantics(rawText,courtName,jurisdictionHint);
+ const semanticContext=(await understandDocumentSemantics(rawText,courtName,jurisdictionHint))||undefined;
  const institution=semanticContext?.institution?.value||institutionHint(rawText,courtName);
  const heading=semanticContext?.document_type?.value||documentHeading(rawText);
  const semanticQueries=semanticContext?.search_intents||[];
