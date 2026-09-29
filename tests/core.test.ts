@@ -357,6 +357,22 @@ describe('structured extraction grounding',()=>{
  });
 });
 
+describe('passive payment action extraction',()=>{
+ it('recognizes a payment required in passive legal wording',()=>{
+  const text='COUNTY COURT NOTICE\nIn order to avoid further proceedings, a payment of £2560 is required immediately.';
+  const actions=extractActionGraph(text);
+  const payment=actions.find(action=>action.kind==='pay');
+  expect(payment?.verb).toBe('pay');
+  expect(payment?.target_type).toBe('money');
+  expect(payment?.target_value).toBe('£2560');
+  expect(payment?.source_text).toContain('payment of £2560 is required immediately');
+ });
+ it('does not turn a negated payment statement into a requested action',()=>{
+  const text='COURT INFORMATION\nNo payment is required. Do not send money to anyone.';
+  expect(extractActionGraph(text).some(action=>action.kind==='pay')).toBe(false);
+ });
+});
+
 describe('public-source intelligence layer',()=>{
  const notice=[
   'COMMONWEALTH OF VIRGINIA',
