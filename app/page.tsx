@@ -3,7 +3,6 @@
 
 import {useEffect} from 'react';
 import Link from 'next/link';
-import SealApp from './seal-app';
 import {DISPLAY_LANGUAGES,type DisplayLocale,type UiCopyKey} from '@/lib/ui-locales';
 import {useStoredUiLocale,useUiText} from '@/lib/use-ui-text';
 import './landing.css';
@@ -70,17 +69,10 @@ export default function Home(){
      <h1><span>{ui('landingHeadlineFake')}</span><span className="landing-headline-muted">{ui('landingHeadlineSource')}</span></h1>
      <p className="landing-hero-summary">{ui('landingHeroSummary')}</p>
      <p className="landing-hero-principle">{ui('landingHeroPrinciple')}</p>
-    </div>
-
-    <div className="landing-checker" aria-label={ui('checkCourtMessage')}>
-     <div className="landing-checker-head">
-      <div>
-       <span>{ui('checkCourtMessage')}</span>
-       <small>{ui('landingCheckFormats')}</small>
-      </div>
-      <span className="landing-checker-state">{ui('landingYourMessage')}</span>
+     <div className="landing-hero-actions">
+      <Link className="landing-hero-primary" href="/check/primary">{ui('checkCourtMessage')}</Link>
+      <Link className="landing-hero-secondary" href="/browse">{ui('browse')}</Link>
      </div>
-     <SealApp suppressOnboarding deferIdleOcr/>
     </div>
    </div>
   </section>
