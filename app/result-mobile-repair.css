@@ -1097,6 +1097,7 @@
   margin:0!important
  }
  .seal-app .review-shell .check-object-meta{
+  position:static!important;
   display:flex!important;
   align-items:center!important;
   gap:0!important;
