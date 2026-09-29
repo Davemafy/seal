@@ -94,6 +94,19 @@ function directiveVerb(source:string){
  return null;
 }
 
+function passivePaymentDirective(source:string){
+ const semantic=source.replace(/^[\p{L}][\p{L}\p{M}\s/&()'’.\-]{1,40}:\s*(?=\S)/u,'').replace(/^[\s•*\-–—\d.)]+/,'').trim();
+ if(!semantic)return null;
+ const negated=/\b(?:no|not|never)\s+(?:be\s+)?(?:required|due|payable|paid|made)\b/i.test(semantic)
+  ||/\b(?:no|not|never)\b[^.;]{0,28}\b(?:payment|amount|balance|fine|fee|sum)\b/i.test(semantic)
+  ||/\b(?:payment|amount|balance|fine|fee|sum)\b[^.;]{0,28}\b(?:is|are|remains?|must|shall|should)\s+not\b/i.test(semantic);
+ if(negated)return null;
+ const requiredNominal=/\b(?:a\s+|the\s+)?(?:payment|amount|balance|fine|fee|sum)\b[^.;]{0,110}\b(?:is|are|remains?)\s+(?:now\s+)?(?:required|due|payable)\b/i.test(semantic);
+ const requiredMade=/\b(?:payment|amount|balance|fine|fee|sum)\b[^.;]{0,110}\b(?:must|shall|should)\s+be\s+(?:made|paid|settled|remitted)\b/i.test(semantic);
+ const requiredToMake=/\b(?:required|ordered|directed)\s+to\s+(?:make|send|submit)\s+(?:a\s+)?payment\b/i.test(semantic);
+ return requiredNominal||requiredMade||requiredToMake?semantic:null;
+}
+
 function actionWords(value:string){
  return new Set(value.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(word=>word.length>2&&!/^(?:the|and|for|with|through|this|that|your|you|are|from|into|full|total|official|court|payment|system|immediately)$/.test(word)));
 }
@@ -139,8 +152,22 @@ export function extractActionGraph(text:string,tokens:Token[]=[]):ActionNode[]{
  const sources=[...new Set([...actionWindows(visual),...actionWindows(textLines)].map(s=>s.trim()).filter(Boolean))];
  const actions:ActionNode[]=[];
  for(const source of sources){
-  const directive=directiveVerb(source);if(!directive)continue;
-  const {semantic,verb,match}=directive;
+  const directive=directiveVerb(source);
+  const passivePayment=!directive?passivePaymentDirective(source):null;
+  if(!directive&&!passivePayment)continue;
+  if(passivePayment){
+   const money=passivePayment.match(MONEY)?.[0]||'';
+   const qualifiers=[...new Set([
+    ...(passivePayment.match(/\b(?:must|shall|required|due|payable|immediately|today|now|before|after|within)\b/gi)||[]),
+    ...(passivePayment.match(/\b(?:by|before|after)\s+[^,.;]{1,50}/gi)||[])
+   ])].slice(0,6);
+   const node:ActionNode={verb:'pay',kind:'pay',object:passivePayment,target_type:money?'money':'unknown',target_value:money,qualifiers,source_text:source};
+   const duplicate=actions.find(existing=>similarActions(existing,node));
+   if(!duplicate)actions.push(node);
+   else if(node.source_text.length>duplicate.source_text.length&&node.source_text.length<220)Object.assign(duplicate,node);
+   continue;
+  }
+  const {semantic,verb,match}=directive!;
   const moneyObject=/\b(?:payment|balance|fine|fee|amount|money|costs?)\b/i.test(semantic);
   const kind=(moneyObject&&/(?:pay|remit|submit|send|transfer|settle|clear(?:ed)?)/.test(verb))||/(?:pay|remit|transfer|settle)/.test(verb)?'pay':/(?:call|contact|phone|text)/.test(verb)?'contact':/(?:open|visit|click|scan|use|check)/.test(verb)?'navigate':/(?:reply|respond|provide|share|enter|send|disclose|submit)/.test(verb)?'disclose':/(?:appear|report|attend)/.test(verb)?'appear':'other';
   const phone=semantic.match(PHONE)?.[0]||'',url=semantic.match(URL)?.[0]||'',money=semantic.match(MONEY)?.[0]||'';
