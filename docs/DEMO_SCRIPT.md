@@ -47,7 +47,7 @@ Briefly open the original City of Dallas source if the transition is clean; othe
 Show one clean architecture frame or repository excerpt:
 
 ```text
-artifact → claims → independent resolvers → verdict boundary → safe action
+artifact -> claims -> independent resolvers -> verdict boundary -> safe action
 ```
 
 Say:

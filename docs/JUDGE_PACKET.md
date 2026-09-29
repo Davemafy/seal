@@ -9,10 +9,10 @@
 ## Rubric story
 
 - **Impact (25):** a legal-looking message can contain real public details while steering someone toward an unsafe consequential action. SEAL intervenes before the person calls, clicks, pays, replies, or discloses information.
-- **Technical execution (25):** the system distributes authority: artifact → grounded claim/action → independent resolver → final evidence guard → three-state verdict → sourced safe action.
+- **Technical execution (25):** the system distributes authority: artifact -> grounded claim/action -> independent resolver -> final evidence guard -> three-state verdict -> sourced safe action.
 - **UX (20):** the user sees the original request, the independent evidence, the bounded conclusion, and a safer next route instead of a black-box scam score.
 - **Innovation (15):** SEAL verifies the consequential action independently rather than authenticating the artifact from its appearance or repeating the sender’s claims.
-- **Presentation (15):** Dallas gives a complete story in seconds: official-looking artifact → QR payment instruction → City of Dallas source → rejected route → underlying matter still unconfirmed.
+- **Presentation (15):** Dallas gives a complete story in seconds: official-looking artifact -> QR payment instruction -> City of Dallas source -> rejected route -> underlying matter still unconfirmed.
 
 ## Evidence package
 
@@ -20,7 +20,7 @@
 - 15-case checked-in engineering benchmark.
 - 0 false MISMATCH in the benchmark.
 - 0.933 full-flow benchmark success.
-- 15/15 live action extraction-or-refusal stress gate on the last fully successful verification run before the final polish branch fixes.
+- 15/15 live action extraction-or-refusal stress gate.
 - Dedicated unit tests for model/verdict separation and evidence-required decisive states.
 
 These are engineering measurements, not real-world accuracy estimates.
