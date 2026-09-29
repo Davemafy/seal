@@ -1,4 +1,4 @@
-const CACHE_NAME='seal-shell-v1';
+const CACHE_NAME='seal-shell-v2';
 const CORE_ASSETS=[
  '/offline.html',
  '/brand/seal-app-icon-dark.svg',
@@ -39,6 +39,25 @@ self.addEventListener('fetch',event=>{
  const cacheableDestinations=new Set(['style','script','font','image']);
  if(!cacheableDestinations.has(request.destination))return;
 
+ // Application code must be network-first. A cache-first JS/CSS strategy can
+ // pair an old Next.js chunk with a new deployment and crash the entire view.
+ if(request.destination==='script'||request.destination==='style'){
+  event.respondWith(
+   fetch(request).then(response=>{
+    if(response.ok&&response.type==='basic'){
+     const copy=response.clone();
+     void caches.open(CACHE_NAME).then(cache=>cache.put(request,copy));
+    }
+    return response;
+   }).catch(async()=>{
+    const cached=await caches.match(request);
+    return cached||Response.error();
+   })
+  );
+  return;
+ }
+
+ // Fonts/images may use stale-while-revalidate without affecting app integrity.
  event.respondWith(
   caches.match(request).then(cached=>{
    const fresh=fetch(request).then(response=>{
@@ -47,10 +66,7 @@ self.addEventListener('fetch',event=>{
      void caches.open(CACHE_NAME).then(cache=>cache.put(request,copy));
     }
     return response;
-   }).catch(()=>{
-    if(cached)return cached;
-    return Response.error();
-   });
+   }).catch(()=>cached||Response.error());
 
    return cached||fresh;
   })
