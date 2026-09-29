@@ -359,7 +359,7 @@ describe('structured extraction grounding',()=>{
 
 describe('passive payment action extraction',()=>{
  it('recognizes a payment required in passive legal wording',()=>{
-  const text='COUNTY COURT NOTICE\nIn order to avoid further proceedings, a payment of £2560 is required immediately.';
+  const text='COUNTY COURT NOTICE\nIn order to avoid further proceedings, a payment of £2560 is\nrequired immediately.';
   const actions=extractActionGraph(text);
   const payment=actions.find(action=>action.kind==='pay');
   expect(payment?.verb).toBe('pay');
@@ -368,7 +368,7 @@ describe('passive payment action extraction',()=>{
   expect(payment?.source_text).toContain('payment of £2560 is required immediately');
  });
  it('does not turn a negated payment statement into a requested action',()=>{
-  const text='COURT INFORMATION\nNo payment is required. Do not send money to anyone.';
+  const text='COURT INFORMATION\nNo payment is\nrequired. Do not send money to anyone.';
   expect(extractActionGraph(text).some(action=>action.kind==='pay')).toBe(false);
  });
 });
