@@ -103,6 +103,7 @@ describe('generic official-source discovery',()=>{
   const embedded='SAMPLE OF FRAUDULENT EMAIL\nSubject: URGENT: Jury Duty Summons – Immediate Response Required\nDownload Jury Summons';
   const claim={id:'a1',type:'action' as const,label:'Requested action',value:'Download Jury Summons',exact_source_text:'Download Jury Summons',page:2,action:{verb:'download',kind:'other' as const,object:'Jury Summons',target_type:'unknown' as const,target_value:'',qualifiers:[],source_text:'Download Jury Summons'}};
   const result=await discoverOfficialDirectory(wrapper,'United States District Court for the District of Columbia','United States · Federal','LIVE',[claim],embedded);
+  console.log('WRAPPER_DISCOVERY',JSON.stringify(result.diagnostics));
   expect(result.lane.resolver_id).toBe('official-discovery');
   expect(result.signal?.kind).toBe('OFFICIAL_WARNING');
   expect(result.safeAction?.primary_url).toBe(warning);
