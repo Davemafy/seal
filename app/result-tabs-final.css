@@ -402,3 +402,41 @@
   scroll-padding-bottom:calc(96px + env(safe-area-inset-bottom))!important;
  }
 }
+
+
+/* Final mobile scroll ownership: one scroll container below the tabs. */
+@media(max-width:599px){
+ .seal-app:has(.review-shell)>.review-shell{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  overflow:hidden!important;
+ }
+ .seal-app .review-shell .result-workspace-shell{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  height:auto!important;
+  display:flex!important;
+  flex-direction:column!important;
+  overflow:hidden!important;
+ }
+ .seal-app .review-shell .result-chapters{
+  flex:0 0 auto!important;
+ }
+ .seal-app .review-shell .result-tabs-stage{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  height:auto!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior-y:contain!important;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-gutter:auto!important;
+ }
+ .seal-app .review-shell .result-tabs-stage .result-slide:not([hidden]){
+  height:auto!important;
+  min-height:100%!important;
+  overflow:visible!important;
+  padding-bottom:calc(120px + env(safe-area-inset-bottom))!important;
+  scroll-padding-bottom:calc(120px + env(safe-area-inset-bottom))!important;
+ }
+}
