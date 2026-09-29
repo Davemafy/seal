@@ -55,7 +55,17 @@ export type GroundedSemanticContext={
  requested_actions?:Array<{kind:'pay'|'contact'|'navigate'|'disclose'|'appear'|'other';quote:string;target:string}>;
  search_intents?:string[];
 };
-export type Verification={results:Result[];contact?:{name?:string;phone:string;website:string;source:Evidence};resolver_id:string;signals?:SourceSignal[];safe_action?:SafeAction;lanes?:VerificationLane[];semantic_context?:GroundedSemanticContext};
+export type DiscoveryDiagnostics={
+ mode:'LIVE'|'SNAPSHOT';
+ analysis_heading?:string;
+ wrapper_heading?:string;
+ queries:string[];
+ candidate_urls:string[];
+ fetched_urls:string[];
+ selected_url?:string;
+ fallback_reason?:string;
+};
+export type Verification={results:Result[];contact?:{name?:string;phone:string;website:string;source:Evidence};resolver_id:string;signals?:SourceSignal[];safe_action?:SafeAction;lanes?:VerificationLane[];semantic_context?:GroundedSemanticContext;discovery_debug?:DiscoveryDiagnostics};
 
 export const claimSchema=z.object({
  id:z.string(),
