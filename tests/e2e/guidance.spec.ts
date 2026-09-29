@@ -3,6 +3,7 @@ import {test,expect} from '@playwright/test';
 test('international message gets a safe resolution path without an authenticity verdict',async({page})=>{
  test.setTimeout(90000);
  await page.setViewportSize({width:390,height:844});
+ await page.addInitScript(()=>window.localStorage.setItem('seal:onboarding:v2','1'));
  await page.goto('/check/primary');
  await page.getByRole('button',{name:/Paste text instead/i}).click();
  await page.getByLabel('Paste the court message').fill('DISTRICT COURT — NEW DELHI, INDIA\nCase No: DL-2026-4821\nYou must appear at the court registry on October 14, 2026.\nCall +91 11 5555 0199 to confirm your attendance.');
