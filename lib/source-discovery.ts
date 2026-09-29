@@ -62,6 +62,22 @@ function documentHeading(rawText:string){
  return scored[0]?.line||'';
 }
 
+function advisoryHeading(rawText:string){
+ const lines=rawText.split(/\n/).map(normalize).filter(line=>line.length>=8&&line.length<=140);
+ const scored=lines.map((line,index)=>{
+  let score=0;
+  if(/^public\s+notice\b/i.test(line))score+=10;
+  if(/\b(?:scam|fraud)\s+(?:alert|warning)\b/i.test(line))score+=9;
+  if(/\b(?:warning|advisory|public notice)\b/i.test(line))score+=6;
+  if(/\b(?:scam|fraud|impersonat)\w*\b/i.test(line))score+=3;
+  if(index<12)score+=2;
+  if(/\b(?:download|click|pay|submit|respond|required|immediate response)\b/i.test(line))score-=5;
+  return {line,score,index};
+ }).filter(candidate=>candidate.score>=6);
+ scored.sort((a,b)=>b.score-a.score||a.index-b.index||a.line.length-b.line.length);
+ return scored[0]?.line||'';
+}
+
 function actionHint(rawText:string){
  if(/\b(?:pay|payment|amount|balance|fine|fee|remit|transfer|bank details|account no|sort code)\b/i.test(rawText))return 'payment';
  if(/\b(?:jury|juror|summons|appear|hearing)\b/i.test(rawText))return 'court notice';
@@ -210,7 +226,7 @@ async function discoverLive(rawText:string,courtName:string,jurisdictionHint:str
  const semanticContext=(await understandDocumentSemantics(planningText,courtName,jurisdictionHint))||undefined;
  const institution=semanticContext?.institution?.value||institutionHint(planningText,courtName);
  const heading=semanticContext?.document_type?.value||documentHeading(planningText);
- const wrapperHeading=rawText!==planningText?documentHeading(rawText):'';
+ const wrapperHeading=rawText!==planningText?(advisoryHeading(rawText)||documentHeading(rawText)):'';
  const wrapperInstitution=rawText!==planningText?institutionHint(rawText,courtName):'';
  const semanticQueries=semanticContext?.search_intents||[];
  const fallbackQueries=buildOfficialDiscoveryQueries(planningText,institution||courtName,semanticContext?.jurisdiction?.value||jurisdictionHint);
