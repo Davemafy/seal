@@ -2504,7 +2504,17 @@ async function upload(uploaded:File){
     <header className="result-masthead" id={sectionId('result-top')} data-testid="check-object-header">
      <div className="result-masthead-row">
       <div className="check-object-identity">
-       <h1>{checkObjectDisplayTitle}</h1>
+       <div className="check-object-title-row">
+        <h1>{checkObjectDisplayTitle}</h1>
+        {voiceSupported&&<button
+         type="button"
+         className={`result-voice-trigger${resultSpeaking?' is-speaking':''}`}
+         aria-pressed={resultSpeaking}
+         aria-label={resultSpeaking?'Stop reading result aloud':`Read ${activeResultSection==='next'?'Resolve':activeResultSection==='message'?'Original':activeResultSection.charAt(0).toUpperCase()+activeResultSection.slice(1)} aloud`}
+         title={resultSpeaking?'Stop reading result aloud':`Read ${activeResultSection==='next'?'Resolve':activeResultSection==='message'?'Original':activeResultSection.charAt(0).toUpperCase()+activeResultSection.slice(1)} aloud`}
+         onClick={toggleResultSpeech}
+        ><SealUiIcon name="voice"/><span>{resultSpeaking?resultUi('stopReading'):resultUi('listen')}</span></button>}
+       </div>
        <div className="check-object-meta">
         <div className={`result-language-control is-${resultTranslationState}`}>
          <button type="button" className="result-language-trigger" aria-label={`Display language: ${DISPLAY_LANGUAGES[displayLocale]}`} aria-haspopup="listbox" aria-expanded={resultLanguageMenuOpen} onClick={()=>{setLanguageMenuOpen(false);setResultLanguageMenuOpen(open=>!open)}}>
@@ -2522,14 +2532,6 @@ async function upload(uploaded:File){
           {displayLocale!=='en'&&resultTranslationState==='unavailable'&&<button type="button" className="result-translation-retry" onClick={()=>{setResultTranslationState('translating');setTranslationRetry(value=>value+1)}}><span>{resultUi('retryTranslation')}</span><small>{resultUi('tryAgain')}</small></button>}
          </div>}
         </div>
-        {voiceSupported&&<button
-         type="button"
-         className={`result-voice-trigger${resultSpeaking?' is-speaking':''}`}
-         aria-pressed={resultSpeaking}
-         aria-label={resultSpeaking?'Stop reading result aloud':`Read ${activeResultSection==='next'?'Resolve':activeResultSection==='message'?'Original':activeResultSection.charAt(0).toUpperCase()+activeResultSection.slice(1)} aloud`}
-         title={resultSpeaking?'Stop reading result aloud':`Read ${activeResultSection==='next'?'Resolve':activeResultSection==='message'?'Original':activeResultSection.charAt(0).toUpperCase()+activeResultSection.slice(1)} aloud`}
-         onClick={toggleResultSpeech}
-        ><SealUiIcon name="voice"/><span>{resultSpeaking?resultUi('stopReading'):resultUi('listen')}</span></button>}
         {documentJurisdictionLabel&&<span className="meta-jurisdiction" data-testid="document-jurisdiction">{documentJurisdictionLabel}</span>}
        </div>
       </div>
