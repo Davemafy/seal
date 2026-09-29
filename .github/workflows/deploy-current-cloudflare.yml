@@ -61,4 +61,4 @@ jobs:
           echo "Live Worker did not become healthy within 2 minutes."
           exit 1
 
-# Deploy marker: Translation batching hotfix 2026-09-28
+# Deploy marker: LexHack judge-proof freeze 2026-09-29
