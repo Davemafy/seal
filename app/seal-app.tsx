@@ -19,7 +19,7 @@ import {buildCaseReality,buildCourtQuestionScript,buildHandoffSummary,buildOblig
 import {DISPLAY_LANGUAGES,displayLocaleFor,type DisplayLocale,type UiCopyKey} from '@/lib/ui-locales';
 import {persistUiLocale,useStoredUiLocale,useUiText} from '@/lib/use-ui-text';
 import {safeWorkspaceTitle} from '@/lib/workspace-title';
-import {mapNormalizedBoxToFrame,sameRenderedImageRect} from '@/lib/image-overlay';
+import {mapNormalizedBoxToFrame,ocrLineRegions,sameRenderedImageRect} from '@/lib/image-overlay';
 import {primeBrowserTranslator,translateRecordWithBrowser} from '@/lib/browser-translate';
 import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
 import './workspace.css';
@@ -2199,6 +2199,7 @@ async function upload(uploaded:File){
  const processingStage=status==='Checking independent sources'?2:status==='Reading requested actions'?1:0;
  const processingTitle=processingStage===2?'Checking public sources':processingStage===1?'Finding the instructions':'Reading your document';
  const processingTextRegionsVisible=useMemo(()=>file?.tokens?processingTextRegions(file.tokens):[],[file]);
+ const originalOcrRegions=useMemo(()=>file?.kind==='image'&&file.tokens?.length?ocrLineRegions(file.tokens):[],[file]);
  const processingRegionCount=processingTextRegionsVisible.length;
  const processingMeta=[documentLanguage?.label,jurisdiction].filter(Boolean).join(' · ');
  const processingFileName=uploadPreview?.name&&uploadPreview.name.length<=56&&/[A-Za-z]{3}/.test(uploadPreview.name)?uploadPreview.name:'';
@@ -2768,6 +2769,15 @@ async function upload(uploaded:File){
          onClick={event=>openDocumentPreview(event.currentTarget)}
          onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openDocumentPreview(event.currentTarget)}}}>
          <img ref={originalImageRef} src={file.preview} alt="Uploaded notice" onLoad={syncRenderedImageRect}/>
+         {renderedImageRect?.preview===file.preview&&originalOcrRegions.map((region,index)=>{
+          const box=mapNormalizedBoxToFrame(region,renderedImageRect,{left:0,top:0});
+          return <span
+           aria-hidden="true"
+           className={`ocr-coverage-box ${region.confidence<55?'is-low-confidence':''}`}
+           key={`ocr-line-${index}`}
+           style={{left:box.left,top:box.top,width:box.width,height:box.height}}
+          />;
+         })}
          {renderedImageRect?.preview===file.preview&&claims.filter(claim=>claim.source_bbox&&claim.page===1).map(claim=>{
           const box=mapNormalizedBoxToFrame(claim.source_bbox!,renderedImageRect,{left:0,top:0});
           return <button
