@@ -66,10 +66,9 @@ export default function PDFPreview({url,claims,tokens=[],active,anchors,onSelect
   const frame=preview.current;
   const c=canvas.current;
   if(!frame||!c)return;
-  const frameRect=frame.getBoundingClientRect();
   const canvasRect=c.getBoundingClientRect();
   if(canvasRect.width<=0||canvasRect.height<=0)return;
-  const next={page,left:canvasRect.left-frameRect.left,top:canvasRect.top-frameRect.top,width:canvasRect.width,height:canvasRect.height};
+  const next={page,left:c.offsetLeft,top:c.offsetTop,width:canvasRect.width,height:canvasRect.height};
   setRenderedCanvasRect(previous=>{
    if(previous
     &&previous.page===next.page
@@ -213,13 +212,13 @@ export default function PDFPreview({url,claims,tokens=[],active,anchors,onSelect
   setPage(bounded);
  };
 
- return <>
+ return <div className="pdf-preview-shell">
   {total>1&&<div className="pdf-toolbar">
    <button type="button" disabled={page<=1||rendering} onClick={()=>changePage(page-1)}>Previous</button>
    <span>Page {page} of {total}</span>
    <button type="button" disabled={page>=total||rendering} onClick={()=>changePage(page+1)}>Next</button>
   </div>}
-  <div className="preview-box" ref={preview}>
+  <div className="preview-box pdf-preview-box" ref={preview}>
    {rendering&&<span className="pdf-rendering-note" role="status">Preparing document preview…</span>}
    <canvas ref={canvas} style={{width:'100%',height:'auto',display:'block'}} aria-label={`Uploaded PDF page ${page}`}/>
    {!rendering&&renderedCanvasRect?.page===page&&ocrLineRegions(tokens,page).map((region,index)=><span
@@ -249,5 +248,5 @@ export default function PDFPreview({url,claims,tokens=[],active,anchors,onSelect
    />)}
   </div>
   {error&&<p role="alert">{error}</p>}
- </>;
+ </div>;
 }
