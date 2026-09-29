@@ -91,7 +91,7 @@ Call 1-866-388-2430 after 5:30 PM for the status of your jury service.`);
 test('India coverage-limit message abstains and hands off to official eCourts',async({page})=>{
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:390,height:844});
- await page.goto('/');
+ await page.goto('/check/primary');
  await page.getByRole('button',{name:/Paste text instead/i}).click();
  await page.getByLabel('Paste the court message').fill(`DISTRICT COURT — NEW DELHI, INDIA
 Case reference: DL-2026-4821
@@ -336,13 +336,14 @@ test('mobile SEAL brand returns a result to the clean entry state',async({page})
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:390,height:844});
- await page.goto('/');
+ await page.goto('/check/primary');
  await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
 
  await page.locator('.mobile-brand').click();
- await expect(page.getByTestId('entry-shell')).toBeVisible();
  await expect(page.getByTestId('result-shell')).toHaveCount(0);
+ await expect(page.getByRole('heading',{level:1,name:/The seal can be faked/})).toBeVisible();
+ await expect(page.getByRole('link',{name:'Check a court message'}).first()).toBeVisible();
  await expect(page).toHaveURL(/\/$/);
  assertNoRuntimeErrors();
 });
@@ -745,9 +746,12 @@ test('landing keeps the checker above the fold and exposes Dallas provenance',as
 
  await page.setViewportSize({width:390,height:844});
  await page.reload();
- const uploadBox=await page.getByTestId('upload-file').boundingBox();
- expect(uploadBox).not.toBeNull();
- expect(uploadBox!.y,'mobile checker should begin inside the opening viewport').toBeLessThan(844);
+ await expect(page.getByTestId('upload-file')).toHaveCount(0);
+ const mobileCta=page.getByRole('link',{name:'Check a court message'}).first();
+ await expect(mobileCta).toBeVisible();
+ const ctaBox=await mobileCta.boundingBox();
+ expect(ctaBox).not.toBeNull();
+ expect(ctaBox!.y,'mobile CTA should remain inside the opening viewport').toBeLessThan(844);
  overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
  expect(overflow).toBeLessThanOrEqual(1);
  assertNoRuntimeErrors();
