@@ -761,6 +761,15 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
    :caseReality?.status==='CONFLICT'
     ?resultUi('instructionMismatch')
     :resultUi('notConfirmed');
+ const sourceCheckStatus=decisionRelationshipConflict
+  ?resultUi('sourceConflict')
+  :verification?.results.some(result=>result.verdict==='MATCH')
+   ?resultUi('officialSourceMatch')
+   :verification?.signals?.some(signal=>signal.kind==='OFFICIAL_PROCESS')
+    ?resultUi('officialProcess')
+    :verification?.signals?.some(signal=>signal.kind==='OFFICIAL_DIRECTORY')
+     ?resultUi('officialDirectory')
+     :resultUi('notConfirmed');
  const safeActionCopy=verification?.safe_action
   ?curatedAuthorityMatch
    ?{
@@ -2545,13 +2554,15 @@ async function upload(uploaded:File){
            <small>{resultUi('openServiceNote')}</small>
           </div>}
 
-          {riskSummary&&!file?.sample&&instructionStatus!==matterStatus&&<div className="decision-at-a-glance" data-testid="two-risk-result">
-           <div><span>{resultUi('thisMessage')}</span><strong>{translatedResult.instructionStatus||instructionStatus}</strong></div>
-           <div><span>{resultUi('theCase')}</span><strong>{translatedResult.matterStatus||matterStatus}</strong></div>
-          </div>}
          </div>
 
         </div>
+
+        {riskSummary&&!file?.sample&&<div className="decision-evidence-rail" aria-label={resultUi('whatSealFound')} data-testid="decision-evidence-rail">
+         <div><span>{resultUi('messageInstructions')}</span><strong>{translatedResult.instructionStatus||instructionStatus}</strong></div>
+         <div><span>{resultUi('underlyingMatter')}</span><strong>{translatedResult.matterStatus||matterStatus}</strong></div>
+         <div><span>{resultUi('sourceEvidence')}</span><strong>{sourceCheckStatus}</strong></div>
+        </div>}
 
         <details className="decision-details">
          <summary><span>{translatedResult.whyResult||resultUi('whyResult')}</span><SealGuideIcon/></summary>

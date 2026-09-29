@@ -129,3 +129,75 @@
  .check-object-meta{gap:6px!important}
  .meta-jurisdiction::before{margin-right:6px!important}
 }
+
+
+/* Horizontal Summary trial — compact proof rail, no extra cards. */
+@media(min-width:901px){
+ .result-slide-summary .decision{
+  width:100%!important;
+  max-width:960px!important
+ }
+ .decision-evidence-rail{
+  width:100%!important;
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:0!important;
+  margin-top:28px!important;
+  padding:16px 0!important;
+  border-top:1px solid #e5e5e1!important;
+  border-bottom:1px solid #e5e5e1!important
+ }
+ .decision-evidence-rail>div{
+  min-width:0!important;
+  padding:0 22px!important
+ }
+ .decision-evidence-rail>div:first-child{padding-left:0!important}
+ .decision-evidence-rail>div+div{border-left:1px solid #ecece8!important}
+ .decision-evidence-rail span{
+  display:block!important;
+  margin-bottom:5px!important;
+  color:#777771!important;
+  font-size:10.5px!important;
+  line-height:15px!important;
+  font-weight:540!important
+ }
+ .decision-evidence-rail strong{
+  display:block!important;
+  color:#171715!important;
+  font-size:14px!important;
+  line-height:20px!important;
+  font-weight:620!important
+ }
+ .result-slide-summary .decision-details{
+  width:100%!important;
+  max-width:960px!important;
+  margin-top:20px!important
+ }
+}
+@media(max-width:900px){
+ .decision-evidence-rail{
+  width:100%!important;
+  margin-top:22px!important;
+  border-top:1px solid #e5e5e1!important;
+  border-bottom:1px solid #e5e5e1!important
+ }
+ .decision-evidence-rail>div{
+  display:grid!important;
+  grid-template-columns:minmax(112px,.8fr) minmax(0,1.2fr)!important;
+  gap:14px!important;
+  align-items:baseline!important;
+  padding:11px 0!important
+ }
+ .decision-evidence-rail>div+div{border-top:1px solid #efefeb!important}
+ .decision-evidence-rail span{
+  color:#777771!important;
+  font-size:10.5px!important;
+  line-height:15px!important
+ }
+ .decision-evidence-rail strong{
+  color:#171715!important;
+  font-size:13px!important;
+  line-height:19px!important;
+  font-weight:620!important
+ }
+}
