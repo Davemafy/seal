@@ -58,6 +58,27 @@ describe('generic official-source discovery',()=>{
   expect(result.signal).toBeUndefined();
   expect(result.safeAction).toBeUndefined();
  });
+ it('does not let a generic reviewed directory short-circuit live semantic discovery',async()=>{
+  const warning='https://www.dcd.uscourts.gov/sites/dcd/files/Fraud%20Attachment%20Notice%20From%20the%20Court%20June%202025.pdf';
+  vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo|URL)=>{
+   const url=String(input);
+   if(url.includes('api.groq.com'))return new Response('',{status:503});
+   if(url.includes('duckduckgo.com/html/')||url.includes('bing.com/search')||url.includes('google.com/search'))return new Response(
+    '<html><body><div class="result"><a class="result__a" href="'+warning+'">Fraud Attachment Notice From the Court</a><div class="result__snippet">United States District Court for the District of Columbia jury duty scam warning.</div></div><li class="b_algo"><h2><a href="'+warning+'">Fraud Attachment Notice From the Court</a></h2><div class="b_caption"><p>District of Columbia jury duty scam warning.</p></div></li></body></html>',
+    {status:200,headers:{'content-type':'text/html'}}
+   );
+   if(url===warning)return new Response('official warning pdf',{status:200,headers:{'content-type':'application/pdf'}});
+   if(url.includes('uscourts.gov'))return new Response('<html><main>United States Courts</main></html>',{status:200,headers:{'content-type':'text/html'}});
+   return new Response('',{status:404,headers:{'content-type':'text/plain'}});
+  }));
+  const text='UNITED STATES DISTRICT COURT FOR THE DISTRICT OF COLUMBIA\nURGENT: Jury Duty Summons – Immediate Response Required\nDownload Jury Summons';
+  const claim={id:'a1',type:'action' as const,label:'Requested action',value:'Download Jury Summons',exact_source_text:'Download Jury Summons',page:2,action:{verb:'download',kind:'other' as const,object:'Jury Summons',target_type:'unknown' as const,target_value:'',qualifiers:[],source_text:'Download Jury Summons'}};
+  const result=await discoverOfficialDirectory(text,'UNITED STATES DISTRICT COURT FOR THE DISTRICT OF COLUMBIA','United States · Federal','LIVE',[claim],text);
+  expect(result.lane.resolver_id).toBe('official-discovery');
+  expect(result.signal?.kind).toBe('OFFICIAL_WARNING');
+  expect(result.safeAction?.primary_url).toBe(warning);
+ });
+
  it('keeps discovered warnings outside the decisive verdict boundary',async()=>{
   const warning='https://www.gov.uk/government/news/warning-about-bailiff-email-scam';
   vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo|URL)=>{
