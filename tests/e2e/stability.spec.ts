@@ -119,7 +119,7 @@ test('mobile result keeps the decision first and switches explicit result tabs',
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:390,height:844});
- await page.goto('/');
+ await page.goto('/check/primary');
  await page.getByRole('button',{name:/Paste text instead/i}).click();
  await page.getByLabel('Paste the court message').fill(`STATE OF NEW HAMPSHIRE
 FINAL COURT-ORDERED MANDATORY COLLECTION NOTICE
@@ -452,7 +452,7 @@ test('mobile result has no horizontal overflow and keeps the review accessible',
  test.setTimeout(90000);
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.setViewportSize({width:390,height:844});
- await page.goto('/');
+ await page.goto('/check/primary');
  await chooseFile(page,'tests/fixtures/connecticut-sample-jury-summons.pdf');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:45000});
  await expect(page.getByTestId('evidence-review')).toHaveCount(0);
