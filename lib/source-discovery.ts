@@ -233,10 +233,13 @@ async function discoverLive(rawText:string,courtName:string,jurisdictionHint:str
  const wrapperQueries=rawText!==planningText
   ?buildOfficialDiscoveryQueries(rawText,wrapperInstitution||institution||courtName,semanticContext?.jurisdiction?.value||jurisdictionHint)
   :[];
- const exactWrapperQuery=wrapperHeading
-  ?[`"${wrapperHeading.slice(0,120)}"`,institution&&`"${institution.slice(0,100)}"`,'official'].filter(Boolean).join(' ')
-  :'';
- const queries=[...new Set([exactWrapperQuery,...semanticQueries,...wrapperQueries,...fallbackQueries].map(normalize).filter(query=>query.length>=8))].slice(0,6);
+ const exactWrapperQueries=wrapperHeading
+  ?[
+    [`"${wrapperHeading.slice(0,120)}"`,'official'].join(' '),
+    [`"${wrapperHeading.slice(0,120)}"`,institution&&`"${institution.slice(0,100)}"`].filter(Boolean).join(' ')
+   ]
+  :[];
+ const queries=[...new Set([...exactWrapperQueries,...semanticQueries,...wrapperQueries,...fallbackQueries].map(normalize).filter(query=>query.length>=8))].slice(0,6);
  const diagnostics:DiscoveryDiagnostics={
   mode:'LIVE',
   analysis_heading:heading||undefined,
