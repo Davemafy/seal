@@ -106,6 +106,10 @@ export default function Home(){
      <h1><span>{ui('landingHeadlineFake')}</span><span className="landing-headline-muted">{ui('landingHeadlineSource')}</span></h1>
      <p className="landing-hero-summary">{ui('landingHeroSummary')}</p>
      <p className="landing-hero-principle">{ui('landingHeroPrinciple')}</p>
+     <div className="landing-hero-actions">
+      <Link className="landing-hero-primary" href="/check/primary">{ui('checkCourtMessage')}</Link>
+      <Link className="landing-hero-secondary" href="/browse">{ui('browse')}</Link>
+     </div>
     </div>
 
     <div className="landing-checker" aria-label={ui('checkCourtMessage')}>
