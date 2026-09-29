@@ -98,7 +98,6 @@ export default function Home(){
   </header>
 
   <section className="landing-hero" id="check">
-   <div className="landing-architecture" aria-hidden="true"/>
    <div className="landing-hero-inner">
     <div className="landing-hero-copy">
      <p className="landing-kicker">{ui('landingBeforeAction')}</p>
@@ -110,6 +109,23 @@ export default function Home(){
       <Link className="landing-hero-secondary" href="/browse">{ui('browse')}</Link>
      </div>
     </div>
+
+    <aside className="landing-hero-evidence" aria-label={ui('landingPublishedArtifact')}>
+     <div className="landing-hero-evidence-head">
+      <span>{ui('landingPublishedArtifact')}</span>
+      <small>City of Dallas</small>
+     </div>
+     <div className="landing-hero-evidence-frame">
+      <img src="/browse-assets/dallas-traffic-qr-scam.jpg" alt="City of Dallas published traffic QR scam example"/>
+     </div>
+     <div className="landing-hero-evidence-foot">
+      <div>
+       <small>{ui('landingIndependentSource')}</small>
+       <strong>City of Dallas · SCAM Notice</strong>
+      </div>
+      <Link href="/check/dallas-proof?case=dallas-traffic-qr-scam">{ui('landingOpenThisCheck')}</Link>
+     </div>
+    </aside>
    </div>
   </section>
 
