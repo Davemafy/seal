@@ -310,6 +310,14 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
  const translationCacheRef=useRef<Map<string,Record<string,string>>>(new Map());
  const translatedResult=useMemo(()=>displayLocale==='en'?{}:translatedResultData,[displayLocale,translatedResultData]);
  const resultUi=useCallback((key:UiCopyKey)=>ui(key),[ui]);
+ const claimDisplayLabel=useCallback((claim:Claim)=>{
+  if(claim.type==='court')return resultUi('courtClaimed');
+  if(claim.type==='docket')return resultUi('caseReference');
+  if(claim.type==='payment')return resultUi('paymentStatement');
+  if(claim.type==='reporting_date')return resultUi('scheduleStated');
+  if(claim.type==='action')return resultUi('messageAsks');
+  return claim.label;
+ },[resultUi]);
  const [documentLanguage,setDocumentLanguage]=useState<DetectedDocumentLanguage|null>(null);
  const [jurisdiction,setJurisdiction]=useState('');
  const [workspaceTitle,setWorkspaceTitle]=useState('New check');
@@ -1015,7 +1023,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   verification.results.forEach((result,index)=>{
    strings['resultExplain'+index]=result.explanation;
    const claim=claims.find(candidate=>candidate.id===result.claim_id);
-   if(claim)strings['resultLabel'+index]=claim.label;
+   if(claim)strings['resultLabel'+index]=claimDisplayLabel(claim);
   });
   obligations.forEach((item,index)=>{strings['obligationStatus'+index]=item.statusLabel});
   if(verification.safe_action){
@@ -1036,7 +1044,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   strings.noEvidenceTitle='No independent source evidence was available for this result.';
   strings.noEvidenceBody='The inspection below shows what SEAL could and could not establish from its supported sources.';
   return strings;
- },[verification,claims,file?.sample,conciseDecisionTitle,humanDecisionSummary,decisionRelationship,plainExplanation,riskSummary,caseReality,courtQuestionScript,resultStatusLabel,instructionStatus,matterStatus,curatedSignal,obligations]);
+ },[verification,claims,file?.sample,conciseDecisionTitle,humanDecisionSummary,decisionRelationship,plainExplanation,riskSummary,caseReality,courtQuestionScript,resultStatusLabel,instructionStatus,matterStatus,curatedSignal,obligations,claimDisplayLabel]);
 
  const resultTranslationSectionSource=useMemo(()=>{
   if(!verification||displayLocale==='en')return {};
@@ -1062,7 +1070,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
    takeIndexed('resultExplain',8);
    takeIndexed('resultLabel',8);
   }else if(activeResultSection==='next'){
-   ['plainTitle','plainSummary'].forEach(take);
+   ['plainTitle','plainSummary','unsupportedNextEyebrow','unsupportedNextTitle','locationNamed','detailsUnconfirmed','avoidMessageRoutes','startHere','notVerified'].forEach(take);
    if(!curatedAuthorityMatch){
     ['safeTitle','safeSummary','safePrimary'].forEach(take);
     takeIndexed('safeStep',5);
@@ -1951,6 +1959,7 @@ async function upload(uploaded:File){
    // extractor and claim-level confidence checks can safely use.
    const deterministicExtraction=fallbackExtract(sourceText);
    let extraction:Extraction=deterministicExtraction;
+   let analysisText=sourceText;
    let extractor='DETERMINISTIC';
    const deterministicReady=Boolean(
     !sourceFile
@@ -1968,10 +1977,14 @@ async function upload(uploaded:File){
      if(response.ok){
       const data=await response.json();
       const modelExtraction=data.extraction as Extraction;
+      analysisText=typeof data.analysis_text==='string'&&data.analysis_text.trim()?data.analysis_text.trim():sourceText;
+      const focusedDeterministic=analysisText===sourceText?deterministicExtraction:fallbackExtract(analysisText);
       extraction={
        ...modelExtraction,
-       court_name:preferGroundedCourtIdentity(modelExtraction.court_name,deterministicExtraction.court_name,sourceText)||modelExtraction.court_name||deterministicExtraction.court_name,
-       requested_actions:modelExtraction.requested_actions?.length?modelExtraction.requested_actions:deterministicExtraction.requested_actions
+       court_name:preferGroundedCourtIdentity(modelExtraction.court_name,focusedDeterministic.court_name,analysisText)||modelExtraction.court_name||focusedDeterministic.court_name,
+       requested_actions:modelExtraction.requested_actions?.length?modelExtraction.requested_actions:focusedDeterministic.requested_actions,
+       analysis_text:analysisText===sourceText?'':analysisText,
+       document_role:data.document_role||modelExtraction.document_role
       };
       extractor=data.mode||'DETERMINISTIC';
      }else extractor='DETERMINISTIC_FALLBACK';
@@ -1984,7 +1997,7 @@ async function upload(uploaded:File){
     }
    }
 
-   if(sourceFile?.kind==='pdf'){
+   if(sourceFile?.kind==='pdf'&&analysisText===sourceText){
     const juror=recoverLabeledJurorNumber(sourceFile.tokens);
     const date=recoverLabeledReportingDate(sourceFile.tokens);
     extraction={...extraction,juror_or_reference_number:juror||extraction.juror_or_reference_number,reporting_date:date||extraction.reporting_date};
@@ -1992,16 +2005,17 @@ async function upload(uploaded:File){
 
    if(runId.current!==id)return;
    setExtractionMode(extractor);
-   const routedDirectory=officialCourtDirectoryFor([sourceText,extraction.court_name,extraction.court_location].filter(Boolean).join('\n'))||sourceContext.officialDirectory;
+   const analysisContext=analysisText===sourceText?sourceContext:detectDocumentContext(analysisText);
+   const routedDirectory=officialCourtDirectoryFor([analysisText,extraction.court_name,extraction.court_location].filter(Boolean).join('\n'))||analysisContext.officialDirectory;
    let inferredContext:null|{jurisdiction:string;countryCode:string;evidenceQuote:string;confidence:number}=null;
-   if(!routedDirectory&&!sourceContext.jurisdiction){
+   if(!routedDirectory&&!analysisContext.jurisdiction){
     inferredContext=await Promise.race([
      contextPromise,
      new Promise<null>(resolve=>window.setTimeout(()=>resolve(null),900))
     ]);
    }
    const routedJurisdiction=routedDirectory?.jurisdiction
-    ||sourceContext.jurisdiction
+    ||analysisContext.jurisdiction
     ||inferredContext?.jurisdiction
     ||cleanDisplayText(extraction.court_location);
    if(routedJurisdiction)setJurisdiction(routedJurisdiction);
@@ -2012,14 +2026,14 @@ async function upload(uploaded:File){
 
    // Curated cases use a source-checked transcript for analysis. OCR tokens from
    // the pictured artifact may help display it, but must not invent new claims.
-   const extractedClaims=claimsFromExtraction(extraction,sourceText,sourceCurated?[]:sourceFile?.tokens||[]);
+   const extractedClaims=claimsFromExtraction(extraction,analysisText,sourceCurated?[]:sourceFile?.tokens||[]);
    const found=sourceCurated
     ?extractedClaims.map(claim=>({...claim,verification_eligible:true}))
     :extractedClaims;
    const reliableAction=found.some(claim=>Boolean(claim.action)&&claimReliable(claim));
    const usableAction=found.some(claimNarrativelyUsable);
-   const courtRelated=/\b(?:court|jury|summons|hearing|case|docket|judge|tribunal|magistrate|citation|parking violation|juzgado|gericht|tribunale|mahakama|mahkama|mahkeme|pengadilan|cour|llys)\b|poder judiciário|vara cível|edital de citação|न्यायालय|अदालत|محكمة|المحكمة|法院|裁判所|법원|\bсуд\b/iu.test(sourceText)
-    ||Boolean(extraction.court_name&&sourceText.toLocaleLowerCase().includes(extraction.court_name.toLocaleLowerCase()));
+   const courtRelated=/\b(?:court|jury|summons|hearing|case|docket|judge|tribunal|magistrate|citation|parking violation|juzgado|gericht|tribunale|mahakama|mahkama|mahkeme|pengadilan|cour|llys)\b|poder judiciário|vara cível|edital de citação|न्यायालय|अदालत|محكمة|المحكمة|法院|裁判所|법원|\bсуд\b/iu.test(analysisText)
+    ||Boolean(extraction.court_name&&analysisText.toLocaleLowerCase().includes(extraction.court_name.toLocaleLowerCase()));
    if(!sourceCurated&&!courtRelated)throw new Error('This does not look like a court message SEAL can check. Try a court notice, text, or email.');
    if(!sourceCurated&&!sourceBrowse&&!usableAction)throw new Error(sourceFile?.uncertain
     ?'SEAL read parts of this document, but not a requested action clearly enough to check it safely. Try a clearer image or paste the instruction text.'
@@ -2043,7 +2057,7 @@ async function upload(uploaded:File){
    const response=await fetch('/api/verify',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({claims:verifiable,court_name:routingCourt,jurisdiction_hint:routedJurisdiction,mode:sourceMode,text:sourceText,curated_case_id:curatedCaseId}),
+    body:JSON.stringify({claims:verifiable,court_name:routingCourt,jurisdiction_hint:routedJurisdiction,mode:sourceMode,text:analysisText,document_text:sourceText,allow_live_discovery:Boolean(sourceFile&&!sourceCurated),curated_case_id:curatedCaseId}),
     signal:controller.signal
    });
    if(!response.ok)throw new Error('The source check could not finish. Try again.');
@@ -2855,7 +2869,7 @@ async function upload(uploaded:File){
         const evidenceTitles=result.evidence.map(evidence=>evidence.title);
         return <article className={`source-signal direct-evidence-finding ${primary?'is-primary':'is-secondary'}`} key={claim.id}>
          <p className="signal-kind">{result.verdict==='MATCH'?resultUi('officialSourceMatch'):result.verdict==='MISMATCH'?resultUi('officialSourceConflict'):resultUi('sourceEvidence')}</p>
-         <h3>{translatedResult['resultLabel'+resultIndex]||claim.label}{claim.value?`: ${cleanDisplayText(claim.value)}`:''}</h3>
+         <h3>{translatedResult['resultLabel'+resultIndex]||claimDisplayLabel(claim)}{claim.value?`: ${cleanDisplayText(claim.value)}`:''}</h3>
          <p>{translatedResult['resultExplain'+resultIndex]||result.explanation}</p>
          <div className="signal-links">
           {result.evidence.length>1&&<span className="signal-links-label">{resultUi('sources')}</span>}
@@ -2908,7 +2922,7 @@ async function upload(uploaded:File){
          const result=resultById.get(claim.id);
          return <button type="button" key={claim.id} className={`index-item ${selected===claim.id?'selected':''}`} disabled={!result} onClick={()=>select(claim.id)}>
           <span className="index-ordinal">{String(index+1).padStart(2,'0')}</span>
-          <span className="index-claim">{claim.type==='authority'?`${claim.label} · ${cleanDisplayText(claim.value)}`:claim.label}</span>
+          <span className="index-claim">{claim.type==='authority'?`${claim.label} · ${cleanDisplayText(claim.value)}`:claimDisplayLabel(claim)}</span>
           <span className={`index-state ${result?result.verdict.toLowerCase():''}`}>{result?stateWord(result.verdict):'—'}</span>
          </button>;
         })}
@@ -2917,7 +2931,7 @@ async function upload(uploaded:File){
 
       {current&&currentResult&&<div className="focused-evidence" aria-live="polite">
        <div className="focus-number">
-        <span>{current.label}</span>
+        <span>{claimDisplayLabel(current)}</span>
         <span className={`state-text ${currentResult.verdict.toLowerCase()}`}>{verdictLabel(currentResult.verdict)}</span>
        </div>
        <div className="from-label">{translatedResult.inMessage||'In the message'}</div>
@@ -2970,8 +2984,8 @@ async function upload(uploaded:File){
     <section className="result-slide result-slide-resolve" data-result-section="next" id={sectionId('user-actions-panel')} role="tabpanel" aria-labelledby={sectionId('tab-resolve')} aria-label={resultUi('resolvePanel')} hidden={activeResultSection!=='next'}>
      {ready&&verification&&<div className="resolve-primary" data-testid="resolve-primary">
      {verification&&!verification.safe_action&&decisionClaim?.action&&!verification.contact&&<div className="unsupported-next-step" id={sectionId('next-step')}>
-      <span>{translatedResult.unsupportedNextEyebrow||'What to do next'}</span>
-      <h2>{translatedResult.unsupportedNextTitle||'Check this with the court directly.'}</h2>
+      <span>{translatedResult.unsupportedNextEyebrow||resultUi('whatToDoNext')}</span>
+      <h2>{translatedResult.unsupportedNextTitle||resultUi('checkCourtDirectly')}</h2>
       {messageDetails.length>0||scheduleQuote||noPaymentQuote?<dl className="message-detail-list">{messageDetails.map(claim=><div key={claim.id}><dt>{claim.type==='location'?(translatedResult.locationNamed||'Location named'):claim.label}</dt><dd>{cleanDisplayText(claim.value)}</dd></div>)}{scheduleQuote&&<div><dt>{resultUi('scheduleStated')}</dt><dd>{cleanDisplayText(scheduleQuote)}</dd></div>}{noPaymentQuote&&<div><dt>{resultUi('paymentStatement')}</dt><dd>{cleanDisplayText(noPaymentQuote)}</dd></div>}</dl>:<p>{resultUi('noCourtDetails')}</p>}
       <p>{translatedResult.detailsUnconfirmed||'Those details come from the message itself. They do not confirm that the case exists or that the sender is connected to the court.'}</p>
       <p>{translatedResult.avoidMessageRoutes||'Do not use a payment link, QR code, phone number, or reply address from the message until you reach the court independently.'}</p>
@@ -2996,7 +3010,7 @@ async function upload(uploaded:File){
      </div>}
 
      </div>}
-     {ready&&verification&&caseReality&&<section className="user-actions" id={sectionId('user-actions')} aria-label="What to do next">
+     {ready&&verification&&caseReality&&<section className="user-actions" id={sectionId('user-actions')} aria-label={resultUi('whatToDoNext')}>
      <div className="user-actions-heading"><h2>{resultUi('whatToDoNext')}</h2><p>{resultUi('nextHelpCopy')}</p></div>
      <div className="journey-block case-reality-block" data-testid="case-reality-check">
       <div className="journey-label">{resultUi('theCase')}</div>
