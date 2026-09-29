@@ -11,8 +11,7 @@ test('international message gets a safe resolution path without an authenticity 
  await expect(page.getByTestId('check-object-header')).toContainText(/District Court.*New Delhi/i);
  await page.getByRole('tablist').getByRole('tab',{name:'Resolve'}).click();
  await expect(page.getByTestId('case-reality-check')).toContainText('DL-2026-4821');
- await expect(page.getByTestId('two-risk-result')).toContainText('Not confirmed');
- await expect(page.getByTestId('two-risk-result')).toContainText('Not confirmed');
+ await expect(page.getByTestId('case-reality-check')).toContainText(/not independently confirmed/i);
  await page.getByRole('tablist').getByRole('tab',{name:'Summary'}).click();
  await expect(page.getByTestId('primary-next-step').getByRole('link',{name:'Search India eCourts'})).toBeVisible();
  await page.locator('.decision-details').locator('summary').click();

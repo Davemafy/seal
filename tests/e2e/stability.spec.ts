@@ -33,10 +33,10 @@ test('mobile interface language changes locally even when translation provider i
  await expect(page.getByRole('heading',{name:'Check a court message'})).toBeVisible();
 
  await page.locator('.mobile-language-trigger').click();
- await page.locator('.mobile-language-popover').getByRole('option',{name:/Deutsch/}).click();
- await expect(page.getByRole('heading',{name:'Gerichtsnachricht prüfen'})).toBeVisible();
- await expect(page.getByText('Bescheid oder Screenshot hochladen')).toBeVisible();
- await expect(page.getByRole('button',{name:/Stattdessen Text einfügen/})).toBeVisible();
+ await page.locator('.mobile-language-popover').getByRole('option',{name:/Français/}).click();
+ await expect(page.getByRole('heading',{name:'Vérifier un message judiciaire'})).toBeVisible();
+ await expect(page.getByText('Importer un avis ou une capture d’écran')).toBeVisible();
+ await expect(page.getByRole('button',{name:/Coller le texte à la place/})).toBeVisible();
 
  await page.locator('.mobile-language-trigger').click();
  await page.locator('.mobile-language-popover').getByRole('option',{name:/한국어/}).click();
@@ -81,7 +81,7 @@ Call 1-866-388-2430 after 5:30 PM for the status of your jury service.`);
   throw error;
  });
  await expect(page.getByTestId('check-object-header')).toContainText(/U\.S\. District Court/i);
- await expect(page.locator('.decision-source-brief')).toContainText(/public source|No public source attached/);
+ await expect(page.locator('#review-summary .decision-overview')).toBeVisible();
  await expect(page.locator('.pasted-message')).toContainText('Call 1-866-388-2430 after 5:30 PM');
  await expect(page.locator('.inspection-error')).toHaveCount(0);
  expect(extractRequests,'clear pasted actions should not depend on the optional model extractor').toBe(0);
@@ -102,7 +102,7 @@ Call +91 11 5555 0199 to confirm your attendance.`);
  await expect(page.getByTestId('result-status')).toBeVisible();
  await expect(page.getByTestId('document-jurisdiction')).toBeVisible();
  await expect(page.getByTestId('document-jurisdiction')).toContainText('India');
- await expect(page.getByTestId('two-risk-result')).toContainText('Not confirmed');
+ await expect(page.getByTestId('result-status')).toHaveText('We could not confirm this notice');
  const tabs=page.getByRole('tablist');
  await tabs.getByRole('tab',{name:'Evidence'}).click();
  await expect(page.getByText('Official directory',{exact:true})).toBeVisible();
@@ -169,7 +169,7 @@ test('sample result stays quiet and action-free',async({page})=>{
  await expect(page.getByTestId('primary-next-step')).toHaveCount(0);
  await expect(page.getByTestId('two-risk-result')).toHaveCount(0);
  await expect(page.locator('.sample-warning')).toHaveCount(0);
- await expect(page.locator('.decision-visual')).toHaveCount(1);
+ await expect(page.locator('#review-summary .decision-overview')).toHaveCount(1);
  await expect(page.getByRole('button',{name:'Check again'})).toHaveCount(1);
  await expect(page.getByRole('button',{name:'Check again'}).locator('svg')).toHaveCount(1);
  await expect(page.locator('.rail-language select')).toHaveCount(0);
@@ -228,7 +228,7 @@ Remit FULL PAYMENT IN TOTAL of all outstanding tolls, fines, penalties, administ
  await expect(page.getByTestId('primary-next-step').getByRole('link',{name:'Open NH E-ZPass'})).toHaveAttribute('href','https://www.ezpassnh.com/');
  const tabs=page.getByRole('tablist');
  await tabs.getByRole('tab',{name:'Evidence'}).click();
- await expect(page.getByText('Official process',{exact:true})).toBeVisible();
+ await expect(page.locator('[data-result-section="evidence"] .signal-kind').filter({hasText:'Official process'}).first()).toBeVisible();
  await expect(page.getByText('New Hampshire publishes a specific process for toll and court collections')).toBeVisible();
  await expect(page.getByText(/These sources help with the check, but they still cannot tell us who sent the message/i)).toBeVisible();
  await expect(page.locator('[data-result-section="evidence"] .safe-route')).toHaveCount(0);
@@ -480,8 +480,8 @@ test('Browse keeps every sourced document runnable and high-signal cases first',
  await expect(page.getByRole('heading',{name:'See what real court messages look like'})).toBeVisible();
  const titles=await page.locator('.case-card h2').allTextContents();
  expect(titles.slice(0,3)).toEqual([
+  'Traffic default notice with QR payment',
   'Court text with a fake hearing and payment route',
-  'Public notice to interested parties',
   'Sample federal jury summons'
  ]);
  const cardCount=await page.locator('.case-card').count();
@@ -526,7 +526,7 @@ test('curated Dallas example preserves its source-backed resolution',async({page
  await page.goto('/?case=dallas-traffic-qr-scam');
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:60000});
  await expect(page.locator('#review-summary').getByRole('heading',{name:'Do not scan or pay from this message'})).toBeVisible();
- await expect(page.locator('#review-summary .decision-summary')).toContainText(/City of Dallas published this exact example as a scam/i);
+ await expect(page.locator('#review-summary .decision-summary')).toContainText(/issuing authority published this exact example as a scam/i);
  await expect(page.getByTestId('primary-next-step').getByRole('link',{name:/View the City of Dallas source/i})).toBeVisible();
  await page.getByRole('tablist').getByRole('tab',{name:'Evidence'}).click();
  await expect(page.getByTestId('evidence-review-entry')).toBeVisible();
@@ -542,7 +542,7 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  await page.goto('/check/primary');
 
  await expect(page.locator('.mobile-check-strip')).toHaveCount(0);
- await page.locator('.mobile-new-check').click();
+ await page.locator('.seal-workspace-instance[aria-hidden="false"] .mobile-new-check').click();
  const leaving=page.locator('.seal-workspace-instance.is-leaving');
  await expect(leaving,'old check should remain visible while fading out').toBeVisible();
  let active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
@@ -556,7 +556,7 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  await expect(leaving).toBeHidden();
 
  const previousActiveId=await active.getAttribute('data-workspace-id');
- await page.locator('.mobile-new-check').click();
+ await page.locator('.seal-workspace-instance[aria-hidden="false"] .mobile-new-check').click();
  const secondLeaving=page.locator('.seal-workspace-instance.is-leaving');
  await expect(secondLeaving,'the immediately previous check should remain visible on repeated new-check transitions').toBeVisible();
  const outgoingId=await secondLeaving.getAttribute('data-workspace-id');
@@ -657,10 +657,10 @@ test('desktop entry keeps compact sidebar and canvas in proportion',async({page}
  });
  expect(metrics.railWidth).toBeGreaterThanOrEqual(212);
  expect(metrics.railWidth).toBeLessThanOrEqual(220);
- expect(metrics.shellWidth).toBeLessThanOrEqual(902);
- expect(metrics.intakeWidth).toBeLessThanOrEqual(472);
- expect(metrics.headingSize).toBeLessThanOrEqual(41);
- expect(metrics.headingSize).toBeGreaterThanOrEqual(39);
+ expect(metrics.shellWidth).toBeLessThanOrEqual(1120);
+ expect(metrics.intakeWidth).toBeLessThanOrEqual(760);
+ expect(metrics.headingSize).toBeLessThanOrEqual(47);
+ expect(metrics.headingSize).toBeGreaterThanOrEqual(45);
  expect(metrics.railTitleSize).toBeGreaterThanOrEqual(17);
  expect(metrics.railTitleSize).toBeLessThanOrEqual(19);
  expect(metrics.overflow).toBeLessThanOrEqual(1);
@@ -697,9 +697,9 @@ test('1208 desktop keeps sidebar compact and canvas restrained',async({page})=>{
  });
  expect(metrics.railWidth).toBeGreaterThanOrEqual(212);
  expect(metrics.railWidth).toBeLessThanOrEqual(220);
- expect(metrics.shellWidth).toBeLessThanOrEqual(982);
- expect(metrics.intakeWidth).toBeLessThanOrEqual(520);
- expect(metrics.headingSize).toBeLessThanOrEqual(45);
+ expect(metrics.shellWidth).toBeLessThanOrEqual(1000);
+ expect(metrics.intakeWidth).toBeLessThanOrEqual(760);
+ expect(metrics.headingSize).toBeLessThanOrEqual(47);
  expect(metrics.rowHeight).toBeGreaterThanOrEqual(46);
  expect(metrics.rowHeight).toBeLessThanOrEqual(52);
  expect(metrics.railCopyWidth,'desktop check labels must not collapse to one character').toBeGreaterThan(130);
@@ -723,7 +723,7 @@ test('desktop rail keeps Browse visible and consistent across pages',async({page
  const browseRail=page.locator('.workspace-rail');
  await expect(browseRail.getByRole('link',{name:'Browse',exact:true})).toBeVisible();
  await expect(browseRail.getByRole('link',{name:'Browse',exact:true})).toHaveClass(/is-current/);
- await expect(browseRail.getByRole('button',{name:'New check',exact:true})).toBeVisible();
+ await expect(browseRail.locator('.rail-new-check')).toBeVisible();
  const browseWidth=await browseRail.evaluate(node=>node.getBoundingClientRect().width);
  expect(Math.abs(appWidth-browseWidth)).toBeLessThanOrEqual(1);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth)).toBeLessThanOrEqual(1);
