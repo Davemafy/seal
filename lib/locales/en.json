@@ -304,5 +304,6 @@
   "landingFinalTitle": "Got a court message you’re unsure about?",
   "landingFinalCopy": "Check it before you act.",
   "landingFooterMeta": "SEAL checks court-message claims against independent public sources. It does not authenticate a sender from appearance alone.",
-  "landingFooterAffiliation": "© 2026 SEAL · Not affiliated with any court."
+  "landingFooterAffiliation": "© 2026 SEAL · Not affiliated with any court.",
+  "landingNavCheck": "Check"
 }

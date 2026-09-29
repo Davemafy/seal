@@ -302,5 +302,6 @@
   "landingFinalTitle": "Emin olmadığınız bir mahkeme mesajı mı aldınız?",
   "landingFinalCopy": "Harekete geçmeden önce kontrol edin.",
   "landingFooterMeta": "SEAL, mahkeme mesajlarındaki iddiaları bağımsız kamu kaynaklarıyla karşılaştırır. Yalnızca görünüşe bakarak göndereni doğrulamaz.",
-  "landingFooterAffiliation": "© 2026 SEAL · Hiçbir mahkemeyle bağlantılı değildir."
+  "landingFooterAffiliation": "© 2026 SEAL · Hiçbir mahkemeyle bağlantılı değildir.",
+  "landingNavCheck": "Kontrol et"
 }

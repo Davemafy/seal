@@ -57,7 +57,7 @@ export default function Home(){
       {Object.entries(DISPLAY_LANGUAGES).map(([code,label])=><option key={code} value={code}>{label}</option>)}
      </select>
     </label>
-    <Link className="landing-nav-check" href="/check/primary">{ui('checkCourtMessage')}</Link>
+    <Link className="landing-nav-check" href="/check/primary" aria-label={ui('checkCourtMessage')}><span className="landing-nav-check-full">{ui('checkCourtMessage')}</span><span className="landing-nav-check-short">{ui('landingNavCheck')}</span></Link>
    </nav>
   </header>
 

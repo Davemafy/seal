@@ -304,5 +304,6 @@
   "landingFinalTitle": "Vous avez reçu un message judiciaire qui vous semble douteux ?",
   "landingFinalCopy": "Vérifiez-le avant d’agir.",
   "landingFooterMeta": "SEAL vérifie les affirmations d’un message judiciaire auprès de sources publiques indépendantes. L’apparence seule ne permet pas d’authentifier un expéditeur.",
-  "landingFooterAffiliation": "© 2026 SEAL · Non affilié à un tribunal."
+  "landingFooterAffiliation": "© 2026 SEAL · Non affilié à un tribunal.",
+  "landingNavCheck": "Vérifier"
 }

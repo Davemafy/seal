@@ -64,6 +64,7 @@
  font-weight:500;
  cursor:pointer;
 }
+.landing-nav-check-short{display:none}
 .landing-nav-check{
  min-height:40px;
  display:inline-flex!important;
@@ -633,12 +634,13 @@
  .landing-site-nav nav>a:first-child{display:none}
  .landing-nav-check{
   min-height:36px;
-  max-width:132px;
-  padding:8px 10px;
+  max-width:none;
+  padding:8px 12px;
   white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  overflow:visible;
  }
+ .landing-nav-check-full{display:none}
+ .landing-nav-check-short{display:inline}
  .landing-hero{min-height:0}
  .landing-hero-inner{
   gap:20px;
