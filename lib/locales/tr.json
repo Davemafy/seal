@@ -239,6 +239,8 @@
   "translationPendingQuiet": "Bu bölüm çevriliyor…",
   "listen": "Dinle",
   "stopReading": "Durdur",
+  "fileTypeImage": "Görsel",
+  "fileTypeText": "Metin",
   "nhSafeTitle": "Ücreti veya davayı bu bildirimden bağımsız kontrol edin",
   "nhSafeSummary": "Bu bildirimde yazan herhangi bir ödeme yolunu kullanmadan önce New Hampshire’ın resmî geçiş ücreti veya mahkeme kanallarını kullanın.",
   "nhSafePrimary": "NH E-ZPass’i aç",
