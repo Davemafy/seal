@@ -20,6 +20,7 @@ import {DISPLAY_LANGUAGES,displayLocaleFor,type DisplayLocale,type UiCopyKey} fr
 import {persistUiLocale,useStoredUiLocale,useUiText} from '@/lib/use-ui-text';
 import {safeWorkspaceTitle} from '@/lib/workspace-title';
 import {mapNormalizedBoxToFrame,ocrLineRegions,sameRenderedImageRect} from '@/lib/image-overlay';
+import {detectEmbeddedRecipientScope} from '@/lib/document-scope';
 import {primeBrowserTranslator,translateRecordWithBrowser} from '@/lib/browser-translate';
 import type {Claim,Extraction,Result,Token,Verification} from '@/lib/types';
 import './workspace.css';
@@ -1959,9 +1960,15 @@ async function upload(uploaded:File){
    // Do not use the document-level OCR flag as a kill switch. A globally noisy
    // transcript can still contain a clearly grounded action line that the
    // extractor and claim-level confidence checks can safely use.
-   const deterministicExtraction=fallbackExtract(sourceText);
+   const deterministicScope=detectEmbeddedRecipientScope(sourceText);
+   const deterministicAnalysisText=deterministicScope?.analysisText||sourceText;
+   const deterministicExtraction=fallbackExtract(deterministicAnalysisText);
+   if(deterministicScope){
+    deterministicExtraction.document_role=deterministicScope.documentRole;
+    deterministicExtraction.analysis_text=deterministicScope.analysisText;
+   }
    let extraction:Extraction=deterministicExtraction;
-   let analysisText=sourceText;
+   let analysisText=deterministicAnalysisText;
    let extractor='DETERMINISTIC';
    const deterministicReady=Boolean(
     !sourceFile
@@ -1979,14 +1986,14 @@ async function upload(uploaded:File){
      if(response.ok){
       const data=await response.json();
       const modelExtraction=data.extraction as Extraction;
-      analysisText=typeof data.analysis_text==='string'&&data.analysis_text.trim()?data.analysis_text.trim():sourceText;
-      const focusedDeterministic=analysisText===sourceText?deterministicExtraction:fallbackExtract(analysisText);
+      analysisText=typeof data.analysis_text==='string'&&data.analysis_text.trim()?data.analysis_text.trim():deterministicAnalysisText;
+      const focusedDeterministic=analysisText===deterministicAnalysisText?deterministicExtraction:fallbackExtract(analysisText);
       extraction={
        ...modelExtraction,
        court_name:preferGroundedCourtIdentity(modelExtraction.court_name,focusedDeterministic.court_name,analysisText)||modelExtraction.court_name||focusedDeterministic.court_name,
        requested_actions:modelExtraction.requested_actions?.length?modelExtraction.requested_actions:focusedDeterministic.requested_actions,
        analysis_text:analysisText===sourceText?'':analysisText,
-       document_role:data.document_role||modelExtraction.document_role
+       document_role:deterministicScope?.documentRole||data.document_role||modelExtraction.document_role
       };
       extractor=data.mode||'DETERMINISTIC';
      }else extractor='DETERMINISTIC_FALLBACK';
