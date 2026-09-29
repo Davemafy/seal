@@ -6,6 +6,7 @@ import tr from '../lib/locales/tr.json';
 import hi from '../lib/locales/hi.json';
 
 const locales={fr,ko,tr,hi};
+const landingRequired=Object.keys(en).filter(key=>key.startsWith('landing')) as Array<keyof typeof en>;
 const required=[
  'realExamples','seeRealCourtMessages','browseDeck','browseScope','filterSourceDocuments',
  'originalCourtMaterial','featuredSource','originalSourceAttached','checkInSeal',
@@ -15,7 +16,8 @@ const required=[
  'nextHelpCopy','courtClaimed','caseReference','whatMessageAsks','explainNotice',
  'decisionActTitle','decisionGuidanceSummary','statusUnconfirmedNotice',
  'caseNoIdentifierTitle','caseNoIdentifierDetail','caseUnconfirmedTitle','caseUnconfirmedDetail',
- 'courtMessageShort','openOfficialCourtService','openServiceNote'
+ 'courtMessageShort','openOfficialCourtService','openServiceNote',
+ ...landingRequired
 ] as const;
 
 describe('supported display locale coverage',()=>{

@@ -47,6 +47,23 @@
  text-decoration:none;
 }
 .landing-site-nav nav>a:hover{text-decoration:underline;text-underline-offset:4px}
+.landing-language{
+ display:inline-flex;
+ align-items:center;
+}
+.landing-language select{
+ min-height:34px;
+ max-width:118px;
+ padding:6px 24px 6px 9px;
+ border:1px solid #deddd6;
+ border-radius:8px;
+ background:#fff;
+ color:#353531;
+ font-size:11px;
+ line-height:18px;
+ font-weight:500;
+ cursor:pointer;
+}
 .landing-nav-check{
  min-height:40px;
  display:inline-flex!important;
@@ -750,8 +767,9 @@
  }
  .landing-brand img{width:24px;height:24px}
  .landing-brand span{font-size:17px}
- .landing-site-nav nav{gap:16px}
+ .landing-site-nav nav{gap:10px}
  .landing-site-nav nav>a{font-size:11.5px}
+ .landing-language select{max-width:88px;min-height:34px;padding-left:7px;font-size:10.5px}
  .landing-site-nav nav>a:first-child{display:none}
  .landing-nav-check{min-height:36px;padding:8px 11px}
  .landing-hero{min-height:0}
