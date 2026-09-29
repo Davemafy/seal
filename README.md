@@ -1,12 +1,14 @@
 # SEAL
 
+**The seal can be faked. The source can’t.**
+
 **Check the message before you act on it.**
 
 SEAL checks court messages against public sources.
 
 Upload a screenshot, image, PDF, or paste the message. SEAL identifies the details that could change what you do next, checks those details against evidence outside the message, and shows what is confirmed, what conflicts, and what still cannot be verified.
 
-**Live product:** https://seal-verify.vercel.app
+**Live product:** https://seal.imafidondavid1.workers.dev
 
 ## Why SEAL
 
@@ -83,9 +85,9 @@ Otherwise:
 V(c)=\text{COULD\_NOT\_VERIFY}
 ]
 
-**No evidence, no verdict.**
+**No independent source, no MATCH. No evidence, no decisive verdict.**
 
-That rule is enforced in the resolver itself.
+That rule is enforced twice: claim-specific resolver constructors reject decisive states without evidence, and a final merged-result guard re-checks every result before it leaves verification.
 
 A failed search is not treated as proof of fraud. An OCR guess is not promoted into a claim. If official sources materially disagree, SEAL keeps the result unresolved and preserves the conflicting evidence.
 
@@ -152,13 +154,20 @@ Document
 Text extraction
   |
   v
-Structured claims
+Optional model structuring
+(no verdict field)
+  |
+  v
+Grounded claims
   |
   v
 Claim-specific resolver
   |
   v
 Independent evidence
+  |
+  v
+Final evidence guard
   |
   v
 MATCH / MISMATCH / COULD_NOT_VERIFY
@@ -210,20 +219,21 @@ There is no consented corpus of genuine personal summonses, real scam-victim scr
 
 ## Demo
 
-```bash
-npm install
-npm run dev
-```
+The judge demo uses the **City of Dallas published traffic QR-payment scam artifact**.
 
-Open:
+The point is not to prove that the graphic looks suspicious. Dallas itself published the artifact as a scam example. SEAL demonstrates the harder boundary: it extracts the consequential action, checks outside the message, rejects the QR/payment route from independent evidence, and keeps the underlying case separate when it cannot be established.
+
+The target recording is **87–90 seconds**. It shows one complete chain rather than a feature tour:
 
 ```text
-http://localhost:3000/demo
+artifact → requested action → independent source → verdict boundary → safe action
 ```
 
-The primary demo uses a clearly labeled synthetic jury-scam message with fictional details and no real-person data.
+The close is the same rule the code enforces:
 
-A second coverage-limit demo uses a clearly fictional New Delhi court message. SEAL extracts the requested action, refuses to invent a direct court verdict, and directs the user to the official India eCourts service as an independent starting point.
+> **The seal can be faked. The source can’t.**
+>
+> **No independent source, no MATCH.**
 
 ## Verification
 

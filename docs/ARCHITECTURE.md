@@ -1,9 +1,62 @@
 # Architecture
 
-Browser binary to PDF.js text items or Tesseract word boxes to extracted text to optional Groq schema extraction on server to atomic claim objects to allowlisted server resolvers to three-state verdicts to source highlights and evidence.
+## The system in one line
 
-The binary is never uploaded. The text is transient in the request and no server persistence is configured. Groq cannot issue a verdict. Source provenance includes URL, title, excerpt, check timestamp, and LIVE or SNAPSHOT mode. Snapshot mode is only for deterministic recording; live fetching uses fixed Riverside paths with 8-second timeouts, manual redirect validation and Cheerio text parsing. Uploaded links are never fetched.
+`artifact → grounded claims/actions → independent resolvers → deterministic verdict boundary → sourced safe action`
 
-`lib/resolver.ts` centralizes verdict gates. Riverside compares court identity, Historic Courthouse location, published jury contact, official portal, and SMS/call payment warning. CourtListener search is optional and exact docket results only; no results abstain. Unsupported courts abstain. The official source conflict for the Desert Region number is preserved with both excerpts.
+## Distribution of authority
 
-The image preview has OCR word boxes; PDF extraction retains text item coordinates. The document/result overlay uses a ResizeObserver and claim refs on desktop. Mobile stacks source and result without crossing lines. In demo mode, hand laid text lines provide deterministic anchors.
+| Layer | Allowed to do | Not allowed to do |
+| --- | --- | --- |
+| Uploaded artifact | Supply text and the action being requested | Prove its own authenticity |
+| OCR / PDF extraction | Recover visible text and coordinates | Repair unreadable facts into certainty |
+| Optional LLM extraction | Structure grounded fields/actions from the supplied text | Emit or control MATCH / MISMATCH |
+| Resolver layer | Compare claims with reviewed independent public sources | Treat absence as contradiction |
+| Verdict boundary | Admit evidence-backed MATCH/MISMATCH or abstain | Promote an unsupported conclusion |
+| Safe-action layer | Route the user to an independently sourced official next step | Reuse a phone/link merely because it appeared in the message |
+
+## Runtime path
+
+```text
+image / PDF / pasted text
+        ↓
+browser PDF.js / Tesseract or pasted text
+        ↓
+optional Groq structured extraction
+(schema has no verdict field)
+        ↓
+grounding + sanitization
+(exact quote / field confidence)
+        ↓
+atomic Claim objects
+        ↓
+reviewed resolver + public-source checks
+        ↓
+assertVerdictBoundary()
+        ↓
+MATCH / MISMATCH / COULD_NOT_VERIFY
+        ↓
+cited evidence + independently sourced safe action
+```
+
+## Why the model is not the authority
+
+`app/api/extract/route.ts` instructs the model to extract only visible fields/actions and explicitly says not to determine authenticity or legal validity. The strict extraction schema has no verdict property. Model-generated actions are subsequently grounded back to source text; unsupported or invented fields fall back to deterministic extraction.
+
+`app/api/verify/route.ts` accepts grounded claims and invokes `verifyClaims(...)`. Verdicts are produced by application code against reviewed evidence adapters, not by a model completion.
+
+`lib/resolver.ts` rejects decisive verdicts without evidence and re-checks the final merged results before returning verification.
+
+## Evidence and provenance
+
+Evidence records include URL, title, excerpt, check timestamp, and LIVE or SNAPSHOT mode. Snapshot mode exists for deterministic recording and regression tests; live fetching uses reviewed source routes and timeouts. Uploaded links are never treated as trusted evidence simply because they appeared in the artifact.
+
+## Privacy / document handling
+
+The original uploaded binary remains in the browser. Extracted text is transient in the request and may be sent to Groq for structured extraction when configured. No server-side user/document persistence is configured.
+
+## Failure behavior
+
+Unsupported jurisdiction, unreadable fields, unavailable sources, private identifiers, and official-source disagreement resolve to **COULD_NOT_VERIFY** rather than a guessed positive or negative result.
+
+That abstention behavior is part of the architecture, not an error state.
