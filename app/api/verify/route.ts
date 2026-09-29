@@ -10,6 +10,8 @@ const request=z.object({
  jurisdiction_hint:z.string().max(150).optional(),
  mode:z.enum(['LIVE','SNAPSHOT']),
  text:z.string().max(120000).optional(),
+ document_text:z.string().max(120000).optional(),
+ allow_live_discovery:z.boolean().optional(),
  curated_case_id:z.string().max(120).optional()
 });
 
@@ -58,7 +60,7 @@ function enrichCuratedCase(verification:Verification,caseId:string|undefined,tex
 export async function POST(req:Request){
  try{
   const data=request.parse(await req.json());
-  const verification=await verifyClaims(data.claims,data.court_name,data.mode,data.jurisdiction_hint,data.text||'');
+  const verification=await verifyClaims(data.claims,data.court_name,data.mode,data.jurisdiction_hint,data.text||'',Boolean(data.allow_live_discovery),data.document_text||data.text||'');
   return NextResponse.json(enrichCuratedCase(verification,data.curated_case_id,data.text||''));
  }catch{
   return NextResponse.json({error:'Could not verify this request.'},{status:400});
