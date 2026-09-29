@@ -205,12 +205,13 @@ async function inspectCandidate(candidate:SearchCandidate,institution:string,hea
  }catch{return null}
 }
 
-async function discoverLive(rawText:string,courtName:string,jurisdictionHint:string,claims:Claim[]):Promise<LiveDiscovery>{
- const semanticContext=(await understandDocumentSemantics(rawText,courtName,jurisdictionHint))||undefined;
- const institution=semanticContext?.institution?.value||institutionHint(rawText,courtName);
- const heading=semanticContext?.document_type?.value||documentHeading(rawText);
+async function discoverLive(rawText:string,courtName:string,jurisdictionHint:string,claims:Claim[],analysisText=rawText):Promise<LiveDiscovery>{
+ const planningText=analysisText||rawText;
+ const semanticContext=(await understandDocumentSemantics(planningText,courtName,jurisdictionHint))||undefined;
+ const institution=semanticContext?.institution?.value||institutionHint(planningText,courtName);
+ const heading=semanticContext?.document_type?.value||documentHeading(planningText);
  const semanticQueries=semanticContext?.search_intents||[];
- const fallbackQueries=buildOfficialDiscoveryQueries(rawText,institution||courtName,semanticContext?.jurisdiction?.value||jurisdictionHint);
+ const fallbackQueries=buildOfficialDiscoveryQueries(planningText,institution||courtName,semanticContext?.jurisdiction?.value||jurisdictionHint);
  const queries=[...new Set([...semanticQueries,...fallbackQueries].map(normalize).filter(query=>query.length>=8))].slice(0,4);
  if(!queries.length)return {semanticContext};
  const searched=(await Promise.all(queries.map(search))).flat();
@@ -236,9 +237,48 @@ async function discoverLive(rawText:string,courtName:string,jurisdictionHint:str
  return {page:interpreted[0]?.page||pages[0],semanticContext,relation:interpreted[0]?.relation};
 }
 
-export async function discoverOfficialDirectory(rawText:string,courtName:string,jurisdictionHint:string,mode:'LIVE'|'SNAPSHOT',claims:Claim[]=[]):Promise<{lane:VerificationLane;signal?:SourceSignal;safeAction?:SafeAction;semanticContext?:GroundedSemanticContext}>{
+export async function discoverOfficialDirectory(rawText:string,courtName:string,jurisdictionHint:string,mode:'LIVE'|'SNAPSHOT',claims:Claim[]=[],analysisText=rawText):Promise<{lane:VerificationLane;signal?:SourceSignal;safeAction?:SafeAction;semanticContext?:GroundedSemanticContext}>{
  const started=Date.now();
- const directory=officialCourtDirectoryFor([rawText,courtName,jurisdictionHint].filter(Boolean).join('\n'));
+ const directory=officialCourtDirectoryFor([analysisText||rawText,courtName,jurisdictionHint].filter(Boolean).join('\n'));
+ let semanticContext:GroundedSemanticContext|undefined;
+
+ if(mode==='LIVE'){
+  const discovered=await discoverLive(rawText,courtName,jurisdictionHint,claims,analysisText);
+  semanticContext=discovered.semanticContext;
+  const page=discovered.page;
+  if(page){
+   const relation=discovered.relation;
+   const evidence=evidenceFor(page.title,page.url,relation?.source_quote||page.excerpt,'LIVE');
+   const relationKind=relation?.relation;
+   const kind:SourceSignal['kind']=page.warning?'OFFICIAL_WARNING':relationKind?'OFFICIAL_PROCESS':'OFFICIAL_DIRECTORY';
+   const signal:SourceSignal={
+    id:'discovered-official-source',
+    kind,
+    title:page.warning?'An official warning relevant to this notice was found':relationKind?'An official source addresses a claim in this notice':'An official court or government source was found',
+    summary:relation
+     ?`${relation.reason} SEAL verified that the quoted passage exists on the fetched official page. This relationship does not by itself decide the verdict.`
+     :page.warning
+      ?'SEAL found a government-published warning that overlaps with the institution or notice language in this document. This is independent evidence about the pattern, not proof of who sent this copy.'
+      :'SEAL found an independently reached government or judiciary source relevant to the institution named in the document.',
+    evidence:[evidence]
+   };
+   const safeAction:SafeAction={
+    title:page.warning?'Use the official warning before acting on this notice':'Continue through the independently found official source',
+    summary:page.warning
+     ?'Do not use payment or contact details from the notice until you compare them with the independently found government guidance.'
+     :'Use the independently found government or judiciary page rather than a link, phone number, or payment route supplied by the message.',
+    primary_url:page.url,
+    primary_label:page.warning?'Open the official warning':'Open the official source',
+    steps:page.warning
+     ?['Read the government warning below.','Do not pay or contact anyone through details supplied only by the notice.','If the underlying case could still be real, reach the court through an independently found official channel.']
+     :['Open the official source below independently.','Find the court or case using details from the document.','Treat the message as unverified until the official source confirms what action is required.'],
+    evidence:[evidence]
+   };
+   const lane:VerificationLane={id:'official-directory',label:'Official source discovery',status:'evidence_found',summary:relation?'Found, fetched, and semantically compared a relevant official source.':'Found and fetched a relevant source on an official government or judiciary domain.',evidence:[evidence],resolver_id:'official-discovery',duration_ms:Date.now()-started};
+   return {lane,signal,safeAction,semanticContext};
+  }
+ }
+
  if(directory){
   let live=false;
   if(mode==='LIVE'){
@@ -248,45 +288,23 @@ export async function discoverOfficialDirectory(rawText:string,courtName:string,
    }catch{}
   }
   const evidence=evidenceFor(directory.label,directory.url,directory.note,live?'LIVE':'SNAPSHOT');
-  const lane:VerificationLane={id:'official-directory',label:'Official court directory',status:'evidence_found',summary:live?('Reached the official judiciary route for '+directory.jurisdiction+'.'):('Identified the reviewed official judiciary route for '+directory.jurisdiction+'.'),evidence:[evidence],resolver_id:'official-directory',duration_ms:Date.now()-started};
+  const lane:VerificationLane={
+   id:'official-directory',
+   label:'Official court directory',
+   status:'evidence_found',
+   summary:mode==='LIVE'
+    ?(live?'Live semantic discovery did not find a more specific source, so SEAL fell back to the independently reached official judiciary route.':'Live semantic discovery did not find a more specific source; SEAL retained the reviewed official judiciary route as a fallback.')
+    :'Identified the reviewed official judiciary route for '+directory.jurisdiction+'.',
+   evidence:[evidence],
+   resolver_id:'official-directory',
+   duration_ms:Date.now()-started
+  };
   const signal:SourceSignal={id:'directory-'+directory.id,kind:'OFFICIAL_DIRECTORY',title:'Official court route found for '+directory.jurisdiction,summary:directory.note,evidence:[evidence]};
   const safeAction:SafeAction={title:'Verify through the official court system',summary:'SEAL identified an official judiciary route for '+directory.jurisdiction+'. Use it independently of any link, phone number, or QR code in the message.',primary_url:directory.url,primary_label:directory.label,steps:['Open the official judiciary route below independently.','Search for the court or case using details from the document, not a link supplied by the message.','Treat the message as unverified until the official record or court contact confirms what action is required.'],evidence:[evidence]};
-  return {lane,signal,safeAction};
+  return {lane,signal,safeAction,semanticContext};
  }
 
- if(mode!=='LIVE')return {lane:{id:'official-directory',label:'Official source discovery',status:'not_applicable',summary:'No reviewed directory matched this document. Live discovery was not requested for this source snapshot.',evidence:[],resolver_id:'official-discovery',duration_ms:Date.now()-started}};
+ if(mode!=='LIVE')return {lane:{id:'official-directory',label:'Official source discovery',status:'not_applicable',summary:'No reviewed directory matched this document. Live discovery was not requested for this source snapshot.',evidence:[],resolver_id:'official-discovery',duration_ms:Date.now()-started},semanticContext};
 
- const discovered=await discoverLive(rawText,courtName,jurisdictionHint,claims);
- const page=discovered.page;
- if(!page)return {lane:{id:'official-directory',label:'Official source discovery',status:'unavailable',summary:discovered.semanticContext?'SEAL understood the institution and requested action, but no sufficiently relevant official source was reached during this check.':'No sufficiently relevant government or judiciary source was found during this check.',evidence:[],resolver_id:'official-discovery',duration_ms:Date.now()-started},semanticContext:discovered.semanticContext};
-
- const relation=discovered.relation;
- const evidence=evidenceFor(page.title,page.url,relation?.source_quote||page.excerpt,'LIVE');
- const relationKind=relation?.relation;
- const kind:SourceSignal['kind']=page.warning?'OFFICIAL_WARNING':relationKind?'OFFICIAL_PROCESS':'OFFICIAL_DIRECTORY';
- const signal:SourceSignal={
-  id:'discovered-official-source',
-  kind,
-  title:page.warning?'An official warning relevant to this notice was found':relationKind?'An official source addresses a claim in this notice':'An official court or government source was found',
-  summary:relation
-   ?`${relation.reason} SEAL verified that the quoted passage exists on the fetched official page. This relationship does not by itself decide the verdict.`
-   :page.warning
-    ?'SEAL found a government-published warning that overlaps with the institution or notice language in this document. This is independent evidence about the pattern, not proof of who sent this copy.'
-    :'SEAL found an independently reached government or judiciary source relevant to the institution named in the document.',
-  evidence:[evidence]
- };
- const safeAction:SafeAction={
-  title:page.warning?'Use the official warning before acting on this notice':'Continue through the independently found official source',
-  summary:page.warning
-   ?'Do not use payment or contact details from the notice until you compare them with the independently found government guidance.'
-   :'Use the independently found government or judiciary page rather than a link, phone number, or payment route supplied by the message.',
-  primary_url:page.url,
-  primary_label:page.warning?'Open the official warning':'Open the official source',
-  steps:page.warning
-   ?['Read the government warning below.','Do not pay or contact anyone through details supplied only by the notice.','If the underlying case could still be real, reach the court through an independently found official channel.']
-   :['Open the official source below independently.','Find the court or case using details from the document.','Treat the message as unverified until the official source confirms what action is required.'],
-  evidence:[evidence]
- };
- const lane:VerificationLane={id:'official-directory',label:'Official source discovery',status:'evidence_found',summary:relation?'Found, fetched, and semantically compared a relevant official source.':'Found and fetched a relevant source on an official government or judiciary domain.',evidence:[evidence],resolver_id:'official-discovery',duration_ms:Date.now()-started};
- return {lane,signal,safeAction,semanticContext:discovered.semanticContext};
+ return {lane:{id:'official-directory',label:'Official source discovery',status:'unavailable',summary:semanticContext?'SEAL understood the institution and requested action, but no sufficiently relevant official source was reached during this check.':'No sufficiently relevant government or judiciary source was found during this check.',evidence:[],resolver_id:'official-discovery',duration_ms:Date.now()-started},semanticContext};
 }
