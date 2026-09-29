@@ -128,6 +128,22 @@ function actionWindows(lines:string[]){
  for(let i=0;i<lines.length;i++){
   const line=lines[i].trim();if(!line)continue;
   out.push(line);
+
+  // Layout PDFs often split a passive legal instruction across adjacent text
+  // rows (for example, "a payment ... is" / "required immediately").
+  // Reconstruct only short nearby payment/deontic windows before classification.
+  if(!passivePaymentDirective(line)&&/\b(?:payment|amount|balance|fine|fee|sum|required|due|payable)\b/i.test(line)){
+   let passiveJoined=line;
+   for(let j=1;j<=2&&i+j<lines.length;j++){
+    const next=lines[i+j].trim();
+    if(!next||passiveJoined.length+next.length>220||startsDirective(next)||looksLikeHeader(next))break;
+    if(/^[\s•*\-–—]*\d+[.)]\s+/.test(next))break;
+    passiveJoined=`${passiveJoined} ${next}`.replace(/\s+/g,' ').trim();
+    out.push(passiveJoined);
+    if(passivePaymentDirective(passiveJoined)||/[.!?]$/.test(next))break;
+   }
+  }
+
   if(!ACTION_VERBS.test(line)){ACTION_VERBS.lastIndex=0;continue}
   ACTION_VERBS.lastIndex=0;
   // Only stitch genuine OCR/text wraps. Never swallow the next numbered action
