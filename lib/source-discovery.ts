@@ -1,11 +1,11 @@
 import * as cheerio from 'cheerio';
-import type {Claim,Evidence,GroundedSemanticContext,SafeAction,SourceSignal,VerificationLane} from './types';
+import type {Claim,DiscoveryDiagnostics,Evidence,GroundedSemanticContext,SafeAction,SourceSignal,VerificationLane} from './types';
 import {officialCourtDirectoryFor} from './official-directories';
 import {interpretOfficialSource,understandDocumentSemantics,type EvidenceRelationCandidate} from './semantic-grounding';
 
 type SearchCandidate={title:string;url:string;snippet:string};
 type OfficialPage={title:string;url:string;text:string;excerpt:string;warning:boolean;score:number};
-type LiveDiscovery={page?:OfficialPage;semanticContext?:GroundedSemanticContext;relation?:EvidenceRelationCandidate};
+type LiveDiscovery={page?:OfficialPage;semanticContext?:GroundedSemanticContext;relation?:EvidenceRelationCandidate;diagnostics:DiscoveryDiagnostics};
 
 const USER_AGENT='Mozilla/5.0 (compatible; SEAL/1.0; +https://github.com/Davemafy/seal)';
 const SEARCH_HEADERS={'User-Agent':USER_AGENT,'Accept':'text/html,application/xhtml+xml','Accept-Language':'en-GB,en;q=0.8'};
@@ -210,19 +210,37 @@ async function discoverLive(rawText:string,courtName:string,jurisdictionHint:str
  const semanticContext=(await understandDocumentSemantics(planningText,courtName,jurisdictionHint))||undefined;
  const institution=semanticContext?.institution?.value||institutionHint(planningText,courtName);
  const heading=semanticContext?.document_type?.value||documentHeading(planningText);
+ const wrapperHeading=rawText!==planningText?documentHeading(rawText):'';
+ const wrapperInstitution=rawText!==planningText?institutionHint(rawText,courtName):'';
  const semanticQueries=semanticContext?.search_intents||[];
  const fallbackQueries=buildOfficialDiscoveryQueries(planningText,institution||courtName,semanticContext?.jurisdiction?.value||jurisdictionHint);
- const queries=[...new Set([...semanticQueries,...fallbackQueries].map(normalize).filter(query=>query.length>=8))].slice(0,4);
- if(!queries.length)return {semanticContext};
+ const wrapperQueries=rawText!==planningText
+  ?buildOfficialDiscoveryQueries(rawText,wrapperInstitution||institution||courtName,semanticContext?.jurisdiction?.value||jurisdictionHint)
+  :[];
+ const exactWrapperQuery=wrapperHeading
+  ?[`"${wrapperHeading.slice(0,120)}"`,institution&&`"${institution.slice(0,100)}"`,'official'].filter(Boolean).join(' ')
+  :'';
+ const queries=[...new Set([...semanticQueries,...fallbackQueries,...wrapperQueries,exactWrapperQuery].map(normalize).filter(query=>query.length>=8))].slice(0,6);
+ const diagnostics:DiscoveryDiagnostics={
+  mode:'LIVE',
+  analysis_heading:heading||undefined,
+  wrapper_heading:wrapperHeading||undefined,
+  queries,
+  candidate_urls:[],
+  fetched_urls:[]
+ };
+ if(!queries.length)return {semanticContext,diagnostics:{...diagnostics,fallback_reason:'no_queries'}};
  const searched=(await Promise.all(queries.map(search))).flat();
- const unique=[...new Map(searched.map(item=>[item.url,item])).values()].slice(0,10);
- if(!unique.length)return {semanticContext};
- const pages=(await Promise.all(unique.slice(0,6).map(candidate=>inspectCandidate(candidate,institution,heading))))
+ const unique=[...new Map(searched.map(item=>[item.url,item])).values()].slice(0,12);
+ diagnostics.candidate_urls=unique.map(item=>item.url);
+ if(!unique.length)return {semanticContext,diagnostics:{...diagnostics,fallback_reason:'no_official_candidates'}};
+ const pages=(await Promise.all(unique.slice(0,8).map(candidate=>inspectCandidate(candidate,institution,heading||wrapperHeading))))
   .filter((page):page is OfficialPage=>Boolean(page))
   .sort((a,b)=>b.score-a.score);
- if(!pages.length)return {semanticContext};
+ diagnostics.fetched_urls=pages.map(page=>page.url);
+ if(!pages.length)return {semanticContext,diagnostics:{...diagnostics,fallback_reason:'official_candidates_rejected'}};
 
- const interpreted=await Promise.all(pages.slice(0,2).map(async page=>{
+ const interpreted=await Promise.all(pages.slice(0,3).map(async page=>{
   const relations=page.text?await interpretOfficialSource(claims,page.title,page.url,page.text):[];
   const useful=relations.filter(relation=>relation.relation!=='NONE').sort((a,b)=>{
    const weight=(value:EvidenceRelationCandidate['relation'])=>value==='CONTRADICTS'?3:value==='SUPPORTS'?2:value==='RELEVANT'?1:0;
@@ -234,10 +252,12 @@ async function discoverLive(rawText:string,courtName:string,jurisdictionHint:str
   const weight=(value?:EvidenceRelationCandidate['relation'])=>value==='CONTRADICTS'?30:value==='SUPPORTS'?20:value==='RELEVANT'?10:0;
   return (b.page.score+weight(b.relation?.relation))-(a.page.score+weight(a.relation?.relation));
  });
- return {page:interpreted[0]?.page||pages[0],semanticContext,relation:interpreted[0]?.relation};
+ const selected=interpreted[0]?.page||pages[0];
+ diagnostics.selected_url=selected.url;
+ return {page:selected,semanticContext,relation:interpreted[0]?.relation,diagnostics};
 }
 
-export async function discoverOfficialDirectory(rawText:string,courtName:string,jurisdictionHint:string,mode:'LIVE'|'SNAPSHOT',claims:Claim[]=[],analysisText=rawText):Promise<{lane:VerificationLane;signal?:SourceSignal;safeAction?:SafeAction;semanticContext?:GroundedSemanticContext}>{
+export async function discoverOfficialDirectory(rawText:string,courtName:string,jurisdictionHint:string,mode:'LIVE'|'SNAPSHOT',claims:Claim[]=[],analysisText=rawText):Promise<{lane:VerificationLane;signal?:SourceSignal;safeAction?:SafeAction;semanticContext?:GroundedSemanticContext;diagnostics?:DiscoveryDiagnostics}>{
  const started=Date.now();
  const directory=officialCourtDirectoryFor([analysisText||rawText,courtName,jurisdictionHint].filter(Boolean).join('\n'));
  let semanticContext:GroundedSemanticContext|undefined;
@@ -275,7 +295,7 @@ export async function discoverOfficialDirectory(rawText:string,courtName:string,
     evidence:[evidence]
    };
    const lane:VerificationLane={id:'official-directory',label:'Official source discovery',status:'evidence_found',summary:relation?'Found, fetched, and semantically compared a relevant official source.':'Found and fetched a relevant source on an official government or judiciary domain.',evidence:[evidence],resolver_id:'official-discovery',duration_ms:Date.now()-started};
-   return {lane,signal,safeAction,semanticContext};
+   return {lane,signal,safeAction,semanticContext,diagnostics:discovered.diagnostics};
   }
  }
 
@@ -301,10 +321,10 @@ export async function discoverOfficialDirectory(rawText:string,courtName:string,
   };
   const signal:SourceSignal={id:'directory-'+directory.id,kind:'OFFICIAL_DIRECTORY',title:'Official court route found for '+directory.jurisdiction,summary:directory.note,evidence:[evidence]};
   const safeAction:SafeAction={title:'Verify through the official court system',summary:'SEAL identified an official judiciary route for '+directory.jurisdiction+'. Use it independently of any link, phone number, or QR code in the message.',primary_url:directory.url,primary_label:directory.label,steps:['Open the official judiciary route below independently.','Search for the court or case using details from the document, not a link supplied by the message.','Treat the message as unverified until the official record or court contact confirms what action is required.'],evidence:[evidence]};
-  return {lane,signal,safeAction,semanticContext};
+  return {lane,signal,safeAction,semanticContext,diagnostics:mode==='LIVE'?{mode:'LIVE',queries:[],candidate_urls:[],fetched_urls:[],fallback_reason:'generic_directory_fallback'}:{mode:'SNAPSHOT',queries:[],candidate_urls:[],fetched_urls:[],fallback_reason:'snapshot_directory'}};
  }
 
- if(mode!=='LIVE')return {lane:{id:'official-directory',label:'Official source discovery',status:'not_applicable',summary:'No reviewed directory matched this document. Live discovery was not requested for this source snapshot.',evidence:[],resolver_id:'official-discovery',duration_ms:Date.now()-started},semanticContext};
+ if(mode!=='LIVE')return {lane:{id:'official-directory',label:'Official source discovery',status:'not_applicable',summary:'No reviewed directory matched this document. Live discovery was not requested for this source snapshot.',evidence:[],resolver_id:'official-discovery',duration_ms:Date.now()-started},semanticContext,diagnostics:{mode:'SNAPSHOT',queries:[],candidate_urls:[],fetched_urls:[],fallback_reason:'live_discovery_not_requested'}};
 
- return {lane:{id:'official-directory',label:'Official source discovery',status:'unavailable',summary:semanticContext?'SEAL understood the institution and requested action, but no sufficiently relevant official source was reached during this check.':'No sufficiently relevant government or judiciary source was found during this check.',evidence:[],resolver_id:'official-discovery',duration_ms:Date.now()-started},semanticContext};
+ return {lane:{id:'official-directory',label:'Official source discovery',status:'unavailable',summary:semanticContext?'SEAL understood the institution and requested action, but no sufficiently relevant official source was reached during this check.':'No sufficiently relevant government or judiciary source was found during this check.',evidence:[],resolver_id:'official-discovery',duration_ms:Date.now()-started},semanticContext,diagnostics:{mode:'LIVE',queries:[],candidate_urls:[],fetched_urls:[],fallback_reason:'no_relevant_official_source'}};
 }
