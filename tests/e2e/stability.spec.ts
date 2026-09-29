@@ -486,7 +486,7 @@ test('Browse keeps every sourced document runnable and high-signal cases first',
  ]);
  const cardCount=await page.locator('.case-feature, .case-library-card').count();
  expect(cardCount).toBeGreaterThanOrEqual(7);
- await expect(page.getByRole('link',{name:'Run in SEAL'})).toHaveCount(cardCount);
+ await expect(page.getByRole('link',{name:'Check in SEAL'})).toHaveCount(cardCount);
  const international=await page.request.get('/api/browse-case?id=brazil-parana-citation-notice');
  expect(international.ok()).toBe(true);
  expect(await international.json()).toMatchObject({assetType:'pdf',ocrLanguage:'por',title:'Public citation notice with response period'});
@@ -661,8 +661,8 @@ test('desktop entry keeps compact sidebar and canvas in proportion',async({page}
  expect(metrics.railWidth).toBeLessThanOrEqual(220);
  expect(metrics.shellWidth).toBeLessThanOrEqual(1120);
  expect(metrics.intakeWidth).toBeLessThanOrEqual(metrics.shellWidth);
- expect(metrics.headingSize).toBeLessThanOrEqual(47);
- expect(metrics.headingSize).toBeGreaterThanOrEqual(45);
+ expect(metrics.headingSize).toBeLessThanOrEqual(43);
+ expect(metrics.headingSize).toBeGreaterThanOrEqual(41);
  expect(metrics.railTitleSize).toBeGreaterThanOrEqual(17);
  expect(metrics.railTitleSize).toBeLessThanOrEqual(19);
  expect(metrics.overflow).toBeLessThanOrEqual(1);
@@ -702,8 +702,8 @@ test('1208 desktop keeps sidebar compact and canvas restrained',async({page})=>{
  expect(metrics.shellWidth).toBeLessThanOrEqual(1000);
  expect(metrics.intakeWidth).toBeLessThanOrEqual(metrics.shellWidth);
  expect(metrics.headingSize).toBeLessThanOrEqual(47);
- expect(metrics.rowHeight).toBeGreaterThanOrEqual(46);
- expect(metrics.rowHeight).toBeLessThanOrEqual(52);
+ expect(metrics.rowHeight).toBeGreaterThanOrEqual(40);
+ expect(metrics.rowHeight).toBeLessThanOrEqual(44);
  expect(metrics.railCopyWidth,'desktop check labels must not collapse to one character').toBeGreaterThan(130);
  expect(metrics.railTitleSize).toBeGreaterThanOrEqual(12);
  expect(metrics.railTitleSize).toBeLessThanOrEqual(13);
