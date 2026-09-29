@@ -12,6 +12,8 @@ export function safeWorkspaceTitle(value:string){
   .replace(/^[~≈·|:;,.\-–—\s]+|[~≈·|:;,.\-–—\s]+$/g,'');
  if(!clean)return '';
  const words=clean.split(/\s+/).filter(Boolean);
+ const leadingTiny=words.slice(0,5).filter(word=>word.replace(/[^\p{L}\p{N}]/gu,'').length<=1).length;
+ if(leadingTiny>=3)return '';
  const compact=clean.replace(/\s/g,'');
  const letters=(compact.match(/\p{L}/gu)||[]).length;
  const noise=(compact.match(/[^\p{L}\p{M}\p{N}.,'’&()\-]/gu)||[]).length;

@@ -226,7 +226,7 @@ The point is not to prove that the graphic looks suspicious. Dallas itself publi
 The target recording is **87–90 seconds**. It shows one complete chain rather than a feature tour:
 
 ```text
-artifact → requested action → independent source → verdict boundary → safe action
+artifact -> requested action -> independent source -> verdict boundary -> safe action
 ```
 
 The close is the same rule the code enforces:

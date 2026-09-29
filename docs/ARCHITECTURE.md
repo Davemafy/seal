@@ -2,7 +2,7 @@
 
 ## The system in one line
 
-`artifact → grounded claims/actions → independent resolvers → deterministic verdict boundary → sourced safe action`
+`artifact -> grounded claims/actions -> independent resolvers -> deterministic verdict boundary -> sourced safe action`
 
 ## Distribution of authority
 
