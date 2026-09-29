@@ -51,5 +51,8 @@
     "@vitejs/plugin-rsc": "^0.5.35",
     "vite": "^8.3.1",
     "wrangler": "^4.135.0"
+  },
+  "overrides": {
+    "std-env": "4.2.0"
   }
 }
