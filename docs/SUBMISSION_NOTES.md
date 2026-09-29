@@ -22,7 +22,7 @@ It is:
 
 ## Solution
 
-SEAL is an action-first court-message verification product prototype built around one rule: the uploaded message is never treated as its own proof.
+SEAL is an action-first court-message verification product prototype built around one rule: **no independent source, no MATCH.** The uploaded message is never treated as its own proof.
 
 A user can upload an image/PDF or paste a court-related message. SEAL:
 
@@ -47,11 +47,37 @@ Language and jurisdiction are also independent. SEAL can detect the document lan
 
 A general assistant can analyze the document you give it. SEAL is built to distrust that document.
 
-SEAL does not treat the uploaded notice as its own proof, and it does not turn an LLM opinion into a verdict.
+SEAL does not treat the uploaded notice as its own proof, and it does not turn an LLM opinion into a verdict. The extraction schema has no verdict field; model output can structure grounded claims/actions, while application code decides whether independent evidence is sufficient for MATCH, MISMATCH, or COULD NOT VERIFY.
 
 The original message stays visually connected to the requested action and the supporting source evidence. Pattern evidence and direct case verification are shown as different things.
 
 That matters because a legitimate-looking document can contain a dangerous instruction, while a legitimate court document can contain QR codes, urgency, or payment language without being fraudulent.
+
+## Technical execution / trust boundary
+
+```text
+artifact
+  ↓
+grounded claims / requested actions
+  ↓
+independent reviewed resolvers
+  ↓
+final evidence guard
+  ↓
+MATCH / MISMATCH / COULD_NOT_VERIFY
+  ↓
+sourced safe action
+```
+
+Three boundaries matter:
+
+- the artifact is a source of claims, not proof of itself;
+- the model can help structure claims, but cannot emit a verdict through the runtime extraction contract;
+- the final verification path rejects any decisive result that has no evidence attached.
+
+That is the engineering rule underneath the product promise:
+
+**The model can tell SEAL what to check. It cannot tell SEAL what is true.**
 
 ## Demo cases
 
@@ -119,7 +145,7 @@ Direct case-source depth is intentionally bounded by reviewed evidence adapters.
 
 ## Live links
 
-Use the deployed Cloudflare URL as the primary live demo.
+Primary live demo: https://seal.imafidondavid1.workers.dev
 
 Repository: https://github.com/Davemafy/seal
 
@@ -130,7 +156,7 @@ Repository: https://github.com/Davemafy/seal
 - Dallas Browse / Run in SEAL path works
 - Connecticut legitimate contrast works
 - India coverage-limit demo ends in abstention and links to official eCourts
-- demo video is under 3 minutes
+- demo video is 87–90 seconds and shows one complete Dallas evidence chain
 - screenshots show the real artifact and evidence result, not only the landing page
 - tech stack and AI/tool usage are declared
 - no unsupported accuracy, authenticity, or “scam detection” claim appears in title, video, screenshots, or Devpost copy
