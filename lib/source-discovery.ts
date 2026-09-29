@@ -261,10 +261,12 @@ export async function discoverOfficialDirectory(rawText:string,courtName:string,
  const started=Date.now();
  const directory=officialCourtDirectoryFor([analysisText||rawText,courtName,jurisdictionHint].filter(Boolean).join('\n'));
  let semanticContext:GroundedSemanticContext|undefined;
+ let liveDiagnostics:DiscoveryDiagnostics|undefined;
 
  if(mode==='LIVE'){
   const discovered=await discoverLive(rawText,courtName,jurisdictionHint,claims,analysisText);
   semanticContext=discovered.semanticContext;
+  liveDiagnostics=discovered.diagnostics;
   const page=discovered.page;
   if(page){
    const relation=discovered.relation;
@@ -321,10 +323,10 @@ export async function discoverOfficialDirectory(rawText:string,courtName:string,
   };
   const signal:SourceSignal={id:'directory-'+directory.id,kind:'OFFICIAL_DIRECTORY',title:'Official court route found for '+directory.jurisdiction,summary:directory.note,evidence:[evidence]};
   const safeAction:SafeAction={title:'Verify through the official court system',summary:'SEAL identified an official judiciary route for '+directory.jurisdiction+'. Use it independently of any link, phone number, or QR code in the message.',primary_url:directory.url,primary_label:directory.label,steps:['Open the official judiciary route below independently.','Search for the court or case using details from the document, not a link supplied by the message.','Treat the message as unverified until the official record or court contact confirms what action is required.'],evidence:[evidence]};
-  return {lane,signal,safeAction,semanticContext,diagnostics:mode==='LIVE'?{mode:'LIVE',queries:[],candidate_urls:[],fetched_urls:[],fallback_reason:'generic_directory_fallback'}:{mode:'SNAPSHOT',queries:[],candidate_urls:[],fetched_urls:[],fallback_reason:'snapshot_directory'}};
+  return {lane,signal,safeAction,semanticContext,diagnostics:mode==='LIVE'?{...(liveDiagnostics||{mode:'LIVE',queries:[],candidate_urls:[],fetched_urls:[]}),fallback_reason:liveDiagnostics?.fallback_reason||'generic_directory_fallback'}:{mode:'SNAPSHOT',queries:[],candidate_urls:[],fetched_urls:[],fallback_reason:'snapshot_directory'}};
  }
 
  if(mode!=='LIVE')return {lane:{id:'official-directory',label:'Official source discovery',status:'not_applicable',summary:'No reviewed directory matched this document. Live discovery was not requested for this source snapshot.',evidence:[],resolver_id:'official-discovery',duration_ms:Date.now()-started},semanticContext,diagnostics:{mode:'SNAPSHOT',queries:[],candidate_urls:[],fetched_urls:[],fallback_reason:'live_discovery_not_requested'}};
 
- return {lane:{id:'official-directory',label:'Official source discovery',status:'unavailable',summary:semanticContext?'SEAL understood the institution and requested action, but no sufficiently relevant official source was reached during this check.':'No sufficiently relevant government or judiciary source was found during this check.',evidence:[],resolver_id:'official-discovery',duration_ms:Date.now()-started},semanticContext,diagnostics:{mode:'LIVE',queries:[],candidate_urls:[],fetched_urls:[],fallback_reason:'no_relevant_official_source'}};
+ return {lane:{id:'official-directory',label:'Official source discovery',status:'unavailable',summary:semanticContext?'SEAL understood the institution and requested action, but no sufficiently relevant official source was reached during this check.':'No sufficiently relevant government or judiciary source was found during this check.',evidence:[],resolver_id:'official-discovery',duration_ms:Date.now()-started},semanticContext,diagnostics:{...(liveDiagnostics||{mode:'LIVE',queries:[],candidate_urls:[],fetched_urls:[]}),fallback_reason:liveDiagnostics?.fallback_reason||'no_relevant_official_source'}};
 }
