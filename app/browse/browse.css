@@ -401,12 +401,12 @@
 /* Browse adopts the checker composition — editorial source library, not card dashboard. */
 @media(min-width:901px){
  .browse-page{
-  grid-template-columns:224px minmax(0,1fr)!important;
+  grid-template-columns:216px minmax(0,1fr)!important;
   background:#fff!important
  }
  .browse-page .workspace-rail{
-  width:224px!important;
-  max-width:224px!important
+  width:216px!important;
+  max-width:216px!important
  }
  .browse-shell{
   width:min(100%,1160px)!important;

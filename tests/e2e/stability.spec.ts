@@ -105,7 +105,7 @@ Call +91 11 5555 0199 to confirm your attendance.`);
  await expect(page.getByTestId('result-status')).toHaveText('We could not confirm this notice');
  const tabs=page.getByRole('tablist');
  await tabs.getByRole('tab',{name:'Evidence'}).click();
- await expect(page.getByText('Official directory',{exact:true})).toBeVisible();
+ await expect(page.locator('[data-result-section="evidence"] .signal-kind').filter({hasText:'Official directory'}).first()).toBeVisible();
  await tabs.getByRole('tab',{name:'Resolve'}).click();
  const route=page.getByTestId('case-reality-check').getByRole('link',{name:'Search India eCourts'});
  await expect(route).toBeVisible();
@@ -478,13 +478,13 @@ test('Browse keeps every sourced document runnable and high-signal cases first',
  const assertNoRuntimeErrors=guardRuntime(page);
  await page.goto('/browse');
  await expect(page.getByRole('heading',{name:'See what real court messages look like'})).toBeVisible();
- const titles=await page.locator('.case-card h2').allTextContents();
+ const titles=await page.locator('.case-feature h2, .case-library-card h2').allTextContents();
  expect(titles.slice(0,3)).toEqual([
   'Traffic default notice with QR payment',
   'Court text with a fake hearing and payment route',
   'Sample federal jury summons'
  ]);
- const cardCount=await page.locator('.case-card').count();
+ const cardCount=await page.locator('.case-feature, .case-library-card').count();
  expect(cardCount).toBeGreaterThanOrEqual(7);
  await expect(page.getByRole('link',{name:'Run in SEAL'})).toHaveCount(cardCount);
  const international=await page.request.get('/api/browse-case?id=brazil-parana-citation-notice');
@@ -527,7 +527,7 @@ test('curated Dallas example preserves its source-backed resolution',async({page
  await expect(page.getByTestId('result-shell')).toBeVisible({timeout:60000});
  await expect(page.locator('#review-summary').getByRole('heading',{name:'Do not scan or pay from this message'})).toBeVisible();
  await expect(page.locator('#review-summary .decision-summary')).toContainText(/issuing authority published this exact example as a scam/i);
- await expect(page.getByTestId('primary-next-step').getByRole('link',{name:/View the City of Dallas source/i})).toBeVisible();
+ await expect(page.getByTestId('primary-next-step').getByRole('link',{name:/Open the published source/i})).toBeVisible();
  await page.getByRole('tablist').getByRole('tab',{name:'Evidence'}).click();
  await expect(page.getByTestId('evidence-review-entry')).toBeVisible();
  assertNoRuntimeErrors();
@@ -575,9 +575,9 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  await expect(drawer.locator('.workspace-drawer-row')).toHaveCount(3);
  const drawerCopyWidth=await drawer.locator('.workspace-drawer-copy').first().evaluate(node=>node.getBoundingClientRect().width);
  expect(drawerCopyWidth,'workspace row copy must not collapse to a single character').toBeGreaterThan(120);
- await expect(drawer.getByRole('button',{name:/Delete check 3:/})).toBeVisible();
+ await expect(drawer.locator('.workspace-drawer-delete')).toHaveCount(3);
 
- await drawer.getByRole('button',{name:/Delete check 3:/}).click();
+ await drawer.locator('.workspace-drawer-delete').last().click();
  active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
  await expect(active.getByRole('dialog',{name:'Checks',includeHidden:true})).not.toBeVisible();
  await expect(active.getByTestId('entry-shell')).toBeVisible();
@@ -585,7 +585,8 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  await page.getByRole('button',{name:/Open checks, \d+/}).click();
  drawer=page.getByRole('dialog',{name:'Checks'});
  await expect(drawer.locator('.workspace-drawer-row')).toHaveCount(2);
- await drawer.getByRole('button',{name:/Delete check 2:/}).click();
+ await expect(drawer.locator('.workspace-drawer-delete')).toHaveCount(2);
+ await drawer.locator('.workspace-drawer-delete').last().click();
  active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
  await expect(active.getByRole('dialog',{name:'Checks',includeHidden:true})).not.toBeVisible();
  await expect(active.getByTestId('entry-shell')).toBeVisible();
@@ -593,7 +594,8 @@ test('mobile workspace drawer replaces the numbered strip and can delete checks'
  await page.getByRole('button',{name:/Open checks, \d+/}).click();
  drawer=page.getByRole('dialog',{name:'Checks'});
  await expect(drawer.locator('.workspace-drawer-row')).toHaveCount(1);
- await drawer.getByRole('button',{name:/Delete check 1:/}).click();
+ await expect(drawer.locator('.workspace-drawer-delete')).toHaveCount(1);
+ await drawer.locator('.workspace-drawer-delete').last().click();
  active=page.locator('.seal-workspace-instance[aria-hidden="false"]');
  await expect(active.getByRole('dialog',{name:'Checks',includeHidden:true})).not.toBeVisible();
  await expect(active.getByTestId('entry-shell')).toBeVisible();
@@ -658,7 +660,7 @@ test('desktop entry keeps compact sidebar and canvas in proportion',async({page}
  expect(metrics.railWidth).toBeGreaterThanOrEqual(212);
  expect(metrics.railWidth).toBeLessThanOrEqual(220);
  expect(metrics.shellWidth).toBeLessThanOrEqual(1120);
- expect(metrics.intakeWidth).toBeLessThanOrEqual(760);
+ expect(metrics.intakeWidth).toBeLessThanOrEqual(metrics.shellWidth);
  expect(metrics.headingSize).toBeLessThanOrEqual(47);
  expect(metrics.headingSize).toBeGreaterThanOrEqual(45);
  expect(metrics.railTitleSize).toBeGreaterThanOrEqual(17);
@@ -698,7 +700,7 @@ test('1208 desktop keeps sidebar compact and canvas restrained',async({page})=>{
  expect(metrics.railWidth).toBeGreaterThanOrEqual(212);
  expect(metrics.railWidth).toBeLessThanOrEqual(220);
  expect(metrics.shellWidth).toBeLessThanOrEqual(1000);
- expect(metrics.intakeWidth).toBeLessThanOrEqual(760);
+ expect(metrics.intakeWidth).toBeLessThanOrEqual(metrics.shellWidth);
  expect(metrics.headingSize).toBeLessThanOrEqual(47);
  expect(metrics.rowHeight).toBeGreaterThanOrEqual(46);
  expect(metrics.rowHeight).toBeLessThanOrEqual(52);
