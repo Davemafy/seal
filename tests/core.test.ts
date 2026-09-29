@@ -30,6 +30,14 @@ describe('grounded jurisdiction inference',()=>{
  });
 });
 
+describe('mixed-document extraction schema',()=>{
+ it('accepts a grounded embedded-message analysis scope without changing legacy deterministic extraction',()=>{
+  const parsed=extractionSchema.parse({...fallbackExtract('UNITED STATES DISTRICT COURT\nDownload Jury Summons'),document_role:'mixed_with_embedded_example',analysis_text:'UNITED STATES DISTRICT COURT\nDownload Jury Summons'});
+  expect(parsed.document_role).toBe('mixed_with_embedded_example');
+  expect(parsed.analysis_text).toContain('Download Jury Summons');
+ });
+});
+
 describe('court identity extraction',()=>{
  it('recognizes plural institutional court names without requiring a jurisdiction adapter',()=>{
   const text='HM Courts & Tribunals Service\nNOTICE OF ENFORCEMENT\nA payment of £2560 is required immediately.';
