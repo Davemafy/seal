@@ -2,7 +2,7 @@ import type {Claim,Result,Verification} from './types';
 import type {JusticeSupport} from './justice-support';
 
 export type RiskSummary={instructions:{title:string;detail:string};matter:{title:string;detail:string}};
-export type CaseReality={status:'FOUND'|'CONFLICT'|'NOT_CONFIRMED'|'NO_IDENTIFIER';title:string;detail:string;court:string;reference:string};
+export type CaseReality={status:'FOUND'|'CONFLICT'|'NOT_CONFIRMED'|'NO_IDENTIFIER';title:string;detail:string;court:string;reference:string;publisher:string};
 export type ObligationItem={id:string;text:string;deadline:string;status:'MATCH'|'MISMATCH'|'COULD_NOT_VERIFY';statusLabel:string};
 
 const resultMap=(verification:Verification)=>new Map(verification.results.map(result=>[result.claim_id,result]));
@@ -41,12 +41,13 @@ export function buildRiskSummary(claims:Claim[],verification:Verification):RiskS
 
 export function buildCaseReality(claims:Claim[],verification:Verification):CaseReality{
  const court=courtClaim(claims)?.value||'Court not identified';
+ const publisher=verification.provenance_context?.institution?.value||'';
  const docket=docketClaim(claims);
  const result=resultFor(docket,verification);
- if(!docket)return {status:'NO_IDENTIFIER',title:'No verified case identifier',detail:'SEAL did not get a case number it can use for a public-record check. This does not mean there is no legal matter.',court,reference:''};
- if(result?.verdict==='MATCH')return {status:'FOUND',title:'Case reference found in a supported public source',detail:'The public record supports this case reference. It still does not prove that the message or sender is authentic.',court,reference:docket.value};
- if(result?.verdict==='MISMATCH')return {status:'CONFLICT',title:'Case reference conflicts with a supported public source',detail:'The reference does not match the source SEAL checked. Confirm the matter directly with the court before deciding what to do.',court,reference:docket.value};
- return {status:'NOT_CONFIRMED',title:'Case not independently confirmed',detail:'SEAL has a reference from the message, but no supported public source established that case. Absence from a public search is not proof that it is false.',court,reference:docket.value};
+ if(!docket)return {status:'NO_IDENTIFIER',title:'No verified case identifier',detail:'SEAL did not get a case number it can use for a public-record check. This does not mean there is no legal matter.',court,reference:'',publisher};
+ if(result?.verdict==='MATCH')return {status:'FOUND',title:'Case reference found in a supported public source',detail:'The public record supports this case reference. It still does not prove that the message or sender is authentic.',court,reference:docket.value,publisher};
+ if(result?.verdict==='MISMATCH')return {status:'CONFLICT',title:'Case reference conflicts with a supported public source',detail:'The reference does not match the source SEAL checked. Confirm the matter directly with the court before deciding what to do.',court,reference:docket.value,publisher};
+ return {status:'NOT_CONFIRMED',title:'Case not independently confirmed',detail:'SEAL has a reference from the message, but no supported public source established that case. Absence from a public search is not proof that it is false.',court,reference:docket.value,publisher};
 }
 
 function deadlineFor(claim:Claim,reportingDate:string){
@@ -101,6 +102,7 @@ export function buildHandoffSummary(claims:Claim[],verification:Verification,sup
   'Prepared from a public-source check. Keep the original message with this record.',
   '',
   'CLAIMED MATTER',
+  ...(reality.publisher?['Published by/context: '+reality.publisher]:[]),
   'Court claimed: '+reality.court,
   'Case/reference: '+(reality.reference||'Not verified'),
   'Underlying matter: '+reality.title,

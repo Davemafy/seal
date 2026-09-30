@@ -2012,6 +2012,7 @@ async function upload(uploaded:File){
    const routedJurisdiction=routedDirectory?.jurisdiction
     ||analysisContext.jurisdiction
     ||inferredContext?.jurisdiction
+    ||cleanDisplayText(extraction.provenance_context?.jurisdiction?.value||'')
     ||cleanDisplayText(extraction.court_location);
    if(routedJurisdiction)setJurisdiction(routedJurisdiction);
    if(extraction.document_role==='mixed_with_embedded_example'&&!sourceBrowse){
@@ -2054,7 +2055,7 @@ async function upload(uploaded:File){
    const response=await fetch('/api/verify',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({claims:verifiable,court_name:routingCourt,jurisdiction_hint:routedJurisdiction,mode:sourceMode,text:analysisText,document_text:sourceText,allow_live_discovery:!sourceCurated,curated_case_id:curatedCaseId}),
+    body:JSON.stringify({claims:verifiable,court_name:routingCourt,jurisdiction_hint:routedJurisdiction,mode:sourceMode,text:analysisText,document_text:sourceText,provenance_context:extraction.provenance_context,allow_live_discovery:!sourceCurated,curated_case_id:curatedCaseId}),
     signal:controller.signal
    });
    if(!response.ok)throw new Error('The source check could not finish. Try again.');
@@ -2143,7 +2144,9 @@ async function upload(uploaded:File){
      court_name:routingCourt,
      jurisdiction_hint:checkOrigin?.jurisdiction||jurisdiction,
      mode:'LIVE',
-     text,
+     text:claims.map(claim=>claim.exact_source_text||claim.context||claim.value).filter(Boolean).join('\n'),
+     document_text:text,
+     provenance_context:verification?.provenance_context,
      curated_case_id:caseId
     }),
     signal:controller.signal
@@ -3028,7 +3031,7 @@ async function upload(uploaded:File){
       <div className="journey-label">{resultUi('theCase')}</div>
       <div className="journey-content">
        <h3>{caseRealityCopy?.title||caseReality.title}</h3><p>{caseRealityCopy?.detail||caseReality.detail}</p>
-       <dl className="case-reality-facts"><div><dt>{resultUi('courtClaimed')}</dt><dd>{caseReality.court}</dd></div><div><dt>{resultUi('caseReference')}</dt><dd>{caseReality.reference||(translatedResult.notVerified||'Not verified')}</dd></div></dl>
+       <dl className="case-reality-facts">{caseReality.publisher&&<div><dt>Published by</dt><dd>{caseReality.publisher}</dd></div>}<div><dt>{resultUi('courtClaimed')}</dt><dd>{caseReality.court}</dd></div><div><dt>{resultUi('caseReference')}</dt><dd>{caseReality.reference||(translatedResult.notVerified||'Not verified')}</dd></div></dl>
        {verification.contact?.website?<a className="journey-link" href={verification.contact.website} target="_blank" rel="noopener noreferrer">{resultUi('openCourtWebsiteIndependently')}</a>:officialLookup&&<a className="journey-link" href={officialLookup.url} target="_blank" rel="noopener noreferrer">{officialLookup.label}</a>}
        {officialLookup&&<small className="journey-note">{officialLookup.note}</small>}
       </div>
