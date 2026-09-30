@@ -15,7 +15,7 @@ function evidenceFor(title:string,url:string,excerpt:string,mode:'LIVE'|'SNAPSHO
 }
 
 const normalize=(value:string)=>value.normalize('NFKC').replace(/\s+/g,' ').trim();
-const FEDERAL_DISTRICT_STOP=new Set(['has','have','had','is','was','were','will','would','may','might','can','could','warn','warns','warning','announces','advises','provides','jury','juror','court','courts','clerk','office','website','home','regarding','about','made','aware','public','notice']);
+const FEDERAL_DISTRICT_STOP=new Set(['has','have','had','is','was','were','will','would','may','might','can','could','warn','warns','warning','announces','advises','provides','jury','juror','court','courts','clerk','office','website','home','regarding','about','made','aware','public','notice','united','states','district','federal']);
 function federalDistrictIdentity(value:string){
  const match=normalize(value).match(/\b(?:(northern|southern|eastern|western|central|middle)\s+)?district\s+of\s+([a-z][a-z.'’-]*(?:\s+[a-z][a-z.'’-]*){0,4})/i);
  if(!match)return '';
