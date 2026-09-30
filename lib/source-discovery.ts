@@ -3,8 +3,8 @@ import type {Claim,DiscoveryDiagnostics,Evidence,GroundedSemanticContext,SafeAct
 import {officialCourtDirectoryFor} from './official-directories';
 import {interpretOfficialSource,understandDocumentSemantics,type EvidenceRelationCandidate} from './semantic-grounding';
 
-type SearchCandidate={title:string;url:string;snippet:string};
-type OfficialPage={title:string;url:string;text:string;excerpt:string;warning:boolean;score:number};
+type SearchCandidate={title:string;url:string;snippet:string;seed?:boolean};
+type OfficialPage={title:string;url:string;text:string;excerpt:string;warning:boolean;score:number;links?:SearchCandidate[]};
 type LiveDiscovery={page?:OfficialPage;semanticContext?:GroundedSemanticContext;relation?:EvidenceRelationCandidate;diagnostics:DiscoveryDiagnostics};
 
 const USER_AGENT='Mozilla/5.0 (compatible; SEAL/1.0; +https://github.com/Davemafy/seal)';
@@ -95,6 +95,16 @@ export function buildOfficialDiscoveryQueries(rawText:string,courtName:string,ju
  return [...new Set([q1,q2].map(normalize).filter(query=>query.length>=8))].slice(0,2);
 }
 
+function decodeBingTarget(raw:string){
+ try{
+  if(!raw)return '';
+  const encoded=raw.startsWith('a1')?raw.slice(2):raw;
+  const normalized=encoded.replace(/-/g,'+').replace(/_/g,'/');
+  const padded=normalized+'='.repeat((4-normalized.length%4)%4);
+  const decoded=atob(padded);
+  return /^https?:\/\//i.test(decoded)?decoded:'';
+ }catch{return ''}
+}
 function unwrapSearchUrl(value:string,base='https://html.duckduckgo.com'){
  try{
   const url=new URL(value,base);
@@ -104,6 +114,10 @@ function unwrapSearchUrl(value:string,base='https://html.duckduckgo.com'){
   }
   if(/(?:^|\.)google\.[a-z.]+$/i.test(url.hostname)&&url.pathname==='/url'){
    const target=url.searchParams.get('q')||url.searchParams.get('url');
+   if(target)return target;
+  }
+  if(/(?:^|\.)bing\.com$/i.test(url.hostname)){
+   const target=decodeBingTarget(url.searchParams.get('u')||'');
    if(target)return target;
   }
   return url.toString();
@@ -162,10 +176,27 @@ async function searchGoogle(query:string):Promise<SearchCandidate[]>{
  }catch{return []}
 }
 
+async function searchBrave(query:string):Promise<SearchCandidate[]>{
+ try{
+  const base='https://search.brave.com';
+  const response=await fetch(base+'/search?q='+encodeURIComponent(query)+'&source=web',{headers:SEARCH_HEADERS,redirect:'follow',signal:AbortSignal.timeout(5000)});
+  if(!response.ok||!response.headers.get('content-type')?.includes('text/html'))return [];
+  const html=await response.text();if(html.length>1_500_000)return [];
+  const $=cheerio.load(html),out:SearchCandidate[]=[];
+  $('a[href]').each((_,node)=>{
+   const anchor=$(node),href=anchor.attr('href')||'';
+   const label=normalize(anchor.text());
+   if(!label||label.length<4)return;
+   addCandidate(out,label,href,'',base);
+  });
+  return out.slice(0,6);
+ }catch{return []}
+}
+
 async function search(query:string):Promise<SearchCandidate[]>{
- const settled=await Promise.allSettled([searchDuckDuckGo(query),searchBing(query),searchGoogle(query)]);
+ const settled=await Promise.allSettled([searchDuckDuckGo(query),searchBing(query),searchGoogle(query),searchBrave(query)]);
  const merged=settled.flatMap(result=>result.status==='fulfilled'?result.value:[]);
- return [...new Map(merged.map(item=>[item.url,item])).values()].slice(0,10);
+ return [...new Map(merged.map(item=>[item.url,item])).values()].slice(0,12);
 }
 
 function overlapScore(source:Set<string>,target:string){
@@ -197,8 +228,8 @@ async function inspectCandidate(candidate:SearchCandidate,institution:string,hea
   if(type.includes('pdf')){
    const combined=`${candidate.title} ${candidate.snippet} ${finalUrl}`;
    const relevance=overlapScore(institutionWords,combined)+overlapScore(headingWords,combined);
-   if(relevance<1)return null;
-   return {title:candidate.title||'Official court document',url:finalUrl,text:'',excerpt:candidate.snippet||'Official PDF located on a government domain.',warning:/\b(?:scam|fraud|fake|false|warning|not genuine|suspicious)\b/i.test(combined),score:6+relevance};
+   if(relevance<1&&!candidate.seed)return null;
+   return {title:candidate.title||'Official court document',url:finalUrl,text:'',excerpt:candidate.snippet||'Official PDF located on a government domain.',warning:/\b(?:scam|fraud|fake|false|warning|not genuine|suspicious)\b/i.test(combined),score:(candidate.seed?4:6)+relevance};
   }
   if(!type.includes('html')&&!type.includes('text'))return null;
   const html=await response.text();if(html.length>2_000_000)return null;
@@ -210,14 +241,29 @@ async function inspectCandidate(candidate:SearchCandidate,institution:string,hea
   const institutionOverlap=overlapScore(institutionWords,combined);
   const headingOverlap=overlapScore(headingWords,combined);
   const relevant=institutionOverlap>=1||headingOverlap>=2;
-  if(!relevant)return null;
+  if(!relevant&&!candidate.seed)return null;
   const warning=/\b(?:scam(?:s|mers)?|fraud(?:ulent)?|fake|false|not genuine|suspicious|impersonat(?:e|ing|ion)|warning)\b/i.test(combined);
-  const score=8+institutionOverlap*2+headingOverlap+(warning?3:0);
+  const score=(candidate.seed?5:8)+institutionOverlap*2+headingOverlap+(warning?3:0);
   const excerpt=excerptAround(text,[
    /\b(?:scam(?:s|mers)?|fraud(?:ulent)?|fake|false|not genuine|suspicious|impersonat(?:e|ing|ion)|warning)\b/i,
    /\b(?:notice|summons|order|warrant|enforcement|payment)\b/i
   ]);
-  return {title,url:finalUrl,text,excerpt,warning,score};
+  const links:SearchCandidate[]=[];
+  $('a[href]').each((_,node)=>{
+   if(links.length>=14)return;
+   const anchor=$(node),href=anchor.attr('href')||'',label=normalize(anchor.text());
+   let target='';
+   try{target=new URL(href,finalUrl).toString()}catch{return}
+   if(target===finalUrl||!isOfficialGovernmentHost(target))return;
+   let sameHost=false;
+   try{sameHost=new URL(target).hostname===new URL(finalUrl).hostname}catch{}
+   if(!sameHost)return;
+   const hint=`${label} ${target}`;
+   if(!/\b(?:scam|fraud|warning|alert|jury|juror|summons|notice|security|impersonat|phishing)\b/i.test(hint))return;
+   if(links.some(link=>link.url===target))return;
+   links.push({title:label||new URL(target).pathname,url:target,snippet:title,seed:true});
+  });
+  return {title,url:finalUrl,text,excerpt,warning,score,links};
  }catch{return null}
 }
 
@@ -249,12 +295,19 @@ async function discoverLive(rawText:string,courtName:string,jurisdictionHint:str
   fetched_urls:[]
  };
  if(!queries.length)return {semanticContext,diagnostics:{...diagnostics,fallback_reason:'no_queries'}};
+ const semanticSeeds=(semanticContext?.official_url_candidates||[])
+  .filter(isOfficialGovernmentHost)
+  .map(url=>({title:'Model-proposed official source',url,snippet:institution||heading||jurisdictionHint,seed:true}));
  const searched=(await Promise.all(queries.map(search))).flat();
- const unique=[...new Map(searched.map(item=>[item.url,item])).values()].slice(0,12);
+ const unique=[...new Map([...semanticSeeds,...searched].map(item=>[item.url,item])).values()].slice(0,16);
  diagnostics.candidate_urls=unique.map(item=>item.url);
  if(!unique.length)return {semanticContext,diagnostics:{...diagnostics,fallback_reason:'no_official_candidates'}};
- const pages=(await Promise.all(unique.slice(0,8).map(candidate=>inspectCandidate(candidate,institution,wrapperHeading||heading))))
-  .filter((page):page is OfficialPage=>Boolean(page))
+ const initialPages=(await Promise.all(unique.slice(0,10).map(candidate=>inspectCandidate(candidate,institution,wrapperHeading||heading))))
+  .filter((page):page is OfficialPage=>Boolean(page));
+ const linkedCandidates=[...new Map(initialPages.flatMap(page=>page.links||[]).map(item=>[item.url,item])).values()].slice(0,12);
+ const linkedPages=(await Promise.all(linkedCandidates.map(candidate=>inspectCandidate(candidate,institution,wrapperHeading||heading))))
+  .filter((page):page is OfficialPage=>Boolean(page));
+ const pages=[...new Map([...initialPages,...linkedPages].map(page=>[page.url,page])).values()]
   .sort((a,b)=>b.score-a.score);
  diagnostics.fetched_urls=pages.map(page=>page.url);
  if(!pages.length)return {semanticContext,diagnostics:{...diagnostics,fallback_reason:'official_candidates_rejected'}};

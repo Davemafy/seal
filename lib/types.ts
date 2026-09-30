@@ -54,6 +54,7 @@ export type GroundedSemanticContext={
  jurisdiction?:{value:string;evidence_quote:string};
  requested_actions?:Array<{kind:'pay'|'contact'|'navigate'|'disclose'|'appear'|'other';quote:string;target:string}>;
  search_intents?:string[];
+ official_url_candidates?:string[];
 };
 export type DiscoveryDiagnostics={
  mode:'LIVE'|'SNAPSHOT';

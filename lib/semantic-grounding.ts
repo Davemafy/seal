@@ -7,6 +7,7 @@ export type GroundedSemanticContext={
  jurisdiction?:{value:string;evidence_quote:string};
  requested_actions?:Array<{kind:'pay'|'contact'|'navigate'|'disclose'|'appear'|'other';quote:string;target:string}>;
  search_intents?:string[];
+ official_url_candidates?:string[];
 };
 
 export type EvidenceRelationCandidate={
@@ -29,7 +30,8 @@ const semanticSchema=z.object({
   quote:z.string().max(220),
   target:z.string().max(180)
  })).max(8),
- search_intents:z.array(z.string().max(220)).max(4)
+ search_intents:z.array(z.string().max(220)).max(4),
+ official_url_candidates:z.array(z.string().max(500)).max(4)
 });
 
 const relationSchema=z.object({
@@ -93,8 +95,14 @@ function groundedContext(rawText:string,candidate:z.infer<typeof semanticSchema>
    return meaningful.some(token=>query.toLowerCase().includes(token));
   }))
   .slice(0,3);
+ const official_url_candidates=candidate.official_url_candidates
+  .map(normalize)
+  .filter(value=>{
+   try{const url=new URL(value);return url.protocol==='https:'&&url.hostname.length>3}catch{return false}
+  })
+  .slice(0,4);
  if(!institution&&!document_type&&!jurisdiction&&!requested_actions.length)return null;
- return {institution,document_type,jurisdiction,requested_actions,search_intents};
+ return {institution,document_type,jurisdiction,requested_actions,search_intents,official_url_candidates};
 }
 
 export function validateGroundedSemanticContext(rawText:string,value:unknown):GroundedSemanticContext|null{
@@ -109,6 +117,7 @@ export async function understandDocumentSemantics(rawText:string,courtName:strin
   'Do not decide whether the document is authentic, fraudulent, valid, or trustworthy.',
   'Do not invent names, countries, amounts, links, or court records.',
   'search_intents are short web-search queries for finding independent official judiciary/government sources about the named institution, document type, and requested action. Do not include URLs and do not assume a specific known case.',
+  'official_url_candidates may contain up to four likely HTTPS URLs for the named court or a relevant warning/process page on an official government or judiciary site. These are only retrieval guesses: never treat them as evidence, and never invent a non-government domain. Prefer a court homepage plus a likely warning/process page when plausible.',
   'If a field is not grounded, return empty strings or an empty array.'
  ].join(' ');
  const properties={
@@ -116,7 +125,8 @@ export async function understandDocumentSemantics(rawText:string,courtName:strin
   document_type:{type:'object',additionalProperties:false,properties:{value:{type:'string'},quote:{type:'string'}},required:['value','quote']},
   jurisdiction:{type:'object',additionalProperties:false,properties:{value:{type:'string'},evidence_quote:{type:'string'}},required:['value','evidence_quote']},
   requested_actions:{type:'array',items:{type:'object',additionalProperties:false,properties:{kind:{type:'string',enum:['pay','contact','navigate','disclose','appear','other']},quote:{type:'string'},target:{type:'string'}},required:['kind','quote','target']}},
-  search_intents:{type:'array',items:{type:'string'}}
+  search_intents:{type:'array',items:{type:'string'}},
+  official_url_candidates:{type:'array',items:{type:'string'}}
  };
  const user=[
   courtName?`Existing extracted court/institution hint: ${courtName}`:'',

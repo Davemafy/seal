@@ -2,7 +2,7 @@ import {afterEach,describe,expect,it,vi} from 'vitest';
 import {discoverOfficialDirectory,isOfficialGovernmentHost} from '../lib/source-discovery';
 import {verifyClaims} from '../lib/resolver';
 
-afterEach(()=>vi.unstubAllGlobals());
+afterEach(()=>{vi.unstubAllGlobals();vi.unstubAllEnvs();});
 
 describe('generic official-source discovery',()=>{
  it('accepts government namespaces and rejects lookalike commercial domains',()=>{
@@ -108,6 +108,39 @@ describe('generic official-source discovery',()=>{
   expect(result.safeAction?.primary_url).toBe(warning);
   expect(result.diagnostics?.wrapper_heading).toMatch(/Jury Duty Email/i);
   expect(result.diagnostics?.queries.some(query=>/Jury Duty Email/i.test(query))).toBe(true);
+  expect(result.diagnostics?.selected_url).toBe(warning);
+ });
+
+ it('uses validated semantic URL candidates when public search is blocked',async()=>{
+  const warning='https://www.dcd.uscourts.gov/jury-scam-alerts';
+  vi.stubEnv('GROQ_API_KEY','test-key');
+  vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo|URL)=>{
+   const url=String(input);
+   if(url.includes('api.groq.com'))return new Response(JSON.stringify({
+    choices:[{message:{content:JSON.stringify({
+     institution:{value:'United States District Court for the District of Columbia',quote:'United States District Court for the District of Columbia'},
+     document_type:{value:'jury duty notice',quote:'Jury Duty'},
+     jurisdiction:{value:'United States · Federal',evidence_quote:'United States District Court for the District of Columbia'},
+     requested_actions:[{kind:'pay',quote:'immediate payment is made',target:'payment'}],
+     search_intents:['District of Columbia jury scam alert'],
+     official_url_candidates:[warning]
+    })}}]
+   }),{status:200,headers:{'content-type':'application/json'}});
+   if(url.includes('duckduckgo.com/html/')||url.includes('bing.com/search')||url.includes('google.com/search')||url.includes('search.brave.com/search'))return new Response('<html><body></body></html>',{status:200,headers:{'content-type':'text/html'}});
+   if(url===warning)return new Response(
+    '<html><body><main><h1>Jury Scam Alerts</h1><p>The United States District Court for the District of Columbia warns about fraudulent jury emails, text messages, and phone calls asking for money. The court will never ask for payment by phone, email, or text.</p></main></body></html>',
+    {status:200,headers:{'content-type':'text/html'}}
+   );
+   if(url.includes('uscourts.gov/federal-court-finder'))return new Response('<html><main>Federal Court Finder</main></html>',{status:200,headers:{'content-type':'text/html'}});
+   return new Response('',{status:404,headers:{'content-type':'text/plain'}});
+  }));
+  const text='United States District Court for the District of Columbia\nJury Duty\nFraudulent email says immediate payment is made to avoid arrest.';
+  const claim={id:'pay',type:'payment' as const,label:'Requested payment',value:'payment',exact_source_text:'immediate payment is made',page:1,action:{verb:'pay',kind:'pay' as const,object:'payment',target_type:'money' as const,target_value:'',qualifiers:['immediate'],source_text:'immediate payment is made'}};
+  const result=await discoverOfficialDirectory(text,'United States District Court for the District of Columbia','United States · Federal','LIVE',[claim],text);
+  expect(result.lane.resolver_id).toBe('official-discovery');
+  expect(result.signal?.kind).toBe('OFFICIAL_WARNING');
+  expect(result.safeAction?.primary_url).toBe(warning);
+  expect(result.semanticContext?.official_url_candidates).toContain(warning);
   expect(result.diagnostics?.selected_url).toBe(warning);
  });
 

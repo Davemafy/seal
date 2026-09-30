@@ -601,6 +601,7 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
   ||verification?.signals?.find(signal=>signal.kind==='SOURCE_CONFLICT')
   ||verification?.signals?.[0];
  const decisionClaim=verification?chooseDecisionClaim(claims,verification):undefined;
+ const summaryActionClaims=groundedActions.length?groundedActions:(decisionClaim?.action?[decisionClaim]:[]);
  const evidenceBackedClaim=verification?claims.find(claim=>Boolean(resultById.get(claim.id)?.evidence?.length)):undefined;
  const decisionClaimResult=decisionClaim?resultById.get(decisionClaim.id):undefined;
  const storyClaim=decisionClaim&&Boolean(decisionClaimResult?.evidence?.length)
@@ -783,17 +784,17 @@ function SealWorkspace({initialDemo=false,initialText='',initialRun=false,deferI
       :directCourtUnavailable
        ?resultUi('decisionUnverifiedSummary')
        :decision.summary;
+ const hasOfficialWarningSignal=Boolean(verification?.signals?.some(signal=>signal.kind==='OFFICIAL_WARNING'));
+ const hasDecisiveResult=Boolean(verification?.results.some(result=>result.verdict==='MATCH'||result.verdict==='MISMATCH'));
  const resultStatusLabel=file?.sample
   ?resultUi('statusExampleDocument')
-  :curatedAuthorityMatch
+  :curatedAuthorityMatch||hasOfficialWarningSignal
    ?resultUi('statusOfficialWarning')
    :decisionRelationshipConflict
     ?resultUi('statusConflict')
-    :directCourtUnavailable
+    :!hasDecisiveResult
      ?resultUi('statusUnconfirmedNotice')
-     :verification?.results.some(result=>result.verdict==='MATCH')
-      ?resultUi('statusSomeDetails')
-      :resultUi('statusCheckFinished');
+     :resultUi('statusSomeDetails');
  const instructionStatus=file?.sample
   ?resultUi('instructionExample')
   :curatedAuthorityMatch
@@ -2068,7 +2069,7 @@ async function upload(uploaded:File){
    const response=await fetch('/api/verify',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({claims:verifiable,court_name:routingCourt,jurisdiction_hint:routedJurisdiction,mode:sourceMode,text:analysisText,document_text:sourceText,allow_live_discovery:Boolean(sourceFile&&!sourceCurated),curated_case_id:curatedCaseId}),
+    body:JSON.stringify({claims:verifiable,court_name:routingCourt,jurisdiction_hint:routedJurisdiction,mode:sourceMode,text:analysisText,document_text:sourceText,allow_live_discovery:!sourceCurated,curated_case_id:curatedCaseId}),
     signal:controller.signal
    });
    if(!response.ok)throw new Error('The source check could not finish. Try again.');
@@ -2755,13 +2756,18 @@ async function upload(uploaded:File){
 
         </div>
 
+        {summaryActionClaims.length>0&&!file?.sample&&<div className="decision-grounded-action" data-testid="summary-grounded-action">
+         <span>{resultUi('messageAsks')}</span>
+         <ul className="message-action-list">{summaryActionClaims.slice(0,3).map(claim=><li key={claim.id}>{cleanDisplayText(claim.action?.source_text||claim.exact_source_text||claim.value)}</li>)}</ul>
+        </div>}
+
         {riskSummary&&!file?.sample&&<div className="decision-evidence-rail" aria-label={resultUi('whatSealFound')} data-testid="decision-evidence-rail">
          <div><span>{resultUi('messageInstructions')}</span><strong>{translatedResult.instructionStatus||instructionStatus}</strong></div>
          <div><span>{resultUi('underlyingMatter')}</span><strong>{translatedResult.matterStatus||matterStatus}</strong></div>
          <div><span>{resultUi('sourceEvidence')}</span><strong>{sourceCheckStatus}</strong></div>
         </div>}
 
-        <details className="decision-details">
+        <details className="decision-details" defaultOpen={Boolean(!hasDecisiveResult||hasOfficialWarningSignal)}>
          <summary><span>{translatedResult.whyResult||resultUi('whyResult')}</span><SealGuideIcon/></summary>
          <div className="decision-details-body">
           {riskSummary&&<div className="decision-risks">
@@ -2769,13 +2775,13 @@ async function upload(uploaded:File){
            <div className="decision-risk-row"><span>{resultUi('underlyingMatter')}</span><div><strong>{riskSummaryCopy?.matter.title}</strong><small>{riskSummaryCopy?.matter.detail}</small></div></div>
           </div>}
 
-          {directCourtUnavailable&&groundedActions.length>0?<div className="decision-claim">
+          {summaryActionClaims.length===0&&(directCourtUnavailable&&groundedActions.length>0?<div className="decision-claim">
            <span>{resultUi('messageAsks')}</span>
            <ul className="message-action-list">{groundedActions.map(claim=><li key={claim.id}>{cleanDisplayText(claim.action?.source_text||claim.exact_source_text||claim.value)}</li>)}</ul>
           </div>:decisionClaim&&<div className="decision-claim">
            <span>{resultUi('fromMessage')}</span>
            <p>{decisionClaimDisplay||cleanDisplayText(decisionClaim.value)}</p>
-          </div>}
+          </div>)}
 
           <div className={`decision-evidence decision-relationship-block ${decisionRelationshipConflict?'is-conflict':''}`}>
            <span>{resultUi('publicSourcesSay')}</span>
