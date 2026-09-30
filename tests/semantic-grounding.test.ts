@@ -12,11 +12,19 @@ Contact the Jury Office immediately.`;
    role:'mixed_with_embedded_example',
    recipient_start_quote:'SAMPLE OF FRAUDULENT EMAIL',
    recipient_end_quote:'Contact the Jury Office immediately.',
-   wrapper_evidence_quote:'The District Court warns that scammers may impersonate court staff.'
+   wrapper_evidence_quote:'The District Court warns that scammers may impersonate court staff.',
+   context_institution:'District Court',
+   context_institution_quote:'The District Court warns that scammers may impersonate court staff.',
+   context_jurisdiction:'',
+   context_jurisdiction_quote:'',
+   context_document_type:'Public notice',
+   context_document_type_quote:'PUBLIC NOTICE: Jury scam alert'
   });
   expect(segmented?.role).toBe('mixed_with_embedded_example');
   expect(segmented?.recipientText).toMatch(/^SAMPLE OF FRAUDULENT EMAIL/);
   expect(segmented?.recipientText).not.toContain('Report suspicious contact');
+  expect(segmented?.provenanceContext?.institution?.value).toBe('District Court');
+  expect(segmented?.provenanceContext?.document_type?.value).toBe('Public notice');
  });
 
  it('rejects invented or wrapper-inside-recipient boundaries',()=>{
@@ -24,19 +32,21 @@ Contact the Jury Office immediately.`;
    role:'mixed_with_embedded_example',
    recipient_start_quote:'SAMPLE OF FRAUDULENT EMAIL',
    recipient_end_quote:'invented ending',
-   wrapper_evidence_quote:'Jury scam alert'
+   wrapper_evidence_quote:'Jury scam alert',
+   context_institution:'',context_institution_quote:'',context_jurisdiction:'',context_jurisdiction_quote:'',context_document_type:'',context_document_type_quote:''
   })).toBeNull();
   expect(validateDocumentSegmentation(mixed,{
    role:'mixed_with_embedded_example',
    recipient_start_quote:'SAMPLE OF FRAUDULENT EMAIL',
    recipient_end_quote:'Contact the Jury Office immediately.',
-   wrapper_evidence_quote:'Click Download Jury Summons.'
+   wrapper_evidence_quote:'Click Download Jury Summons.',
+   context_institution:'',context_institution_quote:'',context_jurisdiction:'',context_jurisdiction_quote:'',context_document_type:'',context_document_type_quote:''
   })).toBeNull();
  });
 
  it('uses the full artifact for ordinary received messages',()=>{
   const notice='DISTRICT COURT OF NORTHBRIDGE\nYou must appear on October 14, 2026.';
-  const segmented=validateDocumentSegmentation(notice,{role:'received_message',recipient_start_quote:'',recipient_end_quote:'',wrapper_evidence_quote:''});
+  const segmented=validateDocumentSegmentation(notice,{role:'received_message',recipient_start_quote:'',recipient_end_quote:'',wrapper_evidence_quote:'',context_institution:'',context_institution_quote:'',context_jurisdiction:'',context_jurisdiction_quote:'',context_document_type:'',context_document_type_quote:''});
   expect(segmented?.recipientText).toBe(notice);
  });
 });
