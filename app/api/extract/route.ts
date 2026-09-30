@@ -12,7 +12,12 @@ export async function POST(req:Request){let parsedText='';let parsedScope:Embedd
  const modelRole=String(raw.document_role||'unknown');
  const documentRole=parsedScope?.documentRole||modelRole;
  const proposedAnalysis=parsedScope?.analysisText||String(raw.analysis_text||'').trim();
- const analysisText=parsedScope?.analysisText||(documentRole==='mixed_with_embedded_example'&&proposedAnalysis&&normalizeScope(text).includes(normalizeScope(proposedAnalysis))?proposedAnalysis:'');
+ const modelScopeGrounded=Boolean(proposedAnalysis&&normalizeScope(text).includes(normalizeScope(proposedAnalysis)));
+ const modelScopeLooksRecipientOnly=Boolean(
+  proposedAnalysis
+  &&!/\b(?:public\s+notice|please\s+be\s+advised|report\s+the\s+incident|consumer\s+alert|scam\s+alert|fraud\s+warning)\b/i.test(proposedAnalysis.slice(0,1200))
+ );
+ const analysisText=parsedScope?.analysisText||(documentRole==='mixed_with_embedded_example'&&modelScopeGrounded&&modelScopeLooksRecipientOnly?proposedAnalysis:'');
  if(documentRole==='mixed_with_embedded_example'&&!analysisText)throw new Error('Model analysis scope not grounded');
  const extractionText=analysisText||scopedText;
  const extraction=sanitizeStructuredExtraction(extractionSchema.parse({...raw,document_role:documentRole,analysis_text:analysisText}),extractionText);

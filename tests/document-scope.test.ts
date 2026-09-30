@@ -46,6 +46,39 @@ If you have questions, contact the Jury Office immediately.`;
   expect(extraction.requested_actions?.some(action=>/Report the incident/i.test(action.exact_quote))).toBe(false);
  });
 
+ it('splits the sample even when the marker is glued directly to wrapper text',()=>{
+  const text=`PUBLIC NOTICE: Jury Duty Email, Text, and Phone Scam Alert
+The United States District Court for the District of Columbia has been made aware of a recent scam.
+Please be advised: do not click suspicious links. Report the incident to local law enforcement.
+You may contact the court directly to verify any jury summonsSAMPLE OF FRAUDULENT EMAIL
+Subject: URGENT: Jury Duty Summons – Immediate Response Required
+UNITED STATES DISTRICT COURT
+To download your official Jury Summons form and complete the required documentation, please click the button below:
+Download Jury Summons
+If you believe this notice was received in error, you must contact the Jury Office immediately.`;
+  const scoped=detectEmbeddedRecipientScope(text);
+  expect(scoped?.documentRole).toBe('mixed_with_embedded_example');
+  expect(scoped?.analysisText).toMatch(/^SAMPLE OF FRAUDULENT EMAIL/);
+  expect(scoped?.analysisText).not.toContain('Report the incident');
+  const extraction=fallbackExtract(scoped!.analysisText);
+  const actions=extraction.requested_actions?.map(action=>action.exact_quote)||[];
+  expect(actions.some(action=>/Download Jury Summons/i.test(action))).toBe(true);
+  expect(actions.some(action=>/Report the incident/i.test(action))).toBe(false);
+  expect(actions.some(action=>/Please be advised/i.test(action))).toBe(false);
+ });
+
+ it('splits an OCR-damaged sample marker without promoting advisory actions',()=>{
+  const text=`PUBLIC NOTICE: Jury Duty Scam Alert
+The District Court warns citizens about fraudulent emails.
+Please be advised: Report the incident to local law enforcement.
+SAMPLE   OF   FRAUDULENT   E-MAIL
+Subject: Jury Duty Summons
+Click the button below to download your summons.`;
+  const scoped=detectEmbeddedRecipientScope(text);
+  expect(scoped?.analysisText).toMatch(/^SAMPLE\s+OF\s+FRAUDULENT\s+E-MAIL/i);
+  expect(scoped?.analysisText).not.toContain('Report the incident');
+ });
+
  it('does not split a normal court notice merely because it mentions an example',()=>{
   const text=`DISTRICT COURT OF NORTHBRIDGE
 NOTICE TO APPEAR

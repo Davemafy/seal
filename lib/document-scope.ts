@@ -5,7 +5,7 @@ export type EmbeddedRecipientScope={
  marker:string;
 };
 
-const EMBEDDED_MARKER=/(?:^|[\n.;:]\s*)((?:sample|example)(?:\s+of)?\s+(?:(?:a|an)\s+)?(?:(?:fraudulent|fraud|fake|scam|suspicious|phishing)\s+)?(?:email|e-mail|text(?:\s+message)?|message|notice|summons|order|letter|communication)\b)/im;
+const EMBEDDED_MARKER=/\b((?:sample|example)(?:\s+of)?\s+(?:(?:a|an)\s+)?(?:(?:fraudulent|fraud|fake|scam|suspicious|phishing)\s+)?(?:email|e-mail|text(?:\s+message)?|message|notice|summons|order|letter|communication))\b/i;
 const COURTISH=/\b(?:court|courts|tribunal|tribunals|judiciary|judicial|jury|juror|clerk)\b/i;
 
 function advisoryScore(value:string){
@@ -28,11 +28,20 @@ export function detectEmbeddedRecipientScope(text:string):EmbeddedRecipientScope
  if(!text||text.length<80)return null;
  const match=EMBEDDED_MARKER.exec(text);
  EMBEDDED_MARKER.lastIndex=0;
- if(!match||typeof match.index!=='number')return null;
+ let resolved=match;
+ if(!resolved||typeof resolved.index!=='number'){
+  const normalized=text.normalize('NFKC');
+  const fallback=/\b(?:sample|example)\W{0,12}(?:of\W{0,8})?(?:fraudulent|fraud|fake|scam|suspicious|phishing)\W{0,12}(?:e-?mail|message|notice|summons|order|letter|communication)\b/i.exec(normalized);
+  if(!fallback||typeof fallback.index!=='number')return null;
+  resolved=fallback as RegExpExecArray;
+ }
+ const matchIndex=resolved.index;
+ const fullMatch=resolved[0]||'';
+ const markerCapture=resolved[1]||fullMatch;
 
- const markerText=(match[1]||'').trim();
- const markerOffset=(match[0]||'').lastIndexOf(match[1]||'');
- const markerStart=match.index+Math.max(0,markerOffset);
+ const markerText=markerCapture.trim();
+ const markerOffset=fullMatch.lastIndexOf(markerCapture);
+ const markerStart=matchIndex+Math.max(0,markerOffset);
  const prefix=text.slice(0,markerStart).trim();
  if(prefix.length<40||!COURTISH.test(prefix)||advisoryScore(prefix)<4)return null;
 
