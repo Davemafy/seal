@@ -12,13 +12,16 @@ const instruction=[
  'The supplied text has already been segmented to the recipient-facing message. Do not look outside it and do not classify document wrappers.',
  'The court may be in any country. Preserve names, currencies, dates, and exact action quotes in the language printed; never assume a US jurisdiction.',
  'Extract only claims visibly printed in this recipient-facing scope.',
- 'Most importantly, return each action the recipient is asked to take in requested_actions. Give each distinct instruction its own action entry.',
+ 'Most importantly, return each action the recipient is asked to take in requested_actions. Give each distinct instruction its own action entry, even when several instructions appear in the same sentence or paragraph.',
+ 'Before returning, do a completeness pass over the entire recipient scope and make sure every distinct obligation is represented once.',
  'exact_quote must be the shortest continuous clause containing that instruction, at most 180 characters, copied verbatim from the supplied text with only whitespace differences.',
  'A heading such as PHONE TO CALL is not itself an action. Do not paraphrase, repair OCR, or combine separate instructions.',
  'Use kind pay/contact/navigate/disclose/appear/other. Include deadline and target only when visibly present in exact_quote; otherwise use an empty string and target_type unknown.',
  'Confidence is 0–100 for how clearly the text asks the recipient to take that action, not a prediction of authenticity.',
  'If no recipient action is readable, use an empty array.',
  'reporting_date is only a date explicitly associated with reporting instructions, never a hearing or payment date.',
+ 'Extract case_or_docket_number whenever the recipient message explicitly labels a case, case number, case ID, docket, docket number, or similar matter identifier. Preserve the exact printed identifier even when its format is unusual; do not validate or normalize it.',
+ 'Use juror_or_reference_number for explicitly labeled juror, participant, badge, or general reference identifiers that are not the case/docket identifier.',
  'Do not determine authenticity or legal validity. Do not infer names, dates, numbers, domains, addresses, amounts, methods, or actions.',
  'Put explicit requests for personal data in information_requests. Use empty values when absent and uncertain_fields for unclear raw text.',
  'Return only the schema.'
@@ -54,7 +57,8 @@ export async function POST(req:Request){
    const extraction=fallbackExtract('');
    extraction.document_role=documentRole;
    extraction.analysis_text='';
-   return NextResponse.json({extraction,mode:'GROQ',document_role:documentRole,segmentation_mode:'GROUNDED_LLM'});
+   extraction.provenance_context=segmentation.provenanceContext;
+   return NextResponse.json({extraction,mode:'GROQ',document_role:documentRole,provenance_context:segmentation.provenanceContext,segmentation_mode:'GROUNDED_LLM'});
   }
 
   const extractionText=segmentation.recipientText||text;
@@ -77,7 +81,7 @@ export async function POST(req:Request){
   const raw=JSON.parse(body.choices?.[0]?.message?.content||'{}') as Record<string,unknown>;
   if(!Array.isArray(raw.requested_actions))throw new Error('Model omitted requested actions');
 
-  const extraction=sanitizeStructuredExtraction(extractionSchema.parse({...raw,document_role:documentRole,analysis_text:analysisText}),extractionText);
+  const extraction=sanitizeStructuredExtraction(extractionSchema.parse({...raw,document_role:documentRole,analysis_text:analysisText,provenance_context:segmentation.provenanceContext}),extractionText);
   const actions=raw.requested_actions as Array<Record<string,unknown>>;
   if(actions.some(action=>typeof action.exact_quote!=='string'||!grounded(extractionText,String(action.exact_quote))))throw new Error('Model invented action');
 
@@ -93,7 +97,7 @@ export async function POST(req:Request){
   if(!present(extraction.court_name)||!present(extraction.court_location)||!present(extraction.juror_or_reference_number)||!present(extraction.case_or_docket_number)||extraction.phone_numbers.some(value=>!present(value))||extraction.urls.some(value=>!present(value))||extraction.emails.some(value=>!present(value))||!present(extraction.reporting_date)||!present(extraction.notice_date)||!present(extraction.payment_demand.amount)||!present(extraction.payment_demand.url)||extraction.information_requests.some(value=>!present(value))||extraction.threats.some(value=>!present(value)))throw new Error('Model invented field');
 
   if(!extraction.court_name)extraction.court_name=fallbackExtract(extractionText).court_name;
-  return NextResponse.json({extraction,mode:'GROQ',document_role:documentRole,analysis_text:analysisText||undefined,segmentation_mode:'GROUNDED_LLM'});
+  return NextResponse.json({extraction,mode:'GROQ',document_role:documentRole,analysis_text:analysisText||undefined,provenance_context:segmentation.provenanceContext,segmentation_mode:'GROUNDED_LLM'});
  }catch(error){
   const reason=error instanceof Error?error.message:'';
   const category=/Provider status 429/.test(reason)?'rate_limit':/Provider status/.test(reason)?'provider_error':reason==='Model invented field'?'ungrounded_field':reason==='Model invented action'?'ungrounded_action':reason==='Model omitted requested actions'?'missing_actions':reason==='Semantic segmentation unavailable'?'segmentation_unavailable':error instanceof z.ZodError?'schema_error':error instanceof SyntaxError?'invalid_json':error instanceof Error&&error.name==='TimeoutError'?'timeout':'unavailable';
