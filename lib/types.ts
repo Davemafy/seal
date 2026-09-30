@@ -1,5 +1,11 @@
 import {z} from 'zod';
 
+export const provenanceContextSchema=z.object({
+ institution:z.object({value:z.string(),quote:z.string()}).optional(),
+ jurisdiction:z.object({value:z.string(),quote:z.string()}).optional(),
+ document_type:z.object({value:z.string(),quote:z.string()}).optional()
+}).strict();
+export type ProvenanceContext=z.infer<typeof provenanceContextSchema>;
 export const requestedActionSchema=z.object({
  exact_quote:z.string(),kind:z.enum(['pay','contact','navigate','disclose','appear','other']),verb:z.string(),object:z.string(),target_type:z.enum(['money','phone','url','qr','information','place','date','unknown']),target_value:z.string(),deadline:z.string(),confidence:z.number().min(0).max(100)
 }).strict();
@@ -66,7 +72,7 @@ export type DiscoveryDiagnostics={
  selected_url?:string;
  fallback_reason?:string;
 };
-export type Verification={results:Result[];contact?:{name?:string;phone:string;website:string;source:Evidence};resolver_id:string;signals?:SourceSignal[];safe_action?:SafeAction;lanes?:VerificationLane[];semantic_context?:GroundedSemanticContext;discovery_debug?:DiscoveryDiagnostics};
+export type Verification={results:Result[];contact?:{name?:string;phone:string;website:string;source:Evidence};resolver_id:string;signals?:SourceSignal[];safe_action?:SafeAction;lanes?:VerificationLane[];semantic_context?:GroundedSemanticContext;provenance_context?:ProvenanceContext;discovery_debug?:DiscoveryDiagnostics};
 
 export const claimSchema=z.object({
  id:z.string(),
