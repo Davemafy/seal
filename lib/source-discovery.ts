@@ -15,6 +15,29 @@ function evidenceFor(title:string,url:string,excerpt:string,mode:'LIVE'|'SNAPSHO
 }
 
 const normalize=(value:string)=>value.normalize('NFKC').replace(/\s+/g,' ').trim();
+const FEDERAL_DISTRICT_STOP=new Set(['has','have','had','is','was','were','will','would','may','might','can','could','warn','warns','warning','announces','advises','provides','jury','juror','court','courts','clerk','office','website','home','regarding','about','made','aware','public','notice']);
+function federalDistrictIdentity(value:string){
+ const match=normalize(value).match(/\b(?:(northern|southern|eastern|western|central|middle)\s+)?district\s+of\s+([a-z][a-z.'’-]*(?:\s+[a-z][a-z.'’-]*){0,4})/i);
+ if(!match)return '';
+ const qualifier=(match[1]||'').toLowerCase();
+ const raw=(match[2]||'').toLowerCase().split(/\s+/);
+ const place:string[]=[];
+ for(const token of raw){
+  if(FEDERAL_DISTRICT_STOP.has(token))break;
+  place.push(token);
+ }
+ if(!place.length)return '';
+ return [qualifier,...place].filter(Boolean).join(' ');
+}
+function federalDistrictDisplay(identity:string){
+ if(!identity)return '';
+ return identity.split(/\s+/).map(word=>word.charAt(0).toUpperCase()+word.slice(1)).join(' ');
+}
+function federalDistrictCompatible(expectedContext:string,candidateContext:string){
+ const expected=federalDistrictIdentity(expectedContext);
+ const candidate=federalDistrictIdentity(candidateContext);
+ return !expected||!candidate||expected===candidate;
+}
 const words=(value:string)=>new Set(
  normalize(value).toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu,' ').split(/\s+/)
   .filter(word=>word.length>=3&&!/^(?:the|and|for|with|from|this|that|court|courts|tribunal|tribunals|service|official|united|kingdom)$/.test(word))
@@ -217,7 +240,7 @@ function excerptAround(text:string,patterns:RegExp[]){
  return normalize(text.slice(0,320));
 }
 
-async function inspectCandidate(candidate:SearchCandidate,institution:string,heading:string):Promise<OfficialPage|null>{
+async function inspectCandidate(candidate:SearchCandidate,institution:string,heading:string,authorityContext=''):Promise<OfficialPage|null>{
  try{
   const response=await fetch(candidate.url,{headers:{...SEARCH_HEADERS,'Accept':'text/html,application/xhtml+xml,application/pdf;q=0.8'},redirect:'follow',signal:AbortSignal.timeout(5500)});
   if(!response.ok)return null;
@@ -227,9 +250,11 @@ async function inspectCandidate(candidate:SearchCandidate,institution:string,hea
   const institutionWords=words(institution),headingWords=words(heading);
   if(type.includes('pdf')){
    const combined=`${candidate.title} ${candidate.snippet} ${finalUrl}`;
+   if(!federalDistrictCompatible(authorityContext,combined))return null;
    const relevance=overlapScore(institutionWords,combined)+overlapScore(headingWords,combined);
+   const districtBonus=federalDistrictIdentity(authorityContext)&&federalDistrictIdentity(authorityContext)===federalDistrictIdentity(combined)?12:0;
    if(relevance<1&&!candidate.seed)return null;
-   return {title:candidate.title||'Official court document',url:finalUrl,text:'',excerpt:candidate.snippet||'Official PDF located on a government domain.',warning:/\b(?:scam|fraud|fake|false|warning|not genuine|suspicious)\b/i.test(combined),score:(candidate.seed?4:6)+relevance};
+   return {title:candidate.title||'Official court document',url:finalUrl,text:'',excerpt:candidate.snippet||'Official PDF located on a government domain.',warning:/\b(?:scam|fraud|fake|false|warning|not genuine|suspicious)\b/i.test(combined),score:(candidate.seed?4:6)+relevance+districtBonus};
   }
   if(!type.includes('html')&&!type.includes('text'))return null;
   const html=await response.text();if(html.length>2_000_000)return null;
@@ -238,12 +263,15 @@ async function inspectCandidate(candidate:SearchCandidate,institution:string,hea
   const text=normalize($('main').text()||$('article').text()||$('body').text());
   if(text.length<80)return null;
   const combined=`${title} ${candidate.snippet} ${text.slice(0,12000)}`;
+  if(!federalDistrictCompatible(authorityContext,combined))return null;
   const institutionOverlap=overlapScore(institutionWords,combined);
   const headingOverlap=overlapScore(headingWords,combined);
   const relevant=institutionOverlap>=1||headingOverlap>=2;
   if(!relevant&&!candidate.seed)return null;
   const warning=/\b(?:scam(?:s|mers)?|fraud(?:ulent)?|fake|false|not genuine|suspicious|impersonat(?:e|ing|ion)|warning)\b/i.test(combined);
-  const score=(candidate.seed?5:8)+institutionOverlap*2+headingOverlap+(warning?3:0);
+  const districtIdentity=federalDistrictIdentity(authorityContext);
+  const districtBonus=districtIdentity&&districtIdentity===federalDistrictIdentity(combined)?12:0;
+  const score=(candidate.seed?5:8)+institutionOverlap*2+headingOverlap+(warning?3:0)+districtBonus;
   const excerpt=excerptAround(text,[
    /\b(?:scam(?:s|mers)?|fraud(?:ulent)?|fake|false|not genuine|suspicious|impersonat(?:e|ing|ion)|warning)\b/i,
    /\b(?:notice|summons|order|warrant|enforcement|payment)\b/i
@@ -279,13 +307,21 @@ async function discoverLive(rawText:string,courtName:string,jurisdictionHint:str
  const wrapperQueries=rawText!==planningText
   ?buildOfficialDiscoveryQueries(rawText,wrapperInstitution||institution||courtName,semanticContext?.jurisdiction?.value||jurisdictionHint)
   :[];
+ const authorityContext=rawText!==planningText?rawText:[courtName,institution,jurisdictionHint].filter(Boolean).join(' ');
+ const expectedFederalDistrict=federalDistrictIdentity(authorityContext);
+ const exactIdentityQueries=expectedFederalDistrict
+  ?[
+    [`"United States District Court"`,`"${federalDistrictDisplay(expectedFederalDistrict)}"`,'jury scam warning'].join(' '),
+    [`"${federalDistrictDisplay(expectedFederalDistrict)}"`,wrapperHeading&&`"${wrapperHeading.slice(0,120)}"`].filter(Boolean).join(' ')
+   ]
+  :[];
  const exactWrapperQueries=wrapperHeading
   ?[
     [`"${wrapperHeading.slice(0,120)}"`,'official'].join(' '),
-    [`"${wrapperHeading.slice(0,120)}"`,institution&&`"${institution.slice(0,100)}"`].filter(Boolean).join(' ')
+    [`"${wrapperHeading.slice(0,120)}"`,(wrapperInstitution||institution)&&`"${(wrapperInstitution||institution).slice(0,100)}"`].filter(Boolean).join(' ')
    ]
   :[];
- const queries=[...new Set([...exactWrapperQueries,...semanticQueries,...wrapperQueries,...fallbackQueries].map(normalize).filter(query=>query.length>=8))].slice(0,6);
+ const queries=[...new Set([...exactIdentityQueries,...exactWrapperQueries,...semanticQueries,...wrapperQueries,...fallbackQueries].map(normalize).filter(query=>query.length>=8))].slice(0,8);
  const diagnostics:DiscoveryDiagnostics={
   mode:'LIVE',
   analysis_heading:heading||undefined,
@@ -302,10 +338,10 @@ async function discoverLive(rawText:string,courtName:string,jurisdictionHint:str
  const unique=[...new Map([...semanticSeeds,...searched].map(item=>[item.url,item])).values()].slice(0,16);
  diagnostics.candidate_urls=unique.map(item=>item.url);
  if(!unique.length)return {semanticContext,diagnostics:{...diagnostics,fallback_reason:'no_official_candidates'}};
- const initialPages=(await Promise.all(unique.slice(0,10).map(candidate=>inspectCandidate(candidate,institution,wrapperHeading||heading))))
+ const initialPages=(await Promise.all(unique.slice(0,10).map(candidate=>inspectCandidate(candidate,institution,wrapperHeading||heading,authorityContext))))
   .filter((page):page is OfficialPage=>Boolean(page));
  const linkedCandidates=[...new Map(initialPages.flatMap(page=>page.links||[]).map(item=>[item.url,item])).values()].slice(0,12);
- const linkedPages=(await Promise.all(linkedCandidates.map(candidate=>inspectCandidate(candidate,institution,wrapperHeading||heading))))
+ const linkedPages=(await Promise.all(linkedCandidates.map(candidate=>inspectCandidate(candidate,institution,wrapperHeading||heading,authorityContext))))
   .filter((page):page is OfficialPage=>Boolean(page));
  const pages=[...new Map([...initialPages,...linkedPages].map(page=>[page.url,page])).values()]
   .sort((a,b)=>b.score-a.score);

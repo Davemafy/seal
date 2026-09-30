@@ -79,6 +79,43 @@ describe('generic official-source discovery',()=>{
   expect(result.safeAction?.primary_url).toBe(warning);
  });
 
+ it('rejects a warning from the wrong federal district even when the warning pattern is relevant',async()=>{
+  const wrong='https://www.scd.uscourts.gov/Jury/jury.asp';
+  const right='https://www.dcd.uscourts.gov/jury-scam-alerts';
+  vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo|URL)=>{
+   const url=String(input);
+   if(url.includes('api.groq.com'))return new Response('',{status:503});
+   if(url.includes('duckduckgo.com/html/')||url.includes('bing.com/search')||url.includes('google.com/search')||url.includes('search.brave.com/search'))return new Response(
+    '<html><body>'+
+    '<div class="result"><a class="result__a" href="'+wrong+'">United States District Court - District of South Carolina Jury Warning</a><div class="result__snippet">District of South Carolina jury scam warning.</div></div>'+
+    '<div class="result"><a class="result__a" href="'+right+'">Jury Scam Alerts</a><div class="result__snippet">United States District Court for the District of Columbia jury scam alert.</div></div>'+
+    '</body></html>',
+    {status:200,headers:{'content-type':'text/html'}}
+   );
+   if(url===wrong)return new Response(
+    '<html><body><main><h1>United States District Court - District of South Carolina</h1><p>Jury scam warning. Do not pay callers claiming to be court officials.</p></main></body></html>',
+    {status:200,headers:{'content-type':'text/html'}}
+   );
+   if(url===right)return new Response(
+    '<html><body><main><h1>Jury Scam Alerts</h1><p>The United States District Court for the District of Columbia warns that fraudulent jury emails may demand payment or ask recipients to click links.</p></main></body></html>',
+    {status:200,headers:{'content-type':'text/html'}}
+   );
+   return new Response('',{status:404,headers:{'content-type':'text/plain'}});
+  }));
+  const wrapper=`PUBLIC NOTICE: Jury Duty Email, Text, and Phone Scam Alert
+The United States District Court for the District of Columbia has been made aware of a recent scam.
+SAMPLE OF FRAUDULENT EMAIL
+UNITED STATES DISTRICT COURT
+Download Jury Summons`;
+  const embedded='SAMPLE OF FRAUDULENT EMAIL\nUNITED STATES DISTRICT COURT\nDownload Jury Summons';
+  const claim={id:'a1',type:'action' as const,label:'Requested action',value:'Download Jury Summons',exact_source_text:'Download Jury Summons',page:2,action:{verb:'download',kind:'other' as const,object:'Jury Summons',target_type:'unknown' as const,target_value:'',qualifiers:[],source_text:'Download Jury Summons'}};
+  const result=await discoverOfficialDirectory(wrapper,'UNITED STATES DISTRICT COURT','United States · Federal','LIVE',[claim],embedded);
+  expect(result.lane.resolver_id).toBe('official-discovery');
+  expect(result.safeAction?.primary_url).toBe(right);
+  expect(result.diagnostics?.selected_url).toBe(right);
+  expect(result.diagnostics?.fetched_urls).not.toContain(wrong);
+ });
+
  it('uses wrapper advisory headings to discover a specific official warning',async()=>{
   const warning='https://www.dcd.uscourts.gov/news/jury-scam-alert';
   vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo|URL)=>{
