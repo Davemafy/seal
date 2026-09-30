@@ -448,6 +448,7 @@
 .decision-grounded-action>span{display:block;margin-bottom:7px;color:#777;font-size:12px;line-height:18px}
 .decision-grounded-action .message-action-list{gap:7px}
 .decision-grounded-action .message-action-list li{font-size:16px;line-height:23px;font-weight:560}
+.decision-rationale{max-width:620px;margin:16px 0 0;color:#5f5f5f;font-size:13px;line-height:20px}
 .decision-claim{margin-top:28px;padding-top:18px;border-top:1px solid var(--line)}
 .decision-claim>span,.decision-evidence>span{display:block;margin-bottom:7px;color:#777;font-size:12px;line-height:18px}
 .decision-claim p{margin:0;font-size:18px;line-height:26px;font-weight:500}

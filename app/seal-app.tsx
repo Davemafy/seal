@@ -2767,7 +2767,8 @@ async function upload(uploaded:File){
          <div><span>{resultUi('sourceEvidence')}</span><strong>{sourceCheckStatus}</strong></div>
         </div>}
 
-        <details className="decision-details" defaultOpen={Boolean(!hasDecisiveResult||hasOfficialWarningSignal)}>
+        <p className="decision-rationale">{translatedResult.relationship||decisionRelationship}</p>
+        <details className="decision-details">
          <summary><span>{translatedResult.whyResult||resultUi('whyResult')}</span><SealGuideIcon/></summary>
          <div className="decision-details-body">
           {riskSummary&&<div className="decision-risks">
