@@ -5,7 +5,7 @@ export type EmbeddedRecipientScope={
  marker:string;
 };
 
-const EMBEDDED_MARKER=/\b((?:sample|example)(?:\s+of)?\s+(?:(?:a|an)\s+)?(?:(?:fraudulent|fraud|fake|scam|suspicious|phishing)\s+)?(?:email|e-mail|text(?:\s+message)?|message|notice|summons|order|letter|communication))\b/i;
+const EMBEDDED_MARKER=/((?:sample|example)(?:\s+of)?\s+(?:(?:a|an)\s+)?(?:(?:fraudulent|fraud|fake|scam|suspicious|phishing)\s+)?(?:email|e-mail|text(?:\s+message)?|message|notice|summons|order|letter|communication))\b/i;
 const COURTISH=/\b(?:court|courts|tribunal|tribunals|judiciary|judicial|jury|juror|clerk)\b/i;
 
 function advisoryScore(value:string){
@@ -31,7 +31,7 @@ export function detectEmbeddedRecipientScope(text:string):EmbeddedRecipientScope
  let resolved=match;
  if(!resolved||typeof resolved.index!=='number'){
   const normalized=text.normalize('NFKC');
-  const fallback=/\b(?:sample|example)\W{0,12}(?:of\W{0,8})?(?:fraudulent|fraud|fake|scam|suspicious|phishing)\W{0,12}(?:e-?mail|message|notice|summons|order|letter|communication)\b/i.exec(normalized);
+  const fallback=/(?:sample|example)\W{0,12}(?:of\W{0,8})?(?:fraudulent|fraud|fake|scam|suspicious|phishing)\W{0,12}(?:e-?mail|message|notice|summons|order|letter|communication)\b/i.exec(normalized);
   if(!fallback||typeof fallback.index!=='number')return null;
   resolved=fallback as RegExpExecArray;
  }
