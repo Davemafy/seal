@@ -1,6 +1,6 @@
 import {NextResponse} from 'next/server';
 import {z} from 'zod';
-import {claimSchema,type Evidence,type Verification} from '@/lib/types';
+import {claimSchema,provenanceContextSchema,type Evidence,type Verification} from '@/lib/types';
 import {verifyClaims} from '@/lib/resolver';
 import {getBrowseCase} from '@/lib/browse-cases';
 
@@ -12,7 +12,8 @@ const request=z.object({
  text:z.string().max(120000).optional(),
  document_text:z.string().max(120000).optional(),
  allow_live_discovery:z.boolean().optional(),
- curated_case_id:z.string().max(120).optional()
+ curated_case_id:z.string().max(120).optional(),
+ provenance_context:provenanceContextSchema.optional()
 });
 
 function normalized(value:string){
@@ -60,7 +61,7 @@ function enrichCuratedCase(verification:Verification,caseId:string|undefined,tex
 export async function POST(req:Request){
  try{
   const data=request.parse(await req.json());
-  const verification=await verifyClaims(data.claims,data.court_name,data.mode,data.jurisdiction_hint,data.text||'',Boolean(data.allow_live_discovery),data.document_text||data.text||'');
+  const verification=await verifyClaims(data.claims,data.court_name,data.mode,data.jurisdiction_hint,data.text||'',Boolean(data.allow_live_discovery),data.document_text||data.text||'',data.provenance_context);
   return NextResponse.json(enrichCuratedCase(verification,data.curated_case_id,data.text||''));
  }catch{
   return NextResponse.json({error:'Could not verify this request.'},{status:400});

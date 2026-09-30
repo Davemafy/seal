@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import type {Claim,DiscoveryDiagnostics,Evidence,GroundedSemanticContext,SafeAction,SourceSignal,VerificationLane} from './types';
+import type {Claim,DiscoveryDiagnostics,Evidence,GroundedSemanticContext,ProvenanceContext,SafeAction,SourceSignal,VerificationLane} from './types';
 import {officialCourtDirectoryFor} from './official-directories';
 import {interpretOfficialSource,understandDocumentSemantics,type EvidenceRelationCandidate} from './semantic-grounding';
 
@@ -295,19 +295,24 @@ async function inspectCandidate(candidate:SearchCandidate,institution:string,hea
  }catch{return null}
 }
 
-async function discoverLive(rawText:string,courtName:string,jurisdictionHint:string,claims:Claim[],analysisText=rawText):Promise<LiveDiscovery>{
+async function discoverLive(rawText:string,courtName:string,jurisdictionHint:string,claims:Claim[],analysisText=rawText,provenanceContext?:ProvenanceContext):Promise<LiveDiscovery>{
  const planningText=analysisText||rawText;
  const semanticContext=(await understandDocumentSemantics(planningText,courtName,jurisdictionHint))||undefined;
  const institution=semanticContext?.institution?.value||institutionHint(planningText,courtName);
  const heading=semanticContext?.document_type?.value||documentHeading(planningText);
- const wrapperHeading=rawText!==planningText?(advisoryHeading(rawText)||documentHeading(rawText)):'';
- const wrapperInstitution=rawText!==planningText?institutionHint(rawText,courtName):'';
+ const provenanceInstitution=provenanceContext?.institution?.value||'';
+ const provenanceJurisdiction=provenanceContext?.jurisdiction?.value||'';
+ const wrapperHeading=rawText!==planningText?(provenanceContext?.document_type?.value||advisoryHeading(rawText)||documentHeading(rawText)):'';
+ const wrapperInstitution=rawText!==planningText?(provenanceInstitution||institutionHint(rawText,courtName)):'';
  const semanticQueries=semanticContext?.search_intents||[];
- const fallbackQueries=buildOfficialDiscoveryQueries(planningText,institution||courtName,semanticContext?.jurisdiction?.value||jurisdictionHint);
+ const recipientJurisdiction=semanticContext?.jurisdiction?.value||jurisdictionHint;
+ const fallbackQueries=buildOfficialDiscoveryQueries(planningText,institution||courtName,recipientJurisdiction);
  const wrapperQueries=rawText!==planningText
-  ?buildOfficialDiscoveryQueries(rawText,wrapperInstitution||institution||courtName,semanticContext?.jurisdiction?.value||jurisdictionHint)
+  ?buildOfficialDiscoveryQueries(rawText,wrapperInstitution||institution||courtName,provenanceJurisdiction||recipientJurisdiction)
   :[];
- const authorityContext=rawText!==planningText?rawText:[courtName,institution,jurisdictionHint].filter(Boolean).join(' ');
+ const authorityContext=rawText!==planningText
+  ?[provenanceInstitution,provenanceJurisdiction,rawText].filter(Boolean).join(' ')
+  :[courtName,institution,jurisdictionHint].filter(Boolean).join(' ');
  const expectedFederalDistrict=federalDistrictIdentity(authorityContext);
  const exactIdentityQueries=expectedFederalDistrict
   ?[
@@ -365,14 +370,14 @@ async function discoverLive(rawText:string,courtName:string,jurisdictionHint:str
  return {page:selected,semanticContext,relation:interpreted[0]?.relation,diagnostics};
 }
 
-export async function discoverOfficialDirectory(rawText:string,courtName:string,jurisdictionHint:string,mode:'LIVE'|'SNAPSHOT',claims:Claim[]=[],analysisText=rawText):Promise<{lane:VerificationLane;signal?:SourceSignal;safeAction?:SafeAction;semanticContext?:GroundedSemanticContext;diagnostics?:DiscoveryDiagnostics}>{
+export async function discoverOfficialDirectory(rawText:string,courtName:string,jurisdictionHint:string,mode:'LIVE'|'SNAPSHOT',claims:Claim[]=[],analysisText=rawText,provenanceContext?:ProvenanceContext):Promise<{lane:VerificationLane;signal?:SourceSignal;safeAction?:SafeAction;semanticContext?:GroundedSemanticContext;diagnostics?:DiscoveryDiagnostics}>{
  const started=Date.now();
  const directory=officialCourtDirectoryFor([analysisText||rawText,courtName,jurisdictionHint].filter(Boolean).join('\n'));
  let semanticContext:GroundedSemanticContext|undefined;
  let liveDiagnostics:DiscoveryDiagnostics|undefined;
 
  if(mode==='LIVE'){
-  const discovered=await discoverLive(rawText,courtName,jurisdictionHint,claims,analysisText);
+  const discovered=await discoverLive(rawText,courtName,jurisdictionHint,claims,analysisText,provenanceContext);
   semanticContext=discovered.semanticContext;
   liveDiagnostics=discovered.diagnostics;
   const page=discovered.page;

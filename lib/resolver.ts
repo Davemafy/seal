@@ -1,4 +1,4 @@
-import type {Claim,Result,Evidence,Verification} from './types';
+import type {Claim,Result,Evidence,Verification,ProvenanceContext} from './types';
 import {getSources,cite,snapshot,type SourceKey,type Source} from './sources';
 import {getCtSources,ctCite,ctSnapshot,type ConnecticutSourceKey,type ConnecticutSource} from './connecticut-sources';
 import {getScamSources,scamCite,type ScamSourceKey,type ScamSource} from './scam-sources';
@@ -63,7 +63,7 @@ function resolveConnecticut(c:Claim,s:CtSources,scams:ScamSources):Result{
 export const ConnecticutDistrictCourtResolver:CourtResolver={id:'connecticut',supportedCourt:n=>/united states district court/i.test(n)&&/district of connecticut/i.test(n),async resolve(claims,mode){const [s,scams]=await Promise.all([getCtSources(mode),getScamSources(mode)]);const contact=ctProof(s,'contact','(800) 827-8224')||ctCite(ctSnapshot('contact'),'(800) 827-8224');return {results:claims.map(c=>resolveConnecticut(c,s,scams)),resolver_id:this.id,contact:contact?{phone:'800-827-8224',website:'https://www.ctd.uscourts.gov/contact-parking-information',source:contact}:undefined};}};
 export const UnsupportedCourtResolver:CourtResolver={id:'unsupported',supportedCourt:()=>true,async resolve(claims){return {results:claims.map(c=>unknown(c,'No dedicated direct-check resolver matched this jurisdiction. SEAL will still look for independent public routes.','unsupported')),resolver_id:this.id};}};
 export const FederalCourtListenerResolver:CourtResolver={id:'courtlistener',supportedCourt:n=>/united states (district|court of appeals|bankruptcy) court/i.test(n),async resolve(claims,_mode,courtName=''){const results:Result[]=await Promise.all(claims.map(async c=>{if(c.type!=='docket')return unknown(c,'SEAL’s federal source checks exact dockets only; it cannot independently confirm jury notice details.','courtlistener');const token=process.env.COURTLISTENER_TOKEN;if(!token)return unknown(c,'CourtListener integration is unavailable without a server token.','courtlistener');const query=new URL('https://www.courtlistener.com/api/rest/v4/search/');query.searchParams.set('type','d');query.searchParams.set('q',`docketNumber:"${c.value.replace(/[^a-zA-Z0-9:.-]/g,'')}"`);try{const response=await fetch(query,{headers:{Authorization:`Token ${token}`,'User-Agent':'SEAL/1.0'},signal:AbortSignal.timeout(8000)});if(!response.ok)return unknown(c,'CourtListener search was unavailable.','courtlistener');const body=await response.json() as {results?:{docketNumber?:string;absolute_url?:string;court?:string}[]};const expectedCourt=courtName.toLowerCase().replace(/united states|district court|court of appeals|bankruptcy court|for the|for|the/g,'').replace(/\s+/g,' ').trim();const exact=body.results?.find(r=>r.docketNumber?.trim().toLowerCase()===c.value.trim().toLowerCase()&&!!expectedCourt&&r.court?.toLowerCase().includes(expectedCourt));if(!exact)return unknown(c,'No exact docket record was found. Absence is not contradiction.','courtlistener');const url=exact.absolute_url?.startsWith('/')?'https://www.courtlistener.com'+exact.absolute_url:'';return verdict(c,'MATCH','An exact docket number appears in the CourtListener index.',[{title:'CourtListener docket search',url:url||query.toString(),excerpt:`Docket number: ${exact.docketNumber}`,checked_at:new Date().toISOString(),source_mode:'LIVE'}],'courtlistener');}catch{return unknown(c,'CourtListener search was unavailable.','courtlistener');}}));return {results,resolver_id:this.id};}};
-export async function verifyClaims(claims:Claim[],courtName:string,mode:'LIVE'|'SNAPSHOT',jurisdictionHint='',rawText='',allowLiveDiscovery=false,documentText=''):Promise<Verification>{
+export async function verifyClaims(claims:Claim[],courtName:string,mode:'LIVE'|'SNAPSHOT',jurisdictionHint='',rawText='',allowLiveDiscovery=false,documentText='',provenanceContext?:ProvenanceContext):Promise<Verification>{
  const identifiedCourt=(courtName+'\n'+jurisdictionHint).replace(/\s+/g,' ').trim();
  const r=RiversideSuperiorCourtResolver.supportedCourt(courtName)?RiversideSuperiorCourtResolver:ConnecticutDistrictCourtResolver.supportedCourt(identifiedCourt)?ConnecticutDistrictCourtResolver:FederalCourtListenerResolver.supportedCourt(courtName)?FederalCourtListenerResolver:UnsupportedCourtResolver;
  const text=rawText||claims.map(c=>c.context||c.exact_source_text||c.value).join('\n');
@@ -71,7 +71,7 @@ export async function verifyClaims(claims:Claim[],courtName:string,mode:'LIVE'|'
  const courtPromise=r.resolve(claims,mode,courtName).then(value=>({value,duration:Date.now()-courtStarted}));
  const discoveryMode=allowLiveDiscovery?'LIVE':mode;
  const discoveryText=documentText||text;
- const directoryPromise=discoverOfficialDirectory(discoveryText,courtName,jurisdictionHint,discoveryMode,claims,text);
+ const directoryPromise=discoverOfficialDirectory(discoveryText,courtName,jurisdictionHint,discoveryMode,claims,text,provenanceContext);
  const publicStarted=Date.now();
  const publicResults=resolvePublicClaims(claims,text);
  const intelligence=analyzePublicIntelligence(text,claims,[...publicResults.values()]);
@@ -88,5 +88,5 @@ export async function verifyClaims(claims:Claim[],courtName:string,mode:'LIVE'|'
  const signals=[...intelligence.signals,...(directory.signal&&!intelligence.signals.some(signal=>signal.id===directory.signal!.id)?[directory.signal]:[])];
  const discoveryActionEligible=directory.signal?.kind==='OFFICIAL_WARNING'||directory.signal?.kind==='OFFICIAL_PROCESS'||r.id==='unsupported';
  const safeAction=intelligence.safe_action||(discoveryActionEligible?directory.safeAction:undefined);
- return {...base,results:merged,signals,safe_action:safeAction,contact:base.contact||intelligence.contact,lanes,semantic_context:directory.semanticContext,discovery_debug:directory.diagnostics};
+ return {...base,results:merged,signals,safe_action:safeAction,contact:base.contact||intelligence.contact,lanes,semantic_context:directory.semanticContext,provenance_context:provenanceContext,discovery_debug:directory.diagnostics};
 }
