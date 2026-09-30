@@ -31,7 +31,7 @@ const semanticSchema=z.object({
   target:z.string().max(180)
  })).max(8),
  search_intents:z.array(z.string().max(220)).max(4),
- official_url_candidates:z.array(z.string().max(500)).max(4)
+ official_url_candidates:z.array(z.string().max(500)).max(4).default([])
 });
 
 const relationSchema=z.object({
