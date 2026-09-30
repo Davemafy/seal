@@ -1,5 +1,5 @@
 import {z} from 'zod';
-import type {Claim} from './types';
+import type {Claim,ProvenanceContext} from './types';
 
 export type GroundedSemanticContext={
  institution?:{value:string;quote:string};
@@ -25,6 +25,7 @@ export type GroundedDocumentSegmentation={
  recipientStartQuote?:string;
  recipientEndQuote?:string;
  wrapperEvidenceQuote?:string;
+ provenanceContext?:ProvenanceContext;
 };
 
 const normalize=(value:string)=>value.normalize('NFKC').replace(/\s+/g,' ').trim();
@@ -47,7 +48,13 @@ const segmentationSchema=z.object({
  role:z.enum(['received_message','official_advisory','mixed_with_embedded_example','unknown']),
  recipient_start_quote:z.string().max(240),
  recipient_end_quote:z.string().max(240),
- wrapper_evidence_quote:z.string().max(240)
+ wrapper_evidence_quote:z.string().max(240),
+ context_institution:z.string().max(180),
+ context_institution_quote:z.string().max(240),
+ context_jurisdiction:z.string().max(180),
+ context_jurisdiction_quote:z.string().max(240),
+ context_document_type:z.string().max(180),
+ context_document_type_quote:z.string().max(240)
 });
 const relationSchema=z.object({
  relations:z.array(z.object({
@@ -104,8 +111,21 @@ export function validateDocumentSegmentation(rawText:string,value:unknown):Groun
  let parsed:z.infer<typeof segmentationSchema>;
  try{parsed=segmentationSchema.parse(value)}catch{return null}
  const role=parsed.role;
+ const contextFrom=(value:string,quote:string,before=rawText.length)=>{
+  if(!value.trim()||!quote.trim())return undefined;
+  const hit=quoteMatch(rawText,quote);
+  if(!hit||hit.end>before)return undefined;
+  return {value:normalize(value),quote:normalize(quote)};
+ };
  if(role==='received_message'||role==='unknown')return {role,recipientText:rawText};
- if(role==='official_advisory')return {role,recipientText:''};
+ if(role==='official_advisory'){
+  const provenanceContext:ProvenanceContext={
+   institution:contextFrom(parsed.context_institution,parsed.context_institution_quote),
+   jurisdiction:contextFrom(parsed.context_jurisdiction,parsed.context_jurisdiction_quote),
+   document_type:contextFrom(parsed.context_document_type,parsed.context_document_type_quote)
+  };
+  return {role,recipientText:'',provenanceContext};
+ }
  const start=quoteMatch(rawText,parsed.recipient_start_quote);
  if(!start)return null;
  const end=quoteMatch(rawText,parsed.recipient_end_quote,start.start);
@@ -114,7 +134,12 @@ export function validateDocumentSegmentation(rawText:string,value:unknown):Groun
  if(!wrapper||wrapper.end>start.start)return null;
  const recipientText=rawText.slice(start.start,end.end).trim();
  if(recipientText.length<20)return null;
- return {role,recipientText,recipientStartQuote:normalize(parsed.recipient_start_quote),recipientEndQuote:normalize(parsed.recipient_end_quote),wrapperEvidenceQuote:normalize(parsed.wrapper_evidence_quote)};
+ const provenanceContext:ProvenanceContext={
+  institution:contextFrom(parsed.context_institution,parsed.context_institution_quote,start.start),
+  jurisdiction:contextFrom(parsed.context_jurisdiction,parsed.context_jurisdiction_quote,start.start),
+  document_type:contextFrom(parsed.context_document_type,parsed.context_document_type_quote,start.start)
+ };
+ return {role,recipientText,recipientStartQuote:normalize(parsed.recipient_start_quote),recipientEndQuote:normalize(parsed.recipient_end_quote),wrapperEvidenceQuote:normalize(parsed.wrapper_evidence_quote),provenanceContext};
 }
 
 export async function segmentDocumentWithModel(rawText:string):Promise<GroundedDocumentSegmentation|null>{
@@ -126,14 +151,22 @@ export async function segmentDocumentWithModel(rawText:string):Promise<GroundedD
   'Use mixed_with_embedded_example only when a wrapper or advisory contains a distinct quoted, attached, pictured, or embedded message that a recipient could receive.',
   'For mixed_with_embedded_example, recipient_start_quote must be a short continuous verbatim quote from the beginning of the embedded recipient message, and recipient_end_quote must be a short continuous verbatim quote from the end of that same embedded message.',
   'For mixed_with_embedded_example, wrapper_evidence_quote must be a short continuous verbatim quote from the wrapper before the embedded message that shows commentary, guidance, warning, or publication context.',
+  'Also identify wrapper provenance separately: context_institution is the institution that published or framed the wrapper, context_jurisdiction is its jurisdiction, and context_document_type is the wrapper publication type. Each non-empty value requires its own short verbatim quote from before the recipient message.',
+  'Wrapper provenance is context only. Never treat the wrapper institution as the sender claimed by the embedded message, and never turn wrapper guidance into recipient actions.',
   'Do not include wrapper instructions inside the recipient message. Do not decide authenticity. Do not rewrite OCR or repair text.',
-  'For received_message, official_advisory, or unknown, return empty boundary quote fields.'
+  'For received_message or unknown, return empty boundary and context fields. For official_advisory, boundary fields stay empty but grounded wrapper context fields may be populated.'
  ].join(' ');
  const properties={
   role:{type:'string',enum:['received_message','official_advisory','mixed_with_embedded_example','unknown']},
   recipient_start_quote:{type:'string'},
   recipient_end_quote:{type:'string'},
-  wrapper_evidence_quote:{type:'string'}
+  wrapper_evidence_quote:{type:'string'},
+  context_institution:{type:'string'},
+  context_institution_quote:{type:'string'},
+  context_jurisdiction:{type:'string'},
+  context_jurisdiction_quote:{type:'string'},
+  context_document_type:{type:'string'},
+  context_document_type_quote:{type:'string'}
  };
  return structuredCall(instruction,'DOCUMENT:\n'+rawText.slice(0,30000),'seal_document_segmentation',{type:'object',additionalProperties:false,properties,required:Object.keys(properties)},raw=>validateDocumentSegmentation(rawText,raw),7000);
 }
