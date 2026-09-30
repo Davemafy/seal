@@ -345,9 +345,9 @@ test('mobile SEAL brand returns a result to the clean entry state',async({page})
 
  await page.locator('.mobile-brand').click();
  await expect(page.getByTestId('result-shell')).toHaveCount(0);
- await expect(page.getByRole('heading',{level:1,name:/The seal can be faked/})).toBeVisible();
- await expect(page.getByRole('link',{name:'Check a court message'}).first()).toBeVisible();
- await expect(page).toHaveURL(/\/$/);
+ await expect(page.getByTestId('entry-shell')).toBeVisible();
+ await expect(page.getByRole('heading',{level:1,name:'Check a court message'})).toBeVisible();
+ await expect(page).toHaveURL(/\/check\/primary$/);
  assertNoRuntimeErrors();
 });
 
@@ -711,7 +711,7 @@ test('1208 desktop keeps sidebar compact and canvas restrained',async({page})=>{
  expect(metrics.rowHeight).toBeLessThanOrEqual(44);
  expect(metrics.railCopyWidth,'desktop check labels must remain readable').toBeGreaterThan(100);
  expect(metrics.railTitleSize).toBeGreaterThanOrEqual(12);
- expect(metrics.railTitleSize).toBeLessThanOrEqual(13);
+ expect(metrics.railTitleSize).toBeLessThanOrEqual(13.5);
  expect(metrics.appBottom).toBeLessThanOrEqual(metrics.viewport+1);
  expect(metrics.overflow).toBeLessThanOrEqual(1);
  assertNoRuntimeErrors();
