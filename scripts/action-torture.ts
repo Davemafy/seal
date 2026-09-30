@@ -32,7 +32,7 @@ const [homeResponse,browseResponse,versionResponse]=await Promise.all([
 if(!homeResponse.ok||!browseResponse.ok||!versionResponse.ok)throw new Error(`Live surface unavailable: home=${homeResponse.status} browse=${browseResponse.status} version=${versionResponse.status}`);
 const [homeHtml,browseHtml]=await Promise.all([homeResponse.text(),browseResponse.text()]);
 if(!homeHtml.includes('Check a court message'))throw new Error('Live home surface is missing the current intake heading.');
-if(!browseHtml.includes('Browse real cases'))throw new Error('Live browse surface is missing the case archive heading.');
+if(!browseHtml.includes('See what real court messages look like'))throw new Error('Live browse surface is missing the current case archive heading.');
 console.log('PASS live surface: home + browse + version');
 
 let passed=0;
