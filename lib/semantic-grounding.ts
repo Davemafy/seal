@@ -91,7 +91,7 @@ async function structuredCall<T>(instruction:string,user:string,schemaName:strin
 function quoteMatch(text:string,quote:string,from=0){
  const cleaned=quote.normalize('NFKC').trim();
  if(cleaned.length<8)return null;
- const escape=(value:string)=>value.replace(/[.*+?^${}()|[\]\\]/g,match=>'\\\\'+match);
+ const escape=(value:string)=>value.replace(/[.*+?^${}()|[\]\\]/g,match=>'\\'+match);
  const pattern=cleaned.split(/\s+/).map(escape).join('\\s+');
  try{
   const match=new RegExp(pattern,'iu').exec(text.slice(from));

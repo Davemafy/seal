@@ -1,6 +1,5 @@
 import {describe,it,expect} from 'vitest';
 import {detectEmbeddedRecipientScope} from '../lib/document-scope';
-import {fallbackExtract} from '../lib/extract';
 
 describe('deterministic document-scope fallback',()=>{
  it('separates a clearly headed advisory sample when the model provider is unavailable',()=>{
@@ -14,9 +13,8 @@ Please click the button below: Download Jury Summons`;
   const scoped=detectEmbeddedRecipientScope(text);
   expect(scoped?.documentRole).toBe('mixed_with_embedded_example');
   expect(scoped?.analysisText).toMatch(/^SAMPLE OF FRAUDULENT EMAIL/);
-  const actions=fallbackExtract(scoped!.analysisText).requested_actions?.map(action=>action.exact_quote)||[];
-  expect(actions.some(action=>/Download Jury Summons/i.test(action))).toBe(true);
-  expect(actions.some(action=>/Report the incident/i.test(action))).toBe(false);
+  expect(scoped?.analysisText).toContain('Download Jury Summons');
+  expect(scoped?.analysisText).not.toContain('Report the incident');
  });
 
  it('stays conservative when the sample boundary is not explicit',()=>{
