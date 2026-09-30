@@ -1,5 +1,48 @@
+describe('grounded document segmentation',()=>{
+ const mixed=`PUBLIC NOTICE: Jury scam alert
+The District Court warns that scammers may impersonate court staff.
+Report suspicious contact to law enforcement.
+SAMPLE OF FRAUDULENT EMAIL
+Subject: Jury Duty Summons
+Click Download Jury Summons.
+Contact the Jury Office immediately.`;
+
+ it('accepts model-selected boundaries only when both recipient edges and wrapper evidence are grounded',()=>{
+  const segmented=validateDocumentSegmentation(mixed,{
+   role:'mixed_with_embedded_example',
+   recipient_start_quote:'SAMPLE OF FRAUDULENT EMAIL',
+   recipient_end_quote:'Contact the Jury Office immediately.',
+   wrapper_evidence_quote:'The District Court warns that scammers may impersonate court staff.'
+  });
+  expect(segmented?.role).toBe('mixed_with_embedded_example');
+  expect(segmented?.recipientText).toMatch(/^SAMPLE OF FRAUDULENT EMAIL/);
+  expect(segmented?.recipientText).not.toContain('Report suspicious contact');
+ });
+
+ it('rejects invented or wrapper-inside-recipient boundaries',()=>{
+  expect(validateDocumentSegmentation(mixed,{
+   role:'mixed_with_embedded_example',
+   recipient_start_quote:'SAMPLE OF FRAUDULENT EMAIL',
+   recipient_end_quote:'invented ending',
+   wrapper_evidence_quote:'Jury scam alert'
+  })).toBeNull();
+  expect(validateDocumentSegmentation(mixed,{
+   role:'mixed_with_embedded_example',
+   recipient_start_quote:'SAMPLE OF FRAUDULENT EMAIL',
+   recipient_end_quote:'Contact the Jury Office immediately.',
+   wrapper_evidence_quote:'Click Download Jury Summons.'
+  })).toBeNull();
+ });
+
+ it('uses the full artifact for ordinary received messages',()=>{
+  const notice='DISTRICT COURT OF NORTHBRIDGE\nYou must appear on October 14, 2026.';
+  const segmented=validateDocumentSegmentation(notice,{role:'received_message',recipient_start_quote:'',recipient_end_quote:'',wrapper_evidence_quote:''});
+  expect(segmented?.recipientText).toBe(notice);
+ });
+});
+
 import {describe,expect,it} from 'vitest';
-import {validateEvidenceRelations,validateGroundedSemanticContext} from '../lib/semantic-grounding';
+import {validateDocumentSegmentation,validateEvidenceRelations,validateGroundedSemanticContext} from '../lib/semantic-grounding';
 import type {Claim} from '../lib/types';
 
 describe('grounded semantic document layer',()=>{
