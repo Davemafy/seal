@@ -47,7 +47,9 @@ jobs:
             page.on('pageerror',e=>errors.push(e.message));
             await page.goto('http://127.0.0.1:3000/',{waitUntil:'domcontentloaded',timeout:30000});
             await page.locator('.landing-hero').waitFor();
+            await page.locator('.site-loader').waitFor({state:'detached',timeout:16000});
             await page.evaluate(()=>document.fonts?.ready);
+            await page.waitForTimeout(220);
             await page.screenshot({path:'redesign-artifacts/'+label+'.png',fullPage:true,animations:'disabled'});
             const measured=await page.evaluate(()=>{
               const visible=s=>{const e=document.querySelector(s);if(!e)return false;const style=getComputedStyle(e);const r=e.getBoundingClientRect();return style.display!=='none'&&r.width>1&&r.height>1};
@@ -60,9 +62,17 @@ jobs:
                 bodyHeight:document.documentElement.scrollHeight,
                 links:[...document.querySelectorAll('.landing-page a[href]')].map(a=>a.getAttribute('href')).slice(0,40)};
             });
-            states.push({label,width,height,...measured,errors});
-            console.log(label,JSON.stringify(measured),errors.join('; '));
-            if(measured.horizontalOverflow||!measured.heading||errors.length||!measured.checkerHasUpload)failed=true;
+            let pasteInteraction=false;
+            if(measured.checkerVisible){
+              const switcher=page.locator('.landing-checker .paste-mode-switch').first();
+              if(await switcher.isVisible()){
+                await switcher.click();
+                pasteInteraction=await page.locator('.landing-checker textarea').first().isVisible();
+              }
+            }
+            states.push({label,width,height,...measured,pasteInteraction,errors});
+            console.log(label,JSON.stringify({...measured,pasteInteraction}),errors.join('; '));
+            if(measured.horizontalOverflow||!measured.heading||errors.length||!measured.checkerHasUpload||!measured.checkerVisible||!pasteInteraction)failed=true;
             await context.close();
           }
           await browser.close();
