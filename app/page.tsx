@@ -7,6 +7,7 @@ import SealApp from './seal-app';
 import {DISPLAY_LANGUAGES,type DisplayLocale,type UiCopyKey} from '@/lib/ui-locales';
 import {useStoredUiLocale,useUiText} from '@/lib/use-ui-text';
 import './landing.css';
+import './landing-recovery.css';
 
 const featuredCases:[
  {titleKey:UiCopyKey;meta:string;image:string;href:string;labelKey:UiCopyKey},
