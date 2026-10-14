@@ -1,0 +1,91 @@
+name: SEAL · Sloppertizer redesign preview
+on:
+  push:
+    branches:
+      - experiment/sloppertizer-context-redesign
+
+permissions:
+  contents: read
+
+jobs:
+  design-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm install --no-audit --no-fund
+      - name: Typecheck and production build
+        run: |
+          npm run typecheck
+          npm run build
+      - name: Install browser
+        run: npx playwright install --with-deps chromium
+      - name: Render responsive design and verify primary workflow controls
+        run: |
+          set -e
+          npm run start -- --port 3000 > /tmp/seal-next.log 2>&1 &
+          server=$!
+          trap 'kill $server || true' EXIT
+          for i in $(seq 1 55); do
+            if curl -fsS http://127.0.0.1:3000/ -o /dev/null; then break; fi
+            sleep 2
+          done
+          mkdir -p redesign-artifacts
+          node --input-type=module <<'JS'
+          import {chromium} from 'playwright';
+          import fs from 'node:fs/promises';
+          const browser=await chromium.launch({headless:true});
+          let failed=false;
+          const states=[];
+          for(const [width,height,label] of [[1440,900,'desktop'],[768,1024,'tablet'],[390,844,'mobile']]){
+            const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1});
+            const page=await context.newPage();
+            const errors=[];
+            page.on('pageerror',e=>errors.push(e.message));
+            await page.goto('http://127.0.0.1:3000/',{waitUntil:'domcontentloaded',timeout:30000});
+            await page.locator('.landing-hero').waitFor();
+            await page.evaluate(()=>document.fonts?.ready);
+            await page.screenshot({path:'redesign-artifacts/'+label+'.png',fullPage:true,animations:'disabled'});
+            const measured=await page.evaluate(()=>{
+              const visible=s=>{const e=document.querySelector(s);if(!e)return false;const style=getComputedStyle(e);const r=e.getBoundingClientRect();return style.display!=='none'&&r.width>1&&r.height>1};
+              const h1=document.querySelector('h1');
+              return {title:document.title,heading:h1?.textContent?.slice(0,180)||'',
+                horizontalOverflow:document.documentElement.scrollWidth>innerWidth+2,
+                checkerVisible:visible('.landing-checker'),checkerHasUpload:!!document.querySelector('.landing-checker input[type=file]'),
+                checkerHasPaste:!!document.querySelector('.landing-checker textarea'),
+                heroHeight:document.querySelector('.landing-hero')?.getBoundingClientRect().height,
+                bodyHeight:document.documentElement.scrollHeight,
+                links:[...document.querySelectorAll('.landing-page a[href]')].map(a=>a.getAttribute('href')).slice(0,40)};
+            });
+            states.push({label,width,height,...measured,errors});
+            console.log(label,JSON.stringify(measured),errors.join('; '));
+            if(measured.horizontalOverflow||!measured.heading||errors.length||!measured.checkerHasUpload)failed=true;
+            await context.close();
+          }
+          await browser.close();
+          await fs.writeFile('redesign-artifacts/qa.json',JSON.stringify({states,pass:!failed},null,2));
+          if(failed)process.exitCode=1;
+          JS
+      - name: Upload screenshots and quality measurements
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sloppertizer-seal-visual-preview
+          path: redesign-artifacts
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Upload source snapshot for reproducible local inspection
+        if: always()
+        run: |
+          tar --exclude=.git --exclude=node_modules --exclude=.next --exclude=test-results --exclude=redesign-artifacts -czf /tmp/seal-source-redesign.tar.gz .
+          cp /tmp/seal-source-redesign.tar.gz redesign-artifacts/source.tar.gz
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sloppertizer-seal-source
+          path: redesign-artifacts/source.tar.gz
+          retention-days: 3
+          if-no-files-found: warn
