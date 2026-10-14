@@ -750,12 +750,15 @@ test('landing keeps the checker above the fold and exposes Dallas provenance',as
 
  await page.setViewportSize({width:390,height:844});
  await page.reload();
- await expect(page.getByTestId('upload-file')).not.toBeVisible();
+ const mobileUpload=page.getByTestId('upload-file');
+ await expect(mobileUpload).toBeVisible();
+ const uploadBox=await mobileUpload.boundingBox();
+ expect(uploadBox).not.toBeNull();
+ expect(uploadBox!.y,'mobile upload workspace should begin within the opening viewport').toBeLessThan(844);
+ await page.locator('.landing-checker .paste-mode-switch').first().click();
+ await expect(page.locator('.landing-checker textarea')).toBeVisible();
  const mobileCta=page.getByRole('link',{name:'Check a court message'}).first();
  await expect(mobileCta).toBeVisible();
- const ctaBox=await mobileCta.boundingBox();
- expect(ctaBox).not.toBeNull();
- expect(ctaBox!.y,'mobile CTA should remain inside the opening viewport').toBeLessThan(844);
  overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
  expect(overflow).toBeLessThanOrEqual(1);
  assertNoRuntimeErrors();
