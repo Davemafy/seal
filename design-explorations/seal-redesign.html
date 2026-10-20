@@ -3,234 +3,130 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f4f1ea">
-<meta name="description" content="SEAL helps you examine suspicious court messages against independent official sources and find a safer way to contact the court.">
-<title>SEAL — Before you call, click, pay, or reply.</title>
+<meta name="theme-color" content="#f7f6f2">
+<meta name="description" content="Check the claims in a suspicious court message against independent official sources.">
+<title>SEAL — Check the claim, not the letterhead.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;650;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
 <style>
-:root{color-scheme:light;--canvas:#f4f1ea;--paper:#fffefa;--ink:#171916;--muted:#666960;--line:#d9d8cf;--line-dark:#a8a99f;--rust:#a9442c;--rust-pale:#f6e7e0;--green:#216849;--green-pale:#e3eee6;--blue:#315bce;--sans:"Instrument Sans",Arial,sans-serif;--serif:"Source Serif 4",Georgia,serif;--max:1380px}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
-a{color:inherit;text-underline-offset:4px}
-button,input,textarea{font:inherit}
-button,a,input,textarea,summary{outline-offset:4px}
-:focus-visible{outline:2px solid var(--blue)}
-.skip-link{position:absolute;left:12px;top:-60px;padding:10px 14px;background:var(--ink);color:white;z-index:10}.skip-link:focus{top:12px}
-.site-header{max-width:var(--max);margin:auto;padding:24px 5.2%;display:flex;align-items:center;justify-content:space-between;gap:24px;border-bottom:1px solid var(--line)}
-.brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none;font-size:25px;line-height:1;font-weight:700;letter-spacing:-1.4px}
-.brand-mark{width:29px;height:29px;display:grid;place-items:center;border:1.5px solid var(--ink);border-radius:50%;position:relative}
-.brand-mark:before{content:"";width:10px;height:10px;border:1.5px solid var(--ink);border-radius:2px;transform:rotate(45deg)}
-.brand-mark:after{content:"";position:absolute;width:4px;height:4px;background:var(--green);border-radius:50%;right:2px;top:2px}
-.brand sup{font-size:9px;letter-spacing:.04em;margin-left:1px;align-self:flex-start}
-.header-meta{display:flex;align-items:center;gap:26px;color:var(--muted);font-size:13px}
-.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:8px;vertical-align:1px}
-.header-link{text-decoration:none;border-bottom:1px solid var(--line-dark);padding-bottom:3px}
-main{max-width:var(--max);margin:0 auto;padding:0 5.2%}
-.hero{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(360px,.98fr);gap:clamp(44px,7vw,112px);align-items:center;padding:76px 0 70px}
-.eyebrow{display:flex;align-items:center;gap:10px;margin:0 0 25px;color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
-.eyebrow:before{content:"";width:26px;height:1px;background:var(--rust)}
-h1,h2,h3,p{margin-top:0}
-h1{max-width:700px;margin-bottom:24px;font-size:clamp(47px,6.1vw,84px);line-height:.99;letter-spacing:-.075em;font-weight:600}
-h1 .serif{font-family:var(--serif);font-weight:400;letter-spacing:-.055em;font-style:italic}
-.hero-intro{max-width:480px;color:#4f524b;font-size:17px;line-height:1.7;margin-bottom:30px}
-.hero-note{display:flex;align-items:flex-start;gap:11px;max-width:470px;margin-top:17px;color:var(--muted);font-size:12px;line-height:1.55}
-.info-icon{flex:0 0 18px;width:18px;height:18px;border:1px solid var(--line-dark);border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600}
-.intake{max-width:560px}
-.dropzone{min-height:144px;display:flex;align-items:center;gap:17px;padding:23px 24px;background:rgba(255,254,250,.66);border:1px dashed #aaa99e;transition:background .18s,border-color .18s}
-.dropzone.dragging{border-color:var(--blue);background:#edf1ff}
-.upload-symbol{flex:0 0 43px;width:43px;height:43px;display:grid;place-items:center;border:1px solid var(--line);background:var(--paper)}
-.upload-symbol svg{width:21px;height:21px}
-.drop-copy{min-width:0;flex:1}
-.drop-title{display:block;font-size:14px;font-weight:600;letter-spacing:-.02em}
-.drop-sub{display:block;margin-top:4px;color:var(--muted);font-size:12px}
-.file-input{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
-.browse-button{flex:0 0 auto;border:1px solid var(--ink);background:var(--ink);color:white;padding:11px 14px;font-size:12px;font-weight:600;cursor:pointer}
-.browse-button:hover{background:#343630}
-.file-status{display:none;margin-top:9px;padding:10px 12px;background:var(--green-pale);color:var(--green);font-size:12px}
-.file-status.visible{display:block}
-.paste-details{margin-top:10px;border-bottom:1px solid var(--line)}
-.paste-details summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 1px;cursor:pointer;list-style:none;font-size:13px;font-weight:600}
-.paste-details summary::-webkit-details-marker{display:none}
-.paste-details summary:after{content:"+";font-size:20px;font-weight:400;color:var(--muted)}
-.paste-details[open] summary:after{content:"−"}
-.paste-body{padding:5px 0 15px}
-.paste-body label{display:block;margin-bottom:8px;font-size:12px;font-weight:600}
-textarea{width:100%;min-height:126px;resize:vertical;padding:14px;background:var(--paper);border:1px solid var(--line-dark);border-radius:0;color:var(--ink);font-size:14px;line-height:1.6}
-textarea::placeholder{color:#898a81}
-.intake-actions{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:15px}
-.primary-button{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:49px;padding:13px 18px;border:1px solid var(--ink);background:var(--ink);color:white;text-decoration:none;font-size:13px;font-weight:600;cursor:pointer;transition:background .18s}
-.primary-button:hover{background:#363832}
-.primary-button svg{width:15px;height:15px}
-.text-button{padding:8px 0;border:0;border-bottom:1px solid var(--line-dark);background:transparent;color:var(--ink);font-size:12px;font-weight:600;cursor:pointer}
-.prototype-notice{display:none;margin-top:14px;padding:14px 16px;border-left:3px solid var(--blue);background:#e9edf9;color:#263b76;font-size:13px;line-height:1.6}
-.prototype-notice.visible{display:block}
-.hero-aside{position:relative;min-width:0}
-.specimen-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;color:var(--muted);font-size:10px;letter-spacing:.11em;text-transform:uppercase}
-.specimen-top span:last-child{letter-spacing:.04em}
-.paper-wrap{position:relative;padding:0 0 28px 24px}
-.paper-wrap:before{content:"";position:absolute;inset:15px 0 0 10px;border:1px solid #dedbd1;background:#ece8df}
-.notice-paper{position:relative;min-height:478px;padding:clamp(24px,3.1vw,43px);background:var(--paper);border:1px solid #d9d6cb;box-shadow:0 18px 45px rgba(43,40,31,.055);transform:rotate(.25deg)}
-.paper-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding-bottom:22px;border-bottom:1px solid #d8d7ce}
-.seal-emblem{width:43px;height:43px;border:1px solid #85877f;border-radius:50%;display:grid;place-items:center;flex:0 0 auto}
-.seal-emblem svg{width:25px;height:25px}
-.court-title{font-family:var(--serif);font-size:14px;line-height:1.4;letter-spacing:.005em}
-.court-title small{display:block;margin-top:5px;font-family:var(--sans);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#73766e}
-.doc-label{margin:24px 0 12px;color:#7a7c73;font-size:9px;letter-spacing:.12em;text-transform:uppercase}
-.doc-title{font-family:var(--serif);font-size:clamp(25px,3vw,36px);line-height:1.05;letter-spacing:-.035em;font-weight:400;margin:0 0 22px}
-.doc-meta{display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:15px 0;border-top:1px solid #e5e2d8;border-bottom:1px solid #e5e2d8}
-.doc-meta span{display:block;color:#77796f;font-size:9px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
-.doc-meta strong{font-size:11px;font-weight:500}
-.doc-copy{font-family:var(--serif);font-size:14px;line-height:1.75;color:#44463f;margin:20px 0}
-.doc-copy p{margin-bottom:11px}
-.marked-claim{background:linear-gradient(transparent 58%,#f1d6c9 58%);color:#722e1d}
-.fake-stamp{display:flex;align-items:center;gap:9px;padding-top:17px;border-top:1px solid #e5e2d8;color:var(--rust);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
-.fake-stamp span{width:7px;height:7px;background:var(--rust);border-radius:50%}
-.specimen-caption{display:flex;justify-content:space-between;gap:20px;padding:0 0 0 24px;color:var(--muted);font-size:11px;line-height:1.5}
-.specimen-caption strong{color:var(--ink);font-weight:600}
-.section-rule{height:1px;background:var(--line)}
-.method{display:grid;grid-template-columns:.8fr 2fr;gap:60px;padding:37px 0 43px}
-.method-heading{font-size:12px;font-weight:600;letter-spacing:.02em}
-.method-intro{max-width:260px;margin-top:9px;color:var(--muted);font-size:12px;line-height:1.65}
-.method-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
-.method-step{padding-top:4px}
-.step-index{display:block;width:24px;height:24px;margin-bottom:18px;border:1px solid var(--line-dark);border-radius:50%;display:grid;place-items:center;font-size:10px;color:var(--muted)}
-.method-step h3{font-size:15px;letter-spacing:-.025em;margin-bottom:7px}
-.method-step p{max-width:240px;margin:0;color:var(--muted);font-size:12px;line-height:1.65}
-.limit-section{display:grid;grid-template-columns:.8fr 2fr;gap:60px;padding:35px 0 45px}
-.limit-label{font-size:12px;font-weight:600}
-.limit-copy{max-width:760px;color:#4f524b;font-size:14px;line-height:1.8}
-.limit-copy strong{color:var(--ink);font-weight:600}
-.limit-copy p{margin:0 0 12px}
-.limit-copy p:last-child{margin-bottom:0}
-.site-footer{max-width:var(--max);margin:auto;padding:22px 5.2% 28px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:22px;color:var(--muted);font-size:11px}
-.footer-brand{color:var(--ink);font-weight:700;letter-spacing:-.04em}
-.footer-right{max-width:600px;text-align:right}
-@media(min-width:1200px){.hero{padding-top:88px;padding-bottom:82px}}
-@media(max-width:900px){main{padding:0 5%}.site-header{padding:21px 5%}.hero{grid-template-columns:minmax(0,1fr) minmax(300px,.85fr);gap:38px;padding:58px 0}.header-meta{gap:15px}.hero-intro{font-size:15px}.dropzone{padding:18px;gap:12px}.browse-button{padding:10px}.notice-paper{min-height:450px}.method,.limit-section{grid-template-columns:.65fr 2fr;gap:34px}}
-@media(max-width:700px){.site-header{padding:18px 5%}.brand{font-size:23px}.header-meta .header-link{display:none}.header-meta{font-size:11px}.hero{grid-template-columns:1fr;gap:42px;padding:49px 0 42px}.hero-copy{max-width:600px}h1{max-width:580px;font-size:clamp(49px,11.5vw,72px);margin-bottom:19px}.hero-intro{font-size:16px;max-width:540px;margin-bottom:24px}.intake{max-width:none}.hero-aside{max-width:560px;width:100%;margin:auto}.paper-wrap{padding-left:14px}.paper-wrap:before{left:5px;top:10px}.notice-paper{min-height:0;padding:26px 23px;transform:none}.doc-title{font-size:32px}.specimen-caption{padding-left:14px}.method,.limit-section{grid-template-columns:1fr;gap:24px;padding:29px 0 34px}.method-intro{max-width:460px}.method-steps{gap:18px}.step-index{margin-bottom:12px}.method-step h3{font-size:14px}.site-footer{padding:20px 5%;flex-direction:column;gap:8px}.footer-right{text-align:left}}
-@media(max-width:430px){.header-meta .status-text{display:none}.hero{padding-top:39px;gap:35px}.eyebrow{margin-bottom:19px}.dropzone{align-items:flex-start;flex-wrap:wrap}.upload-symbol{width:37px;height:37px;flex-basis:37px}.drop-copy{padding-top:1px}.browse-button{margin-left:49px}.method-steps{grid-template-columns:1fr;gap:19px}.method-step{display:grid;grid-template-columns:28px 1fr;column-gap:11px}.step-index{grid-row:span 2;margin:0}.method-step h3{margin-bottom:4px}.method-step p{max-width:none}.doc-meta{gap:10px}.doc-copy{font-size:13px}.specimen-top{font-size:9px}}
+:root{color-scheme:light;--bg:#f7f6f2;--paper:#fffefa;--ink:#20231f;--muted:#696d65;--line:#d9dad2;--line2:#b9bcb2;--red:#a6382b;--redbg:#f5e8e4;--green:#276247;--greenbg:#e5eee7;--amber:#7c5a19;--amberbg:#f3eddc;--mono:"DM Mono",monospace;--sans:"DM Sans",Arial,sans-serif;--serif:"Newsreader",Georgia,serif;--max:1240px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 var(--sans);-webkit-font-smoothing:antialiased}a{color:inherit;text-underline-offset:4px}button,input,textarea{font:inherit}button,a,textarea,input{outline-offset:4px}:focus-visible{outline:2px solid #284d8c}.skip{position:absolute;top:-80px;left:12px;padding:10px;background:var(--ink);color:white;z-index:10}.skip:focus{top:12px}
+.shell{max-width:var(--max);margin:auto;padding:0 36px}.topbar{height:74px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:24px}.wordmark{display:flex;align-items:center;gap:11px;text-decoration:none;font-weight:700;font-size:20px;letter-spacing:-.07em}.mark{width:25px;height:29px;border:1.5px solid var(--ink);position:relative;display:block}.mark:before{content:"";position:absolute;left:5px;right:5px;top:6px;height:1px;background:var(--ink);box-shadow:0 5px var(--ink),0 10px var(--ink)}.mark:after{content:"";position:absolute;width:6px;height:6px;border:1px solid var(--red);right:-4px;bottom:-4px;background:var(--bg)}.top-meta{font:10px var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}.top-meta a{text-decoration:none;border-bottom:1px solid var(--line2);margin-left:24px;padding-bottom:3px}
+main{padding-bottom:0}.intro{padding:52px 0 33px;display:grid;grid-template-columns:1fr auto;align-items:end;gap:30px;border-bottom:1px solid var(--ink)}.kicker,.micro{font:10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.kicker{margin:0 0 17px;display:flex;gap:10px;align-items:center}.kicker:before{content:"";width:22px;height:1px;background:var(--red)}h1{font:400 clamp(45px,6.5vw,78px)/.97 var(--serif);letter-spacing:-.055em;max-width:760px;margin:0}h1 em{font-weight:400;color:var(--red)}.intro-side{max-width:250px;color:var(--muted);font-size:12px;line-height:1.7;padding-bottom:4px}.intro-side strong{display:block;color:var(--ink);font-weight:600;margin-bottom:6px}
+.workbench{display:grid;grid-template-columns:minmax(0,1.06fr) minmax(360px,.94fr);gap:38px;padding:35px 0 46px}.column-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:0 0 13px;border-bottom:1px solid var(--line2);margin-bottom:18px}.column-head h2{font:500 15px var(--sans);margin:0;letter-spacing:-.02em}.step-label{font:10px var(--mono);color:var(--muted)}.intake-lede{font:400 23px/1.2 var(--serif);letter-spacing:-.02em;margin:0 0 7px}.intake-help{font-size:12px;color:var(--muted);margin:0 0 21px;max-width:450px}
+.upload{border:1px dashed var(--line2);background:rgba(255,254,250,.7);min-height:110px;display:flex;align-items:center;gap:15px;padding:20px}.file-glyph{width:34px;height:42px;flex:0 0 34px;border:1px solid var(--line2);position:relative;background:var(--paper)}.file-glyph:before{content:"";position:absolute;left:7px;right:7px;top:13px;height:1px;background:var(--line2);box-shadow:0 6px var(--line2),0 12px var(--line2)}.upload.drag{border-color:#284d8c;background:#edf0f7}.upload-copy{flex:1;min-width:0}.upload-copy strong{display:block;font-size:12px;font-weight:600}.upload-copy span{display:block;font-size:11px;color:var(--muted);margin-top:4px}.choose{border:1px solid var(--ink);background:var(--ink);color:white;padding:9px 12px;font-size:11px;cursor:pointer}.choose:hover,.primary:hover{background:#3b4038}.file-input{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}.file-status{display:none;padding:10px 12px;background:var(--greenbg);color:var(--green);font-size:11px;margin-top:8px}.file-status.show{display:block}
+.or{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--muted);font:10px var(--mono);text-transform:uppercase}.or:before,.or:after{content:"";height:1px;background:var(--line);flex:1}.field-label{display:block;font-size:11px;font-weight:600;margin:0 0 8px}textarea{display:block;width:100%;min-height:126px;padding:13px 14px;border:1px solid var(--line2);background:var(--paper);border-radius:0;resize:vertical;font-size:12px;line-height:1.7;color:var(--ink)}textarea::placeholder{color:#8b8e85}.form-bottom{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:12px}.primary{display:inline-flex;align-items:center;gap:15px;padding:12px 15px;border:1px solid var(--ink);background:var(--ink);color:white;font-size:11px;font-weight:600;cursor:pointer}.primary span{font-size:16px;line-height:10px}.quiet{border:0;border-bottom:1px solid var(--line2);padding:5px 0;background:transparent;font-size:11px;cursor:pointer}.notice{display:none;margin-top:13px;padding:12px 14px;border-left:3px solid #284d8c;background:#e9edf5;color:#273e6c;font-size:11px;line-height:1.65}.notice.show{display:block}.privacy{margin:17px 0 0;display:flex;gap:9px;align-items:flex-start;color:var(--muted);font-size:10px;line-height:1.65}.privacy-mark{width:14px;height:14px;flex:0 0 14px;border:1px solid var(--line2);font:9px var(--mono);display:grid;place-items:center;margin-top:1px}
+.evidence{min-width:0}.evidence-card{background:var(--paper);border:1px solid var(--line);}.evidence-top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 15px;border-bottom:1px solid var(--line);font:9px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}.fiction{padding:4px 6px;background:#efeee8;color:#595d55}.claim{padding:22px 23px 21px;border-bottom:1px solid var(--line)}.claim-label{font:10px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:0 0 11px}.claim blockquote{font:400 clamp(20px,2.4vw,27px)/1.24 var(--serif);letter-spacing:-.025em;margin:0}.claim mark{color:var(--red);background:linear-gradient(transparent 61%,#f0d8d0 61%)}.comparison{display:grid;grid-template-columns:1fr 1fr}.compare-cell{padding:17px 18px 19px;min-width:0}.compare-cell+ .compare-cell{border-left:1px solid var(--line)}.cell-label{display:block;font:9px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}.compare-cell p{font-size:11px;line-height:1.7;margin:0}.compare-cell .quoted{padding-left:10px;border-left:2px solid var(--line2)}.compare-cell .quoted em{font-style:normal;color:var(--red);text-decoration:underline;text-decoration-color:#d7a398;text-underline-offset:3px}.result-panel{border-top:1px solid var(--line);padding:17px 19px 19px;background:#f8f7f2}.result-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.result-head h3{font:500 12px var(--sans);margin:0}.state-tag{font:9px var(--mono);letter-spacing:.05em;text-transform:uppercase;padding:5px 7px;border:1px solid currentColor}.state-tag.mismatch{color:var(--red);background:var(--redbg)}.state-tag.match{color:var(--green);background:var(--greenbg)}.state-tag.unknown{color:var(--amber);background:var(--amberbg)}.result-copy{font-size:11px;line-height:1.7;margin:0 0 12px;max-width:520px}.source-line{display:flex;align-items:flex-start;gap:8px;padding-top:10px;border-top:1px solid var(--line);font-size:10px;line-height:1.6;color:var(--muted)}.source-dot{width:6px;height:6px;flex:0 0 6px;background:var(--line2);margin-top:5px}.state-controls{display:flex;gap:5px;flex-wrap:wrap;margin-top:13px}.state-button{background:transparent;border:1px solid var(--line2);padding:6px 8px;font:9px var(--mono);cursor:pointer;color:var(--muted)}.state-button[aria-pressed=true]{border-color:var(--ink);color:var(--ink);background:white}.demo-caption{font:9px var(--mono);color:var(--muted);margin:10px 0 0;line-height:1.6}
+.principles{border-top:1px solid var(--ink);display:grid;grid-template-columns:repeat(3,1fr);margin-top:0}.principle{padding:22px 23px 27px 0}.principle+.principle{padding-left:23px;border-left:1px solid var(--line)}.principle .n{font:10px var(--mono);color:var(--red);display:block;margin-bottom:16px}.principle h2{font:500 15px var(--sans);letter-spacing:-.025em;margin:0 0 7px}.principle p{font-size:11px;color:var(--muted);line-height:1.7;max-width:290px;margin:0}.caveat{border-top:1px solid var(--line);padding:24px 0 29px;display:grid;grid-template-columns:1fr 2fr;gap:30px}.caveat h2{font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.04em;margin:0}.caveat p{max-width:780px;margin:0 0 8px;font-size:11px;line-height:1.8;color:var(--muted)}.caveat p:last-child{margin-bottom:0}.caveat strong{color:var(--ink);font-weight:600}
+footer{border-top:1px solid var(--ink);padding:17px 0 24px;display:flex;justify-content:space-between;gap:20px;font-size:10px;color:var(--muted)}footer strong{color:var(--ink);letter-spacing:-.04em}footer span:last-child{text-align:right;max-width:650px}
+@media(min-width:1300px){.intro{padding-top:64px}.workbench{padding-top:40px;padding-bottom:53px}}
+@media(max-width:850px){.shell{padding:0 24px}.workbench{grid-template-columns:1fr;gap:39px}.intro{grid-template-columns:1fr;gap:17px}.intro-side{max-width:480px}.intro-side strong{display:inline;margin-right:5px}.evidence{max-width:650px;width:100%}.intake{max-width:650px}.comparison .compare-cell{padding:16px}.caveat{grid-template-columns:1fr;gap:13px}}
+@media(max-width:520px){.shell{padding:0 17px}.topbar{height:63px}.top-meta{font-size:8px}.top-meta a{margin-left:10px}.intro{padding:37px 0 25px}h1{font-size:clamp(45px,12vw,63px)}.intro-side{font-size:11px}.workbench{padding:25px 0 34px;gap:32px}.upload{padding:15px 12px;gap:10px}.file-glyph{width:28px;height:36px;flex-basis:28px}.file-glyph:before{left:5px;right:5px}.choose{padding:8px 9px;font-size:10px}.upload-copy strong{font-size:11px}.upload-copy span{font-size:10px}.claim{padding:18px 16px}.claim blockquote{font-size:22px}.comparison .compare-cell{padding:13px 11px}.compare-cell p{font-size:10px}.result-panel{padding:15px}.principles{grid-template-columns:1fr}.principle,.principle+.principle{padding:18px 0;border-left:0;border-bottom:1px solid var(--line)}.principle .n{margin-bottom:8px}.principle p{max-width:400px}.caveat{padding:20px 0 24px}footer{flex-direction:column;gap:8px}footer span:last-child{text-align:left}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
-<a class="skip-link" href="#main">Skip to main content</a>
-<header class="site-header">
-  <a class="brand" href="#" aria-label="SEAL home"><span class="brand-mark" aria-hidden="true"></span>SEAL<sup>INDEPENDENT</sup></a>
-  <div class="header-meta"><span><i class="status-dot"></i><span class="status-text">A calmer way to check</span></span><a class="header-link" href="#how-it-works">How it works</a></div>
+<a class="skip" href="#main">Skip to main content</a>
+<div class="shell">
+<header class="topbar">
+  <a class="wordmark" href="#" aria-label="SEAL home"><span class="mark" aria-hidden="true"></span>SEAL</a>
+  <div class="top-meta">Independent message checking <a href="#method">Method</a></div>
 </header>
 <main id="main">
-  <section class="hero" aria-labelledby="hero-title">
-    <div class="hero-copy">
-      <p class="eyebrow">An independent court-message checker</p>
-      <h1 id="hero-title">Before you call, click, <span class="serif">pay,</span> or reply.</h1>
-      <p class="hero-intro">A court message can look official and still ask you to do the wrong thing. SEAL separates the action it asks for from the details around it, then checks what independent official sources can establish.</p>
-      <div class="intake" id="check">
-        <div class="dropzone" id="dropzone">
-          <span class="upload-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 14v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5"/></svg></span>
-          <div class="drop-copy"><strong class="drop-title">Add the message you received</strong><span class="drop-sub">Screenshot, image, or PDF · or drag a file here</span></div>
-          <input class="file-input" id="file-input" type="file" accept="image/*,.pdf,application/pdf" aria-label="Choose a screenshot, image, or PDF">
-          <button class="browse-button" type="button" id="browse-button">Choose file</button>
-        </div>
-        <div class="file-status" id="file-status" role="status" aria-live="polite"></div>
-        <details class="paste-details" id="paste-details">
-          <summary>Paste message text instead</summary>
-          <div class="paste-body">
-            <label for="message-text">Message text</label>
-            <textarea id="message-text" placeholder="Paste the message here. Remove personal details you do not need checked."></textarea>
-            <div class="intake-actions">
-              <button class="primary-button" id="check-text" type="button">Check this message <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 8h10m-4-4 4 4-4 4"/></svg></button>
-              <button class="text-button" id="load-example" type="button">Use synthetic example</button>
-            </div>
-          </div>
-        </details>
-        <div class="prototype-notice" id="prototype-notice" role="status" aria-live="polite"></div>
-        <p class="hero-note"><span class="info-icon" aria-hidden="true">i</span><span>Your original image or PDF stays in your browser in SEAL's intended workflow. Extracted text may be sent to the SEAL server for claim structuring. This standalone HTML is a visual prototype and does not upload or verify messages.</span></p>
+  <section class="intro" aria-labelledby="page-title">
+    <div><p class="kicker">Court-message verification / independent evidence</p><h1 id="page-title">Check the claim.<br>Not the <em>letterhead.</em></h1></div>
+    <div class="intro-side"><strong>Official-looking is not the same as official.</strong>Inspect what a message asks you to do, then compare its claims with evidence from independent official sources.</div>
+  </section>
+  <section class="workbench" aria-label="Message intake and example evidence">
+    <div class="intake">
+      <div class="column-head"><h2>Submit a message</h2><span class="step-label">01 / INTAKE</span></div>
+      <p class="intake-lede">What did the message ask you to do?</p>
+      <p class="intake-help">Add a screenshot, image, PDF, or paste the text. Remove personal details that are not needed for a check.</p>
+      <div class="upload" id="dropzone">
+        <span class="file-glyph" aria-hidden="true"></span>
+        <div class="upload-copy"><strong>Drop a document here</strong><span>Image or PDF · maximum 20 MB in this prototype</span></div>
+        <input class="file-input" id="file-input" type="file" accept="image/*,.pdf,application/pdf" aria-label="Choose an image or PDF">
+        <button class="choose" id="browse" type="button">Choose file</button>
       </div>
+      <div class="file-status" id="file-status" role="status" aria-live="polite"></div>
+      <div class="or">or paste the text</div>
+      <label class="field-label" for="message-text">Message text</label>
+      <textarea id="message-text" placeholder="Paste the message here…"></textarea>
+      <div class="form-bottom"><button class="primary" id="check-text" type="button">Review message <span aria-hidden="true">↗</span></button><button class="quiet" id="load-example" type="button">Load fictional example</button></div>
+      <div class="notice" id="notice" role="status" aria-live="polite"></div>
+      <p class="privacy"><span class="privacy-mark" aria-hidden="true">i</span><span>This standalone page is a visual prototype. It does not upload files, transmit text, or perform a check. In SEAL's intended workflow, the original image or PDF stays in the browser; extracted text may be sent to the server for claim structuring.</span></p>
     </div>
-    <aside class="hero-aside" aria-label="Illustrative example of a suspicious court message">
-      <div class="specimen-top"><span>Message specimen</span><span>Illustrative · not a real notice</span></div>
-      <div class="paper-wrap">
-        <article class="notice-paper">
-          <div class="paper-heading">
-            <div class="court-title">Court notice <small>Illustrative sample · fictional details</small></div>
-            <span class="seal-emblem" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M16 3 25 7v8c0 6-4.5 10.5-9 13-4.5-2.5-9-7-9-13V7l9-4Z"/><path d="M10 13h12M16 8v12m-5-3h10"/></svg></span>
+    <aside class="evidence" aria-labelledby="evidence-heading">
+      <div class="column-head"><h2 id="evidence-heading">Inside a check</h2><span class="step-label">02 / EVIDENCE</span></div>
+      <div class="evidence-card">
+        <div class="evidence-top"><span>Example case / 0001</span><span class="fiction">Fictional scenario</span></div>
+        <div class="claim"><p class="claim-label">Claim extracted from message</p><blockquote>“Pay a processing fee through a payment app within 24 hours to avoid a <mark>court penalty.</mark>”</blockquote></div>
+        <div class="comparison">
+          <div class="compare-cell"><span class="cell-label">Message says</span><p class="quoted">Payment is required immediately through the contact and payment details supplied in the message.</p></div>
+          <div class="compare-cell"><span class="cell-label">Evidence to establish</span><p>Does an independent, official source support this specific payment requirement?</p></div>
+        </div>
+        <div class="result-panel" aria-live="polite">
+          <div class="result-head"><h3 id="result-title">Illustrative finding</h3><span class="state-tag mismatch" id="state-tag">Mismatch</span></div>
+          <p class="result-copy" id="result-copy">The claim conflicts with the hypothetical official-source record in this demonstration. Do not treat this fictional example as a real-world finding.</p>
+          <div class="source-line"><span class="source-dot" aria-hidden="true"></span><span id="source-copy">Evidence shown here is invented for interface demonstration; no official source has been queried.</span></div>
+          <div class="state-controls" aria-label="Preview verification result states">
+            <button class="state-button" type="button" data-state="match" aria-pressed="false">MATCH</button>
+            <button class="state-button" type="button" data-state="mismatch" aria-pressed="true">MISMATCH</button>
+            <button class="state-button" type="button" data-state="unknown" aria-pressed="false">COULD NOT VERIFY</button>
           </div>
-          <p class="doc-label">Action requested</p>
-          <h2 class="doc-title">Notice of jury service</h2>
-          <div class="doc-meta"><div><span>Reference</span><strong>EXAMPLE-0000</strong></div><div><span>Response</span><strong>Within 24 hours</strong></div></div>
-          <div class="doc-copy">
-            <p>You are receiving this illustrative message about a possible jury-service obligation.</p>
-            <p><span class="marked-claim">Pay a processing fee using a payment app to avoid a penalty.</span></p>
-            <p>Do not rely on contact details in a message to establish that it is genuine.</p>
-          </div>
-          <div class="fake-stamp"><span></span>Example claim highlighted for review</div>
-        </article>
+          <p class="demo-caption">PREVIEW THE THREE POSSIBLE RESULT STATES · ALL CONTENT ABOVE IS SYNTHETIC</p>
+        </div>
       </div>
-      <div class="specimen-caption"><span><strong>Read the request, not just the letterhead.</strong><br>The example is synthetic and is not a verdict.</span><span>01 / specimen</span></div>
     </aside>
   </section>
-  <div class="section-rule"></div>
-  <section class="method" id="how-it-works" aria-labelledby="method-title">
-    <div>
-      <h2 class="method-heading" id="method-title">A message is not its own proof.</h2>
-      <p class="method-intro">SEAL looks for independently checkable claims, not visual polish or official-sounding language.</p>
-    </div>
-    <div class="method-steps">
-      <article class="method-step"><span class="step-index">1</span><h3>Identify the action</h3><p>Separate what the message asks you to do from the names, numbers, and other details around it.</p></article>
-      <article class="method-step"><span class="step-index">2</span><h3>Check official evidence</h3><p>Compare supported claims with independent official sources. See the source and the reason behind each finding.</p></article>
-      <article class="method-step"><span class="step-index">3</span><h3>Find a safer route</h3><p>When available, use independently sourced court contact details instead of numbers or links in the message.</p></article>
-    </div>
+  <section class="principles" id="method" aria-label="How SEAL works">
+    <article class="principle"><span class="n">01 / SEPARATE</span><h2>Isolate the claim</h2><p>Pull out the requested action and the factual details that can actually be checked.</p></article>
+    <article class="principle"><span class="n">02 / COMPARE</span><h2>Find independent evidence</h2><p>Compare supported claims against official sources, and make the basis for a finding inspectable.</p></article>
+    <article class="principle"><span class="n">03 / RESPOND</span><h2>Choose a safer next step</h2><p>When possible, contact the court using details found independently—not those provided by the message.</p></article>
   </section>
-  <div class="section-rule"></div>
-  <section class="limit-section" aria-labelledby="limits-title">
-    <div><h2 class="limit-label" id="limits-title">What a check can—and cannot—tell you.</h2></div>
-    <div class="limit-copy">
-      <p>SEAL reports <strong>MATCH</strong>, <strong>MISMATCH</strong>, or <strong>COULD NOT VERIFY</strong> for specific claims against available sources. When evidence is incomplete or official sources disagree, the responsible result is to say so.</p>
-      <p>A source match does not authenticate a message, prove who sent it, or establish that a summons is legally valid. SEAL is independent and is not affiliated with any court. If a message demands payment or sensitive information, contact the court using a number you find independently.</p>
-    </div>
+  <section class="caveat" aria-labelledby="caveat-title">
+    <h2 id="caveat-title">Limits of a result</h2>
+    <div><p>SEAL returns <strong>MATCH</strong>, <strong>MISMATCH</strong>, or <strong>COULD NOT VERIFY</strong> for individual claims against available evidence. An inconclusive result is not proof that a message is genuine or fraudulent.</p><p>A match does not authenticate the sender, prove a document is genuine, or establish legal validity. SEAL is independent and is not affiliated with any court. For urgent payment requests or demands for sensitive information, contact the court using independently sourced contact details.</p></div>
   </section>
 </main>
-<footer class="site-footer">
-  <div><span class="footer-brand">SEAL</span> · Independent court-message checker</div>
-  <div class="footer-right">A visual prototype only. No files are uploaded, no message is transmitted, and no verification is performed on this page.</div>
-</footer>
+<footer><span><strong>SEAL</strong> / Independent court-message checker</span><span>Evidence first. Clear limits. No claim of certainty where the sources do not support it.</span></footer>
+</div>
 <script>
 (function(){
-  const input=document.getElementById('file-input');
-  const browse=document.getElementById('browse-button');
-  const drop=document.getElementById('dropzone');
-  const status=document.getElementById('file-status');
-  const notice=document.getElementById('prototype-notice');
-  const textarea=document.getElementById('message-text');
-  const details=document.getElementById('paste-details');
-  function showNotice(message){notice.textContent=message;notice.classList.add('visible');notice.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest'});}
+  const input=document.getElementById('file-input'),browse=document.getElementById('browse'),drop=document.getElementById('dropzone'),status=document.getElementById('file-status'),notice=document.getElementById('notice'),textarea=document.getElementById('message-text');
+  function showNotice(text){notice.textContent=text;notice.classList.add('show');}
   function setFile(file){
     if(!file)return;
-    const isPdf=file.type==='application/pdf'||file.name.toLowerCase().endsWith('.pdf');
-    const isImage=file.type.startsWith('image/');
-    if(!isPdf&&!isImage){status.textContent='Choose an image or PDF file.';status.classList.add('visible');return;}
-    if(file.size>20*1024*1024){status.textContent='This prototype accepts files up to 20 MB for preview selection.';status.classList.add('visible');return;}
-    status.textContent='Selected: '+file.name+' ('+(isPdf?'PDF document':'image')+'). This prototype does not upload or inspect the file.';
-    status.classList.add('visible');
-    notice.classList.remove('visible');
+    const pdf=file.type==='application/pdf'||file.name.toLowerCase().endsWith('.pdf'),img=file.type.startsWith('image/');
+    if(!pdf&&!img){status.textContent='Choose an image or PDF file.';status.classList.add('show');return;}
+    if(file.size>20*1024*1024){status.textContent='This prototype accepts files up to 20 MB for selection preview.';status.classList.add('show');return;}
+    status.textContent='Selected: '+file.name+' ('+(pdf?'PDF':'image')+'). The file has not been uploaded or inspected.';
+    status.classList.add('show');notice.classList.remove('show');
   }
   browse.addEventListener('click',()=>input.click());
   input.addEventListener('change',()=>setFile(input.files&&input.files[0]));
-  ['dragenter','dragover'].forEach(type=>drop.addEventListener(type,e=>{e.preventDefault();drop.classList.add('dragging')}));
-  ['dragleave','drop'].forEach(type=>drop.addEventListener(type,e=>{e.preventDefault();drop.classList.remove('dragging')}));
+  ['dragenter','dragover'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add('drag')}));
+  ['dragleave','drop'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove('drag')}));
   drop.addEventListener('drop',e=>setFile(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]));
   document.getElementById('check-text').addEventListener('click',()=>{
-    if(!textarea.value.trim()){textarea.focus();showNotice('Paste the message text first. This standalone prototype cannot run a verification.');return;}
-    showNotice('Prototype only: your text has not been sent or checked. In the SEAL application, extracted text is structured into claims and compared with supported independent official sources.');
+    if(!textarea.value.trim()){textarea.focus();showNotice('Paste message text first. This prototype cannot run a verification.');return;}
+    showNotice('Prototype only: this text has not been sent or checked. The real workflow would extract checkable claims and compare them with supported independent official sources.');
   });
   document.getElementById('load-example').addEventListener('click',()=>{
-    textarea.value='Illustrative message: You must pay a jury-service processing fee using a payment app within 24 hours to avoid a penalty. This is fictional sample text, not a real court notice.';
-    details.open=true;textarea.focus();
-    showNotice('Synthetic example loaded. It is fictional and has not been verified.');
+    textarea.value='Fictional example: Pay a processing fee through a payment app within 24 hours to avoid a court penalty. This is synthetic text, not a real court message.';
+    textarea.focus();showNotice('Fictional example loaded. It has not been transmitted or verified.');
   });
+  const states={
+    match:{label:'MATCH',cls:'match',title:'Claim supported by the checked source',copy:'The available source supports this specific claim. That does not establish who sent the message or prove the document is authentic.',source:'A real result should name the official source, show the relevant evidence, and state what was compared.'},
+    mismatch:{label:'MISMATCH',cls:'mismatch',title:'Claim conflicts with the checked source',copy:'The claim conflicts with the hypothetical official-source record in this demonstration. Do not treat this fictional example as a real-world finding.',source:'Evidence shown here is invented for interface demonstration; no official source has been queried.'},
+    unknown:{label:'COULD NOT VERIFY',cls:'unknown',title:'The available evidence is inconclusive',copy:'The available sources do not establish whether this claim is correct. Missing evidence is not confirmation in either direction.',source:'A real result should explain what could not be checked and why, without presenting uncertainty as a verdict.'}
+  };
+  const tag=document.getElementById('state-tag'),title=document.getElementById('result-title'),copy=document.getElementById('result-copy'),source=document.getElementById('source-copy');
+  document.querySelectorAll('[data-state]').forEach(button=>button.addEventListener('click',()=>{
+    const s=states[button.dataset.state];tag.textContent=s.label;tag.className='state-tag '+s.cls;title.textContent=s.title;copy.textContent=s.copy;source.textContent=s.source;
+    document.querySelectorAll('[data-state]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+  }));
 })();
 </script>
 </body>
